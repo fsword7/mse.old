@@ -6,6 +6,16 @@
 #define AXP_nGREGS  32
 #define AXP_nFPREGS 32
 
+#define MSKB       0xFF
+#define MSKW       0xFFFF
+#define MSKL       0xFFFFFFFF
+#define MSKQ       0xFFFFFFFFFFFFFFFF
+
+#define SGNB       0x80
+#define SGNW       0x8000
+#define SGNL       0x80000000
+#define SGNQ       0x8000000000000000
+
 #define REG_nR0     0
 #define REG_nR1     1
 #define REG_nR2     2
