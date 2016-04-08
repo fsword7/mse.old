@@ -1,5 +1,6 @@
 
-#include "emu/cpudev.h"
+#include <emu/core.h>
+#include <emu/devcpu.h>
 #include "devices/cpu/alpha/axp.h"
 #include "devices/cpu/alpha/ev4.h"
 
@@ -18,7 +19,7 @@ void ev4_cpuDevice::execute()
 
 
 
-	while() {
+	while(true) {
 		opc = OP_GETCD(inst);
 
 		switch (opc) {

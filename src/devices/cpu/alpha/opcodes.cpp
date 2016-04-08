@@ -1,5 +1,7 @@
+#include "emu/core.h"
 #include "devices/cpu/alpha/axp.h"
 
+#if 0
 // Instruction Formats for Alpha Processors
 //
 //   PALcode Instrcution Format
@@ -489,3 +491,4 @@ ALPHA_INST alpha_palCodes[] = {
 
 	{ NULL } // Null Terminator
 };
+#endif

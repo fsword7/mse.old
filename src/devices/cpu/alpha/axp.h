@@ -1,8 +1,6 @@
 
 #pragma once
 
-#include "src/main/main.h"
-
 #define AXP_nGREGS  32
 #define AXP_nFPREGS 32
 
@@ -202,7 +200,7 @@ enum opCodes {
 class Process_Alpha
 {
 private:
-	uint64 gRegs[AXP_nGREGS];
-	uint64 fpRegs[AXP_nFPREGS];
-	uint64 pcReg;
+	uint64_t gRegs[AXP_nGREGS];
+	uint64_t fpRegs[AXP_nFPREGS];
+	uint64_t pcReg;
 };
