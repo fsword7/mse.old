@@ -5,8 +5,7 @@
  *      Author: Tim Stark
  */
 
-#ifndef SRC_EMU_CPU_PDP10_PDP10_H_
-#define SRC_EMU_CPU_PDP10_PDP10_H_
+#once
 
 #include "src/main/main.h"
 #include "src/emu/cpu/pdp10/word10.h"
@@ -26,6 +25,3 @@ public:
 	Processor_PDP10()  {}
 	~Processor_PDP10() {}
 };
-
-
-#endif /* SRC_EMU_CPU_PDP10_PDP10_H_ */

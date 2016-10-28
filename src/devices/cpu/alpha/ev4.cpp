@@ -1,6 +1,6 @@
 
-#include <emu/core.h>
-#include <emu/devcpu.h>
+#include "emu/core.h"
+#include "emu/devcpu.h"
 #include "devices/cpu/alpha/axp.h"
 #include "devices/cpu/alpha/ev4.h"
 
