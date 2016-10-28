@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "src/emu/cpu/pdp10/pdp10.h"
+#include "emu/cpu/pdp10/pdp10.hpp"
 
 class Processor_KS10 : public Processor_PDP10
 {

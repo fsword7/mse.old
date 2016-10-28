@@ -7,8 +7,8 @@
 
 #once
 
-#include "src/main/main.h"
-#include "src/emu/cpu/pdp10/word10.h"
+#include "emu/core.hpp"
+#include "emu/cpu/pdp10/word10.hpp"
 
 #define AC_NBLKS      8
 #define AC_NREGS    017

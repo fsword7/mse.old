@@ -1,5 +1,5 @@
-#include "emu/core.h"
-#include "emu/devcpu.h"
+#include "emu/core.hpp"
+#include "emu/devcpu.hpp"
 
 cpu_Device::cpu_Device()
 {

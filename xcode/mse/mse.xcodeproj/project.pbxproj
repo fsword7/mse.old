@@ -14,6 +14,8 @@
 		6840372E1DC3985C001A40C8 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 684037251DC3985C001A40C8 /* main.cpp */; };
 		6840372F1DC3985C001A40C8 /* alpha.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 684037291DC3985C001A40C8 /* alpha.cpp */; };
 		684037311DC39E09001A40C8 /* pdp10.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 684037301DC39E09001A40C8 /* pdp10.cpp */; };
+		684037F81DC3D1B0001A40C8 /* user.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 684037F61DC3D1B0001A40C8 /* user.cpp */; };
+		684037FB1DC3D281001A40C8 /* commands.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 684037F91DC3D281001A40C8 /* commands.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -30,21 +32,25 @@
 
 /* Begin PBXFileReference section */
 		684036EA1DC3951E001A40C8 /* mse */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mse; sourceTree = BUILT_PRODUCTS_DIR; };
-		684037171DC3985C001A40C8 /* axp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = axp.h; sourceTree = "<group>"; };
+		684037171DC3985C001A40C8 /* axp.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = axp.hpp; sourceTree = "<group>"; };
 		684037181DC3985C001A40C8 /* ev4.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ev4.cpp; sourceTree = "<group>"; };
-		684037191DC3985C001A40C8 /* ev4.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ev4.h; sourceTree = "<group>"; };
+		684037191DC3985C001A40C8 /* ev4.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ev4.hpp; sourceTree = "<group>"; };
 		6840371A1DC3985C001A40C8 /* opcodes.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = opcodes.cpp; sourceTree = "<group>"; };
-		6840371C1DC3985C001A40C8 /* ks10.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ks10.h; sourceTree = "<group>"; };
-		6840371D1DC3985C001A40C8 /* pdp10.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pdp10.h; sourceTree = "<group>"; };
-		6840371E1DC3985C001A40C8 /* word10.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = word10.h; sourceTree = "<group>"; };
+		6840371C1DC3985C001A40C8 /* ks10.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ks10.hpp; sourceTree = "<group>"; };
+		6840371D1DC3985C001A40C8 /* pdp10.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = pdp10.hpp; sourceTree = "<group>"; };
+		6840371E1DC3985C001A40C8 /* word10.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = word10.hpp; sourceTree = "<group>"; };
 		684037201DC3985C001A40C8 /* console.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = console.cpp; sourceTree = "<group>"; };
-		684037211DC3985C001A40C8 /* core.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = core.h; sourceTree = "<group>"; };
+		684037211DC3985C001A40C8 /* core.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = core.hpp; sourceTree = "<group>"; };
 		684037221DC3985C001A40C8 /* devcpu.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = devcpu.cpp; sourceTree = "<group>"; };
-		684037231DC3985C001A40C8 /* devcpu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = devcpu.h; sourceTree = "<group>"; };
+		684037231DC3985C001A40C8 /* devcpu.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = devcpu.hpp; sourceTree = "<group>"; };
 		684037251DC3985C001A40C8 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
-		684037261DC3985C001A40C8 /* sysdrv.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sysdrv.h; sourceTree = "<group>"; };
+		684037261DC3985C001A40C8 /* sysdrv.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = sysdrv.hpp; sourceTree = "<group>"; };
 		684037291DC3985C001A40C8 /* alpha.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = alpha.cpp; sourceTree = "<group>"; };
 		684037301DC39E09001A40C8 /* pdp10.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = pdp10.cpp; sourceTree = "<group>"; };
+		684037F61DC3D1B0001A40C8 /* user.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = user.cpp; sourceTree = "<group>"; };
+		684037F71DC3D1B0001A40C8 /* user.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = user.hpp; sourceTree = "<group>"; };
+		684037F91DC3D281001A40C8 /* commands.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = commands.cpp; sourceTree = "<group>"; };
+		684037FA1DC3D281001A40C8 /* commands.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = commands.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -105,9 +111,9 @@
 		684037161DC3985C001A40C8 /* alpha */ = {
 			isa = PBXGroup;
 			children = (
-				684037171DC3985C001A40C8 /* axp.h */,
+				684037171DC3985C001A40C8 /* axp.hpp */,
 				684037181DC3985C001A40C8 /* ev4.cpp */,
-				684037191DC3985C001A40C8 /* ev4.h */,
+				684037191DC3985C001A40C8 /* ev4.hpp */,
 				6840371A1DC3985C001A40C8 /* opcodes.cpp */,
 			);
 			path = alpha;
@@ -116,9 +122,9 @@
 		6840371B1DC3985C001A40C8 /* pdp10 */ = {
 			isa = PBXGroup;
 			children = (
-				6840371C1DC3985C001A40C8 /* ks10.h */,
-				6840371D1DC3985C001A40C8 /* pdp10.h */,
-				6840371E1DC3985C001A40C8 /* word10.h */,
+				6840371C1DC3985C001A40C8 /* ks10.hpp */,
+				6840371D1DC3985C001A40C8 /* pdp10.hpp */,
+				6840371E1DC3985C001A40C8 /* word10.hpp */,
 			);
 			path = pdp10;
 			sourceTree = "<group>";
@@ -127,11 +133,15 @@
 			isa = PBXGroup;
 			children = (
 				684037201DC3985C001A40C8 /* console.cpp */,
-				684037211DC3985C001A40C8 /* core.h */,
+				684037211DC3985C001A40C8 /* core.hpp */,
 				684037221DC3985C001A40C8 /* devcpu.cpp */,
-				684037231DC3985C001A40C8 /* devcpu.h */,
+				684037231DC3985C001A40C8 /* devcpu.hpp */,
 				684037241DC3985C001A40C8 /* osd */,
-				684037261DC3985C001A40C8 /* sysdrv.h */,
+				684037261DC3985C001A40C8 /* sysdrv.hpp */,
+				684037F61DC3D1B0001A40C8 /* user.cpp */,
+				684037F71DC3D1B0001A40C8 /* user.hpp */,
+				684037F91DC3D281001A40C8 /* commands.cpp */,
+				684037FA1DC3D281001A40C8 /* commands.hpp */,
 			);
 			path = emu;
 			sourceTree = "<group>";
@@ -218,6 +228,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				684037F81DC3D1B0001A40C8 /* user.cpp in Sources */,
+				684037FB1DC3D281001A40C8 /* commands.cpp in Sources */,
 				6840372C1DC3985C001A40C8 /* console.cpp in Sources */,
 				6840372A1DC3985C001A40C8 /* ev4.cpp in Sources */,
 				6840372F1DC3985C001A40C8 /* alpha.cpp in Sources */,

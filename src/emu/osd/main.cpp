@@ -1,5 +1,5 @@
 
-#include "emu/core.h"
+#include "emu/core.hpp"
 
 int main(int argc, char **argv)
 {
