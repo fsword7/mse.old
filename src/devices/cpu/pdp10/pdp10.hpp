@@ -24,4 +24,6 @@ public:
 
 	Processor_PDP10()  {}
 	~Processor_PDP10() {}
+
+	virtual void execute();
 };
