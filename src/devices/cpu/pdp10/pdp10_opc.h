@@ -563,3 +563,8 @@
 
 #define OPC_nGFLTR		0030
 #define OPC_nGFSC		0031
+
+// Operand flags
+#define OPR_SWAR		000001 // Swap AR operand
+#define OPR_FEMB		000002 // Fetch from Memory
+#define OPR_SVAR		000004 // Save AR operand to Memory
