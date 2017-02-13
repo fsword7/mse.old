@@ -46,9 +46,9 @@ void Processor_PDP10::execute()
 	while(1) {
 		// Fetch instruction from current PC address
 
-		// Decode operands
-
 		// Decode instruction address
+
+		// Fetch operands from Memory
 
 		// Execute instruction
 		switch (opCode) {
@@ -58,7 +58,7 @@ void Processor_PDP10::execute()
 
 		}
 
-		// Save operand to Memory
+		// Save operands to Memory
 
 		// Page fault exception
 	}
