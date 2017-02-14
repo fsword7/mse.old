@@ -49,7 +49,7 @@
 
 #define OPC_nJSYS		0104
 #define OPC_nADJSP		0105	// Adjust Stack Pointer
-#define OPC_nGMPV		0106	// Giant Floating Multiply
+#define OPC_nGFMP		0106	// Giant Floating Multiply
 #define OPC_nGFDV		0107	// Giant Floating Divide
 
 #define OPC_nDFAD		0110	// Double Floating Add
