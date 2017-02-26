@@ -7,13 +7,13 @@
 
 #once
 
-#include "emu/core.hpp"
-#include "emu/cpu/pdp10/word10.hpp"
+#include <emu/core.h>
+#include "formats/dec/word10.h"
 
 #define AC_NBLKS      8
 #define AC_NREGS    017
 
-class Processor_PDP10
+class pdp10_cpuDevice
 {
 public:
 	// Accumulators
@@ -22,8 +22,8 @@ public:
 	w10_t *curReg; // Current AC block
 	w10_t *prvReg; // Previous AC block
 
-	Processor_PDP10()  {}
-	~Processor_PDP10() {}
+	pdp10_cpuDevice()  {}
+	virtual ~pdp10_cpuDevice() {}
 
 	virtual void execute();
 };

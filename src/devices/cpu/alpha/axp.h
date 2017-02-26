@@ -1,6 +1,9 @@
 
 #pragma once
 
+#include "emu/core.h"
+#include "emu/devcpu.h"
+
 #define AXP_nGREGS  32
 #define AXP_nFPREGS 32
 
@@ -197,8 +200,12 @@ enum opCodes {
 	OPC_BLBS, OPC_BNE,   OPC_BGE,   OPC_BGT
 };
 
-class Process_Alpha
+class axp_cpuDevice
 {
+public:
+	axp_cpuDevice() {};
+	~axp_cpuDevice() {};
+
 private:
 	uint64_t gRegs[AXP_nGREGS];
 	uint64_t fpRegs[AXP_nFPREGS];

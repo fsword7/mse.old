@@ -1,5 +1,5 @@
 
-#include "emu/core.hpp"
+#include <emu/core.h>
 #include "emu/osd/socket.h"
 
 #if __WIN32__

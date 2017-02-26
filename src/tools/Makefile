@@ -1,6 +1,6 @@
-CC = gcc
-LD = gcc
-CFLAGS = -g -O3 -c
+CC = g++
+LD = g++
+CFLAGS = -std=c++11 -g -O3 -c
 LDFLAGS = -g
 INCLUDES = -I.. -I.
 LIBS =
@@ -10,7 +10,7 @@ DUMP_OBJS = dump10.o
 dump10: ${DUMP_OBJS}
 	${CC} ${LDFLAGS} -o $@ ${DUMP_OBJS} ${LIBS}
 	
-.c.o:
+.cpp.o:
 	${CC} ${CFLAGS} ${INCLUDES} $<
 	
 clean:

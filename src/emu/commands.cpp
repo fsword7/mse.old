@@ -6,5 +6,5 @@
 //  Copyright © 2016 Timothy Stark. All rights reserved.
 //
 
-#include "emu/core.hpp"
+#include <emu/core.h>
 #include "emu/commands.hpp"

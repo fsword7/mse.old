@@ -5,7 +5,7 @@
 //  Created by Timothy Stark on 10/28/16.
 //
 
-#include "emu/core.hpp"
+#include <emu/core.h>
 #include "emu/sysdrv.hpp"
 
 GROUP(pdp10)

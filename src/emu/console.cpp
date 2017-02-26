@@ -1,5 +1,5 @@
 
-#include "emu/core.hpp"
+#include <emu/core.h>
 
 std::vector<std::string> split(std::string const &line)
 {
