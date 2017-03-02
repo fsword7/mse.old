@@ -12,9 +12,12 @@
 #define CMD_SHUTDOWN   1
 #define CMD_NOTFOUND   2
 
+class System;
 class Console;
 
-typedef int (*cmdfunc)();
+typedef std::vector<std::string> args_t;
+
+typedef int (*cmdfunc)(Console *, args_t &args);
 
 struct Command {
 	std::string name;
@@ -22,14 +25,19 @@ struct Command {
 	cmdfunc execute;
 };
 
-
 class Console {
 public:
-	Console();
+	Console(System *sys);
 	~Console();
 
 	void prompt();
 
+	inline System *getSystem() const { return sys; }
+
 private:
+	System *sys;
 };
+
+int cmdCreate(Console *con, args_t &args);
+int cmdExit(Console *con, args_t &args);
 

@@ -1,5 +1,6 @@
 
 #include "emu/core.h"
+#include "emu/system.h"
 #include "emu/console.h"
 #include "emu/osd/socket.h"
 
@@ -22,11 +23,16 @@ int main(int argc, char **argv)
 		return 1;
 	}
 #endif
-	Console *con = new Console();
+	System *sys = new System();
+	Console *con = new Console(sys);
 
 	printf("Welcome to Multi-System Emulator System\n\n");
 
 	con->prompt();
+
+	delete con;
+	delete sys;
+
 	osdExit("");
 	return 0;
 }

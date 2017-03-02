@@ -2,7 +2,18 @@
 #include "emu/core.h"
 #include "emu/console.h"
 
-extern Command cmdGeneral[2];
+int cmdShutdown(Console *, args_t &)
+{
+	// Shutdown system
+	return CMD_SHUTDOWN;
+}
+
+// General commands table
+Command cmdGeneral[3] = {
+	{ "create", "", cmdCreate },
+	{ "exit", "", cmdShutdown },
+	{ "quit", "", cmdShutdown }
+};
 
 std::vector<std::string> split(std::string const &line)
 {
@@ -15,7 +26,8 @@ std::vector<std::string> split(std::string const &line)
     return ret;
 }
 
-Console::Console()
+Console::Console(System *_sys)
+: sys(_sys)
 {
 }
 
@@ -45,7 +57,7 @@ void Console::prompt()
     	for (auto &&cmd : cmdGeneral) {
 //    		std::cout << "Command: " << cmd.name << std::endl;
     		if (cmd.name == args[0]) {
-    			rc = cmd.execute();
+    			rc = cmd.execute(this, args);
     			continue;
     		}
     	}

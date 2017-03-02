@@ -10,6 +10,14 @@ struct sysDriver
 	const char *year;
 };
 
+struct Device
+{
+	const char *devName;  // Device name
+	const char *devDesc;  // Device description
+	const char *srcFile;  // Source file
+
+};
+
 #define SYS_NAME(name) sysDriver_##name
 
 #define SYSTEM(name, parent, fname) \
