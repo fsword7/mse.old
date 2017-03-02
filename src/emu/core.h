@@ -8,4 +8,4 @@
 #include <cstdlib>
 #include <cstdint>
 
-void cliPrompt(void);
+void osdExit(std::string reason);

@@ -7,6 +7,8 @@
 
 #pragma once
 
+class Console;
+
 class User
 {
 public:
@@ -16,4 +18,5 @@ public:
 private:
     std::string name;
     
+//    Console con;
 };

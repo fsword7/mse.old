@@ -1,5 +1,8 @@
 
-#include <emu/core.h>
+#include "emu/core.h"
+#include "emu/console.h"
+
+extern Command cmdGeneral[2];
 
 std::vector<std::string> split(std::string const &line)
 {
@@ -12,18 +15,45 @@ std::vector<std::string> split(std::string const &line)
     return ret;
 }
 
-void cliPrompt()
+Console::Console()
+{
+}
+
+Console::~Console()
+{
+}
+
+void Console::prompt()
 {
     std::string cmdLine;
     std::vector<std::string> args;
+    int rc = CMD_OK;
     
-    std::cout << "mse> ";
-    std::getline(std::cin, cmdLine);
-    std::cout << "Entered line: " << cmdLine << std::endl;
+    while(rc == CMD_OK) {
+    	std::cout << "mse> ";
+    	std::getline(std::cin, cmdLine);
+//    	std::cout << "Entered line: " << cmdLine << std::endl;
     
-    args = split(cmdLine);
-    for (auto &&word : args)
-        printf("Arg: %s\n", word.c_str());
+    	args = split(cmdLine);
+//    	for (auto &&word : args)
+//    		printf("Arg: %s\n", word.c_str());
     
-    printf("Done..\n");
+    	if (args.size() == 0)
+    		continue;
+
+    	rc = CMD_NOTFOUND; // default
+    	for (auto &&cmd : cmdGeneral) {
+//    		std::cout << "Command: " << cmd.name << std::endl;
+    		if (cmd.name == args[0]) {
+    			rc = cmd.execute();
+    			continue;
+    		}
+    	}
+
+    	// Command not found
+    	if (rc == CMD_NOTFOUND) {
+    		std::cout << "Command '" << args[0] << "': Not found" << std::endl;
+    		rc = CMD_OK;
+    	}
+    };
 }

@@ -7,7 +7,7 @@
 //
 
 #include <emu/core.h>
-#include "emu/user.hpp"
+#include <emu/user.h>
 
 User::User()
 {
