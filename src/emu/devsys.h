@@ -7,20 +7,44 @@
 
 #pragma once
 
+class Device;
+class Console;
+
+// Return code (error codes)
+#define CMD_OK         0
+#define CMD_SHUTDOWN   1
+#define CMD_NOTFOUND   2
+#define CMD_ERROR      3
+
+typedef std::vector<std::string> args_t;
+
+typedef int (*cmdfunc)(Console *, Device *, args_t &args);
+
+struct Command {
+	const char *name;
+	const char *usage;
+	cmdfunc execute;
+};
+
 struct Driver
 {
-	const char *devName;  // Device name
-	const char *devDesc;  // Device description
+	// Drive type information
+	const char *drvName;  // Driver name
+	const char *drvDesc;  // Driver description
 	const char *srcFile;  // Source file
-	const char *pdevName; // Parent device name
+	const char *pdevName; // Parent driver name
 
+	// Command handler
+	const Command *Commands;
+	const Command *setCommands;
+	const Command *showCommands;
 };
 
 class Device
 {
 public:
 	Device();
-	~Device();
+	virtual ~Device();
 
 	inline Driver *getDriver() const { return driver; }
 
@@ -31,6 +55,9 @@ public:
 	void setParent(Device *parent) { this->parent = parent; }
 
 	void setDrivers(Driver **drivers) { this->drivers = drivers; }
+
+	// Device virtual function calls
+	virtual int load(std::string fname);
 
 protected:
 	Driver  *driver; // Driver table information

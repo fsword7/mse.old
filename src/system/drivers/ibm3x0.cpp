@@ -17,4 +17,8 @@ Driver ibm3x0_sysDriver {
 	__FILE__,
 	nullptr,
 
+	// Command handlers
+	nullptr,
+	nullptr,
+	nullptr,
 };

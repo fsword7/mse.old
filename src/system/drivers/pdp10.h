@@ -34,7 +34,7 @@ public:
 
 	inline uint36_t *getMemory() const { return mem; }
 
-	void load(std::string fname);
+	int load(std::string fname);
 
 	// memory access function calls
 	uint36_t readp(uint32_t paddr);

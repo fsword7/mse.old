@@ -23,7 +23,7 @@ Device *Device::findDevice(std::string devName)
 {
 	for (auto &&dev : devices) {
 		Driver *drv = dev->getDriver();
-		if (drv->devName == devName)
+		if (drv->drvName == devName)
 			return dev;
 	}
 	return nullptr;
@@ -35,10 +35,16 @@ Driver *Device::findDriver(std::string drvName)
 
 	for (int idx = 0; drivers[idx]; idx++) {
 		drv = drivers[idx];
-		if (drv->devName == drvName)
+		if (drv->drvName == drvName)
 			return drv;
 	}
 	return nullptr;
+}
+
+int Device::load(std::string)
+{
+	std::cout << driver->drvName << ": Command not supported" << std::endl;
+	return CMD_ERROR;
 }
 
 // ******************************************************************************
@@ -73,34 +79,24 @@ Driver *sysDrivers[] = {
 	nullptr
 };
 
+extern Command mseCommands;
+//extern Command mseSetCommands;
+//extern Command mseShowCommands;
+
+Driver mseDriver = {
+		"mse",
+		"Multi-System Emulator",
+		__FILE__,
+		nullptr,
+
+		// Command handlers
+		&mseCommands,
+		nullptr,
+		nullptr,
+
+};
+
 void setSystemDrivers(Device *dev)
 {
 	dev->setDrivers(sysDrivers);
-}
-
-// Usage: create [device] <options...>
-int cmdCreate(Console *con, Device *dev, args_t &args)
-{
-	Driver *drv;
-
-	// Check number of arguments
-	if (args.size() < 3) {
-		std::cout << "Usage: " << args[0] << " [device] [driver]" << std::endl;
-		return CMD_OK;
-	}
-
-	// check existing device by using name
-	if (dev->findDevice(args[1]) != nullptr) {
-		std::cout << args[1] << ": name already taken or device not found." << std::endl;
-		return CMD_OK;
-	}
-
-	// find available driver by using name
-	drv = dev->findDriver(args[2]);
-	if (drv == nullptr) {
-		std::cout << args[2] << ": driver not found." << std::endl;
-		return CMD_OK;
-	}
-
-	return CMD_OK;
 }

@@ -35,7 +35,7 @@ void pdp10_sysDevice::writep(uint32_t paddr, uint36_t data)
 		mem[paddr] = data;
 }
 
-void pdp10_sysDevice::load(std::string fname)
+int pdp10_sysDevice::load(std::string fname)
 {
 	uint36_t d36; // 36-bit data buffer
 	uint18_t idx1, idx2;
@@ -63,7 +63,7 @@ void pdp10_sysDevice::load(std::string fname)
 			ndir = len;
 			if (ndir >= sizeof(dir)) {
 				std::cerr << fname << ": Too long directory entry block" << std::endl;
-				return;
+				return CMD_ERROR;
 			}
 			in.read((char *)cbuf, ndir*5);
 			for (idx1 = 0; idx1 < ndir; idx1++) {
@@ -115,6 +115,8 @@ void pdp10_sysDevice::load(std::string fname)
 	std::cout << fname << ": Start address: " << std::oct << uint18_t(d36 & H10_MASK) << std::endl;
 
 	in.close();
+
+	return CMD_OK;
 }
 
 // ***************************************************************************
@@ -140,4 +142,8 @@ Driver pdp10_sysDriver {
 	__FILE__,
 	nullptr,
 
+	// Command handlers
+	sysCommands,
+	nullptr,
+	nullptr,
 };

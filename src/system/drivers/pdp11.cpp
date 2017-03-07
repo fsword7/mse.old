@@ -17,4 +17,8 @@ Driver pdp11_sysDriver {
 	__FILE__,
 	nullptr,
 
+	// Command handlers
+	nullptr,
+	nullptr,
+	nullptr,
 };

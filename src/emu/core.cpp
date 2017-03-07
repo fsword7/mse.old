@@ -9,9 +9,12 @@
 #include "emu/devsys.h"
 #include "emu/devcore.h"
 
+extern Driver mseDriver;
+
 Core::Core()
 {
 	setSystemDrivers(this);
+	setDriver(&mseDriver);
 }
 
 Core::~Core()
