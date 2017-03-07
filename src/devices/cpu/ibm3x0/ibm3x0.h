@@ -111,7 +111,7 @@
 #define CC_BUSY       2 // Device Busy
 #define CC_NFOUND     3 // Device Not Found
 
-class i3x0_cpuDevice
+class i3x0_cpuDevice : public cpuDevice
 {
 public:
 	i3x0_cpuDevice() {};

@@ -13,7 +13,7 @@
 #define AC_NBLKS      8
 #define AC_NREGS    017
 
-class pdp10_cpuDevice
+class pdp10_cpuDevice : public cpuDevice
 {
 public:
 	// Accumulators

@@ -67,7 +67,7 @@
 // APR File Registers
 #define APR_nREGS  64
 
-class pdp11_cpuDevice
+class pdp11_cpuDevice : public cpuDevice
 {
 public:
 	pdp11_cpuDevice() {};

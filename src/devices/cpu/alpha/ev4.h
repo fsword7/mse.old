@@ -7,7 +7,7 @@
 
 #pragma once
 
-class ev4_cpuDevice : public cpuDevice
+class ev4_cpuDevice : public axp_cpuDevice
 {
 public:
 	ev4_cpuDevice();

@@ -200,7 +200,7 @@ enum opCodes {
 	OPC_BLBS, OPC_BNE,   OPC_BGE,   OPC_BGT
 };
 
-class axp_cpuDevice
+class axp_cpuDevice : public cpuDevice
 {
 public:
 	axp_cpuDevice() {};

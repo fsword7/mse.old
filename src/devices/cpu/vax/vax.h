@@ -80,7 +80,7 @@
 #define AM_USER			3 // User mode for normal programs
 
 
-class vax_cpuDevice
+class vax_cpuDevice : public cpuDevice
 {
 public:
 	vax_cpuDevice() {};

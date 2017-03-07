@@ -9,7 +9,7 @@
 
 #pragma once
 
-class i700_cpuDevice
+class i700_cpuDevice : public cpuDevice
 {
 public:
 	i700_cpuDevice() {};
