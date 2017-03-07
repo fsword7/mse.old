@@ -9,18 +9,12 @@
 #include "emu/devsys.h"
 #include "emu/devcore.h"
 
-appCore::appCore()
+Core::Core()
 {
-	devList.clear();
+	setSystemDrivers(this);
 }
 
-appCore::~appCore()
+Core::~Core()
 {
 }
 
-void appCore::findDevice(std::string devName)
-{
-	for (auto &&dev : devList) {
-
-	}
-}

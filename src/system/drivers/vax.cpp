@@ -11,7 +11,7 @@
 //GROUP(alpha)
 //SYSTEM(as400, alpha,   "AlphaServer 400")
 
-sysDriver vax_sysDriver {
+Driver vax_sysDriver {
 	"VAX",
 	"DEC VAX-11 Series"
 	__FILE__,

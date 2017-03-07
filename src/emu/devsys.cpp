@@ -11,12 +11,37 @@
 #include "emu/console.h"
 
 Device::Device()
+: driver(nullptr), parent(nullptr)
 {
 }
 
 Device::~Device()
 {
 }
+
+Device *Device::findDevice(std::string devName)
+{
+	for (auto &&dev : devices) {
+		Driver *drv = dev->getDriver();
+		if (drv->devName == devName)
+			return dev;
+	}
+	return nullptr;
+}
+
+Driver *Device::findDriver(std::string drvName)
+{
+	Driver *drv;
+
+	for (int idx = 0; drivers[idx]; idx++) {
+		drv = drivers[idx];
+		if (drv->devName == drvName)
+			return drv;
+	}
+	return nullptr;
+}
+
+// ******************************************************************************
 
 sysDevice::sysDevice()
 {
@@ -28,34 +53,54 @@ sysDevice::~sysDevice()
 
 // ******************************************************************************
 
-extern sysDriver axp_sysDriver;
-extern sysDriver ibm3x0_sysDriver;
-extern sysDriver ibm700_sysDriver;
-extern sysDriver pdp10_sysDriver;
-extern sysDriver pdp11_sysDriver;
-extern sysDriver vax_sysDriver;
+extern Driver axp_sysDriver;
+extern Driver hsc_sysDriver;
+extern Driver ibm3x0_sysDriver;
+extern Driver ibm700_sysDriver;
+extern Driver pdp10_sysDriver;
+extern Driver pdp11_sysDriver;
+extern Driver vax_sysDriver;
 
-sysDriver *sysList[6] = {
+Driver *sysDrivers[] = {
 	&axp_sysDriver,
+	&hsc_sysDriver,
 	&ibm3x0_sysDriver,
 	&ibm700_sysDriver,
 	&pdp10_sysDriver,
 	&pdp11_sysDriver,
-	&vax_sysDriver
+	&vax_sysDriver,
+	// end of system driver table
+	nullptr
 };
 
-// Usage: create [device] <options...>
-int cmdCreate(Console *con, args_t &args)
+void setSystemDrivers(Device *dev)
 {
-	appCore *app;
+	dev->setDrivers(sysDrivers);
+}
+
+// Usage: create [device] <options...>
+int cmdCreate(Console *con, Device *dev, args_t &args)
+{
+	Driver *drv;
 
 	// Check number of arguments
-	if (args.size() < 2) {
-		std::cout << "Usage: " << args[0] << " [device] <options...>" << std::endl;
+	if (args.size() < 3) {
+		std::cout << "Usage: " << args[0] << " [device] [driver]" << std::endl;
 		return CMD_OK;
 	}
-	app = con->getSystem();
 
+	// check existing device by using name
+	if (dev->findDevice(args[1]) != nullptr) {
+		std::cout << args[1] << ": name already taken or device not found." << std::endl;
+		return CMD_OK;
+	}
+
+	// find available driver by using name
+	drv = dev->findDriver(args[2]);
+	if (drv == nullptr) {
+		std::cout << args[2] << ": driver not found." << std::endl;
+		return CMD_OK;
+	}
 
 	return CMD_OK;
 }

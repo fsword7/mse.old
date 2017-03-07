@@ -1,7 +1,9 @@
 
 #pragma once
 
-class cpuDevice
+#include "emu/devsys.h"
+
+class cpuDevice : public Device
 {
 public:
 	cpuDevice();

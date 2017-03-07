@@ -203,8 +203,8 @@ enum opCodes {
 class axp_cpuDevice : public cpuDevice
 {
 public:
-	axp_cpuDevice() {};
-	~axp_cpuDevice() {};
+	axp_cpuDevice();
+	~axp_cpuDevice();
 
 private:
 	uint64_t gRegs[AXP_nGREGS];

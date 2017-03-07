@@ -11,13 +11,14 @@
 #define CMD_OK         0
 #define CMD_SHUTDOWN   1
 #define CMD_NOTFOUND   2
+#define CMD_ERROR      3
 
-class appCore;
 class Console;
+class Device;
 
 typedef std::vector<std::string> args_t;
 
-typedef int (*cmdfunc)(Console *, args_t &args);
+typedef int (*cmdfunc)(Console *, Device *, args_t &args);
 
 struct Command {
 	std::string name;
@@ -27,17 +28,17 @@ struct Command {
 
 class Console {
 public:
-	Console(appCore *app);
+	Console(Device *dev);
 	~Console();
 
 	void prompt();
 
-	inline appCore *getSystem() const { return app; }
+	inline Device *getDevice() const { return root; }
 
 private:
-	appCore *app;
+	Device *root; // root core device
 };
 
-int cmdCreate(Console *con, args_t &args);
-int cmdExit(Console *con, args_t &args);
+int cmdCreate(Console *con, Device *dev, args_t &args);
+int cmdExit(Console *con, Device *dev, args_t &args);
 

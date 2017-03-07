@@ -2,7 +2,7 @@
 #include "emu/core.h"
 #include "emu/console.h"
 
-int cmdShutdown(Console *, args_t &)
+int cmdShutdown(Console *, Device *, args_t &)
 {
 	// Shutdown system
 	return CMD_SHUTDOWN;
@@ -26,8 +26,8 @@ std::vector<std::string> split(std::string const &line)
     return ret;
 }
 
-Console::Console(appCore *_app)
-: app(_app)
+Console::Console(Device *dev)
+: root(dev)
 {
 }
 
@@ -57,7 +57,7 @@ void Console::prompt()
     	for (auto &&cmd : cmdGeneral) {
 //    		std::cout << "Command: " << cmd.name << std::endl;
     		if (cmd.name == args[0]) {
-    			rc = cmd.execute(this, args);
+    			rc = cmd.execute(this, root, args);
     			continue;
     		}
     	}

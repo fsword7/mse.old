@@ -1,5 +1,6 @@
 
 #include "emu/core.h"
+#include "emu/devsys.h"
 #include "emu/devcore.h"
 #include "emu/console.h"
 #include "emu/osd/socket.h"
@@ -23,7 +24,9 @@ int main(int argc, char **argv)
 		return 1;
 	}
 #endif
-	appCore *app = new appCore();
+
+	// Create root core device and console handler
+	Core    *app = new Core();
 	Console *con = new Console(app);
 
 	printf("Welcome to Multi-System Emulator System\n\n");

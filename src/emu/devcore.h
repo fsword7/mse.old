@@ -2,19 +2,17 @@
  * devcore.h
  *
  *  Created on: Mar 3, 2017
- *      Author: fswor
+ *      Author: Timothy Stark
  */
 
 class sysDevice;
+struct Driver;
 
-class appCore
+class Core : public Device
 {
 public:
-	appCore();
-	~appCore();
-
-	void findDevice(std::string devName);
+	Core();
+	~Core();
 
 private:
-	std::vector<sysDevice*> devList;
 };

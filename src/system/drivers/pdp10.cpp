@@ -6,21 +6,10 @@
 //
 
 #include "emu/core.h"
+#include "emu/console.h"
 #include "emu/devsys.h"
 #include "system/drivers/pdp10.h"
 
-//GROUP(pdp10)
-//SYSTEM(dec2020, pdp10,   "DECsystem2020")
-
-sysDriver pdp10_sysDriver {
-	"PDP10",
-	"DECsystem-10",
-	__FILE__,
-	nullptr,
-
-};
-
-// *************************************************************************
 
 pdp10_sysDevice::pdp10_sysDevice()
 : memSize(0), mem(nullptr)
@@ -127,3 +116,28 @@ void pdp10_sysDevice::load(std::string fname)
 
 	in.close();
 }
+
+// ***************************************************************************
+
+static int cmdLoad(Console *con, Device *dev, args_t &args)
+{
+	return CMD_OK;
+}
+
+// General commands table
+Command sysCommands[1] = {
+	{ "load", "<file>", cmdLoad },
+};
+
+// ***************************************************************************
+
+//GROUP(pdp10)
+//SYSTEM(dec2020, pdp10,   "DECsystem2020")
+
+Driver pdp10_sysDriver {
+	"PDP10",
+	"DECsystem-10",
+	__FILE__,
+	nullptr,
+
+};

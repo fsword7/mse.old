@@ -11,7 +11,7 @@
 //GROUP(alpha)
 //SYSTEM(as400, alpha,   "AlphaServer 400")
 
-sysDriver axp_sysDriver {
+Driver axp_sysDriver {
 	"AXP",
 	"AlphaServer"
 	__FILE__,

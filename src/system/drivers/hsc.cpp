@@ -1,8 +1,8 @@
 /*
- * ibm3x0.cpp
+ * hsc.cpp
  *
- *  Created on: Mar 2, 2017
- *      Author: Timothy Stark
+ *  Created on: Mar 7, 2017
+ *      Author: fswor
  */
 
 #include "emu/core.h"
@@ -11,10 +11,13 @@
 //GROUP(alpha)
 //SYSTEM(as400, alpha,   "AlphaServer 400")
 
-Driver ibm3x0_sysDriver {
-	"IBM3x0",
-	"IBM 360/370/390 Series"
+Driver hsc_sysDriver {
+	"HSC",
+	"DEC HSC Series"
 	__FILE__,
 	nullptr,
 
 };
+
+
+
