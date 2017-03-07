@@ -12,7 +12,7 @@
 #define CMD_SHUTDOWN   1
 #define CMD_NOTFOUND   2
 
-class System;
+class appCore;
 class Console;
 
 typedef std::vector<std::string> args_t;
@@ -27,15 +27,15 @@ struct Command {
 
 class Console {
 public:
-	Console(System *sys);
+	Console(appCore *app);
 	~Console();
 
 	void prompt();
 
-	inline System *getSystem() const { return sys; }
+	inline appCore *getSystem() const { return app; }
 
 private:
-	System *sys;
+	appCore *app;
 };
 
 int cmdCreate(Console *con, args_t &args);

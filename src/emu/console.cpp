@@ -26,8 +26,8 @@ std::vector<std::string> split(std::string const &line)
     return ret;
 }
 
-Console::Console(System *_sys)
-: sys(_sys)
+Console::Console(appCore *_app)
+: app(_app)
 {
 }
 

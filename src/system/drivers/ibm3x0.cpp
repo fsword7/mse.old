@@ -6,12 +6,12 @@
  */
 
 #include "emu/core.h"
-#include "emu/sysdrv.h"
+#include "emu/devsys.h"
 
 //GROUP(alpha)
 //SYSTEM(as400, alpha,   "AlphaServer 400")
 
-Device ibm3x0_sysDevice {
+Device ibm3x0_sysDriver {
 	"IBM3x0",
 	"IBM 360/370/390 Series"
 	__FILE__,

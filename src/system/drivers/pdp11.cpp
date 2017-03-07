@@ -1,8 +1,8 @@
 /*
- * vax.cpp
+ * pdp11.cpp
  *
- *  Created on: Mar 2, 2017
- *      Author: Timothy Stark
+ *  Created on: Mar 7, 2017
+ *      Author: fswor
  */
 
 #include "emu/core.h"
@@ -11,8 +11,8 @@
 //GROUP(alpha)
 //SYSTEM(as400, alpha,   "AlphaServer 400")
 
-Device vax_sysDriver {
-	"VAX",
-	"DEC VAX-11 Series"
+Device pdp11_sysDriver {
+	"PDP11",
+	"DEC PDP-11 Series"
 	__FILE__,
 };

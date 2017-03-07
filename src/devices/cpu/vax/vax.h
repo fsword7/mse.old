@@ -34,11 +34,6 @@
 #define REG_nSP		REG_nR14 // Stack Pointer
 #define REG_nPC		REG_nR15 // Program Counter
 
-// Access Mode List
-#define AM_KERNEL		0 // for OS kernel
-#define AM_EXECUTIVE	1 // for file system
-#define AM_SUPERVISOR	2 // for DCL (shell)
-#define AM_USER			3 // for normal programs
 
 // Processor Status Register definition
 //
@@ -77,6 +72,13 @@
 #define CC_V			0x0002 // Overflow
 #define CC_C			0x0001 // Carry
 #define CC_MASK			(CC_N|CC_Z|CC_V|CC_C)
+
+// Access Mode (Protection Codes)
+#define AM_KERNEL		0 // Kernel mode for OS kernel
+#define AM_EXECUTIVE	1 // Executive mode for file system
+#define AM_SUPERVISOR	2 // Supervisor mode for DCL (shell)
+#define AM_USER			3 // User mode for normal programs
+
 
 class vax_cpuDevice
 {

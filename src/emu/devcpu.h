@@ -1,11 +1,11 @@
 
 #pragma once
 
-class cpu_Device
+class cpuDevice
 {
 public:
-	cpu_Device();
-	virtual ~cpu_Device();
+	cpuDevice();
+	virtual ~cpuDevice();
 
 	virtual void execute() = 0;
 };

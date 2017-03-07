@@ -6,12 +6,12 @@
 //
 
 #include "emu/core.h"
-#include "emu/sysdrv.h"
+#include "emu/devsys.h"
 
 GROUP(alpha)
 SYSTEM(as400, alpha,   "AlphaServer 400")
 
-Device axp_sysDevice {
+Device axp_sysDriver {
 	"AXP",
 	"AlphaServer"
 	__FILE__,
