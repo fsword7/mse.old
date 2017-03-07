@@ -11,8 +11,10 @@
 //GROUP(alpha)
 //SYSTEM(as400, alpha,   "AlphaServer 400")
 
-Device pdp11_sysDriver {
+sysDriver pdp11_sysDriver {
 	"PDP11",
 	"DEC PDP-11 Series"
 	__FILE__,
+	nullptr,
+
 };

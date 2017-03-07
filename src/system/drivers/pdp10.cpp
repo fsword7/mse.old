@@ -9,19 +9,21 @@
 #include "emu/devsys.h"
 #include "system/drivers/pdp10.h"
 
-GROUP(pdp10)
-SYSTEM(dec2020, pdp10,   "DECsystem2020")
+//GROUP(pdp10)
+//SYSTEM(dec2020, pdp10,   "DECsystem2020")
 
-Device pdp10_sysDriver {
+sysDriver pdp10_sysDriver {
 	"PDP10",
 	"DECsystem-10",
 	__FILE__,
+	nullptr,
+
 };
 
 // *************************************************************************
 
 pdp10_sysDevice::pdp10_sysDevice()
-: mem(nullptr)
+: memSize(0), mem(nullptr)
 {
 }
 
@@ -29,6 +31,19 @@ pdp10_sysDevice::~pdp10_sysDevice()
 {
 	if (mem != nullptr)
 		delete mem;
+}
+
+uint36_t pdp10_sysDevice::readp(uint32_t paddr)
+{
+	if (paddr < memSize)
+		return mem[paddr];
+	return 0;
+}
+
+void pdp10_sysDevice::writep(uint32_t paddr, uint36_t data)
+{
+	if (paddr < memSize)
+		mem[paddr] = data;
 }
 
 void pdp10_sysDevice::load(std::string fname)
@@ -92,19 +107,23 @@ void pdp10_sysDevice::load(std::string fname)
 				// Loading data block
 				in.read((char *)cbuf, SAV_BLK_SIZE*5);
 				for (idx2 = 0; idx2 < SAV_BLK_SIZE; idx2++) {
-					mem[paddr++] = d36;
+					writep(paddr++, d36);
 				}
 				fpage++;
 			} else {
 				// Clear data block
 				for (idx2 = 0; idx2 < SAV_BLK_SIZE; idx2++)
-					mem[paddr++] = 0;
+					writep(paddr++, 0);
 			}
 
 			ppage++;
 			count -= SAV_BLK_SIZE;
 		}
 	}
+
+	// Set start address for execute
+	d36 = readp(0120);
+	std::cout << fname << ": Start address: " << std::oct << uint18_t(d36 & H10_MASK) << std::endl;
 
 	in.close();
 }

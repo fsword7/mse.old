@@ -8,11 +8,13 @@
 #include "emu/core.h"
 #include "emu/devsys.h"
 
-GROUP(alpha)
-SYSTEM(as400, alpha,   "AlphaServer 400")
+//GROUP(alpha)
+//SYSTEM(as400, alpha,   "AlphaServer 400")
 
-Device axp_sysDriver {
+sysDriver axp_sysDriver {
 	"AXP",
 	"AlphaServer"
 	__FILE__,
+	nullptr,
+
 };

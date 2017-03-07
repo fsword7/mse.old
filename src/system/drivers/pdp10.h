@@ -36,6 +36,11 @@ public:
 
 	void load(std::string fname);
 
+	// memory access function calls
+	uint36_t readp(uint32_t paddr);
+	void writep(uint32_t paddr, uint36_t data);
+
 private:
+	uint32_t  memSize;
 	uint36_t *mem;
 };

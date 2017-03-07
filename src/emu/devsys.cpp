@@ -10,6 +10,14 @@
 #include "emu/devcore.h"
 #include "emu/console.h"
 
+Device::Device()
+{
+}
+
+Device::~Device()
+{
+}
+
 sysDevice::sysDevice()
 {
 }
@@ -20,14 +28,14 @@ sysDevice::~sysDevice()
 
 // ******************************************************************************
 
-extern Device axp_sysDriver;
-extern Device ibm3x0_sysDriver;
-extern Device ibm700_sysDriver;
-extern Device pdp10_sysDriver;
-extern Device pdp11_sysDriver;
-extern Device vax_sysDriver;
+extern sysDriver axp_sysDriver;
+extern sysDriver ibm3x0_sysDriver;
+extern sysDriver ibm700_sysDriver;
+extern sysDriver pdp10_sysDriver;
+extern sysDriver pdp11_sysDriver;
+extern sysDriver vax_sysDriver;
 
-Device *sysList[6] = {
+sysDriver *sysList[6] = {
 	&axp_sysDriver,
 	&ibm3x0_sysDriver,
 	&ibm700_sysDriver,

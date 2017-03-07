@@ -11,8 +11,10 @@
 //GROUP(alpha)
 //SYSTEM(as400, alpha,   "AlphaServer 400")
 
-Device vax_sysDriver {
+sysDriver vax_sysDriver {
 	"VAX",
 	"DEC VAX-11 Series"
 	__FILE__,
+	nullptr,
+
 };

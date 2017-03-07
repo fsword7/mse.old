@@ -11,8 +11,10 @@
 //GROUP(alpha)
 //SYSTEM(as400, alpha,   "AlphaServer 400")
 
-Device ibm3x0_sysDriver {
+sysDriver ibm3x0_sysDriver {
 	"IBM3x0",
 	"IBM 360/370/390 Series"
 	__FILE__,
+	nullptr,
+
 };
