@@ -27,7 +27,7 @@ extern Device pdp10_sysDriver;
 extern Device pdp11_sysDriver;
 extern Device vax_sysDriver;
 
-Device *sysList[5] = {
+Device *sysList[6] = {
 	&axp_sysDriver,
 	&ibm3x0_sysDriver,
 	&ibm700_sysDriver,
