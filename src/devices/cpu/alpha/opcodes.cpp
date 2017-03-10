@@ -1,5 +1,5 @@
-#include <devices/cpu/alpha/axp.h>
-#include <emu/core.h>
+#include "devices/cpu/alpha/axp.h"
+#include "emu/core.h"
 
 #if 0
 // Instruction Formats for Alpha Processors

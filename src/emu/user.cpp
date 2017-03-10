@@ -6,8 +6,8 @@
 //  Copyright © 2016 Timothy Stark. All rights reserved.
 //
 
-#include <emu/core.h>
-#include <emu/user.h>
+#include "emu/core.h"
+#include "emu/user.h"
 
 User::User()
 {
