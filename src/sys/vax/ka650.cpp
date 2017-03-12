@@ -4,11 +4,14 @@
  *  Created on: Mar 12, 2017
  *      Author: Timothy Stark
  *
- *  MicroVAX 3900 series system
+ *  MicroVAX 3500/3600 system (KA650 system)
+ *  MicroVAX 3800/3900 system (KA655 system)
+ *
+ *  KA655X is SIMH version of KA655 with 512MB memory expansion support and designed for emulators.
  *
  */
 
-// KA650/KA655/KA655X - CVAX Memory Map
+// KA650/KA655 Memory Map
 //
 // 00000000 +-------------------------------------+
 //          |           Main Memory               |
