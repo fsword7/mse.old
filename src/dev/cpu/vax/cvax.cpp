@@ -1,10 +1,10 @@
 /*
- * ka650.cpp
+ * cvax.cpp
  *
  *  Created on: Mar 12, 2017
  *      Author: Timothy Stark
  *
- *  KA650/KA655 CVAX Processor emulation
+ *  CVAX Processor emulation
  *
  */
 
@@ -12,7 +12,7 @@
 #include "emu/devcpu.h"
 #include "dev/cpu/vax/mtpr.h"
 #include "dev/cpu/vax/vax.h"
-#include "dev/cpu/vax/ka650.h"
+#include "dev/cpu/vax/cvax.h"
 
 #if 0
 static int   regSize = 0x40;
@@ -84,22 +84,22 @@ static char *regNames[] = {
 };
 #endif
 
-ka650_cpuDevice::ka650_cpuDevice()
+cvax_cpuDevice::cvax_cpuDevice()
 {
 }
 
-ka650_cpuDevice::~ka650_cpuDevice()
+cvax_cpuDevice::~cvax_cpuDevice()
 {
 }
 
-void ka650_cpuDevice::reset()
+void cvax_cpuDevice::reset()
 {
-	pRegs[PR_SID] = (SID_ID|SID_REV);
+	pRegs[PR_SID] = (SID_ID|SID_UCODE);
 }
 
 #if 0
 // Read Privileged Register
-int32 ka650_cpuDevice::readRegister(int32 pReg)
+int32 cvax_cpuDevice::readRegister(int32 pReg)
 {
 	int32 data;
 
@@ -149,7 +149,7 @@ int32 ka650_cpuDevice::readRegister(int32 pReg)
 	return data;
 }
 
-void ka650_cpuDevice::writeRegister(int32 pReg, int32 data)
+void cvax_cpuDevice::writeRegister(int32 pReg, int32 data)
 {
 	switch (pReg) {
 		case PR_KSP: // Kernel Stack Pointer
