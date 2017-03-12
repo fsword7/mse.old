@@ -5,7 +5,7 @@
  *      Author: Timothy Stark
  */
 
-#include "devices/cpu/alpha/axp.h"
+#include "dev/cpu/alpha/axp.h"
 
 axp_cpuDevice::axp_cpuDevice()
 {

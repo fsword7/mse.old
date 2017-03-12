@@ -79,14 +79,18 @@
 #define AM_SUPERVISOR	2 // Supervisor mode for DCL (shell)
 #define AM_USER			3 // User mode for normal programs
 
-
 class vax_cpuDevice : public cpuDevice
 {
 public:
-	vax_cpuDevice() {};
-	~vax_cpuDevice() {};
+	vax_cpuDevice();
+	virtual ~vax_cpuDevice();
+
+	// CPU function calls
+	virtual void reset();
+	void execute();
 
 protected:
 	uint32_t gRegs[VAX_nGREGS]; // General registers
 	uint32_t pRegs[VAX_nPREGS]; // Processor registers
+
 };

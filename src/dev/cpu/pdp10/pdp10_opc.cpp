@@ -5,7 +5,7 @@
  *      Author: Timothy Stark
  */
 
-#include "devices/cpu/pdp10/pdp10_opc.h"
+#include "dev/cpu/pdp10/pdp10_opc.h"
 
 #define PDP6
 #define KA

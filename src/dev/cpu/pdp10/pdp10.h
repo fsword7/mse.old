@@ -7,7 +7,7 @@
 
 #once
 
-#include <emu/core.h>
+#include "emu/core.h"
 #include "formats/dec/word10.h"
 
 #define AC_NBLKS      8

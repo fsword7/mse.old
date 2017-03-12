@@ -9,5 +9,6 @@ public:
 	cpuDevice();
 	virtual ~cpuDevice();
 
+	virtual void reset() = 0;
 	virtual void execute() = 0;
 };

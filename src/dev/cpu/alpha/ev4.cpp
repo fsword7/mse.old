@@ -1,8 +1,8 @@
 
-#include "devices/cpu/alpha/axp.h"
-#include "devices/cpu/alpha/ev4.h"
 #include "emu/core.h"
 #include "emu/devcpu.h"
+#include "dev/cpu/alpha/axp.h"
+#include "dev/cpu/alpha/ev4.h"
 
 ev4_cpuDevice::ev4_cpuDevice()
 {

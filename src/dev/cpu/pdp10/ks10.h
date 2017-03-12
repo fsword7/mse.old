@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "devices/cpu/pdp10/pdp10.h"
+#include "dev/cpu/pdp10/pdp10.h"
 
 class ks10_cpuDevice : public pdp10_cpuDevice
 {

@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include <devices/cpu/pdp10/pdp10.h>
-#include "devices/cpu/pdp10/pdp10_opc.h"
+#include "dev/cpu/pdp10/pdp10.h"
+#include "dev/cpu/pdp10/pdp10_opc.h"
 
 #if 0
 // Operand flags for each instruction

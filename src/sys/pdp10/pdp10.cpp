@@ -8,8 +8,7 @@
 #include "emu/core.h"
 #include "emu/console.h"
 #include "emu/devsys.h"
-#include "system/drivers/pdp10.h"
-
+#include "sys/pdp10/pdp10.h"
 
 pdp10_sysDevice::pdp10_sysDevice()
 : memSize(0), mem(nullptr)
