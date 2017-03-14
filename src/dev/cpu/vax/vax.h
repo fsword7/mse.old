@@ -79,6 +79,7 @@
 #define AM_SUPERVISOR	2 // Supervisor mode for DCL (shell)
 #define AM_USER			3 // User mode for normal programs
 
+
 class vax_cpuDevice : public cpuDevice
 {
 public:
