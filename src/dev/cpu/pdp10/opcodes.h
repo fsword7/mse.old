@@ -7,6 +7,13 @@
 
 #pragma once
 
+struct pdp10_Opcode {
+	const char *opName;
+	const char *opDesc;
+	uint18_t    opExtend;
+	uint18_t    opOcode;
+};
+
 #define OPC_nUUO		0000	// Unimplemented Instruction
 #define OPC_nLUUO01		0001
 #define OPC_nLUUO02		0002

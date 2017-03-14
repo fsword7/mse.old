@@ -22,6 +22,5 @@ void vax_cpuDevice::reset()
 {
 }
 
-void vax_cpuDevice::execute()
-{
-}
+#define CPU_CLASS vax_cpuDevice
+#include "dev/cpu/vax/executes.h"

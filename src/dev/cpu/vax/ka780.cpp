@@ -31,3 +31,6 @@ void ka780_cpuDevice::reset()
 	// Set specific serial number
 	pRegs[PR_SID] |= SID_SN;
 }
+
+#define CPU_CLASS ka780_cpuDevice
+#include "dev/cpu/vax/executes.h"

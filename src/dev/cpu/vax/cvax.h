@@ -28,5 +28,5 @@ public:
 	~cvax_cpuDevice();
 
 	void reset();
-
+	void execute();
 };

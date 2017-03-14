@@ -39,5 +39,5 @@ public:
 	~ka820_cpuDevice();
 
 	void reset();
-
+	void execute();
 };

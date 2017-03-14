@@ -27,5 +27,5 @@ void ka820_cpuDevice::reset()
 	pRegs[PR_SID] = (SID_ID|SID_CPUREV|SID_PATREV|SID_MBO|SID_UCODE);
 }
 
-
-
+#define CPU_CLASS ka820_cpuDevice
+#include "dev/cpu/vax/executes.h"

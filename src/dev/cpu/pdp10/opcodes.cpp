@@ -5,7 +5,10 @@
  *      Author: Timothy Stark
  */
 
-#include "dev/cpu/pdp10/pdp10_opc.h"
+#include "emu/core.h"
+#include "formats/dec/word10.h"
+#include "dev/cpu/pdp10/opcodes.h"
+
 
 #define PDP6
 #define KA
@@ -13,6 +16,26 @@
 #define KL
 #define KS
 #define XKL
+
+const pdp10_Opcode pdp10_Opcodes[] =
+{
+	{
+		"AOBJN", "Add One to Both Halves of AC and Jump if Negative",
+		0, OPC_nAOBJN
+	},
+
+	{
+		"AOBJP", "Add One to Both Halves of AC and Jump if Positive",
+		0, OPC_nAOBJP
+	},
+
+	{
+		"BLT", "Block Transfer",
+		0, OPC_nBLT
+	},
+
+};
+
 
 #if 0
 
