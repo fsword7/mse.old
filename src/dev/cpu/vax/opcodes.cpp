@@ -11,15 +11,609 @@
 #include "emu/core.h"
 #include "dev/cpu/vax/opcodes.h"
 
+#define OPC_nHALT		0x00
+#define OPC_nNOP		0x01
+#define OPC_nREI		0x02
+#define OPC_nBPT		0x03
+#define OPC_nRET		0x04
+#define OPC_nRSB		0x05
+#define OPC_nLDPCTX		0x06
+#define OPC_nSVPCTX		0x07
+
+#define OPC_nCVTPS		0x08
+#define OPC_nCVTSP		0x09
+#define OPC_nINDEX		0x0A
+#define OPC_nCRC		0x0B
+#define OPC_nPROBER		0x0C
+#define OPC_nPROBEW		0x0D
+#define OPC_nINSQUE		0x0E
+#define OPC_nREMQUE		0x0F
+
+#define OPC_nBSBB		0x10
+#define OPC_nBRB		0x11
+#define OPC_nBNEQ		0x12
+#define OPC_nBEQL		0x13
+#define OPC_nBGTR		0x14
+#define OPC_nBLEQ		0x15
+#define OPC_nJSB		0x16
+#define OPC_nJMP		0x17
+
+#define OPC_nBGEQ		0x18
+#define OPC_nBLSS		0x19
+#define OPC_nBGTRU		0x1A
+#define OPC_nBLEQU		0x1B
+#define OPC_nBVC		0x1C
+#define OPC_nBVS		0x1D
+#define OPC_nBCC		0x1E
+#define OPC_nBCS		0x1F
+
+#define OPC_nADDP4		0x20
+#define OPC_nADDP6		0x21
+#define OPC_nSUBP4		0x22
+#define OPC_nSUBP6		0x23
+#define OPC_nCVTPT		0x24
+#define OPC_nMULP6		0x25
+#define OPC_nCVTTP		0x26
+#define OPC_nDIVP6		0x27
+
+#define OPC_nMOVC3		0x28
+#define OPC_nCMPC3		0x29
+#define OPC_nSCANC		0x2A
+#define OPC_nSPANC		0x2B
+#define OPC_nMOVC5		0x2C
+#define OPC_nCMPC5		0x2D
+#define OPC_nMOVTC		0x2E
+#define OPC_nMOVTUC		0x2F
+
+#define OPC_nBSBW		0x30
+#define OPC_nBRW		0x31
+#define OPC_nCVTWL		0x32
+#define OPC_nCVTWB		0x33
+#define OPC_nMOVP		0x34
+#define OPC_nCMPP3		0x35
+#define OPC_nCVTPL		0x36
+#define OPC_nCMPP4		0x37
+
+#define OPC_nEDITPC		0x38
+#define OPC_nMATCHC		0x39
+#define OPC_nLOCC		0x3A
+#define OPC_nSKPC		0x3B
+#define OPC_nMOVZWL		0x3C
+#define OPC_nACBW		0x3D
+#define OPC_nMOVAW		0x3E
+#define OPC_nPUSHAW		0x3F
+
+#define OPC_nADDF2		0x40
+#define OPC_nADDF3		0x41
+#define OPC_nSUBF2		0x42
+#define OPC_nSUBF3		0x43
+#define OPC_nMULF2		0x44
+#define OPC_nMULF3		0x45
+#define OPC_nDIVF2		0x46
+#define OPC_nDIVF3		0x47
+
+#define OPC_nCVTFB		0x48
+#define OPC_nCVTFW		0x49
+#define OPC_nCVTFL		0x4A
+#define OPC_nCVTRFL		0x4B
+#define OPC_nCVTBF		0x4C
+#define OPC_nCVTWF		0x4D
+#define OPC_nCVTLF		0x4E
+#define OPC_nACBF		0x4F
+
+#define OPC_nMOVF		0x50
+#define OPC_nCMPF		0x51
+#define OPC_nMNEGF		0x52
+#define OPC_nTSTF		0x53
+#define OPC_nEMODF		0x54
+#define OPC_nPOLYF		0x55
+#define OPC_nCVTFD		0x56
+// Reserved				0x57
+
+#define OPC_nADAWI		0x58
+// Reserved				0x59
+// Reserved				0x5A
+// Reserved				0x5B
+#define OPC_nINSQHI		0x5C
+#define OPC_nINSQTI		0x5D
+#define OPC_nREMQHI		0x5E
+#define OPC_nREMQTI		0x5F
+
+#define OPC_nADDD2		0x60
+#define OPC_nADDD3		0x61
+#define OPC_nSUBD2		0x62
+#define OPC_nSUBD3		0x63
+#define OPC_nMULD2		0x64
+#define OPC_nMULD3		0x65
+#define OPC_nDIVD2		0x66
+#define OPC_nDIVD3		0x67
+
+#define OPC_nCVTDB		0x68
+#define OPC_nCVTDW		0x69
+#define OPC_nCVTDL		0x6A
+#define OPC_nCVTRDL		0x6B
+#define OPC_nCVTBD		0x6C
+#define OPC_nCVTWD		0x6D
+#define OPC_nCVTLD		0x6E
+#define OPC_nACBD		0x6F
+
+#define OPC_nMOVD		0x70
+#define OPC_nCMPD		0x71
+#define OPC_nMNEGD		0x72
+#define OPC_nTSTD		0x73
+#define OPC_nEMODD		0x74
+#define OPC_nPOLYD		0x75
+#define OPC_nCVTDF		0x76
+// Reserved				0x77
+
+#define OPC_nASHL		0x78
+#define OPC_nASHQ		0x79
+#define OPC_nEMUL		0x7A
+#define OPC_nEDIV		0x7B
+#define OPC_nCLRQ		0x7C
+#define OPC_nMOVQ		0x7D
+#define OPC_nMOVAQ		0x7E
+#define OPC_nPUSHAQ		0x7F
+
+#define OPC_nADDB2		0x80
+#define OPC_nADDB3		0x81
+#define OPC_nSUBB2		0x82
+#define OPC_nSUBB3		0x83
+#define OPC_nMULB2		0x84
+#define OPC_nMULB3		0x85
+#define OPC_nDIVB2		0x86
+#define OPC_nDIVB3		0x87
+
+#define OPC_nBISB2		0x88
+#define OPC_nBISB3		0x89
+#define OPC_nBICB2		0x8A
+#define OPC_nBICB3		0x8B
+#define OPC_nXORB2		0x8C
+#define OPC_nXORB3		0x8D
+#define OPC_nMNEGB		0x8E
+#define OPC_nCASEB		0x8F
+
+#define OPC_nMOVB		0x90
+#define OPC_nCMPB		0x91
+#define OPC_nMCOMB		0x92
+#define OPC_nBITB		0x93
+#define OPC_nCLRB		0x94
+#define OPC_nTSTB		0x95
+#define OPC_nINCB		0x96
+#define OPC_nDECB		0x97
+
+#define OPC_nCVTBL		0x98
+#define OPC_nCVTBW		0x99
+#define OPC_nMOVZBL		0x9A
+#define OPC_nMOVZBW		0x9B
+#define OPC_nROTL		0x9C
+#define OPC_nACBB		0x9D
+#define OPC_nMOVAB		0x9E
+#define OPC_nPUSHAB		0x9F
+
+#define OPC_nADDW2		0xA0
+#define OPC_nADDW3		0xA1
+#define OPC_nSUBW2		0xA2
+#define OPC_nSUBW3		0xA3
+#define OPC_nMULW2		0xA4
+#define OPC_nMULW3		0xA5
+#define OPC_nDIVW2		0xA6
+#define OPC_nDIVW3		0xA7
+
+#define OPC_nBISW2		0xA8
+#define OPC_nBISW3		0xA9
+#define OPC_nBICW2		0xAA
+#define OPC_nBICW3		0xAB
+#define OPC_nXORW2		0xAC
+#define OPC_nXORW3		0xAD
+#define OPC_nMNEGW		0xAE
+#define OPC_nCASEW		0xAF
+
+#define OPC_nMOVW		0xB0
+#define OPC_nCMPW		0xB1
+#define OPC_nMCOMW		0xB2
+#define OPC_nBITW		0xB3
+#define OPC_nCLRW		0xB4
+#define OPC_nTSTW		0xB5
+#define OPC_nINCW		0xB6
+#define OPC_nDECW		0xB7
+
+#define OPC_nBISPSW		0xB8
+#define OPC_nBICPSW		0xB9
+#define OPC_nPOPR		0xBA
+#define OPC_nPUSHR		0xBB
+#define OPC_nCHMK		0xBC
+#define OPC_nCHME		0xBD
+#define OPC_nCHMS		0xBE
+#define OPC_nCHMU		0xBF
+
+#define OPC_nADDL2		0xC0
+#define OPC_nADDL3		0xC1
+#define OPC_nSUBL2		0xC2
+#define OPC_nSUBL3		0xC3
+#define OPC_nMULL2		0xC4
+#define OPC_nMULL3		0xC5
+#define OPC_nDIVL2		0xC6
+#define OPC_nDIVL3		0xC7
+
+#define OPC_nBISL2		0xC8
+#define OPC_nBISL3		0xC9
+#define OPC_nBICL2		0xCA
+#define OPC_nBICL3		0xCB
+#define OPC_nXORL2		0xCC
+#define OPC_nXORL3		0xCD
+#define OPC_nMNEGL		0xCE
+#define OPC_nCASEL		0xCF
+
+#define OPC_nMOVL		0xD0
+#define OPC_nCMPL		0xD1
+#define OPC_nMCOML		0xD2
+#define OPC_nBITL		0xD3
+#define OPC_nCLRL		0xD4
+#define OPC_nTSTL		0xD5
+#define OPC_nINCL		0xD6
+#define OPC_nDECL		0xD7
+
+#define OPC_nADWC		0xD8
+#define OPC_nSBWC		0xD9
+#define OPC_nMTPR		0xDA
+#define OPC_nMFPR		0xDB
+#define OPC_nMOVPSL		0xDC
+#define OPC_nPUSHL		0xDD
+#define OPC_nMOVAL		0xDE
+#define OPC_nPUSHAL		0xDF
+
+#define OPC_nBBS		0xE0
+#define OPC_nBBC		0xE1
+#define OPC_nBBSS		0xE2
+#define OPC_nBBCS		0xE3
+#define OPC_nBBSC		0xE4
+#define OPC_nBBCC		0xE5
+#define OPC_nBBSSI		0xE6
+#define OPC_nBBCCI		0xE7
+
+#define OPC_nBLBS		0xE8
+#define OPC_nBLBC		0xE9
+#define OPC_nFFS		0xEA
+#define OPC_nFFC		0xEB
+#define OPC_nCMPV		0xEC
+#define OPC_nCMPZV		0xED
+#define OPC_nEXTV		0xEE
+#define OPC_nEXTZV		0xEF
+
+#define OPC_nINSV		0xF0
+#define OPC_nACBL		0xF1
+#define OPC_nAOBLSS		0xF2
+#define OPC_nAOBLEQ		0xF3
+#define OPC_nSOBGEQ		0xF4
+#define OPC_nSOBGTR		0xF5
+#define OPC_nCVTLB		0xF6
+#define OPC_nCVTLW		0xF7
+
+#define OPC_nASHP		0xF8
+#define OPC_nCVTLP		0xF9
+#define OPC_nCALLG		0xFA
+#define OPC_nCALLS		0xFB
+#define OPC_nXFC		0xFC
+#define OPC_nEXTEND		0xFD
+// Two-Byte Opcode		0xFE
+// Two-Byte Opcode		0xFF
+
+
+// FD - Two-Byte Opcode Table
+// Reserved				0x00
+// Reserved				0x01
+#define OPC_nWAIT		0x02
+// Reserved				0x03
+// Reserved				0x04
+// Reserved				0x05
+// Reserved				0x06
+// Reserved				0x07
+
+// Reserved				0x08
+// Reserved				0x09
+// Reserved				0x0A
+// Reserved				0x0B
+// Reserved				0x0C
+// Reserved				0x0D
+// Reserved				0x0E
+// Reserved				0x0F
+
+// Reserved				0x10
+// Reserved				0x11
+// Reserved				0x12
+// Reserved				0x13
+// Reserved				0x14
+// Reserved				0x15
+// Reserved				0x16
+// Reserved				0x17
+
+// Reserved				0x18
+// Reserved				0x19
+// Reserved				0x1A
+// Reserved				0x1B
+// Reserved				0x1C
+// Reserved				0x1D
+// Reserved				0x1E
+// Reserved				0x1F
+
+// Reserved				0x20
+// Reserved				0x21
+// Reserved				0x22
+// Reserved				0x23
+// Reserved				0x24
+// Reserved				0x25
+// Reserved				0x26
+// Reserved				0x27
+
+// Reserved				0x28
+// Reserved				0x29
+// Reserved				0x2A
+// Reserved				0x2B
+// Reserved				0x2C
+// Reserved				0x2D
+// Reserved				0x2E
+// Reserved				0x2F
+
+// Reserved				0x30
+#define OPC_nMFVP		0x31
+#define OPC_nCVTDH		0x32
+#define OPC_nCVTGF		0x33
+#define OPC_nVLDL		0x34
+#define OPC_nVGATHL		0x35
+#define OPC_nVLDQ		0x36
+#define OPC_nVGATHQ		0x37
+
+// Reserved				0x38
+// Reserved				0x39
+// Reserved				0x3A
+// Reserved				0x3B
+// Reserved				0x3C
+// Reserved				0x3D
+// Reserved				0x3E
+// Reserved				0x3F
+
+#define OPC_nADDG2		0x40
+#define OPC_nADDG3		0x41
+#define OPC_nSUBG2		0x42
+#define OPC_nSUBG3		0x43
+#define OPC_nMULG2		0x44
+#define OPC_nMULG3		0x45
+#define OPC_nDIVG2		0x46
+#define OPC_nDIVG3		0x47
+
+#define OPC_nCVTGB		0x48
+#define OPC_nCVTGW		0x49
+#define OPC_nCVTGL		0x4A
+#define OPC_nCVTRGL		0x4B
+#define OPC_nCVTBG		0x4C
+#define OPC_nCVTWG		0x4D
+#define OPC_nCVTLG		0x4E
+#define OPC_nACBG		0x4F
+
+#define OPC_nMOVG		0x50
+#define OPC_nCMPG		0x51
+#define OPC_nMNEGG		0x52
+#define OPC_nTSTG		0x53
+#define OPC_nEMODG		0x54
+#define OPC_nPOLYG		0x55
+#define OPC_nCVTGH		0x56
+// Reserved				0x57
+
+// Reserved				0x58
+// Reserved				0x59
+// Reserved				0x5A
+// Reserved				0x5B
+// Reserved				0x5C
+// Reserved				0x5D
+// Reserved				0x5E
+// Reserved				0x5F
+
+#define OPC_nADDH2		0x60
+#define OPC_nADDH3		0x61
+#define OPC_nSUBH2		0x62
+#define OPC_nSUBH3		0x63
+#define OPC_nMULH2		0x64
+#define OPC_nMULH3		0x65
+#define OPC_nDIVH2		0x66
+#define OPC_nDIVH3		0x67
+
+#define OPC_nCVTHB		0x68
+#define OPC_nCVTHW		0x69
+#define OPC_nCVTHL		0x6A
+#define OPC_nCVTRHL		0x6B
+#define OPC_nCVTBH		0x6C
+#define OPC_nCVTWH		0x6D
+#define OPC_nCVTLH		0x6E
+#define OPC_nACBH		0x6F
+
+#define OPC_nMOVH		0x70
+#define OPC_nCMPH		0x71
+#define OPC_nMNEGH		0x72
+#define OPC_nTSTH		0x73
+#define OPC_nEMODH		0x74
+#define OPC_nPOLYH		0x75
+#define OPC_nCVTHG		0x76
+// Reserved				0x77
+
+// Reserved				0x78
+// Reserved				0x79
+// Reserved				0x7A
+// Reserved				0x7B
+#define OPC_nCLRO		0x7C
+#define OPC_nMOVO		0x7D
+#define OPC_nMOVAO		0x7E
+#define OPC_nPUSHAO		0x7F
+
+#define OPC_nVVADDL		0x80
+#define OPC_nVSADDL		0x81
+#define OPC_nVVADDG		0x82
+#define OPC_nVSADDG		0x83
+#define OPC_nVVADDF		0x84
+#define OPC_nVSADDF		0x85
+#define OPC_nVVADDD		0x86
+#define OPC_nVSADDD		0x87
+
+#define OPC_nVVSUBL		0x88
+#define OPC_nVSSUBL		0x89
+#define OPC_nVVSUBG		0x8A
+#define OPC_nVSSUBG		0x8B
+#define OPC_nVVSUBF		0x8C
+#define OPC_nVSSUBF		0x8D
+#define OPC_nVVSUBD		0x8E
+#define OPC_nVSSUBD		0x8F
+
+// Reserved				0x90
+// Reserved				0x91
+// Reserved				0x92
+// Reserved				0x93
+// Reserved				0x94
+// Reserved				0x95
+// Reserved				0x96
+// Reserved				0x97
+
+#define OPC_nCVTFH		0x98
+#define OPC_nCVTFG		0x99
+#define OPC_nPROBEVMR	0x9A
+#define OPC_nPROBEVMW	0x9B
+#define OPC_nVSTL		0x9C
+#define OPC_nVSCATL		0x9D
+#define OPC_nVSTQ		0x9E
+#define OPC_nVSCATQ		0x9F
+
+#define OPC_nVVMULL		0xA0
+#define OPC_nVSMULL		0xA1
+#define OPC_nVVMULG		0xA2
+#define OPC_nVSMULG		0xA3
+#define OPC_nVVMULF		0xA4
+#define OPC_nVSMULF		0xA5
+#define OPC_nVVMULD		0xA6
+#define OPC_nVSMULD		0xA7
+
+#define OPC_nVSYNC		0xA8
+#define OPC_nMTVP		0xA9
+#define OPC_nVVDIVG		0xAA
+#define OPC_nVSDIVG		0xAB
+#define OPC_nVVDIVF		0xAC
+#define OPC_nVSDIVF		0xAD
+#define OPC_nVVDIVD		0xAE
+#define OPC_nVSDIVD		0xAF
+
+// Reserved				0xB0
+// Reserved				0xB1
+// Reserved				0xB2
+// Reserved				0xB3
+// Reserved				0xB4
+// Reserved				0xB5
+// Reserved				0xB6
+// Reserved				0xB7
+
+// Reserved				0xB8
+// Reserved				0xB9
+// Reserved				0xBA
+// Reserved				0xBB
+// Reserved				0xBC
+// Reserved				0xBD
+// Reserved				0xBE
+// Reserved				0xBF
+
+#define OPC_nVVCMPL		0xC0
+#define OPC_nVSCMPL		0xC1
+#define OPC_nVVCMPG		0xC2
+#define OPC_nVSCMPG		0xC3
+#define OPC_nVVCMPF		0xC4
+#define OPC_nVSCMPF		0xC5
+#define OPC_nVVCMPD		0xC6
+#define OPC_nVSCMPD		0xC7
+
+#define OPC_nVVBISL		0xC8
+#define OPC_nVSBISL		0xC9
+// Illegal Vector		0xCA
+// Illegal Vector		0xCB
+#define OPC_nVVBICL		0xCC
+#define OPC_nVSBICL		0xCD
+// Illegal Vector		0xCE
+// Illegal Vector		0xCF
+
+// Reserved				0xD0
+// Reserved				0xD1
+// Reserved				0xD2
+// Reserved				0xD3
+// Reserved				0xD4
+// Reserved				0xD5
+// Reserved				0xD6
+// Reserved				0xD7
+
+// Reserved				0xD8
+// Reserved				0xD9
+// Reserved				0xDA
+// Reserved				0xDB
+// Reserved				0xDC
+// Reserved				0xDD
+// Reserved				0xDE
+// Reserved				0xDF
+
+#define OPC_nVVSRLL		0xE0
+#define OPC_nVSSRLL		0xE1
+// Illegal Vector		0xE2
+// Illegal Vector		0xE3
+#define OPC_nVVSLLL		0xE4
+#define OPC_nVSSLLL		0xE5
+// Illegal Vector		0xE6
+// Illegal Vector		0xE7
+
+#define OPC_nVVXORL		0xE8
+#define OPC_nVSXORL		0xE9
+// Illegal Vector		0xEA
+// Illegal Vector		0xEB
+#define OPC_nVVCVT		0xEC
+#define OPC_nIOTA		0xED
+#define OPC_nVVMERGE	0xEE
+#define OPC_nVSMERGE	0xEF
+
+// Reserved				0xF0
+// Reserved				0xF1
+// Reserved				0xF2
+// Reserved				0xF3
+// Reserved				0xF4
+// Reserved				0xF5
+#define OPC_nCVTHF		0xF6
+#define OPC_nCVTHD		0xF7
+
+// Reserved				0xF8
+// Reserved				0xF9
+// Reserved				0xFA
+// Reserved				0xFB
+// Reserved				0xFC
+// Reserved				0xFD
+// Reserved				0xFE
+// Reserved				0xFF
+
+// FE - Two-Byte Opcode Table
+// Reserved				0x00 - 0xFF
+
+// FF - Two Byte Opcode Table
+// Reserved				0x00 - 0xF7
+
+// Reserved				0xF8
+// Reserved				0xF9
+// Reserved				0xFA
+// Reserved				0xFB
+#define OPC_nBUGL		0xFD
+#define OPC_nBUGW		0xFE
+// Reserved all time 	0xFF
+
+
+
 #define DEF_NAME(cpu, opc) nullptr
 
 const vaxOpcode vax_Instruction[] =
 {
 	{
 		"HALT", "Halt",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x00,   // Opcode (Extended + Normal)
-		0,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nHALT,			// Opcode (Extended + Normal)
+		0,							// Number of Operands
 		{ 0 , 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, HALT) // Opcode Function
@@ -27,9 +621,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"NOP", "No operation",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x01,   // Opcode (Extended + Normal)
-		0,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nNOP,				// Opcode (Extended + Normal)
+		0,							// Number of Operands
 		{ 0 , 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, NOP) // Opcode Function
@@ -37,9 +631,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"REI", "Return from exception or interrupt",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x02,   // Opcode (Extended + Normal)
-		0,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nREI,				// Opcode (Extended + Normal)
+		0,							// Number of Operands
 		{ 0 , 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, REI) // Opcode Function
@@ -47,9 +641,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"BPT", "Break point trap",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x03,   // Opcode (Extended + Normal)
-		0,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nBPT,				// Opcode (Extended + Normal)
+		0,							// Number of Operands
 		{ 0 , 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, BPT) // Opcode Function
@@ -57,9 +651,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"RET", "Return from called procedure",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x04,   // Opcode (Extended + Normal)
-		0,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nRET,				// Opcode (Extended + Normal)
+		0,							// Number of Operands
 		{ 0 , 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, RET) // Opcode Function
@@ -67,9 +661,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"RSB", "Return from subroutine",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x05,   // Opcode (Extended + Normal)
-		0,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nRSB,				// Opcode (Extended + Normal)
+		0,							// Number of Operands
 		{ 0 , 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, RSB) // Opcode Function
@@ -77,9 +671,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"LDPCTX", "Load program context",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x06,   // Opcode (Extended + Normal)
-		0,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nLDPCTX,			// Opcode (Extended + Normal)
+		0,							// Number of Operands
 		{ 0 , 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, LDPCTX) // Opcode Function
@@ -87,9 +681,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"SVPCTX", "Save program context",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x07,   // Opcode (Extended + Normal)
-		0,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nSVPCTX,			// Opcode (Extended + Normal)
+		0,							// Number of Operands
 		{ 0 , 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, SVPCTX) // Opcode Function
@@ -97,9 +691,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CVTPS", "Convert packed to leading separate",
-		OPC_EMULATE, // Instruction Flags
-		0x00, 0x08,   // Opcode (Extended + Normal)
-		4,            // Number of Operands
+		OPC_EMULATE,				// Instruction Flags
+		0x00, OPC_nCVTPS,			// Opcode (Extended + Normal)
+		4,							// Number of Operands
 		{ RW, AB, RW, AB, 0 , 0  }, // Operand Scale/Mode
 
 		nullptr       // Execute Routine
@@ -107,9 +701,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CVTSP", "Convert leading separate to packed",
-		OPC_EMULATE, // Instruction Flags
-		0x00, 0x09,   // Opcode (Extended + Normal)
-		4,            // Number of Operands
+		OPC_EMULATE,				// Instruction Flags
+		0x00, OPC_nCVTSP,			// Opcode (Extended + Normal)
+		4,							// Number of Operands
 		{ RW, AB, RW, AB, 0 , 0  }, // Operand Scale/Mode
 
 		nullptr       // Execute Routine
@@ -117,9 +711,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"INDEX", "Index calculation",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x0A,   // Opcode (Extended + Normal)
-		6,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nINDEX,			// Opcode (Extended + Normal)
+		6,							// Number of Operands
 		{ RL, RL, RL, RL, RL, WL }, // Operand Scale/Mode
 
 		DEF_NAME(vax, INDEX) // Opcode Function
@@ -127,9 +721,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CRC", "Calcuate cyclic redundancy check",
-		OPC_EMULATE, // Instruction Flags
-		0x00, 0x0B,   // Opcode (Extended + Normal)
-		4,            // Number of Operands
+		OPC_EMULATE,				// Instruction Flags
+		0x00, OPC_nCRC,				// Opcode (Extended + Normal)
+		4,							// Number of Operands
 		{ AB, RL, RW, AB, 0 , 0  }, // Operand Scale/Mode
 
 		nullptr       // Execute Routine
@@ -137,9 +731,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"PROBER", "Probe read access",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x0C,   // Opcode (Extended + Normal)
-		3,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nPROBER,			// Opcode (Extended + Normal)
+		3,							// Number of Operands
 		{ RB, RW, AB, 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, PROBER) // Opcode Function
@@ -147,9 +741,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"PROBEW", "Probe write access",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x0D,   // Opcode (Extended + Normal)
-		3,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nPROBEW,			// Opcode (Extended + Normal)
+		3,							// Number of Operands
 		{ RB, RW, AB, 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, PROBEW) // Opcode Function
@@ -157,9 +751,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"INSQUE", "Insert into queue",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x0E,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nINSQUE,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ AB, AB, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, INSQUE) // Opcode Function
@@ -167,9 +761,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"REMQUE", "Remove from queue",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x0F,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nREMQUE,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ AB, WL, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, REMQUE) // Opcode Function
@@ -177,9 +771,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"BSBB", "Branch to subroutine with byte displacment",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x10,   // Opcode (Extended + Normal)
-		1,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nBSBB,			// Opcode (Extended + Normal)
+		1,							// Number of Operands
 		{ BB, 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, BSBB) // Opcode Function
@@ -187,9 +781,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"BRB", "Branch with byte displacement",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x11,   // Opcode (Extended + Normal)
-		1,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nBRB,				// Opcode (Extended + Normal)
+		1,							// Number of Operands
 		{ BB, 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, BRB) // Opcode Function
@@ -197,9 +791,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"BNEQ", "Branch on not equal",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x12,   // Opcode (Extended + Normal)
-		1,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nBNEQ,			// Opcode (Extended + Normal)
+		1,							// Number of Operands
 		{ BB, 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, BNEQ) // Opcode Function
@@ -207,9 +801,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"BNEQU", "Branch on not equal unsigned",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x12,   // Opcode (Extended + Normal)
-		1,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nBNEQ,			// Opcode (Extended + Normal)
+		1,							// Number of Operands
 		{ BB, 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, BNEQ) // Opcode Function
@@ -217,9 +811,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"BEQL", "Branch on equal",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x13,   // Opcode (Extended + Normal)
-		1,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nBEQL,			// Opcode (Extended + Normal)
+		1,							// Number of Operands
 		{ BB, 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, BEQL) // Opcode Function
@@ -227,9 +821,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"BEQLU", "Branch on equal unsigned",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x13,   // Opcode (Extended + Normal)
-		1,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nBEQL,			// Opcode (Extended + Normal)
+		1,							// Number of Operands
 		{ BB, 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, BEQL) // Opcode Function
@@ -237,9 +831,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"BGTR", "Branch on greater",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x14,   // Opcode (Extended + Normal)
-		1,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nBGTR,			// Opcode (Extended + Normal)
+		1,							// Number of Operands
 		{ BB, 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, BGTR) // Opcode Function
@@ -247,9 +841,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"BLEQ", "Branch on less or equal",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x15,   // Opcode (Extended + Normal)
-		1,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nBLEQ,			// Opcode (Extended + Normal)
+		1,							// Number of Operands
 		{ BB, 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, BLEQ) // Opcode Function
@@ -257,9 +851,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"JSB", "Jump to subroutine",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x16,   // Opcode (Extended + Normal)
-		1,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nJSB,				// Opcode (Extended + Normal)
+		1,							// Number of Operands
 		{ AB, 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, JSB) // Opcode Function
@@ -267,9 +861,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"JMP", "Jump",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x17,   // Opcode (Extended + Normal)
-		1,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nJMP,				// Opcode (Extended + Normal)
+		1,							// Number of Operands
 		{ AB, 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, JMP) // Opcode Function
@@ -277,9 +871,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"BGEQ", "Branch on greater or equal",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x18,   // Opcode (Extended + Normal)
-		1,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nBGEQ,			// Opcode (Extended + Normal)
+		1,							// Number of Operands
 		{ BB, 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, BGEQ) // Opcode Function
@@ -287,9 +881,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"BLSS", "Branch on less",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x19,   // Opcode (Extended + Normal)
-		1,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nBLSS,			// Opcode (Extended + Normal)
+		1,							// Number of Operands
 		{ BB, 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, BLSS) // Opcode Function
@@ -297,9 +891,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"BGTRU", "Branch on greater unsigned",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x1A,   // Opcode (Extended + Normal)
-		1,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nBGTRU,			// Opcode (Extended + Normal)
+		1,							// Number of Operands
 		{ BB, 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, BGTRU) // Opcode Function
@@ -307,9 +901,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"BLEQU", "Branch on less or equal unsigned",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x1B,   // Opcode (Extended + Normal)
-		1,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nBLEQU,			// Opcode (Extended + Normal)
+		1,							// Number of Operands
 		{ BB, 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, BLEQU) // Opcode Function
@@ -317,9 +911,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"BVC", "Branch on overflow clear",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x1C,   // Opcode (Extended + Normal)
-		1,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nBVC,				// Opcode (Extended + Normal)
+		1,							// Number of Operands
 		{ BB, 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, BVC) // Opcode Function
@@ -327,9 +921,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"BVS", "Branch on overflow set",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x1D,   // Opcode (Extended + Normal)
-		1,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nBVS,				// Opcode (Extended + Normal)
+		1,							// Number of Operands
 		{ BB, 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, BVS) // Opcode Function
@@ -337,9 +931,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"BCC", "Branch on carry clear",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x1E,   // Opcode (Extended + Normal)
-		1,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nBCC,				// Opcode (Extended + Normal)
+		1,							// Number of Operands
 		{ BB, 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, BCC) // Opcode Function
@@ -347,9 +941,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"BGEQU", "Branch on greater or equal unsigned",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x1E,   // Opcode (Extended + Normal)
-		1,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nBCC,				// Opcode (Extended + Normal)
+		1,							// Number of Operands
 		{ BB, 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, BCC) // Opcode Function
@@ -357,9 +951,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"BCS", "Branch on carry set",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x1F,   // Opcode (Extended + Normal)
-		1,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nBCS,				// Opcode (Extended + Normal)
+		1,							// Number of Operands
 		{ BB, 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, BCS) // Opcode Function
@@ -367,9 +961,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"BLSSU", "Branch on less unsigned",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x1F,   // Opcode (Extended + Normal)
-		1,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nBCS,				// Opcode (Extended + Normal)
+		1,							// Number of Operands
 		{ BB, 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, BCS) // Opcode Function
@@ -377,9 +971,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"ADDP4", "Add packed 4 operand",
-		OPC_EMULATE, // Instruction Flags
-		0x00, 0x20,   // Opcode (Extended + Normal)
-		4,            // Number of Operands
+		OPC_EMULATE,				// Instruction Flags
+		0x00, OPC_nADDP4,			// Opcode (Extended + Normal)
+		4,							// Number of Operands
 		{ RW, AB, RW, AB, 0 , 0  }, // Operand Scale/Mode
 
 		nullptr       // Execute Routine
@@ -387,9 +981,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"ADDP6", "Add packed 6 operand",
-		OPC_EMULATE, // Instruction Flags
-		0x00, 0x21,   // Opcode (Extended + Normal)
-		6,            // Number of Operands
+		OPC_EMULATE,				// Instruction Flags
+		0x00, OPC_nADDP6,			// Opcode (Extended + Normal)
+		6,							// Number of Operands
 		{ RW, AB, RW, AB, RW, AB }, // Operand Scale/Mode
 
 		nullptr       // Execute Routine
@@ -397,9 +991,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"SUBP4", "Subtract packed 4 operand",
-		OPC_EMULATE, // Instruction Flags
-		0x00, 0x22,   // Opcode (Extended + Normal)
-		4,            // Number of Operands
+		OPC_EMULATE,				// Instruction Flags
+		0x00, OPC_nSUBP4,			// Opcode (Extended + Normal)
+		4,							// Number of Operands
 		{ RW, AB, RW, AB, 0 , 0  }, // Operand Scale/Mode
 
 		nullptr       // Execute Routine
@@ -407,9 +1001,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"SUBP6", "Subtract packed 6 operand",
-		OPC_EMULATE, // Instruction Flags
-		0x00, 0x23,   // Opcode (Extended + Normal)
-		6,            // Number of Operands
+		OPC_EMULATE,				// Instruction Flags
+		0x00, OPC_nSUBP6,			// Opcode (Extended + Normal)
+		6,							// Number of Operands
 		{ RW, AB, RW, AB, RW, AB }, // Operand Scale/Mode
 
 		nullptr       // Execute Routine
@@ -417,9 +1011,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CVTPT", "Convert packed to trailing",
-		OPC_EMULATE, // Instruction Flags
-		0x00, 0x24,   // Opcode (Extended + Normal)
-		5,            // Number of Operands
+		OPC_EMULATE,				// Instruction Flags
+		0x00, OPC_nCVTPT,			// Opcode (Extended + Normal)
+		5,							// Number of Operands
 		{ RW, AB, AB, RW, AB, 0  }, // Operand Scale/Mode
 
 		nullptr       // Execute Routine
@@ -427,9 +1021,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"MULP6", "Multiply packed",
-		OPC_EMULATE, // Instruction Flags
-		0x00, 0x25,   // Opcode (Extended + Normal)
-		6,            // Number of Operands
+		OPC_EMULATE,				// Instruction Flags
+		0x00, OPC_nMULP6,			// Opcode (Extended + Normal)
+		6,							// Number of Operands
 		{ RW, AB, RW, AB, RW, AB }, // Operand Scale/Mode
 
 		nullptr       // Execute Routine
@@ -437,9 +1031,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CVTTP", "Convert trailing to packed",
-		OPC_EMULATE, // Instruction Flags
-		0x00, 0x26,   // Opcode (Extended + Normal)
-		5,            // Number of Operands
+		OPC_EMULATE,				// Instruction Flags
+		0x00, OPC_nCVTTP,			// Opcode (Extended + Normal)
+		5,							// Number of Operands
 		{ RW, AB, AB, RW, AB, 0  }, // Operand Scale/Mode
 
 		nullptr       // Execute Routine
@@ -447,9 +1041,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"DIVP6", "Divide packed",
-		OPC_EMULATE, // Instruction Flags
-		0x00, 0x27,   // Opcode (Extended + Normal)
-		6,            // Number of Operands
+		OPC_EMULATE,				// Instruction Flags
+		0x00, OPC_nDIVP6,			// Opcode (Extended + Normal)
+		6,							// Number of Operands
 		{ RW, AB, RW, AB, RW, AB }, // Operand Scale/Mode
 
 		nullptr       // Execute Routine
@@ -457,9 +1051,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"MOVC3", "Move character 3 operand",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x28,   // Opcode (Extended + Normal)
-		3,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nMOVC3,			// Opcode (Extended + Normal)
+		3,							// Number of Operands
 		{ RW, AB, AB, 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, MOVC3) // Opcode Function
@@ -467,9 +1061,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CMPC3", "Compare character 3 operand",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x29,   // Opcode (Extended + Normal)
-		3,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nCMPC3,			// Opcode (Extended + Normal)
+		3,							// Number of Operands
 		{ RW, AB, AB, 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, CMPC3) // Opcode Function
@@ -477,9 +1071,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"SCANC", "Scan for character",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x2A,   // Opcode (Extended + Normal)
-		4,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nSCANC,			// Opcode (Extended + Normal)
+		4,							// Number of Operands
 		{ RW, AB, AB, RB, 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, SCANC) // Opcode Function
@@ -487,9 +1081,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"SPANC", "Span characters",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x2B,   // Opcode (Extended + Normal)
-		4,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nSPANC,			// Opcode (Extended + Normal)
+		4,							// Number of Operands
 		{ RW, AB, AB, RB, 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, SPANC) // Opcode Function
@@ -497,9 +1091,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"MOVC5", "Move character 5 operand",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x2C,   // Opcode (Extended + Normal)
-		5,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nMOVC5,			// Opcode (Extended + Normal)
+		5,							// Number of Operands
 		{ RW, AB, RB, RW, AB, 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, MOVC5) // Opcode Function
@@ -507,9 +1101,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CMPC5", "Compare character 5 operand",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x2D,   // Opcode (Extended + Normal)
-		5,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nCMPC5,			// Opcode (Extended + Normal)
+		5,							// Number of Operands
 		{ RW, AB, RB, RW, AB, 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, CMPC5) // Opcode Function
@@ -517,9 +1111,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"MOVTC", "Move translated characters",
-		OPC_EMULATE, // Instruction Flags
-		0x00, 0x2E,   // Opcode (Extended + Normal)
-		6,            // Number of Operands
+		OPC_EMULATE,				// Instruction Flags
+		0x00, OPC_nMOVTC,			// Opcode (Extended + Normal)
+		6,							// Number of Operands
 		{ RW, AB, RB, AB, RW, AB }, // Operand Scale/Mode
 
 		nullptr       // Execute Routine
@@ -527,9 +1121,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"MOVTUC", "Move translated until character",
-		OPC_EMULATE, // Instruction Flags
-		0x00, 0x2F,   // Opcode (Extended + Normal)
-		6,            // Number of Operands
+		OPC_EMULATE,				// Instruction Flags
+		0x00, OPC_nMOVTUC,			// Opcode (Extended + Normal)
+		6,							// Number of Operands
 		{ RW, AB, RB, AB, RW, AB }, // Operand Scale/Mode
 
 		nullptr       // Execute Routine
@@ -537,9 +1131,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"BSBW", "Branch to subroutine with word displacment",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x30,   // Opcode (Extended + Normal)
-		1,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nBSBW,			// Opcode (Extended + Normal)
+		1,							// Number of Operands
 		{ BW, 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, BSBW) // Opcode Function
@@ -547,9 +1141,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"BRW", "Branch with word displacement",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x31,   // Opcode (Extended + Normal)
-		1,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nBRW,				// Opcode (Extended + Normal)
+		1,							// Number of Operands
 		{ BW, 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, BRW) // Opcode Function
@@ -557,9 +1151,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CVTWL", "Convert word to longword",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x32,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nCVTWL,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RW, WL, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, CVTWL) // Opcode Function
@@ -567,9 +1161,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CVTWB", "Convert word to byte",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x33,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nCVTWB,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RW, WB, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, CVTWB) // Opcode Function
@@ -577,9 +1171,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"MOVP", "Move packed",
-		OPC_EMULATE, // Instruction Flags
-		0x00, 0x34,   // Opcode (Extended + Normal)
-		3,            // Number of Operands
+		OPC_EMULATE,				// Instruction Flags
+		0x00, OPC_nMOVP,			// Opcode (Extended + Normal)
+		3,							// Number of Operands
 		{ RW, AB, AB, 0 , 0 , 0  }, // Operand Scale/Mode
 
 		nullptr       // Execute Routine
@@ -587,9 +1181,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CMPP3", "Compare packed 3 operand",
-		OPC_EMULATE, // Instruction Flags
-		0x00, 0x35,   // Opcode (Extended + Normal)
-		3,            // Number of Operands
+		OPC_EMULATE,				// Instruction Flags
+		0x00, OPC_nCMPP3,			// Opcode (Extended + Normal)
+		3,							// Number of Operands
 		{ RW, AB, AB, 0 , 0 , 0  }, // Operand Scale/Mode
 
 		nullptr       // Execute Routine
@@ -597,9 +1191,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CVTPL", "Convert packed to longword",
-		OPC_EMULATE, // Instruction Flags
-		0x00, 0x36,   // Opcode (Extended + Normal)
-		3,            // Number of Operands
+		OPC_EMULATE,				// Instruction Flags
+		0x00, OPC_nCVTPL,			// Opcode (Extended + Normal)
+		3,							// Number of Operands
 		{ RW, AB, WL, 0 , 0 , 0  }, // Operand Scale/Mode
 
 		nullptr       // Execute Routine
@@ -607,9 +1201,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CMPP4", "Compare packed 4 operand",
-		OPC_EMULATE, // Instruction Flags
-		0x00, 0x37,   // Opcode (Extended + Normal)
-		4,            // Number of Operands
+		OPC_EMULATE,				// Instruction Flags
+		0x00, OPC_nCMPP4,			// Opcode (Extended + Normal)
+		4,							// Number of Operands
 		{ RW, AB, RW, AB, 0 , 0  }, // Operand Scale/Mode
 
 		nullptr       // Execute Routine
@@ -617,9 +1211,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"EDITPC", "Edit packed to character",
-		OPC_EMULATE, // Instruction Flags
-		0x00, 0x38,   // Opcode (Extended + Normal)
-		4,            // Number of Operands
+		OPC_EMULATE,				// Instruction Flags
+		0x00, OPC_nEDITPC,			// Opcode (Extended + Normal)
+		4,							// Number of Operands
 		{ RW, AB, AB, AB, 0 , 0  }, // Operand Scale/Mode
 
 		nullptr       // Execute Routine
@@ -627,9 +1221,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"MATCHC", "Match characters",
-		OPC_EMULATE, // Instruction Flags
-		0x00, 0x39,   // Opcode (Extended + Normal)
-		4,            // Number of Operands
+		OPC_EMULATE,				// Instruction Flags
+		0x00, OPC_nMATCHC,			// Opcode (Extended + Normal)
+		4,							// Number of Operands
 		{ RW, AB, RW, AB, 0 , 0  }, // Operand Scale/Mode
 
 		nullptr       // Execute Routine
@@ -637,9 +1231,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"LOCC", "Locate character",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x3A,   // Opcode (Extended + Normal)
-		3,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nLOCC,			// Opcode (Extended + Normal)
+		3,							// Number of Operands
 		{ RB, RW, AB, 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, LOCC) // Opcode Function
@@ -647,9 +1241,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"SKPC", "Skip character",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x3B,   // Opcode (Extended + Normal)
-		3,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nSKPC,			// Opcode (Extended + Normal)
+		3,							// Number of Operands
 		{ RB, RW, AB, 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, SKPC) // Opcode Function
@@ -657,9 +1251,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"MOVZWL", "Move zero-extended word to longword",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x3C,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nMOVZWL,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RW, WL, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, MOVZWL) // Opcode Function
@@ -667,9 +1261,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"ACBW", "Add compare and branch word",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x3D,   // Opcode (Extended + Normal)
-		4,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nACBW,			// Opcode (Extended + Normal)
+		4,							// Number of Operands
 		{ RW, RW, MW, BW, 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, ACBW) // Opcode Function
@@ -677,9 +1271,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"MOVAW", "Move address of word",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x3E,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nMOVAW,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ AW, WL, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, MOVL) // Opcode Function
@@ -687,9 +1281,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"PUSHAW", "Push address of word",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x3F,   // Opcode (Extended + Normal)
-		1,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nPUSHAW,			// Opcode (Extended + Normal)
+		1,							// Number of Operands
 		{ AW, 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, PUSHL) // Opcode Function
@@ -697,9 +1291,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"ADDF2", "Add F_floating 2 operand",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x40,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nADDF2,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RF, MF, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, ADDF) // Opcode Function
@@ -707,9 +1301,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"ADDF3", "Add F_floating 3 operand",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x41,   // Opcode (Extended + Normal)
-		3,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nADDF3,			// Opcode (Extended + Normal)
+		3,							// Number of Operands
 		{ RF, RF, WF, 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, ADDF) // Opcode Function
@@ -717,9 +1311,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"SUBF2", "Subtract F_floating 2 operand",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x42,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nSUBF2,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RF, MF, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, SUBF) // Opcode Function
@@ -727,9 +1321,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"SUBF3", "Subtract F_floating 3 operand",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x43,   // Opcode (Extended + Normal)
-		3,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nSUBF3,			// Opcode (Extended + Normal)
+		3,							// Number of Operands
 		{ RF, RF, WF, 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, SUBF) // Opcode Function
@@ -737,9 +1331,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"MULF2", "Multiply F_floating 2 operand",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x44,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nMULF2,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RF, MF, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, MULF) // Opcode Function
@@ -747,9 +1341,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"MULF3", "Multiply F_floating 3 operand",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x45,   // Opcode (Extended + Normal)
-		3,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nMULF3,			// Opcode (Extended + Normal)
+		3,							// Number of Operands
 		{ RF, RF, WF, 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, MULF) // Opcode Function
@@ -757,9 +1351,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"DIVF2", "Divide F_floating 2 operand",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x46,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nDIVF2,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RF, MF, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, DIVF) // Opcode Function
@@ -767,9 +1361,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"DIVF3", "Divide F_floating 3 operand",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x47,   // Opcode (Extended + Normal)
-		3,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nDIVF3,			// Opcode (Extended + Normal)
+		3,							// Number of Operands
 		{ RF, RF, WF, 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, DIVF) // Opcode Function
@@ -777,9 +1371,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CVTFB", "Convert F_floating to byte",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x48,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nCVTFB,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RF, WB, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, CVTFB) // Opcode Function
@@ -787,9 +1381,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CVTFW", "Convert F_floating to word",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x49,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nCVTFW,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RF, WW, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, CVTFW) // Opcode Function
@@ -797,9 +1391,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CVTFL", "Convert F_floating to longword",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x4A,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nCVTFL,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RF, WL, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, CVTFL) // Opcode Function
@@ -807,9 +1401,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CVTRFL", "Convert rounded F_floating to longword",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x4B,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nCVTRFL,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RF, WL, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, CVTRFL) // Opcode Function
@@ -817,9 +1411,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CVTBF", "Convert byte to F_floating",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x4C,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nCVTBF,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RB, WF, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, CVTBF) // Opcode Function
@@ -827,9 +1421,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CVTWF", "Convert word to F_floating",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x4D,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nCVTWF,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RW, WF, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, CVTWF) // Opcode Function
@@ -837,9 +1431,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CVTLF", "Convert longword to F_floating",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x4E,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nCVTLF,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RL, WF, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, CVTLF) // Opcode Function
@@ -847,9 +1441,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"ACBF", "Add compare and branch F_floating",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x4F,   // Opcode (Extended + Normal)
-		4,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nACBF,			// Opcode (Extended + Normal)
+		4,							// Number of Operands
 		{ RF, RF, MF, BW, 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, ACBF) // Opcode Function
@@ -857,9 +1451,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"MOVF", "Move F_floating",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x50,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nMOVF,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RF, WF, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, MOVF) // Opcode Function
@@ -867,9 +1461,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CMPF", "Compare F_floating",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x51,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nCMPF,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RF, RF, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, CMPF) // Opcode Function
@@ -877,9 +1471,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"MNEGF", "Move negated F_floating",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x52,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nMNEGF,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RF, WF, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, MNEGF) // Opcode Function
@@ -887,9 +1481,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"TSTF", "Test F_floating",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x53,   // Opcode (Extended + Normal)
-		1,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nTSTF,			// Opcode (Extended + Normal)
+		1,							// Number of Operands
 		{ RF, 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, TSTF) // Opcode Function
@@ -897,9 +1491,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"EMODF", "Extended modulus F_floating",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x54,   // Opcode (Extended + Normal)
-		5,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nEMODF,			// Opcode (Extended + Normal)
+		5,							// Number of Operands
 		{ RF, RB, RF, WL, WF, 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, EMODF) // Opcode Function
@@ -907,9 +1501,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"POLYF", "Evaluate polynomial F_floating",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x55,   // Opcode (Extended + Normal)
-		3,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nPOLYF,			// Opcode (Extended + Normal)
+		3,							// Number of Operands
 		{ RF, RW, AB, 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, POLYF) // Opcode Function
@@ -917,9 +1511,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CVTFD", "Convert F_floating to D_floating",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x56,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nCVTFD,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RF, WD, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, CVTFD) // Opcode Function
@@ -927,9 +1521,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"ADAWI", "Add aligned word interlocked",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x58,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nADAWI,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RW, WW, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, ADAWI) // Opcode Function
@@ -937,9 +1531,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"INSQHI", "Insert into queue at head, interlocked",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x5C,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nINSQHI,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ AB, AQ, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, INSQHI) // Opcode Function
@@ -947,9 +1541,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"INSQTI", "Insert into queue at tail, interlocked",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x5D,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nINSQTI,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ AB, AQ, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, INSQTI) // Opcode Function
@@ -957,9 +1551,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"REMQHI", "Remove from queue at head, interlocked",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x5E,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nREMQHI,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ AQ, WL, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, REMQHI) // Opcode Function
@@ -967,9 +1561,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"REMQTI", "Remove from queue at tail, interlocked",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x5F,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nREMQTI,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ AQ, WL, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, REMQTI) // Opcode Function
@@ -977,9 +1571,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"ADDD2", "Add D_floating 2 operand",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x60,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nADDD2,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RD, MD, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, ADDD) // Opcode Function
@@ -987,9 +1581,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"ADDD3", "Add D_floating 3 operand",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x61,   // Opcode (Extended + Normal)
-		3,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nADDD3,			// Opcode (Extended + Normal)
+		3,							// Number of Operands
 		{ RD, RD, WD, 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, ADDD) // Opcode Function
@@ -997,9 +1591,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"SUBD2", "Subtract D_floating 2 operand",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x62,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nSUBD2,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RD, MD, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, SUBD) // Opcode Function
@@ -1007,9 +1601,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"SUBD3", "Subtract D_floating 3 operand",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x63,   // Opcode (Extended + Normal)
-		3,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nSUBD3,			// Opcode (Extended + Normal)
+		3,							// Number of Operands
 		{ RD, RD, WD, 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, SUBD) // Opcode Function
@@ -1017,9 +1611,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"MULD2", "Multiply D_floating 2 operand",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x64,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nMULD2,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RD, MD, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, MULD) // Opcode Function
@@ -1027,9 +1621,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"MULD3", "Multiply D_floating 3 operand",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x65,   // Opcode (Extended + Normal)
-		3,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nMULD3,			// Opcode (Extended + Normal)
+		3,							// Number of Operands
 		{ RD, RD, WD, 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, MULD) // Opcode Function
@@ -1037,9 +1631,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"DIVD2", "Divide D_floating 2 operand",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x66,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nDIVD2,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RD, MD, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, DIVD) // Opcode Function
@@ -1047,9 +1641,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"DIVD3", "Divide D_floating 3 operand",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x67,   // Opcode (Extended + Normal)
-		3,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nDIVD3,			// Opcode (Extended + Normal)
+		3,							// Number of Operands
 		{ RD, RD, WD, 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, DIVD) // Opcode Function
@@ -1057,9 +1651,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CVTDB", "Convert D_floating to byte",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x68,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nCVTDB,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RD, WB, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, CVTDB) // Opcode Function
@@ -1067,9 +1661,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CVTDW", "Convert D_floating to word",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x69,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nCVTDW,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RD, WW, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, CVTDW) // Opcode Function
@@ -1077,9 +1671,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CVTDL", "Convert D_floating to longword",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x6A,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nCVTDL,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RD, WL, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, CVTDL) // Opcode Function
@@ -1087,9 +1681,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CVTRDL", "Convert rounded D_floating to longword",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x6B,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nCVTRDL,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RD, WL, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, CVTRDL) // Opcode Function
@@ -1097,9 +1691,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CVTBD", "Convert byte to D_floating",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x6C,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nCVTBD,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RB, WD, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, CVTBD) // Opcode Function
@@ -1107,9 +1701,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CVTWD", "Convert word to D_floating",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x6D,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nCVTWD,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RW, WD, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, CVTWD) // Opcode Function
@@ -1117,9 +1711,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CVTLD", "Convert longword to D_floating",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x6E,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nCVTLD,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RL, WD, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, CVTLD) // Opcode Function
@@ -1127,9 +1721,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"ACBD", "Add compare and branch D_floating",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x6F,   // Opcode (Extended + Normal)
-		4,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nACBD,			// Opcode (Extended + Normal)
+		4,							// Number of Operands
 		{ RD, RD, MD, BW, 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, ACBD) // Opcode Function
@@ -1137,9 +1731,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"MOVD", "Move D_floating",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x70,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nMOVD,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RD, WD, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, MOVD) // Opcode Function
@@ -1147,9 +1741,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CMPD", "Compare D_floating",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x71,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nCMPD,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RD, RD, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, CMPD) // Opcode Function
@@ -1157,9 +1751,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"MNEGD", "Move negated D_floating",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x72,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nMNEGD,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RD, WD, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, MNEGD) // Opcode Function
@@ -1167,9 +1761,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"TSTD", "Test D_floating",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x73,   // Opcode (Extended + Normal)
-		1,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nTSTD,			// Opcode (Extended + Normal)
+		1,							// Number of Operands
 		{ RD, 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, TSTD) // Opcode Function
@@ -1177,9 +1771,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"EMODD", "Extended modulus D_floating",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x74,   // Opcode (Extended + Normal)
-		5,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nEMODD,			// Opcode (Extended + Normal)
+		5,							// Number of Operands
 		{ RD, RB, RD, WL, WD, 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, EMODD) // Opcode Function
@@ -1187,9 +1781,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"POLYD", "Evaluate polynomial D_floating",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x75,   // Opcode (Extended + Normal)
-		3,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nPOLYD,			// Opcode (Extended + Normal)
+		3,							// Number of Operands
 		{ RD, RW, AB, 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, POLYD) // Opcode Function
@@ -1197,9 +1791,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CVTDF", "Convert D_floating to F_floating",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x76,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nCVTDF,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RD, WF, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, CVTDF) // Opcode Function
@@ -1207,9 +1801,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"ASHL", "Arithmetic shift longword",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x78,   // Opcode (Extended + Normal)
-		3,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nASHL,			// Opcode (Extended + Normal)
+		3,							// Number of Operands
 		{ RB, RL, WL, 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, ASHL) // Opcode Function
@@ -1217,9 +1811,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"ASHQ", "Arithmetic shift quadword",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x79,   // Opcode (Extended + Normal)
-		3,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nASHQ,			// Opcode (Extended + Normal)
+		3,							// Number of Operands
 		{ RB, RQ, WQ, 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, ASHQ) // Opcode Function
@@ -1227,9 +1821,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"EMUL", "Extended multiply",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x7A,   // Opcode (Extended + Normal)
-		4,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nEMUL,			// Opcode (Extended + Normal)
+		4,							// Number of Operands
 		{ RL, RL, RL, WQ, 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, EMUL) // Opcode Function
@@ -1237,9 +1831,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"EDIV", "Extended divide",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x7B,   // Opcode (Extended + Normal)
-		4,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nEDIV,			// Opcode (Extended + Normal)
+		4,							// Number of Operands
 		{ RL, RQ, WL, WL, 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, EDIV) // Opcode Function
@@ -1247,9 +1841,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CLRQ", "Clear quadword",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x7C,   // Opcode (Extended + Normal)
-		1,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nCLRQ,			// Opcode (Extended + Normal)
+		1,							// Number of Operands
 		{ WQ, 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, CLRQ) // Opcode Function
@@ -1257,9 +1851,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CLRD", "Clear D_floating",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x7C,   // Opcode (Extended + Normal)
-		1,            // Number of Operands: 1
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nCLRQ,			// Opcode (Extended + Normal)
+		1,							// Number of Operands: 1
 		{ WD, 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, CLRQ) // Opcode Function
@@ -1267,9 +1861,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"CLRG", "Clear G_floating",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x7C,   // Opcode (Extended + Normal)
-		1,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nCLRQ,			// Opcode (Extended + Normal)
+		1,							// Number of Operands
 		{ WG, 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, CLRQ) // Opcode Function
@@ -1277,9 +1871,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"MOVQ", "Move quadword",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x7D,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nMOVQ,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ RQ, WQ, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, MOVQ) // Opcode Function
@@ -1287,9 +1881,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"MOVAQ", "Move address of quadword",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x7E,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nMOVAQ,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ AQ, WL, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, MOVL) // Opcode Function
@@ -1297,9 +1891,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"MOVAD", "Move address of D_floating",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x7E,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nMOVAQ,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ AD, WL, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, MOVL) // Opcode Function
@@ -1307,9 +1901,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"MOVAG", "Move address of G_floating",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x7E,   // Opcode (Extended + Normal)
-		2,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nMOVAQ,			// Opcode (Extended + Normal)
+		2,							// Number of Operands
 		{ AG, WL, 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, MOVL) // Opcode Function
@@ -1317,9 +1911,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"PUSHAQ", "Push address of quadword",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x7F,   // Opcode (Extended + Normal)
-		1,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nPUSHAQ,			// Opcode (Extended + Normal)
+		1,							// Number of Operands
 		{ AQ, 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, PUSHL) // Opcode Function
@@ -1327,9 +1921,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"PUSHAD", "Push address of D_floating",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x7F,   // Opcode (Extended + Normal)
-		1,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nPUSHAQ,			// Opcode (Extended + Normal)
+		1,							// Number of Operands
 		{ AD, 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, PUSHL) // Opcode Function
@@ -1337,9 +1931,9 @@ const vaxOpcode vax_Instruction[] =
 
 	{
 		"PUSHAG", "Push address of G_floating",
-		OPC_REGULAR,  // Instruction Flags
-		0x00, 0x7F,   // Opcode (Extended + Normal)
-		1,            // Number of Operands
+		OPC_REGULAR,				// Instruction Flags
+		0x00, OPC_nPUSHAQ,			// Opcode (Extended + Normal)
+		1,							// Number of Operands
 		{ AG, 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, PUSHL) // Opcode Function
@@ -2623,6 +3217,16 @@ const vaxOpcode vax_Instruction[] =
 		{ 0 , 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
 
 		DEF_NAME(vax, XFC) // Opcode Function
+	},
+
+	{
+		"WAIT", "Wait",
+		OPC_REGULAR,  // Instruction Flags
+		0xFD, OPC_nWAIT,   // Opcode (Extended + Normal)
+		0,            // Number of Operands
+		{ 0 , 0 , 0 , 0 , 0 , 0  }, // Operand Scale/Mode
+
+		nullptr       // Opcode Function
 	},
 
 	{
