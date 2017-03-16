@@ -32,5 +32,6 @@ void ka780_cpuDevice::reset()
 	pRegs[PR_SID] |= SID_SN;
 }
 
+#define CPU_KA780
 #define CPU_CLASS ka780_cpuDevice
 #include "dev/cpu/vax/executes.h"

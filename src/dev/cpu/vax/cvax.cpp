@@ -97,6 +97,7 @@ void cvax_cpuDevice::reset()
 	pRegs[PR_SID] = (SID_ID|SID_UCODE);
 }
 
+#define CPU_CVAX
 #define CPU_CLASS cvax_cpuDevice
 #include "dev/cpu/vax/executes.h"
 

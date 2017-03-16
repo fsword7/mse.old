@@ -1,10 +1,10 @@
 /*
- * ka820.h
+ * v11.h
  *
  *  Created on: Mar 12, 2017
  *      Author: Timothy Stark
  *
- *  VAX 82x0/83x0 series system
+ *  V-11 (Scorpio) processor emulation
  *
  */
 
@@ -32,11 +32,11 @@
 #define SID_SN      1
 #define SID_SN_MASK ((1u << 12) - 1)
 
-class ka820_cpuDevice : public vax_cpuDevice
+class v11_cpuDevice : public vax_cpuDevice
 {
 public:
-	ka820_cpuDevice();
-	~ka820_cpuDevice();
+	v11_cpuDevice();
+	~v11_cpuDevice();
 
 	void reset();
 	void execute();
