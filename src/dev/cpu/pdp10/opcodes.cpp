@@ -17,23 +17,66 @@
 #define KS
 #define XKL
 
+#define OPC(name, opcode, flags) { name, nullptr, 0, opcode }
+
 const pdp10_Opcode pdp10_Opcodes[] =
 {
-	{
-		"AOBJN", "Add One to Both Halves of AC and Jump if Negative",
-		0, OPC_nAOBJN
-	},
+	// Opcode 000 - 077
+	OPC("UUO",		OPC_nUUO, 0),
 
-	{
-		"AOBJP", "Add One to Both Halves of AC and Jump if Positive",
-		0, OPC_nAOBJP
-	},
+	// Opcode 100 - 177
 
-	{
-		"BLT", "Block Transfer",
-		0, OPC_nBLT
-	},
+	// Opcode 200 - 277
 
+	// Opcode 300 - 377
+
+	// Opcode 400 - 477
+
+	// Opcode 500 - 577
+
+	// Opcode 600 - 677
+
+	OPC("AOBJN",	OPC_nAOBJN, 0),
+	OPC("AOBJP",	OPC_nAOBJP, 0),
+
+	OPC("BLT",		OPC_nBLT, 0),
+};
+
+const pdp10_Opcode pdp10_extOpcodes[] =
+{
+	OPC("CMPSL",	OPC_nCMPSL, 0),
+	OPC("CMPSE",	OPC_nCMPSE, 0),
+	OPC("CMPSLE",	OPC_nCMPSLE, 0),
+	OPC("CMPSGE",	OPC_nCMPSGE, 0),
+	OPC("CMPSN",	OPC_nCMPSN, 0),
+	OPC("CMPSG",	OPC_nCMPSG, 0),
+
+	OPC("EDIT",		OPC_nEDIT, 0),
+
+	OPC("CVTBDO",	OPC_nCVTBDO, 0),
+	OPC("CVTBDT",	OPC_nCVTBDT, 0),
+	OPC("CVTDBO",	OPC_nCVTDBO, 0),
+	OPC("CVTDBT",	OPC_nCVTDBT, 0),
+
+	OPC("MOVSO",	OPC_nMOVSO, 0),
+	OPC("MOVST",	OPC_nMOVST, 0),
+	OPC("MOVSLJ",	OPC_nMOVSLJ, 0),
+	OPC("MOVSRJ",	OPC_nMOVSRJ, 0),
+
+	OPC("XBLT",		OPC_nXBLT, 0),
+
+	OPC("GSNGL",	OPC_nGSNGL, 0),
+	OPC("GDBLE",	OPC_nGDBLE, 0),
+	OPC("GFSC",		OPC_nGFSC, 0),
+	OPC("GFIX",		OPC_nGFIX, 0),
+	OPC("GFIXR",	OPC_nGFIXR, 0),
+	OPC("GFLTR",	OPC_nGFLTR, 0),
+	OPC("DGFIX",	OPC_nDGFIX, 0),
+	OPC("DGFIXR",	OPC_nDGFIXR, 0),
+	OPC("DGFLTR",	OPC_nDGFLTR, 0),
+
+	// null terminator
+	{ nullptr }
 };
 
 
