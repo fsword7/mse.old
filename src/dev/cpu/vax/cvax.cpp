@@ -4,7 +4,7 @@
  *  Created on: Mar 12, 2017
  *      Author: Timothy Stark
  *
- *  CVAX Processor emulation
+ *  CVAX 78034 Processor emulation
  *
  */
 
