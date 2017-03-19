@@ -1,5 +1,5 @@
 /*
- * ether.cpp
+ * ether.h
  *
  *  Created on: Mar 18, 2017
  *      Author: Timothy Stark
@@ -8,7 +8,9 @@
  *
  */
 
-#include "emu/core.h"
-#include "emu/osd/socket.h"
-#include "emu/osd/ether.h"
+#pragma once
 
+#if defined(HAVE_PCAP)
+#define USE_BPF 1
+#include <pcap.h>
+#endif

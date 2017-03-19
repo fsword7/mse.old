@@ -79,6 +79,15 @@ Driver *sysDrivers[] = {
 	nullptr
 };
 
+extern sysModel vax_sysModels;
+
+sysModel *sysModels[] = {
+	&vax_sysModels,
+
+	// null terminator
+	nullptr
+};
+
 extern Command mseCommands;
 //extern Command mseSetCommands;
 //extern Command mseShowCommands;
@@ -99,4 +108,5 @@ Driver mseDriver = {
 void setSystemDrivers(Device *dev)
 {
 	dev->setDrivers(sysDrivers);
+//	dev->setModels(sysLists);
 }

@@ -66,6 +66,22 @@ protected:
 	Driver  **drivers; // child driver table
 };
 
+struct cfgMemory {
+	const char *cfgName;
+	uint64_t	cfgSize;
+};
+
+struct sysModel {
+	const char *name;     // System/model name
+	const char *parent;   // Parent system
+	const char *desc;     // Description
+	Driver     *driver;   // System driver for configurations
+	const char *srcFile;  // Source file
+};
+
+#define SYSTEM(name, desc, driver)         { #name, nullptr, desc, driver, __FILE__ }
+#define MODEL(name, parent, desc, driver)  { #name, #parent, desc, driver, __FILE__ }
+
 class sysDevice : public Device
 {
 public:

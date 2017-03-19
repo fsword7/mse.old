@@ -11,6 +11,9 @@
  *
  */
 
+#include "emu/core.h"
+#include "emu/devsys.h"
+
 // KA650/KA655 Memory Map
 //
 // 00000000 +-------------------------------------+
@@ -47,3 +50,75 @@
 //   2008 0000 - 201F FFFF  Local Register Space
 //   3000 0000 - 303F FFFF  Qbus Memory Space
 
+// Memory configuration for KA650/KA655/KA655X
+cfgMemory ka650_cfgMemory[] =
+{
+	"16M",   (1u << 24),
+	"32M",   (1u << 25),
+	"48M",   (1u << 25)+(1u << 24),
+	"64M",   (1u << 26),
+	// null terminator
+	{ nullptr }
+};
+
+cfgMemory ka655x_cfgMemory[] =
+{
+	"16M",   (1u << 24),
+	"32M",   (1u << 25),
+	"48M",   (1u << 25)+(1u << 24),
+	"64M",   (1u << 26),
+	"128M",  (1u << 27),
+	"256M",  (1u << 28),
+	"512M",  (1u << 29),
+	// null terminator
+	{ nullptr }
+};
+
+
+Driver ka640_sysDriver {
+	"KA640",
+	"KA640 CPU Model"
+	__FILE__,
+	nullptr,
+
+	// Command handlers
+	nullptr,
+	nullptr,
+	nullptr,
+};
+
+Driver ka650_sysDriver {
+	"KA650",
+	"KA650 CPU Model"
+	__FILE__,
+	nullptr,
+
+	// Command handlers
+	nullptr,
+	nullptr,
+	nullptr,
+};
+
+Driver ka655_sysDriver {
+	"KA655",
+	"KA655 CPU Model"
+	__FILE__,
+	nullptr,
+
+	// Command handlers
+	nullptr,
+	nullptr,
+	nullptr,
+};
+
+Driver ka655x_sysDriver {
+	"KA655X",
+	"KA655X CPU Model"
+	__FILE__,
+	nullptr,
+
+	// Command handlers
+	nullptr,
+	nullptr,
+	nullptr,
+};

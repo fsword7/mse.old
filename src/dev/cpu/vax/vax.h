@@ -91,7 +91,6 @@ public:
 	void execute();
 
 protected:
-	uint32_t gRegs[VAX_nGREGS]; // General registers
-	uint32_t pRegs[VAX_nPREGS]; // Processor registers
-
+	scale32_t gRegs[VAX_nGREGS]; // General registers
+	uint32_t  pRegs[VAX_nPREGS]; // Processor registers
 };

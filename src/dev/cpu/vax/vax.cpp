@@ -20,6 +20,9 @@ vax_cpuDevice::~vax_cpuDevice()
 
 void vax_cpuDevice::reset()
 {
+	// Initialize all working registers
+	for (int idx = 0; idx < VAX_nGREGS; idx++)
+		gRegs[idx].l = 0;
 }
 
 #define CPU_CLASS vax_cpuDevice
