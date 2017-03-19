@@ -41,6 +41,20 @@ Driver *Device::findDriver(std::string drvName)
 	return nullptr;
 }
 
+sysModel *Device::findModel(std::string sysName)
+{
+	sysModel *model;
+
+	for (int idx1 = 0; sysModels[idx1]; idx1++) {
+		model = sysModels[idx1];
+		while (++model != nullptr) {
+			if (model->name == sysName)
+				return model;
+		}
+	}
+	return nullptr;
+}
+
 int Device::load(std::string)
 {
 	std::cout << driver->drvName << ": Command not supported" << std::endl;
@@ -79,10 +93,10 @@ Driver *sysDrivers[] = {
 	nullptr
 };
 
-extern sysModel vax_sysModels;
+extern sysModel vax_sysModels[];
 
 sysModel *sysModels[] = {
-	&vax_sysModels,
+	vax_sysModels,
 
 	// null terminator
 	nullptr
@@ -108,5 +122,5 @@ Driver mseDriver = {
 void setSystemDrivers(Device *dev)
 {
 	dev->setDrivers(sysDrivers);
-//	dev->setModels(sysLists);
+	dev->setModels(sysModels);
 }

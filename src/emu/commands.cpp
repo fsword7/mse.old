@@ -11,7 +11,9 @@
 // Usage: create [device] <options...>
 static int cmdCreate(Console *con, Device *dev, args_t &args)
 {
-	Driver *drv;
+	sysModel   *model;
+	Driver     *drv;
+	std::string sysName = "";
 
 	// Check number of arguments
 	if (args.size() < 3) {
@@ -25,12 +27,21 @@ static int cmdCreate(Console *con, Device *dev, args_t &args)
 		return CMD_OK;
 	}
 
-	// find available driver by using name
-	drv = dev->findDriver(args[2]);
-	if (drv == nullptr) {
-		std::cout << args[2] << ": driver not found." << std::endl;
+	// find model by using name
+	model = dev->findModel(args[2]);
+	if (model == nullptr) {
+		std::cout << args[2] << ": system not found." << std::endl;
 		return CMD_OK;
 	}
+	drv = model->driver;
+
+	if (model->parent != nullptr) {
+		sysName += model->parent;
+		sysName += ".";
+	}
+	sysName += model->name;
+
+	std::cout << sysName << ": " << model->desc << std::endl;
 
 	return CMD_OK;
 }
