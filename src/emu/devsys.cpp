@@ -22,8 +22,7 @@ Device::~Device()
 Device *Device::findDevice(std::string devName)
 {
 	for (auto &&dev : devices) {
-		Driver *drv = dev->getDriver();
-		if (drv->drvName == devName)
+		if (devName == dev->getName())
 			return dev;
 	}
 	return nullptr;
@@ -47,7 +46,7 @@ sysModel *Device::findModel(std::string sysName)
 
 	for (int idx1 = 0; sysModels[idx1]; idx1++) {
 		model = sysModels[idx1];
-		while (++model != nullptr) {
+		while ((++model)->name != nullptr) {
 			if (model->name == sysName)
 				return model;
 		}

@@ -13,7 +13,8 @@ static int cmdCreate(Console *con, Device *dev, args_t &args)
 {
 	sysModel   *model;
 	Driver     *drv;
-	std::string sysName = "";
+	std::string devType = "";
+	Device     *ndev;
 
 	// Check number of arguments
 	if (args.size() < 3) {
@@ -23,7 +24,7 @@ static int cmdCreate(Console *con, Device *dev, args_t &args)
 
 	// check existing device by using name
 	if (dev->findDevice(args[1]) != nullptr) {
-		std::cout << args[1] << ": name already taken or device not found." << std::endl;
+		std::cout << args[1] << ": device already created." << std::endl;
 		return CMD_OK;
 	}
 
@@ -36,12 +37,15 @@ static int cmdCreate(Console *con, Device *dev, args_t &args)
 	drv = model->driver;
 
 	if (model->parent != nullptr) {
-		sysName += model->parent;
-		sysName += ".";
+		devType += model->parent;
+		devType += ".";
 	}
-	sysName += model->name;
+	devType += model->name;
 
-	std::cout << sysName << ": " << model->desc << std::endl;
+	ndev = drv->create(args[1], devType, model);
+	dev->addDevice(ndev);
+
+	std::cout << devType << ": " << model->desc << std::endl;
 
 	return CMD_OK;
 }

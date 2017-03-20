@@ -7,7 +7,8 @@
 
 #pragma once
 
-class vax_sysDevice {
+class vax_sysDevice : public Device
+{
 public:
 	vax_sysDevice();
 	~vax_sysDevice();

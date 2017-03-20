@@ -9,6 +9,7 @@
 
 class Device;
 class Console;
+struct sysModel;
 
 // Return code (error codes)
 #define CMD_OK         0
@@ -38,6 +39,9 @@ struct Driver
 	const Command *Commands;
 	const Command *setCommands;
 	const Command *showCommands;
+
+	// Function calls
+	Device *(*create)(std::string, std::string, sysModel *);
 };
 
 struct sysModel {
@@ -57,7 +61,10 @@ public:
 	Device();
 	virtual ~Device();
 
-	inline Driver *getDriver() const { return driver; }
+	inline std::string getName() const        { return devName; }
+	inline std::string getType() const        { return devType; }
+	inline std::string getDescription() const { return devDesc; }
+	inline Driver *getDriver() const          { return driver; }
 
 	Device *findDevice(std::string devName);
 	Driver *findDriver(std::string drvName);
@@ -69,10 +76,16 @@ public:
 	void setDrivers(Driver **drivers) { this->drivers = drivers; }
 	void setModels(sysModel **models) { sysModels = models; }
 
+	void addDevice(Device *dev)       { devices.push_back(dev); }
+
 	// Device virtual function calls
 	virtual int load(std::string fname);
 
 protected:
+	std::string devName; // Device name
+	std::string devType; // Device type (model)
+	std::string devDesc; // Device description
+
 	Driver  *driver; // Driver table information
 	Device  *parent;  // parent device
 	std::vector<Device*> devices; // child device table

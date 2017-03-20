@@ -13,6 +13,8 @@
 
 #include "emu/core.h"
 #include "emu/devsys.h"
+#include "sys/vax/vax.h"
+#include "sys/vax/ka650.h"
 
 // KA650/KA655 Memory Map
 //
@@ -50,6 +52,30 @@
 //   2008 0000 - 201F FFFF  Local Register Space
 //   3000 0000 - 303F FFFF  Qbus Memory Space
 
+ka650_sysDevice::ka650_sysDevice()
+{
+}
+
+ka650_sysDevice::~ka650_sysDevice()
+{
+}
+
+ka650_sysDevice *ka650_sysDevice::create(std::string devName, std::string devType, sysModel *model)
+{
+	ka650_sysDevice *dev = new ka650_sysDevice();
+
+	if (dev == nullptr)
+		return nullptr;
+
+	dev->devName = devName;
+	dev->devType = devType;
+	dev->devDesc = model->desc;
+
+	return dev;
+}
+
+// ******************************************************************************
+
 // Memory configuration for KA650/KA655/KA655X
 cfgMemory ka650_cfgMemory[] =
 {
@@ -75,9 +101,18 @@ cfgMemory ka655x_cfgMemory[] =
 };
 
 
+static Device *create(std::string devName, std::string devType, sysModel *model)
+{
+	ka650_sysDevice *dev;
+
+	dev = ka650_sysDevice::create(devName, devType, model);
+
+	return dev;
+}
+
 Driver ka640_sysDriver {
 	"KA640",
-	"KA640 CPU Model"
+	"KA640 CPU Model",
 	__FILE__,
 	nullptr,
 
@@ -85,11 +120,14 @@ Driver ka640_sysDriver {
 	nullptr,
 	nullptr,
 	nullptr,
+
+	// Function calls
+	create
 };
 
 Driver ka650_sysDriver {
 	"KA650",
-	"KA650 CPU Model"
+	"KA650 CPU Model",
 	__FILE__,
 	nullptr,
 
@@ -97,11 +135,14 @@ Driver ka650_sysDriver {
 	nullptr,
 	nullptr,
 	nullptr,
+
+	// Function calls
+	create
 };
 
 Driver ka655_sysDriver {
 	"KA655",
-	"KA655 CPU Model"
+	"KA655 CPU Model",
 	__FILE__,
 	nullptr,
 
@@ -109,11 +150,14 @@ Driver ka655_sysDriver {
 	nullptr,
 	nullptr,
 	nullptr,
+
+	// Function calls
+	create
 };
 
 Driver ka655x_sysDriver {
 	"KA655X",
-	"KA655X CPU Model"
+	"KA655X CPU Model",
 	__FILE__,
 	nullptr,
 
@@ -121,4 +165,7 @@ Driver ka655x_sysDriver {
 	nullptr,
 	nullptr,
 	nullptr,
+
+	// Function calls
+	create
 };
