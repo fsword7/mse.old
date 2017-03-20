@@ -54,9 +54,57 @@ sysModel *Device::findModel(std::string sysName)
 	return nullptr;
 }
 
+cfgMemory *Device::getMemoryConfig() const
+{
+	if (driver == nullptr || driver->cfgMemory == nullptr)
+		return nullptr;
+	return driver->cfgMemory;
+}
+
+const Command *Device::getCommandTable() const
+{
+	if (driver == nullptr || driver->Commands == nullptr)
+		return nullptr;
+	return driver->Commands;
+}
+
+const Command *Device::getSetCommandTable() const
+{
+	if (driver == nullptr || driver->setCommands == nullptr)
+		return nullptr;
+	return driver->setCommands;
+}
+
+const Command *Device::getShowCommandTable() const
+{
+	if (driver == nullptr || driver->showCommands == nullptr)
+		return nullptr;
+	return driver->showCommands;
+}
+
+const Command *Device::getListCommandTable() const
+{
+//	if (driver == nullptr || driver->listCommands == nullptr)
+//		return nullptr;
+//	return driver->listCommands;
+	return nullptr;
+}
+
+int Device::setMemory(uint32_t)
+{
+	std::cerr << devName << ": Memory configuration not supported" << std::endl;
+	return CMD_ERROR;
+}
+
 int Device::load(std::string)
 {
-	std::cout << driver->drvName << ": Command not supported" << std::endl;
+	std::cerr << devName << ": Command not supported" << std::endl;
+	return CMD_ERROR;
+}
+
+int Device::dump(uint32_t *, uint32_t, uint32_t)
+{
+	std::cerr << devName << ": Command not supported" << std::endl;
 	return CMD_ERROR;
 }
 
@@ -102,8 +150,9 @@ sysModel *sysModels[] = {
 };
 
 extern Command mseCommands;
-//extern Command mseSetCommands;
-//extern Command mseShowCommands;
+extern Command mseSetCommands;
+extern Command mseShowCommands;
+extern Command mseListCommands;
 
 Driver mseDriver = {
 		"mse",
@@ -111,11 +160,17 @@ Driver mseDriver = {
 		__FILE__,
 		nullptr,
 
-		// Command handlers
-		&mseCommands,
-		nullptr,
+		// Configurations
 		nullptr,
 
+		// Command handlers
+		&mseCommands,
+		&mseSetCommands,
+		&mseShowCommands,
+//		&mseListCommands,
+
+		// Function Calls
+		nullptr
 };
 
 void setSystemDrivers(Device *dev)

@@ -13,12 +13,18 @@
 
 Driver pdp11_sysDriver {
 	"PDP11",
-	"DEC PDP-11 Series"
+	"DEC PDP-11 Series",
 	__FILE__,
+	nullptr,
+
+	// Configurations
 	nullptr,
 
 	// Command handlers
 	nullptr,
 	nullptr,
 	nullptr,
+
+	// Function calls
+	nullptr
 };

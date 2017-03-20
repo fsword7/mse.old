@@ -13,12 +13,18 @@
 
 Driver axp_sysDriver {
 	"AXP",
-	"AlphaServer"
+	"AlphaServer",
 	__FILE__,
+	nullptr,
+
+	// Configurations,
 	nullptr,
 
 	// Command handlers
 	nullptr,
 	nullptr,
 	nullptr,
+
+	// Function calls
+	nullptr
 };

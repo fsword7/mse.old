@@ -13,8 +13,11 @@
 
 #include "emu/core.h"
 #include "emu/devsys.h"
+#include "emu/devcpu.h"
 #include "sys/vax/vax.h"
 #include "sys/vax/ka650.h"
+#include "dev/cpu/vax/vax.h"
+#include "dev/cpu/vax/cvax.h"
 
 // KA650/KA655 Memory Map
 //
@@ -70,6 +73,7 @@ ka650_sysDevice *ka650_sysDevice::create(std::string devName, std::string devTyp
 	dev->devName = devName;
 	dev->devType = devType;
 	dev->devDesc = model->desc;
+	dev->driver  = model->driver;
 
 	return dev;
 }
@@ -87,7 +91,7 @@ cfgMemory ka650_cfgMemory[] =
 	{ nullptr }
 };
 
-cfgMemory ka655x_cfgMemory[] =
+cfgMemory ka650x_cfgMemory[] =
 {
 	"16M",   (1u << 24),
 	"32M",   (1u << 25),
@@ -104,8 +108,12 @@ cfgMemory ka655x_cfgMemory[] =
 static Device *create(std::string devName, std::string devType, sysModel *model)
 {
 	ka650_sysDevice *dev;
+	cvax_cpuDevice *cpu;
 
 	dev = ka650_sysDevice::create(devName, devType, model);
+
+	cpu = new cvax_cpuDevice();
+	dev->addDevice(cpu);
 
 	return dev;
 }
@@ -115,6 +123,9 @@ Driver ka640_sysDriver {
 	"KA640 CPU Model",
 	__FILE__,
 	nullptr,
+
+	// Configurations
+	ka650_cfgMemory,
 
 	// Command handlers
 	nullptr,
@@ -131,6 +142,9 @@ Driver ka650_sysDriver {
 	__FILE__,
 	nullptr,
 
+	// Configurations
+	ka650_cfgMemory,
+
 	// Command handlers
 	nullptr,
 	nullptr,
@@ -146,6 +160,9 @@ Driver ka655_sysDriver {
 	__FILE__,
 	nullptr,
 
+	// Configurations
+	ka650_cfgMemory,
+
 	// Command handlers
 	nullptr,
 	nullptr,
@@ -160,6 +177,9 @@ Driver ka655x_sysDriver {
 	"KA655X CPU Model",
 	__FILE__,
 	nullptr,
+
+	// Configurations
+	ka650x_cfgMemory,
 
 	// Command handlers
 	nullptr,

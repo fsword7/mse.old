@@ -15,6 +15,11 @@ Core::Core()
 {
 	setSystemDrivers(this);
 	setDriver(&mseDriver);
+
+	// Set device name and description
+	devName = mseDriver.drvName;
+	devType = mseDriver.drvName;
+	devDesc = mseDriver.drvDesc;
 }
 
 Core::~Core()

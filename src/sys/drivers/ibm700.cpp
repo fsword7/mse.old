@@ -13,12 +13,18 @@
 
 Driver ibm700_sysDriver {
 	"IBM700",
-	"IBM 700 Series"
+	"IBM 700 Series",
 	__FILE__,
+	nullptr,
+
+	// Configurations
 	nullptr,
 
 	// Command handlers
 	nullptr,
 	nullptr,
 	nullptr,
+
+	// Function calls
+	nullptr
 };

@@ -10,6 +10,7 @@
 class Device;
 class Console;
 struct sysModel;
+struct cfgMemory;
 
 // Return code (error codes)
 #define CMD_OK         0
@@ -35,10 +36,14 @@ struct Driver
 	const char *srcFile;  // Source file
 	const char *pdevName; // Parent driver name
 
+	// Configurations
+	cfgMemory  *cfgMemory;
+
 	// Command handler
 	const Command *Commands;
 	const Command *setCommands;
 	const Command *showCommands;
+//	const Command *listCommands;
 
 	// Function calls
 	Device *(*create)(std::string, std::string, sysModel *);
@@ -51,6 +56,12 @@ struct sysModel {
 	Driver     *driver;   // System driver for configurations
 	const char *srcFile;  // Source file
 };
+
+struct cfgMemory {
+	const char *cfgName;
+	uint64_t	cfgSize;
+};
+
 
 #define SYSTEM(name, desc, driver)         { #name, nullptr, desc, driver, __FILE__ }
 #define MODEL(name, parent, desc, driver)  { #name, #parent, desc, driver, __FILE__ }
@@ -66,6 +77,13 @@ public:
 	inline std::string getDescription() const { return devDesc; }
 	inline Driver *getDriver() const          { return driver; }
 
+	// Function calls for driver table
+	cfgMemory *getMemoryConfig() const;
+	const Command   *getCommandTable() const;
+	const Command   *getSetCommandTable() const;
+	const Command   *getShowCommandTable() const;
+	const Command   *getListCommandTable() const;
+
 	Device *findDevice(std::string devName);
 	Driver *findDriver(std::string drvName);
 	sysModel *findModel(std::string sysName);
@@ -79,7 +97,10 @@ public:
 	void addDevice(Device *dev)       { devices.push_back(dev); }
 
 	// Device virtual function calls
+	virtual int setMemory(uint32_t size);
 	virtual int load(std::string fname);
+	virtual int dump(uint32_t *Addr, uint32_t eAddr, uint32_t sw);
+
 
 protected:
 	std::string devName; // Device name
@@ -92,12 +113,6 @@ protected:
 	Driver  **drivers; // child driver table
 	sysModel **sysModels;
 };
-
-struct cfgMemory {
-	const char *cfgName;
-	uint64_t	cfgSize;
-};
-
 
 class sysDevice : public Device
 {

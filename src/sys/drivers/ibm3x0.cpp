@@ -13,12 +13,18 @@
 
 Driver ibm3x0_sysDriver {
 	"IBM3x0",
-	"IBM 360/370/390 Series"
+	"IBM 360/370/390 Series",
 	__FILE__,
+	nullptr,
+
+	// Configurations
 	nullptr,
 
 	// Command handlers
 	nullptr,
 	nullptr,
 	nullptr,
+
+	// Function calls
+	nullptr
 };

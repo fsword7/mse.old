@@ -141,8 +141,14 @@ Driver pdp10_sysDriver {
 	__FILE__,
 	nullptr,
 
+	// Configurations
+	nullptr,
+
 	// Command handlers
 	sysCommands,
 	nullptr,
 	nullptr,
+
+	// Function calls
+	nullptr
 };

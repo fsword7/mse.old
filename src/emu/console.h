@@ -17,10 +17,14 @@ public:
 
 	void prompt();
 
-	inline Device *getDevice() const { return root; }
+	inline Device *getDevice() const { return cdev; }
+	inline Device *getDialedDevice() const { return sdev; }
+
+	void dialDevice(Device *dev)  { sdev = dev; }
 
 private:
-	Device *root; // root core device
+	Device *cdev; // Console device
+	Device *sdev; // Selected device
 };
 
 

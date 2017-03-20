@@ -13,14 +13,20 @@
 
 Driver hsc_sysDriver {
 	"HSC",
-	"DEC HSC Series"
+	"DEC HSC Series",
 	__FILE__,
+	nullptr,
+
+	// Configurations
 	nullptr,
 
 	// Command handlers
 	nullptr,
 	nullptr,
 	nullptr,
+
+	// Function calls
+	nullptr
 };
 
 

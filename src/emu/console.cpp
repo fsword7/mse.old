@@ -15,7 +15,7 @@ std::vector<std::string> split(std::string const &line)
 }
 
 Console::Console(Device *dev)
-: root(dev)
+: cdev(dev), sdev(nullptr)
 {
 }
 
@@ -27,7 +27,7 @@ void Console::prompt()
 {
     std::string cmdLine;
     std::vector<std::string> args;
-    Driver *drv;
+    const Command *cmds;
     int rc = CMD_OK;
     
     while(rc == CMD_OK) {
@@ -42,24 +42,22 @@ void Console::prompt()
     	if (args.size() == 0)
     		continue;
 
-    	// Get driver table for commands
-    	drv = root->getDriver();
-    	rc = CMD_NOTFOUND; // default
-
     	// Process commands by using current device
-    	for (int idx = 0; drv->Commands[idx].name; idx++) {
-    		const Command *cmd = &drv->Commands[idx];
-//    		std::cout << "Command: " << cmd.name << std::endl;
-    		if (cmd->name == args[0]) {
-    			rc = cmd->execute(this, root, args);
-    			continue;
+    	cmds = cdev->getCommandTable();
+    	if (cmds != nullptr) {
+    		rc = CMD_NOTFOUND;
+    		for (int idx = 0; cmds[idx].name; idx++) {
+//    			std::cout << "Command: " << cmd.name << std::endl;
+    			if (cmds[idx].name == args[0]) {
+    				rc = cmds[idx].execute(this, cdev, args);
+    				break;
+    			}
     		}
-    	}
-
-    	// Command not found
-    	if (rc == CMD_NOTFOUND) {
-    		std::cout << drv->drvName <<  ": Unknown command " << args[0] << std::endl;
-    		rc = CMD_OK;
-    	}
-    };
+        	if (rc == CMD_NOTFOUND) {
+        		std::cerr << cdev->getName() <<  ": Unknown command " << args[0] << std::endl;
+        		rc = CMD_OK;
+        	}
+    	} else
+       		std::cerr << cdev->getName() << ": Command table not found." << std::endl;
+    }
 }

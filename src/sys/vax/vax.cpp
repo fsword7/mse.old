@@ -21,6 +21,21 @@ vax_sysDevice::~vax_sysDevice()
 		delete mem;
 }
 
+int vax_sysDevice::setMemory(uint32_t size)
+{
+	if (mem != nullptr)
+		delete mem;
+	if (size > 0) {
+		memSize = size;
+		mem = new uint8_t[size];
+	} else {
+		memSize = 0;
+		mem = nullptr;
+	}
+
+	return CMD_OK;
+}
+
 int vax_sysDevice::load(std::string fname)
 {
 	uint32_t addr, sAddr, eAddr;
@@ -37,7 +52,31 @@ int vax_sysDevice::load(std::string fname)
 
 	in.close();
 
-	std::cout << fname << ": Loaded " << std::hex << sAddr << " to " << eAddr << std::endl;
+	printf("%s: Loaded %08X to %08X (%08X bytes)\n",
+			fname.c_str(), sAddr, eAddr, eAddr - sAddr);
+	return CMD_OK;
+}
+
+int vax_sysDevice::dump(uint32_t *sAddr, uint32_t eAddr, uint32_t sw)
+{
+	int       idx;
+	char      ascBuffer[16];
+	char     *pasc;
+	uint32_t  data;
+
+	while (*sAddr <= eAddr) {
+		printf("%08X: ", *sAddr);
+		pasc = ascBuffer;
+		for (idx = 0; (idx < 16) && (*sAddr <= eAddr); idx++, (*sAddr)++) {
+//			vax_ReadC(vax, (*sAddr)++, &data, OP_BYTE, sw);
+			data = (*sAddr < memSize) ? mem[*sAddr] : 0;
+			printf("%02X%c", data, (idx == 7) ? '-' : ' ');
+			*pasc++ = ((data >= 32) && (data < 127)) ? data : '.';
+		}
+		*pasc = '\0';
+		printf(" |%-16s|\n", ascBuffer);
+	}
+
 	return CMD_OK;
 }
 
@@ -48,8 +87,11 @@ int vax_sysDevice::load(std::string fname)
 
 Driver vax_sysDriver {
 	"VAX",
-	"DEC VAX-11 Series"
+	"DEC VAX-11 Series",
 	__FILE__,
+	nullptr,
+
+	// Configurations
 	nullptr,
 
 	// Command handlers
@@ -57,6 +99,8 @@ Driver vax_sysDriver {
 	nullptr,
 	nullptr,
 
+	// Function calls
+	nullptr
 };
 
 
