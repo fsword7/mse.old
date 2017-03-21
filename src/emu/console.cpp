@@ -23,10 +23,36 @@ Console::~Console()
 {
 }
 
+int Console::executeCommand(args_t &args)
+{
+	const Command *cmds;
+
+	// Process commands by using current system device
+	if (sdev != nullptr && (cmds = sdev->getCommandTable()) != nullptr) {
+		for (int idx = 0; cmds[idx].name; idx++) {
+//    		std::cout << "Command: " << cmd.name << std::endl;
+			if (cmds[idx].name == args[0])
+				return cmds[idx].execute(this, sdev, args);
+		}
+	}
+
+	// Process commands by using console device
+	if ((cmds = cdev->getCommandTable()) != nullptr) {
+		for (int idx = 0; cmds[idx].name; idx++) {
+//    		std::cout << "Command: " << cmd.name << std::endl;
+			if (cmds[idx].name == args[0])
+				return cmds[idx].execute(this, cdev, args);
+		}
+	}
+
+	// command not found as default
+	return CMD_NOTFOUND;
+}
+
 void Console::prompt()
 {
-    std::string cmdLine;
-    std::vector<std::string> args;
+	std::string cmdLine;
+    args_t args;
     const Command *cmds;
     int rc = CMD_OK;
     
@@ -42,22 +68,10 @@ void Console::prompt()
     	if (args.size() == 0)
     		continue;
 
-    	// Process commands by using current device
-    	cmds = cdev->getCommandTable();
-    	if (cmds != nullptr) {
-    		rc = CMD_NOTFOUND;
-    		for (int idx = 0; cmds[idx].name; idx++) {
-//    			std::cout << "Command: " << cmd.name << std::endl;
-    			if (cmds[idx].name == args[0]) {
-    				rc = cmds[idx].execute(this, cdev, args);
-    				break;
-    			}
-    		}
-        	if (rc == CMD_NOTFOUND) {
-        		std::cerr << cdev->getName() <<  ": Unknown command " << args[0] << std::endl;
-        		rc = CMD_OK;
-        	}
-    	} else
-       		std::cerr << cdev->getName() << ": Command table not found." << std::endl;
+    	rc = executeCommand(args);
+    	if (rc == CMD_NOTFOUND) {
+    		std::cerr << cdev->getName() <<  ": Unknown command " << args[0] << std::endl;
+    		rc = CMD_OK;
+    	}
     }
 }

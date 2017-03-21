@@ -6,8 +6,8 @@
  */
 
 #include "emu/core.h"
-#include "emu/console.h"
 #include "emu/devsys.h"
+#include "emu/console.h"
 #include "sys/vax/vax.h"
 
 vax_sysDevice::vax_sysDevice()
@@ -80,10 +80,62 @@ int vax_sysDevice::dump(uint32_t *sAddr, uint32_t eAddr, uint32_t sw)
 	return CMD_OK;
 }
 
-//Device *vaxCreate()
-//{
-//	return new vax_sysDevice();
-//}
+// *****************************************************************************************
+
+// Usage: dump <start> [end]
+static int cmdDump(Console *con, Device *sdev, args_t &args)
+{
+	uint32_t  sAddr, eAddr = -1;
+	char     *strAddr;
+
+	// Check number of arguments
+	if (args.size() < 2) {
+		std::cout << "Usage: " << args[0] << " <start[-end]> [len]" << std::endl;
+		return CMD_OK;
+	}
+
+	sscanf(args[1].c_str(), "%x", &sAddr);
+	if ((strAddr = strchr(args[1].c_str(), '-')) != nullptr)
+		sscanf(strAddr+1, "%x", &eAddr);
+	else {
+		if (args.size() > 2) {
+			sscanf(args[2].c_str(), "%x", &eAddr);
+			eAddr = sAddr + eAddr - 1;
+		} else if (eAddr == -1)
+			eAddr = sAddr + 0x140 - 1;
+	}
+
+	sdev->dump(&sAddr, eAddr, 0);
+
+	return CMD_OK;
+}
+
+// General commands table
+Command vaxCommands[] = {
+	{ "dump", "<start> [end]", cmdDump },
+	// null terminator - end of command table
+	{ nullptr }
+};
+
+// General set commands table
+Command vaxSetCommands[] = {
+	// null terminator - end of command table
+	{ nullptr }
+};
+
+// General show commands table
+Command vaxShowCommands[] = {
+	// null terminator - end of command table
+	{ nullptr }
+};
+
+// General list commands table
+Command vaxListCommands[] = {
+	// null terminator - end of command table
+	{ nullptr }
+};
+
+
 
 Driver vax_sysDriver {
 	"VAX",
@@ -95,9 +147,10 @@ Driver vax_sysDriver {
 	nullptr,
 
 	// Command handlers
-	nullptr,
-	nullptr,
-	nullptr,
+	vaxCommands,
+	vaxSetCommands,
+	vaxShowCommands,
+	vaxListCommands,
 
 	// Function calls
 	nullptr

@@ -43,7 +43,7 @@ struct Driver
 	const Command *Commands;
 	const Command *setCommands;
 	const Command *showCommands;
-//	const Command *listCommands;
+	const Command *listCommands;
 
 	// Function calls
 	Device *(*create)(std::string, std::string, sysModel *);

@@ -6,9 +6,11 @@
 #include <string>
 #include <vector>
 #include <iterator>
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstdint>
+#include <cstring>
 
 // Varying scale unsigned integer
 struct scale16_t {

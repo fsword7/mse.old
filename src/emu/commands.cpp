@@ -6,8 +6,8 @@
  */
 
 #include "emu/core.h"
-#include "emu/console.h"
 #include "emu/devsys.h"
+#include "emu/console.h"
 
 // Usage: create [device] <options...>
 static int cmdCreate(Console *con, Device *cdev, args_t &args)
@@ -51,62 +51,6 @@ static int cmdCreate(Console *con, Device *cdev, args_t &args)
 	return CMD_OK;
 }
 
-// Usage: dial [device]
-static int cmdDial(Console *con, Device *cdev, args_t &args)
-{
-	Device *dev;
-
-	// Check number of arguments
-	if (args.size() < 2) {
-		std::cout << "Usage: " << args[0] << " <device|none>" << std::endl;
-		return CMD_OK;
-	}
-
-	if (args[1] == "none") {
-		dev = con->getDialedDevice();
-		con->dialDevice(nullptr);
-		if (dev != nullptr)
-			std::cout << cdev->getName() << ": " << dev->getName()
-			          << " released" << std::endl;
-		else
-			std::cout << cdev->getName() << ": already released" << std::endl;
-		return CMD_OK;
-	}
-
-	// check existing device by using name
-	dev = cdev->findDevice(args[1]);
-	if (dev == nullptr) {
-		std::cout << args[1] << ": device not found." << std::endl;
-		return CMD_OK;
-	}
-
-	con->dialDevice(dev);
-	std::cout << cdev->getName() << ": Dialed " << dev->getName() << std::endl;
-
-	return CMD_OK;
-}
-
-// Usage: dump <start> [end]
-static int cmdDump(Console *con, Device *cdev, args_t &args)
-{
-	Device *dev;
-
-	// Check number of arguments
-	if (args.size() < 2) {
-		std::cout << "Usage: " << args[0] << " <start> [end]" << std::endl;
-		return CMD_OK;
-	}
-
-	// Check dialed device
-	dev = con->getDialedDevice();
-	if (dev == nullptr) {
-		std::cerr << cdev->getName() << ": Please dial device first" << std::endl;
-		return CMD_OK;
-	}
-
-	return CMD_OK;
-}
-
 // Usage: load <file> ...
 static int cmdLoad(Console *con, Device *cdev, args_t &args)
 {
@@ -118,14 +62,49 @@ static int cmdLoad(Console *con, Device *cdev, args_t &args)
 		return CMD_OK;
 	}
 
-	// Check dialed device
-	dev = con->getDialedDevice();
+	// Check current system device
+	dev = con->getSystemDevice();
 	if (dev == nullptr) {
-		std::cerr << cdev->getName() << ": Please dial device first" << std::endl;
+		std::cerr << cdev->getName() << ": Please select system device first" << std::endl;
 		return CMD_OK;
 	}
 
 	dev->load(args[1]);
+
+	return CMD_OK;
+}
+
+// Usage: select <device|none>
+static int cmdSelect(Console *con, Device *cdev, args_t &args)
+{
+	Device *dev;
+
+	// Check number of arguments
+	if (args.size() < 2) {
+		std::cout << "Usage: " << args[0] << " <device|none>" << std::endl;
+		return CMD_OK;
+	}
+
+	if (args[1] == "none") {
+		dev = con->getSystemDevice();
+		con->setSystemDevice(nullptr);
+		if (dev != nullptr)
+			std::cout << cdev->getName() << ": Device " << dev->getName()
+			          << " released" << std::endl;
+		else
+			std::cout << cdev->getName() << ": device already released" << std::endl;
+		return CMD_OK;
+	}
+
+	// check existing device by using name
+	dev = cdev->findDevice(args[1]);
+	if (dev == nullptr) {
+		std::cout << args[1] << ": device not found." << std::endl;
+		return CMD_OK;
+	}
+
+	con->setSystemDevice(dev);
+	std::cout << cdev->getName() << ": Selected device " << dev->getName() << std::endl;
 
 	return CMD_OK;
 }
@@ -205,11 +184,10 @@ static int cmdShutdown(Console *, Device *, args_t &)
 // General commands table
 Command mseCommands[] = {
 	{ "create", "", cmdCreate },
-	{ "dial", "<device|none>", cmdDial },
-	{ "dump", "<start> [end]", cmdDump },
 	{ "load", "<file> ...", cmdLoad },
 	{ "exit", "", cmdShutdown },
 	{ "quit", "", cmdShutdown },
+	{ "select", "<device|none>", cmdSelect },
 	{ "set", "set [device] <options...>", cmdSet },
 	// null terminator - end of command table
 	{ nullptr }

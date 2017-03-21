@@ -15,16 +15,17 @@ public:
 	Console(Device *dev);
 	~Console();
 
+	int  executeCommand(args_t &args);
 	void prompt();
 
 	inline Device *getDevice() const { return cdev; }
-	inline Device *getDialedDevice() const { return sdev; }
+	inline Device *getSystemDevice() const { return sdev; }
 
-	void dialDevice(Device *dev)  { sdev = dev; }
+	void setSystemDevice(Device *dev)  { sdev = dev; }
 
 private:
 	Device *cdev; // Console device
-	Device *sdev; // Selected device
+	Device *sdev; // Current system device
 };
 
 

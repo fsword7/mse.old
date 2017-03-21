@@ -24,6 +24,7 @@ Driver ibm3x0_sysDriver {
 	nullptr,
 	nullptr,
 	nullptr,
+	nullptr,
 
 	// Function calls
 	nullptr

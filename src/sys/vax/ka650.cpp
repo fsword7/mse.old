@@ -118,6 +118,11 @@ static Device *create(std::string devName, std::string devType, sysModel *model)
 	return dev;
 }
 
+extern Command vaxCommands[];
+extern Command vaxSetCommands[];
+extern Command vaxShowCommands[];
+extern Command vaxListCommands[];
+
 Driver ka640_sysDriver {
 	"KA640",
 	"KA640 CPU Model",
@@ -128,9 +133,10 @@ Driver ka640_sysDriver {
 	ka650_cfgMemory,
 
 	// Command handlers
-	nullptr,
-	nullptr,
-	nullptr,
+	vaxCommands,
+	vaxSetCommands,
+	vaxShowCommands,
+	vaxListCommands,
 
 	// Function calls
 	create
@@ -146,9 +152,10 @@ Driver ka650_sysDriver {
 	ka650_cfgMemory,
 
 	// Command handlers
-	nullptr,
-	nullptr,
-	nullptr,
+	vaxCommands,
+	vaxSetCommands,
+	vaxShowCommands,
+	vaxListCommands,
 
 	// Function calls
 	create
@@ -164,9 +171,10 @@ Driver ka655_sysDriver {
 	ka650_cfgMemory,
 
 	// Command handlers
-	nullptr,
-	nullptr,
-	nullptr,
+	vaxCommands,
+	vaxSetCommands,
+	vaxShowCommands,
+	vaxListCommands,
 
 	// Function calls
 	create
@@ -182,9 +190,10 @@ Driver ka655x_sysDriver {
 	ka650x_cfgMemory,
 
 	// Command handlers
-	nullptr,
-	nullptr,
-	nullptr,
+	vaxCommands,
+	vaxSetCommands,
+	vaxShowCommands,
+	vaxListCommands,
 
 	// Function calls
 	create

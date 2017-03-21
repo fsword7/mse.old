@@ -6,8 +6,8 @@
 //
 
 #include "emu/core.h"
-#include "emu/console.h"
 #include "emu/devsys.h"
+#include "emu/console.h"
 #include "sys/pdp10/pdp10.h"
 
 pdp10_sysDevice::pdp10_sysDevice()
@@ -126,7 +126,7 @@ static int cmdLoad(Console *con, Device *dev, args_t &args)
 }
 
 // General commands table
-Command sysCommands[1] = {
+Command pdp10Commands[1] = {
 	{ "load", "<file>", cmdLoad },
 };
 
@@ -145,7 +145,8 @@ Driver pdp10_sysDriver {
 	nullptr,
 
 	// Command handlers
-	sysCommands,
+	pdp10Commands,
+	nullptr,
 	nullptr,
 	nullptr,
 

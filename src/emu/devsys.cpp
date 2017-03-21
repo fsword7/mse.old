@@ -149,10 +149,10 @@ sysModel *sysModels[] = {
 	nullptr
 };
 
-extern Command mseCommands;
-extern Command mseSetCommands;
-extern Command mseShowCommands;
-extern Command mseListCommands;
+extern Command mseCommands[];
+extern Command mseSetCommands[];
+extern Command mseShowCommands[];
+extern Command mseListCommands[];
 
 Driver mseDriver = {
 		"mse",
@@ -164,10 +164,10 @@ Driver mseDriver = {
 		nullptr,
 
 		// Command handlers
-		&mseCommands,
-		&mseSetCommands,
-		&mseShowCommands,
-//		&mseListCommands,
+		mseCommands,
+		mseSetCommands,
+		mseShowCommands,
+		mseListCommands,
 
 		// Function Calls
 		nullptr
