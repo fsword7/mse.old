@@ -53,7 +53,6 @@ void Console::prompt()
 {
 	std::string cmdLine;
     args_t args;
-    const Command *cmds;
     int rc = CMD_OK;
     
     while(rc == CMD_OK) {

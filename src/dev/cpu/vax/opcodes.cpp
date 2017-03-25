@@ -9,6 +9,8 @@
  */
 
 #include "emu/core.h"
+#include "emu/devcpu.h"
+#include "dev/cpu/vax/vax.h"
 #include "dev/cpu/vax/opcodes.h"
 
 // New VAX opcode table (working in progress)
@@ -19,10 +21,8 @@
 #define OPR(...) __VA_ARGS__
 #define OPC(name, opcode, nopr, opr, flags) \
 	{ name, nullptr, flags, 0x00, opcode, nopr, opr, nullptr }
-#define OPCt(name, opcode) \
-	{ name, nullptr, 0, 0x00, opcode, 0, { 0, 0, 0, 0, 0, 0 }, nullptr }
 
-const vaxOpcode vaxOpcodes2[] = {
+const vaxOpcode vaxOpcodes[] = {
 	// Opcode 0000 - 00FF (00 - FF)
 	OPC("HALT",     OPC_nHALT,     0, OPR({ 0,  0,  0,  0,  0,  0  }), OPC_REG),
 	OPC("NOP",      OPC_nNOP,      0, OPR({ 0,  0,  0,  0,  0,  0  }), OPC_REG),
@@ -470,10 +470,25 @@ const vaxOpcode vaxOpcodes2[] = {
 	{ nullptr }
 };
 
+void vax_cpuDevice::buildOpcodes()
+{
+	uint16_t opCode;
+
+	// Clear all opcode table
+	for (int idx = 0; idx < VAX_nOPCTBL; idx++)
+		opCodes[idx] = nullptr;
+
+	// Initialize opcode table
+	for (int idx = 0; vaxOpcodes[idx].opName; idx++) {
+		opCode = vaxOpcodes[idx].opCode;
+		if (opCodes[opCode] == nullptr)
+			opCodes[opCode] = &vaxOpcodes[idx];
+	}
+}
 
 #define DEF_NAME(cpu, opc) nullptr
 
-const vaxOpcode vaxOpcodes[] =
+const vaxOpcode vax_oldOpcodes[] =
 {
 	{
 		"HALT", "Halt",

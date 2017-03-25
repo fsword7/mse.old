@@ -10,6 +10,7 @@
 #define VAX_nGREGS  16
 #define VAX_nPREGS  256
 #define VAX_nOPREGS 9
+#define VAX_nOPCTBL 1024
 
 // Register List
 #define REG_nR0		0
@@ -79,6 +80,16 @@
 #define AM_SUPERVISOR	2 // Supervisor mode for DCL (shell)
 #define AM_USER			3 // User mode for normal programs
 
+struct vaxOpcode {
+	const char *opName;           // Name of the Instruction
+	const char *opDesc;           // Description of the Instruction
+	uint32_t    flags;            // Instruction Flags
+	uint8_t     opExtend;         // MSB of Instruction (Normally Zero)
+	uint16_t    opCode;           // Extend/Opcode Value
+	uint8_t     nOperands;        // Number of Operands
+	uint32_t    oprMode[6];       // Attributes/Scales for Each Operand
+	void        (*execute)();     // Execute Routine
+};
 
 class vax_cpuDevice : public cpuDevice
 {
@@ -86,11 +97,43 @@ public:
 	vax_cpuDevice();
 	virtual ~vax_cpuDevice();
 
+	void buildOpcodes();
+
 	// CPU function calls
+	virtual void init();
 	virtual void reset();
 	void execute();
+
+	int disasmOperand(char **ptr, uint32_t &vAddr, const vaxOpcode *opc, int opn, bool idxFlag);
+	int disasm(uint32_t pcAddr);
+
+	void assignMemory(uint8_t *mem, uint32_t memSize);
+
+	// Memory access routines
+	uint32_t readpa(uint32_t addr, int size);                 // Read access (aligned)
+	uint32_t readpl(uint32_t pAddr);                          // Longword read access (aligned)
+	void     writepa(uint32_t addr, uint32_t data, int size); // Write access (aligned)
+
+	// Console memory access routines (unaligned)
+	void flushci();
+	int  readci(uint32_t addr, uint32_t *data, int size); // Instruction read access
+	int  readc(uint32_t addr, uint32_t *data, int size);  // Data read access
 
 protected:
 	scale32_t gRegs[VAX_nGREGS]; // General registers
 	uint32_t  pRegs[VAX_nPREGS]; // Processor registers
+
+	// Opcode table for operand decoding and disassembler
+	const vaxOpcode *opCodes[VAX_nOPCTBL];
+
+	// Mirror of system memory (from system device)
+	uint32_t  memSize;
+	uint8_t  *mem;
+
+	// Console instruction buffer (look-ahead buffer)
+	uint32_t  cibData[2]; // IB Aligned data buffer
+	uint32_t  cibAddr;    // IB Address
+	uint32_t  cibCount;   // IB Count
+	uint32_t  cvAddr;     // virtual address
+
 };

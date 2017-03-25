@@ -7,6 +7,7 @@
 
 #include "emu/core.h"
 #include "emu/devsys.h"
+#include "emu/devcpu.h"
 #include "emu/devcore.h"
 #include "emu/console.h"
 
@@ -112,10 +113,25 @@ int Device::dump(uint32_t *, uint32_t, uint32_t)
 
 sysDevice::sysDevice()
 {
+	cpu.clear();
 }
 
 sysDevice::~sysDevice()
 {
+	cpu.clear();
+}
+
+void sysDevice::addCPUDevice(cpuDevice *cpu)
+{
+	this->cpu.push_back(cpu);
+	addDevice(cpu);
+}
+
+cpuDevice *sysDevice::getCPUDevice(int idx)
+{
+	if (idx < 0 || idx >= cpu.size())
+		return nullptr;
+	return cpu[idx];
 }
 
 // ******************************************************************************

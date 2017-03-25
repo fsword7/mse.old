@@ -7,7 +7,7 @@
 
 #pragma once
 
-class vax_sysDevice : public Device
+class vax_sysDevice : public sysDevice
 {
 public:
 	vax_sysDevice();

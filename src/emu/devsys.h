@@ -8,6 +8,7 @@
 #pragma once
 
 class Device;
+class cpuDevice;
 class Console;
 struct sysModel;
 struct cfgMemory;
@@ -120,7 +121,13 @@ public:
 	sysDevice();
 	~sysDevice();
 
-private:
+	void addCPUDevice(cpuDevice *cdev);
+
+	cpuDevice *getCPUDevice(int idx);
+
+protected:
+	std::vector<cpuDevice *> cpu;
+
 };
 
 void setSystemDrivers(Device *dev);

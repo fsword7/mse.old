@@ -7,8 +7,10 @@
 
 #include "emu/core.h"
 #include "emu/devsys.h"
+#include "emu/devcpu.h"
 #include "emu/console.h"
 #include "sys/vax/vax.h"
+#include "dev/cpu/vax/vax.h"
 
 vax_sysDevice::vax_sysDevice()
 : memSize(0), mem(nullptr)
@@ -32,6 +34,9 @@ int vax_sysDevice::setMemory(uint32_t size)
 		memSize = 0;
 		mem = nullptr;
 	}
+
+	for (auto &&cdev : cpu)
+		((vax_cpuDevice *)cdev)->assignMemory(mem, memSize);
 
 	return CMD_OK;
 }
@@ -82,6 +87,46 @@ int vax_sysDevice::dump(uint32_t *sAddr, uint32_t eAddr, uint32_t sw)
 
 // *****************************************************************************************
 
+// Usage: disasm <start> [end]
+static int cmdDisasm(Console *con, Device *sdev, args_t &args)
+{
+	uint32_t  sAddr, eAddr = -1;
+	int       count = -1;
+	char     *strAddr;
+	vax_cpuDevice *cpu;
+
+	// Check number of arguments
+	if (args.size() < 2) {
+		std::cout << "Usage: " << args[0] << " <start[-end]> [len]" << std::endl;
+		return CMD_OK;
+	}
+
+
+	sscanf(args[1].c_str(), "%x", &sAddr);
+	if ((strAddr = strchr(args[1].c_str(), '-')) != nullptr)
+		sscanf(strAddr+1, "%x", &eAddr);
+	else {
+		if (args.size() > 2)
+			sscanf(args[2].c_str(), "%d", &count);
+		else
+			count = 20;
+	}
+
+	cpu = (vax_cpuDevice *)((sysDevice *)sdev)->getCPUDevice(0);
+
+	// Display disassembly listing.
+	cpu->flushci();
+	if (count > 0) {
+		while (count--)
+			sAddr += cpu->disasm(sAddr);
+	} else {
+		while (sAddr < eAddr)
+			sAddr += cpu->disasm(sAddr);
+	}
+
+	return CMD_OK;
+}
+
 // Usage: dump <start> [end]
 static int cmdDump(Console *con, Device *sdev, args_t &args)
 {
@@ -112,6 +157,7 @@ static int cmdDump(Console *con, Device *sdev, args_t &args)
 
 // General commands table
 Command vaxCommands[] = {
+	{ "disasm", "<start> [end]", cmdDisasm },
 	{ "dump", "<start> [end]", cmdDump },
 	// null terminator - end of command table
 	{ nullptr }

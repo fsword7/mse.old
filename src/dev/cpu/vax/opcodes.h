@@ -127,18 +127,6 @@
 // Instruction Data Structure Definitions
 // Instruction Table for Assembler, Disassembler, and Execution
 
-struct vaxOpcode {
-	const char *opName;           // Name of the Instruction
-	const char *opDesc;           // Description of the Instruction
-	uint32_t    flags;            // Instruction Flags
-	uint8_t     opExtend;         // MSB of Instruction (Normally Zero)
-	uint16_t    opCode;           // Extend/Opcode Value
-	uint8_t     nOperands;        // Number of Operands
-	uint32_t    oprMode[6];       // Attributes/Scales for Each Operand
-	void        (*execute)();     // Execute Routine
-};
-
-
 #define OPC_nHALT		0x0000
 #define OPC_nNOP		0x0001
 #define OPC_nREI		0x0002
