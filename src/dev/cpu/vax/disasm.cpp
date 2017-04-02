@@ -180,7 +180,7 @@ int vax_cpuDevice::disasm(uint32_t vAddr)
 	}
 	opc = opCodes[opCode];
 
-	if (opc != nullptr) {
+	if (opc->opCode != OPC_nUOPC) {
 		ptr += sprintf(ptr, "%-8s", opc->opName);
 		for (int opn = 0; opn < opc->nOperands; opn++)
 			disasmOperand(&ptr, pcAddr, opc, opn, false);

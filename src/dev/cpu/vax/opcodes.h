@@ -127,6 +127,8 @@
 // Instruction Data Structure Definitions
 // Instruction Table for Assembler, Disassembler, and Execution
 
+#define OPC_nUOPC		0xFFFF
+
 #define OPC_nHALT		0x0000
 #define OPC_nNOP		0x0001
 #define OPC_nREI		0x0002

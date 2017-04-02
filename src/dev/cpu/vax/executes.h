@@ -24,6 +24,9 @@ void CPU_CLASS::execute()
 	register uint32_t src, srcl, srch;
 	register uint32_t dst, dstl, dsth;
 
+	// Reset instruction steam
+	flushvi();
+
 	while (1) {
 		try {
 			// Fetch instruction from current stream
@@ -257,6 +260,7 @@ void CPU_CLASS::execute()
 				break;
 
 			// MOVx instructions
+			// MOVAx instructions
 			case OPC_nMOVB:
 				dst = opRegs[0];
 				StoreB(opRegs[1], opRegs[2], dst);
@@ -266,6 +270,10 @@ void CPU_CLASS::execute()
 				StoreW(opRegs[1], opRegs[2], dst);
 				break;
 			case OPC_nMOVL:
+			case OPC_nMOVAB:
+			case OPC_nMOVAW:
+			case OPC_nMOVAL:
+			case OPC_nMOVAQ:
 				dst = opRegs[0];
 				StoreL(opRegs[1], opRegs[2], dst);
 				break;
@@ -300,14 +308,23 @@ void CPU_CLASS::execute()
 				break;
 
 			// Illegal/unimplemented instruction
-//			default:
+			default:
+				if (opc->opCode != OPC_nUOPC)
+					throw STOP_UOPC;
 //				throw EXC_ILLEGAL_INSTRUCTION;
+				break;
 			}
 		}
 
 		catch (int32_t exCode) {
-			if (exCode < 0) {
-				printf("%s: %s at PC %08X", devName, stopNames[~exCode], faultAddr);
+			switch (exCode) {
+			case STOP_HALT:
+				printf("%s: %s at PC %08X\n", devName.c_str(), stopNames[~exCode], faultAddr);
+				return;
+
+			case STOP_UOPC:
+				printf("%s: Opcode %s - Unimplemented opcode at PC %08X\n",
+						devName.c_str(), opc->opName, faultAddr);
 				return;
 			}
 		}

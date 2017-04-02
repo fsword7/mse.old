@@ -189,7 +189,7 @@ static int cmdLoad(Console *con, Device *sdev, args_t &args)
 		return CMD_OK;
 	}
 
-	if (args.size() > 2)
+	if (args.size() >= 3)
 		sscanf(args[2].c_str(), "%x", &sAddr);
 
 	sdev->load(args[1], sAddr);
@@ -200,12 +200,27 @@ static int cmdLoad(Console *con, Device *sdev, args_t &args)
 // Usage: run <addr>
 static int cmdRun(Console *con, Device *sdev, args_t &args)
 {
+	uint32_t       sAddr = 0;
+	vax_cpuDevice *cpu;
+
 	// Check number of arguments
 	if (args.size() < 2) {
 		std::cout << "Usage: " << args[0] << " [addr]" << std::endl;
 		return CMD_OK;
 	}
 
+	if (args.size() >= 2)
+		sscanf(args[1].c_str(), "%x", &sAddr);
+
+	// Get first CPU device from CPU device array
+	cpu = (vax_cpuDevice *)((sysDevice *)sdev)->getCPUDevice(0);
+
+	// Start execution
+	cpu->reset();
+	cpu->setPCAddr(sAddr);
+	cpu->execute();
+
+	return CMD_OK;
 }
 
 // General commands table

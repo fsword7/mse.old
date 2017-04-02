@@ -92,9 +92,26 @@ cvax_cpuDevice::~cvax_cpuDevice()
 {
 }
 
+cvax_cpuDevice *cvax_cpuDevice::create(std::string devName)
+{
+	cvax_cpuDevice *cpu = new cvax_cpuDevice();
+
+	if (cpu == nullptr)
+		return nullptr;
+
+	cpu->devName = devName;
+	cpu->devType = "CVAX";
+//	cpu->devDesc = model->desc;
+//	cpu->driver  = model->driver;
+
+	return cpu;
+}
+
 void cvax_cpuDevice::reset()
 {
-	PREG_SID = (SID_ID|SID_UCODE);
+	// Initialize all working registers
+	for (int idx = 0; idx < VAX_nGREGS; idx++)
+		gRegs[idx].l = 0;
 
 	// Powerup initialization
 	psReg  = PSL_IS | PSL_IPL;
@@ -102,6 +119,7 @@ void cvax_cpuDevice::reset()
 	REG_SP = 0x00000000;
 	REG_PC = 0; /* ROM_BASE */
 
+	PREG_SID    = (SID_ID|SID_UCODE);
 	PREG_CONPC  = 0;
 	PREG_CONPSL = PSL_IS | PSL_IPL | CON_PWRUP;
 	PREG_MAPEN  = 0;

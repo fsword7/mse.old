@@ -23,6 +23,8 @@
 	{ name, nullptr, flags, 0x00, opcode, nopr, opr, nullptr }
 
 const vaxOpcode vaxOpcodes[] = {
+	OPC("UOPC",     OPC_nUOPC,     0, OPR({ 0,  0,  0,  0,  0,  0  }), OPC_REG),
+
 	// Opcode 0000 - 00FF (00 - FF)
 	OPC("HALT",     OPC_nHALT,     0, OPR({ 0,  0,  0,  0,  0,  0  }), OPC_REG),
 	OPC("NOP",      OPC_nNOP,      0, OPR({ 0,  0,  0,  0,  0,  0  }), OPC_REG),
@@ -474,14 +476,14 @@ void vax_cpuDevice::buildOpcodes()
 {
 	uint16_t opCode;
 
-	// Clear all opcode table
+	// Initialize all opcode table as default unimplemented opcode
 	for (int idx = 0; idx < VAX_nOPCTBL; idx++)
-		opCodes[idx] = nullptr;
+		opCodes[idx] = &vaxOpcodes[0];
 
 	// Initialize opcode table
-	for (int idx = 0; vaxOpcodes[idx].opName; idx++) {
+	for (int idx = 1; vaxOpcodes[idx].opName; idx++) {
 		opCode = vaxOpcodes[idx].opCode;
-		if (opCodes[opCode] == nullptr)
+		if (opCodes[opCode] == &vaxOpcodes[0])
 			opCodes[opCode] = &vaxOpcodes[idx];
 	}
 }

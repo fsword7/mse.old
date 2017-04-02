@@ -174,29 +174,30 @@
 #define ACC_MASK(am)     (1u << (am))       // Access mode mask
 
 // Exception Codes - Stop
-#define STOP_HALT       -1   // HALT instruction encounter
+#define STOP_HALT		-1		// HALT opcode
+#define STOP_UOPC		-2		// Unimplemented opcode
 
 // Store data macro routines for instructions
 #define StoreB(op0, op1, d)   \
-	if (op0 >= 0)             \
+	if (op0 != OPR_MEM)       \
 		gRegs[op0].b  = d;    \
 	else                      \
 		writevb(op1, d, WACC);
 
 #define StoreW(op0, op1, d)   \
-	if (op0 >= 0)             \
+	if (op0 != OPR_MEM)       \
 		gRegs[op0].w  = d;    \
 	else                      \
 		writevw(op1, d, WACC);
 
 #define StoreL(op0, op1, d)   \
-	if (op0 >= 0)             \
+	if (op0 != OPR_MEM)       \
 		gRegs[op0].l  = d;    \
 	else                      \
 		writevl(op1, d, WACC);
 
 #define StoreQ(op0, op1, dl, dh)        \
-	if (op0 >= 0) {                     \
+	if (op0 != OPR_MEM) {               \
 		gRegs[op0].l  = dl;             \
 		gRegs[op0+1].l = dh;            \
 	} else {                            \
@@ -226,14 +227,15 @@ public:
 
 	// CPU function calls
 	virtual void init();
-	virtual void reset();
+//	virtual void reset();
 	virtual int  boot();
-	void execute();
+//	void execute();
 
 	int disasmOperand(char **ptr, uint32_t &vAddr, const vaxOpcode *opc, int opn, bool idxFlag);
 	int disasm(uint32_t pcAddr);
 
 	void assignMemory(uint8_t *mem, uint32_t memSize);
+	void setPCAddr(uint32_t pcAddr);
 
 	// Memory access routines
 	uint32_t readp(uint32_t addr, int size);                   // Read access (aligned)

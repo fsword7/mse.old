@@ -112,7 +112,7 @@ static Device *create(std::string devName, std::string devType, sysModel *model)
 
 	dev = ka650_sysDevice::create(devName, devType, model);
 
-	cpu = new cvax_cpuDevice();
+	cpu = cvax_cpuDevice::create("cpu0");
 	dev->addCPUDevice(cpu);
 
 	return dev;
