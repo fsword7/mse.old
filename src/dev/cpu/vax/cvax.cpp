@@ -13,10 +13,10 @@
 #include "dev/cpu/vax/mtpr.h"
 #include "dev/cpu/vax/vax.h"
 #include "dev/cpu/vax/cvax.h"
+#include "dev/cpu/vax/opcodes.h"
 
-#if 0
 static int   regSize = 0x40;
-static char *regNames[] = {
+static const char *regNames[] = {
 	"KSP",     // (R/W) 00 Kernel Stack Pointer
 	"ESP",     // (R/W) 01 Executive Stack Pointer
 	"SSP",     // (R/W) 02 Supervisor Stack Pointer
@@ -82,7 +82,7 @@ static char *regNames[] = {
 	"SID",     // (R)   3E System Identification
 	"TBCHK",   // (W)   3F Translation Buffer Check
 };
-#endif
+
 
 cvax_cpuDevice::cvax_cpuDevice()
 {
@@ -94,42 +94,62 @@ cvax_cpuDevice::~cvax_cpuDevice()
 
 void cvax_cpuDevice::reset()
 {
-	pRegs[PR_SID] = (SID_ID|SID_UCODE);
+	PREG_SID = (SID_ID|SID_UCODE);
+
+	// Powerup initialization
+	psReg  = PSL_IS | PSL_IPL;
+	ccReg  = 0;
+	REG_SP = 0x00000000;
+	REG_PC = 0; /* ROM_BASE */
+
+	PREG_CONPC  = 0;
+	PREG_CONPSL = PSL_IS | PSL_IPL | CON_PWRUP;
+	PREG_MAPEN  = 0;
+	PREG_ICCS   = 0;
+	PREG_MSER   = 0;
+	PREG_CADR   = 0;
+	PREG_SISR   = 0;
+	PREG_ASTLVL = 0;
+}
+
+int cvax_cpuDevice::boot()
+{
+	return 0;
 }
 
 #define CPU_CVAX
 #define CPU_CLASS cvax_cpuDevice
 #include "dev/cpu/vax/executes.h"
 
-#if 0
 // Read Privileged Register
-int32 cvax_cpuDevice::readRegister(int32 pReg)
+uint32_t cvax_cpuDevice::readpr(uint32_t pReg)
 {
-	int32 data;
+	uint32_t data;
 
 	switch (pReg) {
 		case PR_KSP:
-			data = (PSL & PSL_IS) ? KSP : SP;
+			data = (psReg & PSL_IS) ? pRegs[PR_KSP] : gRegs[REG_nSP].l;
 			break;
 
 		case PR_ISP:
-			data = (PSL & PSL_IS) ? SP : ISP;
+			data = (psReg & PSL_IS) ? gRegs[REG_nSP].l : pRegs[PR_ISP];
 			break;
 
 		case PR_IPL:
-			IPL = data = PSL_GETIPL(PSL);
+			data = PSL_GETIPL(psReg);
+//			pRegs[PR_IPL] = data;
 			break;
 
 		case PR_RXCS:
-			data = vax_ReadRXCS(vax);
+//			data = vax_ReadRXCS(vax);
 			break;
 
 		case PR_RXDB:
-			data = vax_ReadRXDB(vax);
+//			data = vax_ReadRXDB(vax);
 			break;
 
 		case PR_TXCS:
-			data = vax_ReadTXCS(vax);
+//			data = vax_ReadTXCS(vax);
 			break;
 
 //		case PR_TXDB:
@@ -137,93 +157,100 @@ int32 cvax_cpuDevice::readRegister(int32 pReg)
 //			break;
 
 		default:
-			data = PRN(pReg);
+			data = (pReg < VAX_nPREGS) ? pRegs[pReg] : 0;
 			break;
 	}
 
-#ifdef DEBUG
-	if (dbg_Check(DBG_TRACE|DBG_DATA)) {
-		char *name = "Undefined Register";
-		if ((pReg < regSize) && regNames[pReg])
-			name = regNames[pReg];
-		dbg_Printf("KA650: (R) %s (%02X) => %08X\n", name, pReg, data);
-	}
-#endif /* DEBUG */
+//#ifdef DEBUG
+//	if (dbg_Check(DBG_TRACE|DBG_DATA)) {
+//		char *name = "Undefined Register";
+//		if ((pReg < regSize) && regNames[pReg])
+//			name = regNames[pReg];
+//		dbg_Printf("KA650: (R) %s (%02X) => %08X\n", name, pReg, data);
+//	}
+//#endif /* DEBUG */
 
 	return data;
 }
 
-void cvax_cpuDevice::writeRegister(int32 pReg, int32 data)
+void cvax_cpuDevice::writepr(uint32_t pReg, uint32_t data) //throw(uint32_t)
 {
 	switch (pReg) {
 		case PR_KSP: // Kernel Stack Pointer
-			((PSL & PSL_IS) ? KSP : SP) = data;
+			if (psReg & PSL_IS)
+				pRegs[PR_KSP] = data;
+			else
+				gRegs[REG_nSP].l = data;
 			break;
 
 		case PR_ESP: // Executive Stack Pointer
 		case PR_SSP: // Supervisor Stack Pointer
 		case PR_USP: // User Stack Pointer
-			PRN(pReg) = data;
+			pRegs[pReg] = data;
 			break;
 
 		case PR_ISP: // Interrupt Stack Pointer
-			((PSL & PSL_IS) ? SP : ISP) = data;
+			if (psReg & PSL_IS)
+				gRegs[REG_nSP].l = data;
+			else
+				pRegs[PR_ISP] = data;
 			break;
 
 		case PR_P0BR:
 		case PR_P1BR:
 		case PR_SBR:
-			PRN(pReg) = data & BR_MASK;
-			vax_ClearTBTable(vax, pReg == PR_SBR);
+			pRegs[pReg] = data & BR_MASK;
+//			vax_ClearTBTable(vax, pReg == PR_SBR);
 			break;
 
 		case PR_P0LR:
 		case PR_P1LR:
 		case PR_SLR:
-			PRN(pReg) = data & LR_MASK;
-			vax_ClearTBTable(vax, pReg == PR_SLR);
+			pRegs[pReg] = data & LR_MASK;
+//			vax_ClearTBTable(vax, pReg == PR_SLR);
 			break;
 
 		case PR_PCBB:
 		case PR_SCBB:
-			PRN(pReg) = data & LALIGN;
+			pRegs[pReg] = data & ALIGN_LONG;
 			break;
 
 		case PR_IPL:
-			IPL = data & PSL_M_IPL;
-			PSL = PSL_PUTIPL(IPL) | (PSL & ~PSL_IPL);
+			pRegs[PR_IPL] = data & PSL_M_IPL;
+			psReg &= ~PSL_IPL;
+			psReg |= PSL_SETIPL(data);
 			break;
 
 		case PR_SIRR:
-			if ((data > 0xF) || (data == 0))
-				RSVD_OPND_FAULT;
-			SISR |= (1 << data);
+//			if ((data > 0xF) || (data == 0))
+//				throw EXC_RSVD_OPND_FAULT;
+			pRegs[PR_SIRR] |= (1 << data);
 			break;
 
 		case PR_SISR:
-			SISR = data & SISR_MASK;
+			pRegs[PR_SISR] = data & SISR_MASK;
 			break;
 
 		case PR_ASTLVL:
-			if ((uint32)data > AST_MAX)
-				RSVD_OPND_FAULT;
-			ASTLVL = data;
+//			if ((uint32)data > AST_MAX)
+//				throw EXC_RSVD_OPND_FAULT;
+			pRegs[PR_ASTLVL] = data;
 			break;
 
 		case PR_ICCS:
 			// Subset implementation in MicroVAX series
-			ICCS = data & ICCS_WMASK;
-#ifdef DEBUG
-			if (dbg_Check(DBG_INTERRUPT))
-				dbg_Printf("KA650: Clock Interrupt Enable: %s\n",
-					(data & ICCS_IE) ? "On" : "Off");
-#endif /* DEBUG */
+//			pRegs[PR_ICCS] = data & ICCS_WMASK;
+//#ifdef DEBUG
+//			if (dbg_Check(DBG_INTERRUPT))
+//				dbg_Printf("KA650: Clock Interrupt Enable: %s\n",
+//					(data & ICCS_IE) ? "On" : "Off");
+//#endif /* DEBUG */
 			break;
 
 		case PR_RXCS:
 //			if (data & RXCS_MBZ)
-//				RSVD_OPND_FAULT;
-			vax_WriteRXCS(vax, data);
+//				throw EXC_RSVD_OPND_FAULT;
+//			vax_WriteRXCS(vax, data);
 			break;
 
 		case PR_RXDB:
@@ -232,55 +259,54 @@ void cvax_cpuDevice::writeRegister(int32 pReg, int32 data)
 
 		case PR_TXCS:
 //			if (data & TXCS_MBZ)
-//				RSVD_OPND_FAULT;
-			vax_WriteTXCS(vax, data);
+//				throw EXC_RSVD_OPND_FAULT;
+//			vax_WriteTXCS(vax, data);
 			break;
 
 		case PR_TXDB:
-			vax_WriteTXDB(vax, data);
+//			vax_WriteTXDB(vax, data);
 			break;
 
 		case PR_CADR:
-			PRN(pReg) = (data & CADR_RW) | CADR_MBO;
+//			pRegs[pReg] = (data & CADR_RW) | CADR_MBO;
 			break;
 
 		case PR_MSER:
-			PRN(pReg) &= MSER_HM;
+//			pRegs[pReg] &= MSER_HM;
 			break;
 
 		case PR_CONPC:
 		case PR_CONPSL:
-			PRN(pReg) = data;
+//			pRegs[pReg] = data;
 			break;
 
 		case PR_IORESET:
-			cq_ResetAll(((KA650_DEVICE *)vax)->qba);
+//			cq_ResetAll(((KA650_DEVICE *)vax)->qba);
 			break;
 
 		case PR_MAPEN:
-			MAPEN = data & 1;
+//			pRegs[PR_MAPEN] = data & 1;
 		case PR_TBIA:
-			vax_ClearTBTable(vax, 1);
+//			vax_ClearTBTable(vax, 1);
 			break;
 
 		case PR_TBIS:
-			vax_ClearTBEntry(vax, data);
+//			vax_ClearTBEntry(vax, data);
 			break;
 
 		case PR_TBCHK:
-			if (vax_CheckTBEntry(vax, data))
-				CC |= CC_V;
+//			if (vax_CheckTBEntry(vax, data))
+//				CC |= CC_V;
 			break;
 	}
 
-#ifdef DEBUG
-	if (dbg_Check(DBG_TRACE|DBG_DATA)) {
-		char *name = "Undefined Register";
-		if ((pReg < regSize) && regNames[pReg])
-			name = regNames[pReg];
-		dbg_Printf("KA650: (W) %s (%02X) <= %08X\n", name, pReg, data);
-	}
-#endif /* DEBUG */
+//#ifdef DEBUG
+//	if (dbg_Check(DBG_TRACE|DBG_DATA)) {
+//		char *name = "Undefined Register";
+//		if ((pReg < regSize) && regNames[pReg])
+//			name = regNames[pReg];
+//		dbg_Printf("KA650: (W) %s (%02X) <= %08X\n", name, pReg, data);
+//	}
+//#endif /* DEBUG */
 }
-#endif
 

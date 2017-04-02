@@ -11,8 +11,8 @@
 #include "emu/devcore.h"
 #include "emu/console.h"
 
-Device::Device()
-: driver(nullptr), parent(nullptr)
+Device::Device(int _clsType)
+: clsType(_clsType), driver(nullptr), parent(nullptr)
 {
 }
 
@@ -97,7 +97,13 @@ int Device::setMemory(uint32_t)
 	return CMD_ERROR;
 }
 
-int Device::load(std::string)
+int Device::boot()
+{
+	std::cerr << devName << ": Command not supported" << std::endl;
+	return CMD_ERROR;
+}
+
+int Device::load(std::string, uint32_t)
 {
 	std::cerr << devName << ": Command not supported" << std::endl;
 	return CMD_ERROR;
@@ -112,6 +118,7 @@ int Device::dump(uint32_t *, uint32_t, uint32_t)
 // ******************************************************************************
 
 sysDevice::sysDevice()
+: Device(CLS_SYSTEM)
 {
 	cpu.clear();
 }

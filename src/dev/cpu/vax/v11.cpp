@@ -13,6 +13,7 @@
 #include "dev/cpu/vax/mtpr.h"
 #include "dev/cpu/vax/vax.h"
 #include "dev/cpu/vax/v11.h"
+#include "dev/cpu/vax/opcodes.h"
 
 
 v11_cpuDevice::v11_cpuDevice()

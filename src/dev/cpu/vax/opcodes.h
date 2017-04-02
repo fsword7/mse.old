@@ -20,7 +20,7 @@
 #define OPC_WORD     0x00000002 // Word/D_Floating Type
 #define OPC_BYTE     0x00000001 // Byte/F_Floating Type
 
-#define OPC_nEXTEND  0xFC00 // Extended opcode offset for opcode table
+#define OPC_nEXTEND  0xFC // Extended opcode offset for opcode table
 
 // Operand type definitions
 #define OPR_BYTE    1 // Operand is a byte      (1 byte)
@@ -103,9 +103,9 @@
 #define IL    (OPR_IMMED|OPR_LONG)
 
 // Operand mode definitions
-#define OP_MMASK     0xF0
-#define OP_RMASK     0x0F
-#define OP_MEM       -1
+#define OPR_MMASK     0xF0
+#define OPR_RMASK     0x0F
+#define OPR_MEM       -1
 
 #define LIT0  0x00 // Short Literal
 #define LIT1  0x10

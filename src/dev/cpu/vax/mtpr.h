@@ -128,3 +128,48 @@
 #define PR_PCIDX   125 // primary cache index
 #define PR_PCERR   126 // primary cache error address
 #define PR_PCSTS   127 // primary cache status
+
+
+
+#define PREG_KSP    pRegs[PR_KSP]     // (R/W) Kernel Stack Pointer
+#define PREG_ESP    pRegs[PR_ESP]     // (R/W) Executive Stack Pointer
+#define PREG_SSP    pRegs[PR_SSP]     // (R/W) Supervisor Stack Pointer
+#define PREG_USP    pRegs[PR_USP]     // (R/W) User Stack Pointer
+#define PREG_ISP    pRegs[PR_ISP]     // (R/W) Interrupt Stack Pointer
+
+#define PREG_P0BR   pRegs[PR_P0BR]    // (R/W) P0 Base Register
+#define PREG_P0LR   pRegs[PR_P0LR]    // (R/W) P0 Length Register
+#define PREG_P1BR   pRegs[PR_P1BR]    // (R/W) P1 Base Register
+#define PREG_P1LR   pRegs[PR_P1LR]    // (R/W) P1 Length Register
+#define PREG_SBR    pRegs[PR_SBR]     // (R/W) System Base Register
+#define PREG_SLR    pRegs[PR_SLR]     // (R/W) System Limit Register
+
+#define PREG_PCBB   pRegs[PR_PCBB]    // (R/W) Process Control Block Base
+#define PREG_SCBB   pRegs[PR_SCBB]    // (R/W) System Control Block Base
+#define PREG_IPL    pRegs[PR_IPL]     // (R/W) Interrupt Priority Level
+#define PREG_ASTLVL pRegs[PR_ASTLVL]  // (R/W) AST Level
+#define PREG_SIRR   pRegs[PR_SIRR]    // (W)   Software Interrupt Request Register
+#define PREG_SISR   pRegs[PR_SISR]    // (R/W) Software Interrupt Summary Register
+
+#define PREG_ICCS   pRegs[PR_ICCS]    // (R/W) Internal Clock Control Status
+#define PREG_NICR   pRegs[PR_NICR]    // (W)   Next Interval Count Register
+#define PREG_ICR    pRegs[PR_ICR]     // (R)   Interval Count Register
+#define PREG_TODR   pRegs[PR_TODR]    // (R/W) Time of Year Register
+
+#define PREG_RXCS   pRegs[PR_RXCS]    // (R/W) Console Receiver Status
+#define PREG_RXDB   pRegs[PR_RXDB]    // (R)   Console Receiver Data Buffer
+#define PREG_TXCS   pRegs[PR_TXCS]    // (R/W) Console Transmit Status
+#define PREG_TXDB   pRegs[PR_TXDB]    // (W)   Console Transmit Data Buffer
+
+#define PREG_MAPEN  pRegs[PR_MAPEN]   // (R/W) Map Enable
+#define PREG_TBIA   pRegs[PR_TBIA]    // (W)   Translation Buffer Invalidate All
+#define PREG_TBIS   pRegs[PR_TBIS]    // (W)   Trabslation Buffer Invalidate Single
+
+#define PREG_PME    pRegs[PR_PME]     // (R/W) Performance Monitor Enable
+#define PREG_SID    pRegs[PR_SID]     // (R)   System Identification
+#define PREG_TBCHK  pRegs[PR_TBCHK]   // (W)   Translation Buffer Check
+
+#define PREG_CONPC  pRegs[PR_CONPC]   // (R/W) Console Saved PC
+#define PREG_CONPSL pRegs[PR_CONPSL]  // (R/W) Console Saved PSL
+#define PREG_CADR   pRegs[PR_CADR]    // (R/W) Cache Disable Register
+#define PREG_MSER   pRegs[PR_MSER]    // (R/W) Memory System Error Register

@@ -13,6 +13,7 @@
 #include "dev/cpu/vax/mtpr.h"
 #include "dev/cpu/vax/vax.h"
 #include "dev/cpu/vax/ka780.h"
+#include "dev/cpu/vax/opcodes.h"
 
 
 

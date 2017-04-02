@@ -12,6 +12,7 @@
 extern Driver mseDriver;
 
 Core::Core()
+: Device(CLS_ROOT)
 {
 	setSystemDrivers(this);
 	setDriver(&mseDriver);

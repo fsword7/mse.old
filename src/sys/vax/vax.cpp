@@ -6,6 +6,7 @@
  */
 
 #include "emu/core.h"
+#include "emu/debug.h"
 #include "emu/devsys.h"
 #include "emu/devcpu.h"
 #include "emu/console.h"
@@ -41,11 +42,9 @@ int vax_sysDevice::setMemory(uint32_t size)
 	return CMD_OK;
 }
 
-int vax_sysDevice::load(std::string fname)
+int vax_sysDevice::load(std::string fname, uint32_t sAddr)
 {
-	uint32_t addr, sAddr, eAddr;
-
-	sAddr = 0;
+	uint32_t addr, eAddr;
 
 	std::ifstream in(fname, std::ios::binary);
 
@@ -86,6 +85,29 @@ int vax_sysDevice::dump(uint32_t *sAddr, uint32_t eAddr, uint32_t sw)
 }
 
 // *****************************************************************************************
+
+// Usage: boot <device> [options...]
+static int cmdBoot(Console *con, Device *sdev, args_t &args)
+{
+	Device *dev;
+
+	// Check number of arguments
+	if (args.size() < 2) {
+		std::cout << "Usage: " << args[0] << " <device> [options...]" << std::endl;
+		return CMD_OK;
+	}
+
+	// check existing device by using name
+	dev = sdev->findDevice(args[1]);
+	if (dev == nullptr) {
+		std::cout << args[1] << ": device not found." << std::endl;
+		return CMD_OK;
+	}
+
+//	dev->boot();
+
+	return CMD_OK;
+}
 
 // Usage: disasm <start> [end]
 static int cmdDisasm(Console *con, Device *sdev, args_t &args)
@@ -155,10 +177,44 @@ static int cmdDump(Console *con, Device *sdev, args_t &args)
 	return CMD_OK;
 }
 
+// Usage: load <file> ...
+static int cmdLoad(Console *con, Device *sdev, args_t &args)
+{
+	Device   *dev;
+	uint32_t  sAddr = 0;
+
+	// Check number of arguments
+	if (args.size() < 2) {
+		std::cout << "Usage: " << args[0] << " <file> [start]" << std::endl;
+		return CMD_OK;
+	}
+
+	if (args.size() > 2)
+		sscanf(args[2].c_str(), "%x", &sAddr);
+
+	sdev->load(args[1], sAddr);
+
+	return CMD_OK;
+}
+
+// Usage: run <addr>
+static int cmdRun(Console *con, Device *sdev, args_t &args)
+{
+	// Check number of arguments
+	if (args.size() < 2) {
+		std::cout << "Usage: " << args[0] << " [addr]" << std::endl;
+		return CMD_OK;
+	}
+
+}
+
 // General commands table
 Command vaxCommands[] = {
+	{ "boot", "<device> [options...]", cmdBoot },
 	{ "disasm", "<start> [end]", cmdDisasm },
 	{ "dump", "<start> [end]", cmdDump },
+	{ "load", "<file> [start]", cmdLoad },
+	{ "run", "<addr>", cmdRun },
 	// null terminator - end of command table
 	{ nullptr }
 };

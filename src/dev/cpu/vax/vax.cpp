@@ -28,6 +28,11 @@ void vax_cpuDevice::reset()
 		gRegs[idx].l = 0;
 }
 
+int  vax_cpuDevice::boot()
+{
+	return 0;
+}
+
 void vax_cpuDevice::init()
 {
 }
@@ -37,6 +42,16 @@ void vax_cpuDevice::assignMemory(uint8_t *mem, uint32_t memSize)
 	this->mem     = mem;
 	this->memSize = memSize;
 }
+
+uint32_t vax_cpuDevice::readpr(uint32_t)
+{
+	return 0;
+}
+
+void vax_cpuDevice::writepr(uint32_t, uint32_t)
+{
+}
+
 
 #define CPU_CLASS vax_cpuDevice
 #include "dev/cpu/vax/executes.h"

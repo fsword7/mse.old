@@ -69,7 +69,7 @@ static int cmdLoad(Console *con, Device *cdev, args_t &args)
 		return CMD_OK;
 	}
 
-	dev->load(args[1]);
+	dev->load(args[1], 0);
 
 	return CMD_OK;
 }

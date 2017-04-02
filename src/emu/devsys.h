@@ -19,6 +19,13 @@ struct cfgMemory;
 #define CMD_NOTFOUND   2
 #define CMD_ERROR      3
 
+// Device Class Type
+#define CLS_UNKNOWN    0
+#define CLS_ROOT       1
+#define CLS_SYSTEM     2
+#define CLS_CPU        3
+#define CLS_IODEV      4
+
 typedef std::vector<std::string> args_t;
 
 typedef int (*cmdfunc)(Console *, Device *, args_t &args);
@@ -70,13 +77,14 @@ struct cfgMemory {
 class Device
 {
 public:
-	Device();
+	Device(int clsType);
 	virtual ~Device();
 
 	inline std::string getName() const        { return devName; }
 	inline std::string getType() const        { return devType; }
 	inline std::string getDescription() const { return devDesc; }
 	inline Driver *getDriver() const          { return driver; }
+	inline int getClass() const               { return clsType; }
 
 	// Function calls for driver table
 	cfgMemory *getMemoryConfig() const;
@@ -99,15 +107,17 @@ public:
 
 	// Device virtual function calls
 	virtual int setMemory(uint32_t size);
-	virtual int load(std::string fname);
+	virtual int boot();
+	virtual int load(std::string fname, uint32_t sAddr);
 	virtual int dump(uint32_t *Addr, uint32_t eAddr, uint32_t sw);
 
 
 protected:
-	std::string devName; // Device name
+	std::string devName;  // Device name
 	std::string devType; // Device type (model)
-	std::string devDesc; // Device description
+	std::string devDesc;  // Device description
 
+	int      clsType;
 	Driver  *driver; // Driver table information
 	Device  *parent;  // parent device
 	std::vector<Device*> devices; // child device table

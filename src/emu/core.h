@@ -8,6 +8,7 @@
 #include <iterator>
 
 #include <cstdio>
+#include <cstdarg>
 #include <cstdlib>
 #include <cstdint>
 #include <cstring>
@@ -29,6 +30,11 @@
 #define MSK_BYTE 0x000000FF
 #define MSK_WORD 0x0000FFFF
 #define MSK_LONG 0xFFFFFFFF
+
+#define ALIGN_BYTE (~0 << 0) // Aligned byte addressing mask
+#define ALIGN_WORD (~0 << 1) // Aligned word addressing mask
+#define ALIGN_LONG (~0 << 2) // Aligned longword addressing mask
+#define ALIGN_QUAD (~0 << 3) // Aligned quadword addressing mask
 
 // Varying scale unsigned integer
 struct scale16_t {

@@ -173,8 +173,8 @@ int vax_cpuDevice::disasm(uint32_t vAddr)
 
 	// Fetch 1 or 2 bytes opcode
 	readci(pcAddr++, &opCode, OPR_BYTE);
-	if (opCode > 0xFC) {
-		opExtend = (opCode << 8) - OPC_nEXTEND;
+	if (opCode > OPC_nEXTEND) {
+		opExtend = (opCode - OPC_nEXTEND) << 8;
 		readci(pcAddr++, &opCode, OPR_BYTE);
 		opCode |= opExtend;
 	}
@@ -191,7 +191,11 @@ int vax_cpuDevice::disasm(uint32_t vAddr)
 			ptr += sprintf(ptr, ".BYTE %02X", opCode);
 	}
 
+#ifdef ENABLE_DEBUG
+	dbg::log("%s", line);
+#else
 	printf("%s\n", line);
+#endif /* ENABLE_DEBUG */
 
 	return pcAddr - vAddr;
 }

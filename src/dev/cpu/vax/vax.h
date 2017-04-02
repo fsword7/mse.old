@@ -35,6 +35,10 @@
 #define REG_nSP		REG_nR14 // Stack Pointer
 #define REG_nPC		REG_nR15 // Program Counter
 
+#define REG_AP      gRegs[REG_nAP].l
+#define REG_FP      gRegs[REG_nFP].l
+#define REG_SP      gRegs[REG_nSP].l
+#define REG_PC      gRegs[REG_nPC].l
 
 // Processor Status Register definition
 //
@@ -50,35 +54,156 @@
 //
 
 // PSL - Processor Status Longword for Kernel mode
-#define PSL_MBZ			0x3020FF00 // Must Be Zero
-#define PSL_CM			0x80000000 // PDP-11 Compatibility mode
-#define PSL_TP			0x40000000 // Trace Pending
-#define PSL_FPD			0x08000000 // First Part Done
-#define PSL_IS			0x04000000 // Interrupt Stack
-#define PSL_CUR			0x03000000 // Current Mode
-#define PSL_PRV			0x00C00000 // Previous Mode
-#define PSL_IPL			0x001F0000 // Interrupt Priority Level
+#define PSL_MBZ			 0x3020FF00 // Must Be Zero
+#define PSL_CM			 0x80000000 // PDP-11 Compatibility mode
+#define PSL_TP			 0x40000000 // Trace Pending
+#define PSL_FPD			 0x08000000 // First Part Done
+#define PSL_IS			 0x04000000 // Interrupt Stack
+#define PSL_CUR			 0x03000000 // Current Mode
+#define PSL_PRV			 0x00C00000 // Previous Mode
+#define PSL_IPL			 0x001F0000 // Interrupt Priority Level
+
+#define PSL_P_CUR        24   // Position of IPL bits
+#define PSL_P_PRV        22   // Position of previous mode bits
+#define PSL_P_IPL        16   // Position of current mode bits
+
+#define PSL_M_IPL        0x1F // Interrupt Priority Level Mask
+#define PSL_M_ISCUR      0x07 // Access Mode Mask with IS flag
+#define PSL_M_MODE       0x03 // Access Mode Mask
+
+#define PSL_GETIPL(ps)   (((ps) >> PSL_P_IPL) & PSL_M_IPL)
+#define PSL_GETCUR(ps)   (((ps) >> PSL_P_CUR) & PSL_M_MODE)
+#define PSL_GETISCUR(ps) (((ps) >> PSL_P_CUR) & PSL_M_ISCUR)
+#define PSL_GETPRV(ps)   (((ps) >> PSL_P_PRV) & PSL_M_MODE)
+
+#define PSL_SETIPL(ipl)  ((ipl) << PSL_P_IPL)
+#define PSL_SETCUR(acc)  ((acc) << PSL_P_CUR)
+#define PSL_SETPRV(acc)  ((acc) << PSL_P_PRV)
 
 // PSW - Processor Status Word for User mode
-#define PSW_MASK        0xFFFF // PSW User Mask
-#define PSW_DV			0x0080 // Decimal Overflow Trap Enable
-#define PSW_FU			0x0040 // Floating Underflow Trap Enable
-#define PSW_IV			0x0020 // Integer Overflow Trap Enable
-#define PSW_T			0x0010 // Trace Enable
-#define PSW_CC			0x000F // Condition Codes
+#define PSW_MASK         0xFFFF // PSW User Mask
+#define PSW_DV			 0x0080 // Decimal Overflow Trap Enable
+#define PSW_FU			 0x0040 // Floating Underflow Trap Enable
+#define PSW_IV			 0x0020 // Integer Overflow Trap Enable
+#define PSW_T			 0x0010 // Trace Enable
+#define PSW_CC			 0x000F // Condition Codes
 
 // CC - Condition Codes (part of PSW word)
-#define CC_N			0x0008 // Negative
-#define CC_Z			0x0004 // Zero
-#define CC_V			0x0002 // Overflow
-#define CC_C			0x0001 // Carry
-#define CC_MASK			(CC_N|CC_Z|CC_V|CC_C)
+#define CC_N			 0x0008 // Negative
+#define CC_Z			 0x0004 // Zero
+#define CC_V			 0x0002 // Overflow
+#define CC_C			 0x0001 // Carry
+#define CC_MASK			 (CC_N|CC_Z|CC_V|CC_C)
 
 // Access Mode (Protection Codes)
-#define AM_KERNEL		0 // Kernel mode for OS kernel
-#define AM_EXECUTIVE	1 // Executive mode for file system
-#define AM_SUPERVISOR	2 // Supervisor mode for DCL (shell)
-#define AM_USER			3 // User mode for normal programs
+#define AM_KERNEL		 0 // Kernel mode for OS kernel
+#define AM_EXECUTIVE	 1 // Executive mode for file system
+#define AM_SUPERVISOR	 2 // Supervisor mode for DCL (shell)
+#define AM_USER			 3 // User mode for normal programs
+
+// Interrupt/Exception Types
+#define IE_INT           0 // Interrupt
+#define IE_EXC           1 // Exception
+#define IE_SVE           2 // Severe Exception
+
+// System Control Block Vectors
+#define SCB_PASSIVE      0x00  // Passive Release
+#define SCB_MCHK         0x04  // Machine Check
+#define SCB_KSNV         0x08  // Kernel Stack Not Valid
+#define SCB_POWER        0x0C  // Power Fail
+#define SCB_RESIN        0x10  // Reserved or Privileged Instruction
+#define SCB_XFC          0x14  // Customer Reserved Instruction (XFC)
+#define SCB_RESOP        0x18  // Reserved Operand
+#define SCB_RESAD        0x1C  // Reserved Address Mode
+#define SCB_ACV          0x20  // Access-Control Violation
+#define SCB_TNV          0x24  // Translation Not Valid
+#define SCB_TP           0x28  // Trace Pending
+#define SCB_BPT          0x2C  // Breakpoint Instruction
+#define SCB_COMPAT       0x30  // Compatibility
+#define SCB_ARITH        0x34  // Arithmetic
+#define SCB_CHMK         0x40  // Change Mode to Kernel
+#define SCB_CHME         0x44  // Change Mode to Executive
+#define SCB_CHMS         0x48  // Change Mode to Supervisor
+#define SCB_CHMU         0x4C  // Change Mode to User
+#define SCB_CRDERR       0x54  // CRD Error Interrupt
+#define SCB_MEMERR       0x60  // Memory Error Interrupt
+#define SCB_IPLSOFT      0x80  // Software Interrupt Base
+#define SCB_SOFTWARE1    0x84  // Software Level 1
+#define SCB_SOFTWARE2    0x88  // Software Level 2
+#define SCB_SOFTWARE3    0x8C  // Software Level 3
+#define SCB_SOFTWARE4    0x90  // Software Level 4
+#define SCB_SOFTWARE5    0x94  // Software Level 5
+#define SCB_SOFTWARE6    0x98  // Software Level 6
+#define SCB_SOFTWARE7    0x9C  // Software Level 7
+#define SCB_SOFTWARE8    0xA0  // Software Level 8
+#define SCB_SOFTWARE9    0xA4  // Software Level 9
+#define SCB_SOFTWARE10   0xA8  // Software Level A
+#define SCB_SOFTWARE11   0xAC  // Software Level B
+#define SCB_SOFTWARE12   0xB0  // Software Level C
+#define SCB_SOFTWARE13   0xB4  // Software Level D
+#define SCB_SOFTWARE14   0xB8  // Software Level E
+#define SCB_SOFTWARE15   0xBC  // Software Level F
+#define SCB_TIMER        0xC0  // Interval Timer
+#define SCB_EMULATE      0xC8  // Subset Emulation
+#define SCB_EMULFPD      0xCC  // Subset Emulation with FPD flag
+#define SCB_CSREAD       0xF0  // Console Storage Read
+#define SCB_CSWRITE      0xF4  // Console Storage Write
+#define SCB_CTYIN        0xF8  // Console Terminal Read
+#define SCB_CTYOUT       0xFC  // COnsole Terminal Write
+
+#define SCB_ADDR         ALIGN_LONG // SCB Address Mask
+#define SCB_VECTOR       ALIGN_LONG // SCB Vector Mask
+
+// SISR register definitions
+#define SISR_MASK        0xFFFE
+#define SISR_2           (1u << 2)
+
+// ASTLVL register definition
+#define AST_MASK         0x00000007
+#define AST_MAX          4
+
+#define BR_MASK          ALIGN_LONG
+#define LR_MASK          0x003FFFFF
+
+// Read/write memory access
+#define CACC             0x80000000         // Console memory access
+#define RACC             curMode            // Read memory access
+#define WACC             (curMode << 4)     // Write memory access
+#define CRA              (CACC|RACC)        // Console write memory access
+#define CWA              (CACC|WACC)        // Console read memory access
+#define ACC_MASK(am)     (1u << (am))       // Access mode mask
+
+// Exception Codes - Stop
+#define STOP_HALT       -1   // HALT instruction encounter
+
+// Store data macro routines for instructions
+#define StoreB(op0, op1, d)   \
+	if (op0 >= 0)             \
+		gRegs[op0].b  = d;    \
+	else                      \
+		writevb(op1, d, WACC);
+
+#define StoreW(op0, op1, d)   \
+	if (op0 >= 0)             \
+		gRegs[op0].w  = d;    \
+	else                      \
+		writevw(op1, d, WACC);
+
+#define StoreL(op0, op1, d)   \
+	if (op0 >= 0)             \
+		gRegs[op0].l  = d;    \
+	else                      \
+		writevl(op1, d, WACC);
+
+#define StoreQ(op0, op1, dl, dh)        \
+	if (op0 >= 0) {                     \
+		gRegs[op0].l  = dl;             \
+		gRegs[op0+1].l = dh;            \
+	} else {                            \
+		writevl(op1+LN_LONG, dh, WACC); \
+		writevl(op1, dl, WACC);         \
+	}
+
 
 struct vaxOpcode {
 	const char *opName;           // Name of the Instruction
@@ -102,6 +227,7 @@ public:
 	// CPU function calls
 	virtual void init();
 	virtual void reset();
+	virtual int  boot();
 	void execute();
 
 	int disasmOperand(char **ptr, uint32_t &vAddr, const vaxOpcode *opc, int opn, bool idxFlag);
@@ -110,9 +236,35 @@ public:
 	void assignMemory(uint8_t *mem, uint32_t memSize);
 
 	// Memory access routines
-	uint32_t readpa(uint32_t addr, int size);                 // Read access (aligned)
-	uint32_t readpl(uint32_t pAddr);                          // Longword read access (aligned)
-	void     writepa(uint32_t addr, uint32_t data, int size); // Write access (aligned)
+	uint32_t readp(uint32_t addr, int size);                   // Read access (aligned)
+	uint32_t readpl(uint32_t pAddr);                           // Longword read access (aligned)
+	void     writep(uint32_t addr, uint32_t data, int size);   // Write access (aligned)
+	void     writepl(uint32_t pAddr, uint32_t data);           // Longword write access (aligned)
+
+	uint8_t  readvb(uint32_t vAddr, uint32_t acc);
+	uint16_t readvw(uint32_t vAddr, uint32_t acc);
+	uint32_t readvl(uint32_t vAddr, uint32_t acc);
+	uint32_t readv(uint32_t vAddr, uint32_t size, uint32_t acc);
+
+	void     writevb(uint32_t vAddr, uint8_t data, uint32_t acc);
+	void     writevw(uint32_t vAddr, uint16_t data, uint32_t acc);
+	void     writevl(uint32_t vAddr, uint32_t data, uint32_t acc);
+	void     writev(uint32_t vAddr, uint32_t data, uint32_t size, uint32_t acc);
+
+	void     flushvi();
+	uint32_t readvi(int size); // Instruction read access
+
+	// Read/write privileged register access
+	virtual uint32_t readpr(uint32_t pReg);
+	virtual void     writepr(uint32_t pReg, uint32_t data);
+
+//	inline void storeb(uint32_t op0, uint32_t op1, uint8_t data)
+//	{
+//		if (op0 >= 0)
+//			gRegs[op0].b = data;
+//		else
+//			writevb(op1, data, WA);
+//	}
 
 	// Console memory access routines (unaligned)
 	void flushci();
@@ -120,8 +272,11 @@ public:
 	int  readc(uint32_t addr, uint32_t *data, int size);  // Data read access
 
 protected:
-	scale32_t gRegs[VAX_nGREGS]; // General registers
-	uint32_t  pRegs[VAX_nPREGS]; // Processor registers
+	scale32_t gRegs[VAX_nGREGS];   // General registers
+	uint32_t  pRegs[VAX_nPREGS];   // Processor registers
+	uint32_t  opRegs[VAX_nOPREGS]; // Operand registers
+	uint32_t  psReg;               // Processor status register
+	uint32_t  ccReg;               // Condition Code register (part of PSL register)
 
 	// Opcode table for operand decoding and disassembler
 	const vaxOpcode *opCodes[VAX_nOPCTBL];
@@ -130,10 +285,28 @@ protected:
 	uint32_t  memSize;
 	uint8_t  *mem;
 
+	// Instruction buffer (look-ahead buffer)
+	uint32_t  ibData[2]; // IB Aligned data buffer
+	uint32_t  ibpAddr;   // IB physical Address
+	uint32_t  ibCount;   // IB Count
+
 	// Console instruction buffer (look-ahead buffer)
 	uint32_t  cibData[2]; // IB Aligned data buffer
 	uint32_t  cibAddr;    // IB Address
 	uint32_t  cibCount;   // IB Count
 	uint32_t  cvAddr;     // virtual address
 
+	// Memory management unit
+	uint32_t  curMode;    // Current access mode
+	uint32_t  prvMode;    // Previous access mode
+
+	uint32_t  paMask;     // Physical addressing mask
+
+	uint32_t faultAddr;   // Faulting PC address
+
+private:
+#ifdef ENABLE_DEBUG
+	uint32_t dbgFlags;
+	Debug    dbg;
+#endif /* ENABLE_DEBUG */
 };

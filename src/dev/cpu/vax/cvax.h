@@ -21,6 +21,8 @@
 #define SID_ID		(10 << 24)
 #define SID_UCODE	6
 
+#define CON_PWRUP   (3 << 8)
+
 class cvax_cpuDevice : public vax_cpuDevice
 {
 public:
@@ -28,5 +30,11 @@ public:
 	~cvax_cpuDevice();
 
 	void reset();
+	int  boot();
 	void execute();
+
+	// Read/write privileged register access
+	uint32_t readpr(uint32_t pReg);
+	void     writepr(uint32_t pReg, uint32_t data);
+
 };
