@@ -85,11 +85,11 @@ uint32_t vax_cpuDevice::readv(uint32_t vAddr, uint32_t size, uint32_t acc)
 	int      sc;
 
 	pAddr = vAddr & paMask;
-	printf("mem: Read %08X (scale %d)\n", pAddr, size);
+//	printf("mem: Read %08X (scale %d)\n", pAddr, size);
 
 	// Check physical address is aligned
 	if ((pAddr & (size - 1)) == 0) {
-		printf("mem: Aligned %08X => %08X\n", pAddr, readp(pAddr, size));
+//		printf("mem: Aligned %08X => %08X\n", pAddr, readp(pAddr, size));
 		return readp(pAddr, size);
 	}
 

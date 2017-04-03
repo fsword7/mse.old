@@ -128,7 +128,7 @@ void CPU_CLASS::execute()
 					// Autoincrement mode
 					iAddr = gRegs[reg].l;
 					gRegs[reg].l += scale;
-					printf("reg: R%d => %08X\n", reg, iAddr);
+//					printf("reg: R%d => %08X\n", reg, iAddr);
 					break;
 
 				case AINCD: // Autoincrement deferred/absolute mode
@@ -278,6 +278,28 @@ void CPU_CLASS::execute()
 				// Do nothing...
 				break;
 
+			// BIxPSW instructions
+			case OPC_nBICPSW:
+				mask = uint16_t(opRegs[0]);
+//				if (mask & PSW_MBZ)
+//					throw EXC_RSVD_OPND_FAULT;
+				psReg &= ~mask;
+				ccReg &= ~mask;
+				break;
+			case OPC_nBISPSW:
+				mask = uint16_t(opRegs[0]);
+//				if (mask & PSW_MBZ)
+//					throw EXC_RSVD_OPND_FAULT;
+				psReg |= (mask & ~PSW_CC);
+				ccReg |= (mask & PSW_CC);
+				break;
+
+			// MOVPSL instruction
+			case OPC_nMOVPSL:
+				dst = psReg | ccReg;
+				StoreL(opRegs[0], opRegs[1], dst);
+				break;
+
 			// MTPR/MFPR instructions
 			case OPC_nMTPR:
 				src = opRegs[0];
@@ -394,6 +416,7 @@ void CPU_CLASS::execute()
 				}
 				break;
 
+
 			//  BRx instructions
 			case OPC_nBRB:
 				REG_PC = REG_PC + int8_t(brDisp);
@@ -409,6 +432,37 @@ void CPU_CLASS::execute()
 				REG_PC = opRegs[0];
 				flushvi();
 				break;
+
+
+			// BSBx instructions
+			case OPC_nBSBB:
+				writev(REG_SP - LN_LONG, REG_PC, LN_LONG, WACC);
+				REG_SP -= LN_LONG;
+				REG_PC = REG_PC + int8_t(brDisp);
+				flushvi();
+				break;
+			case OPC_nBSBW:
+				writev(REG_SP - LN_LONG, REG_PC, LN_LONG, WACC);
+				REG_SP -= LN_LONG;
+				REG_PC = REG_PC + int16_t(brDisp);
+				flushvi();
+				break;
+
+			// JSB instruction
+			case OPC_nJSB:
+				writev(REG_SP - LN_LONG, REG_PC, LN_LONG, WACC);
+				REG_SP -= LN_LONG;
+				REG_PC = opRegs[0];
+				flushvi();
+				break;
+
+			// RSB instruction
+			case OPC_nRSB:
+				REG_PC  = readv(REG_SP, LN_LONG, RACC);
+				REG_SP += LN_LONG;
+				flushvi();
+				break;
+
 
 			// MOVx instructions
 			// MOVAx instructions
@@ -498,6 +552,70 @@ void CPU_CLASS::execute()
 				dst = src - 1;
 				StoreL(opRegs[1], opRegs[2], dst);
 				printf("%s: Dec %08X => %08X\n", devName.c_str(), uint32_t(src), uint32_t(dst));
+				break;
+
+			// BICx instructions
+			case OPC_nBICB2:
+			case OPC_nBICB3:
+				mask = opRegs[0];
+				src  = opRegs[1];
+				dst  = src & ~mask;
+				StoreB(opRegs[2], opRegs[3], dst);
+				UpdateCC_IIZP_B(ccReg, dst);
+				printf("%s: %02X & ~%02X => %02X\n", devName.c_str(),
+						uint8_t(src), uint8_t(mask), uint8_t(dst));
+				break;
+			case OPC_nBICW2:
+			case OPC_nBICW3:
+				mask = opRegs[0];
+				src  = opRegs[1];
+				dst  = src & ~mask;
+				StoreW(opRegs[2], opRegs[3], dst);
+				UpdateCC_IIZP_W(ccReg, dst);
+				printf("%s: %04X & ~%04X => %04X\n", devName.c_str(),
+						uint16_t(src), uint16_t(mask), uint16_t(dst));
+				break;
+			case OPC_nBICL2:
+			case OPC_nBICL3:
+				mask = opRegs[0];
+				src  = opRegs[1];
+				dst  = src & ~mask;
+				StoreL(opRegs[2], opRegs[3], dst);
+				UpdateCC_IIZP_L(ccReg, dst);
+				printf("%s: %08X & ~%08X => %08X\n", devName.c_str(),
+						uint32_t(src), uint32_t(mask), uint32_t(dst));
+				break;
+
+			// BISx instructions
+			case OPC_nBISB2:
+			case OPC_nBISB3:
+				mask = opRegs[0];
+				src  = opRegs[1];
+				dst  = src | mask;
+				StoreB(opRegs[2], opRegs[3], dst);
+				UpdateCC_IIZP_B(ccReg, dst);
+				printf("%s: %02X | %02X => %02X\n", devName.c_str(),
+						uint8_t(src), uint8_t(mask), uint8_t(dst));
+				break;
+			case OPC_nBISW2:
+			case OPC_nBISW3:
+				mask = opRegs[0];
+				src  = opRegs[1];
+				dst  = src | mask;
+				StoreW(opRegs[2], opRegs[3], dst);
+				UpdateCC_IIZP_W(ccReg, dst);
+				printf("%s: %04X | %04X => %04X\n", devName.c_str(),
+						uint16_t(src), uint16_t(mask), uint16_t(dst));
+				break;
+			case OPC_nBISL2:
+			case OPC_nBISL3:
+				mask = opRegs[0];
+				src  = opRegs[1];
+				dst  = src | mask;
+				StoreL(opRegs[2], opRegs[3], dst);
+				UpdateCC_IIZP_L(ccReg, dst);
+				printf("%s: %08X | %08X => %08X\n", devName.c_str(),
+						uint32_t(src), uint32_t(mask), uint32_t(dst));
 				break;
 
 			// XORx instructions

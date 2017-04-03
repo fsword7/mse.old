@@ -191,6 +191,11 @@ uint32_t cvax_cpuDevice::readpr(uint32_t pReg)
 //	}
 //#endif /* DEBUG */
 
+	const char *name = "Undefined Register";
+	if ((pReg < regSize) && regNames[pReg])
+		name = regNames[pReg];
+	printf("%s: (R) %s (%02X) => %08X\n", devName.c_str(), name, pReg, data);
+
 	return data;
 }
 
@@ -329,5 +334,10 @@ void cvax_cpuDevice::writepr(uint32_t pReg, uint32_t data) //throw(uint32_t)
 //		dbg_Printf("KA650: (W) %s (%02X) <= %08X\n", name, pReg, data);
 //	}
 //#endif /* DEBUG */
+
+	const char *name = "Undefined Register";
+	if ((pReg < regSize) && regNames[pReg])
+		name = regNames[pReg];
+	printf("%s: (W) %s (%02X) <= %08X\n", devName.c_str(), name, pReg, data);
 }
 

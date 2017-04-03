@@ -82,6 +82,7 @@
 
 // PSW - Processor Status Word for User mode
 #define PSW_MASK         0xFFFF // PSW User Mask
+#define PSW_MBZ          0xFF00 // Must be zeroes
 #define PSW_DV			 0x0080 // Decimal Overflow Trap Enable
 #define PSW_FU			 0x0040 // Floating Underflow Trap Enable
 #define PSW_IV			 0x0020 // Integer Overflow Trap Enable
