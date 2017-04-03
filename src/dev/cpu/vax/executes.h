@@ -25,6 +25,7 @@ void CPU_CLASS::execute()
 	register int32_t  ssrc1, ssrc2, sdst, stmp;
 	register uint32_t dst, dst1, dst2;
 	register uint32_t mask;
+	register int32_t  cnt;
 
 	// Reset instruction steam
 	flushvi();
@@ -474,6 +475,40 @@ void CPU_CLASS::execute()
 						ssrc1, REG_SP + LN_LONG, stringCC(ccReg));
 				break;
 
+			// AOB instructions
+			case OPC_nAOBLEQ:
+				ssrc1 = opRegs[0];
+				ssrc2 = opRegs[1];
+				sdst  = ssrc2 + 1;
+				StoreL(opRegs[2], opRegs[3], sdst);
+				UpdateCC_IIZP_L(ccReg, sdst);
+				UpdateV_ADD_L(ccReg, sdst, 1, ssrc2);
+				if (sdst <= src1) {
+					REG_PC = REG_PC + SXTB(brDisp);
+					flushvi();
+				}
+				printf("%s: Inc %08X => %08X <= %08X: %s\n", devName.c_str(),
+						ssrc2, sdst, ssrc1, stringCC(ccReg));
+				if (sdst <= src1)
+					printf("%s: Jump into PC %08X\n", devName.c_str(), REG_PC);
+				break;
+			case OPC_nAOBLSS:
+				ssrc1 = opRegs[0];
+				ssrc2 = opRegs[1];
+				sdst  = ssrc2 + 1;
+				StoreL(opRegs[2], opRegs[3], sdst);
+				UpdateCC_IIZP_L(ccReg, sdst);
+				UpdateV_ADD_L(ccReg, sdst, 1, ssrc2);
+				if (sdst < src1) {
+					REG_PC = REG_PC + SXTB(brDisp);
+					flushvi();
+				}
+				printf("%s: Inc %08X => %08X < %08X: %s\n", devName.c_str(),
+						ssrc2, sdst, ssrc1, stringCC(ccReg));
+				if (sdst <= src1)
+					printf("%s: Jump into PC %08X\n", devName.c_str(), REG_PC);
+				break;
+
 			// MOVx instructions
 			// MOVAx instructions
 			case OPC_nMOVB:
@@ -505,6 +540,29 @@ void CPU_CLASS::execute()
 				UpdateCC_IIZP_Q(ccReg, dst1, dst2);
 				printf("%s: Move %08X %08X: %s\n", devName.c_str(),
 						uint32_t(dst1), uint32_t(dst2), stringCC(ccReg));
+				break;
+
+			// MOVZx instructions
+			case OPC_nMOVZBW:
+				dst = ZXTB(opRegs[0]);
+				StoreW(opRegs[1], opRegs[2], dst);
+				UpdateCC_IIZP_W(ccReg, dst);
+				printf("%s: Move %02X => %04X: %s", devName.c_str(),
+					ZXTB(dst), ZXTW(dst), stringCC(ccReg));
+				break;
+			case OPC_nMOVZBL:
+				dst = ZXTB(opRegs[0]);
+				StoreL(opRegs[1], opRegs[2], dst);
+				UpdateCC_IIZP_L(ccReg, dst);
+				printf("%s: Move %02X => %08X: %s", devName.c_str(),
+					ZXTB(dst), ZXTL(dst), stringCC(ccReg));
+				break;
+			case OPC_nMOVZWL:
+				dst = ZXTW(opRegs[0]);
+				StoreL(opRegs[1], opRegs[2], dst);
+				UpdateCC_IIZP_L(ccReg, dst);
+				printf("%s: Move %04X => %08X: %s", devName.c_str(),
+					ZXTW(dst), ZXTL(dst), stringCC(ccReg));
 				break;
 
 			// CLRx instructions
@@ -688,6 +746,32 @@ void CPU_CLASS::execute()
 						uint32_t(src), uint32_t(mask), uint32_t(dst));
 				break;
 
+			// BITx instructions
+			case OPC_nBITB:
+				mask = opRegs[0];
+				src  = opRegs[1];
+				dst  = src & mask;
+				UpdateCC_IIZP_B(ccReg, dst);
+				printf("%s: %02X & %02X => %02X: %s\n", devName.c_str(),
+						ZXTB(src), ZXTB(mask), ZXTB(dst), stringCC(ccReg));
+				break;
+			case OPC_nBITW:
+				mask = opRegs[0];
+				src  = opRegs[1];
+				dst  = src & mask;
+				UpdateCC_IIZP_W(ccReg, dst);
+				printf("%s: %04X & %04X => %04X: %s\n", devName.c_str(),
+						ZXTW(src), ZXTW(mask), ZXTW(dst), stringCC(ccReg));
+				break;
+			case OPC_nBITL:
+				mask = opRegs[0];
+				src  = opRegs[1];
+				dst  = src & mask;
+				UpdateCC_IIZP_L(ccReg, dst);
+				printf("%s: %08X & %08X => %08X: %s\n", devName.c_str(),
+						ZXTL(src), ZXTL(mask), ZXTL(dst), stringCC(ccReg));
+				break;
+
 			// XORx instructions
 			case OPC_nXORB2:
 			case OPC_nXORB3:
@@ -718,6 +802,17 @@ void CPU_CLASS::execute()
 				UpdateCC_IIZP_L(ccReg, dst);
 				printf("%s: %08X ^ %08X => %08X\n", devName.c_str(),
 						uint32_t(src), uint32_t(mask), uint32_t(dst));
+				break;
+
+			case OPC_nROTL:
+				cnt = ZXTB(opRegs[0]) % 32;
+				src = opRegs[1];
+				dst = (cnt != 0) ? ((src << cnt) | (src >> (32 - cnt))) : src;
+				StoreL(opRegs[2], opRegs[3], dst);
+				UpdateCC_IIZP_L(ccReg, dst);
+				printf("%s: %08X %s %d => %08X: %s\n", devName.c_str(),
+					ZXTL(src), ((cnt < 0) ? ">>" : "<<"), abs(cnt),
+					ZXTL(dst), stringCC(ccReg));
 				break;
 
 			// Illegal/unimplemented instruction
