@@ -31,10 +31,26 @@
 #define MSK_WORD 0x0000FFFF
 #define MSK_LONG 0xFFFFFFFF
 
+#define SIGN_B   0x80
+#define SIGN_W   0x8000
+#define SIGN_L   0x80000000
+
 #define ALIGN_BYTE (~0 << 0) // Aligned byte addressing mask
 #define ALIGN_WORD (~0 << 1) // Aligned word addressing mask
 #define ALIGN_LONG (~0 << 2) // Aligned longword addressing mask
 #define ALIGN_QUAD (~0 << 3) // Aligned quadword addressing mask
+
+// Sign extension
+#define SXTB(d) int8_t(d)
+#define SXTW(d) int16_t(d)
+#define SXTL(d) int32_t(d)
+#define SXTQ(d) int64_t(d)
+
+// Zero extension
+#define ZXTB(d) uint8_t(d)
+#define ZXTW(d) uint16_t(d)
+#define ZXTL(d) uint32_t(d)
+#define ZXTQ(d) uint64_t(d)
 
 // Varying scale unsigned integer
 struct scale16_t {

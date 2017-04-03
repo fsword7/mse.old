@@ -57,5 +57,18 @@ void vax_cpuDevice::writepr(uint32_t, uint32_t)
 {
 }
 
+char *vax_cpuDevice::stringCC(uint32_t cc)
+{
+	static char ccstr[5];
+
+	ccstr[0] = (cc & CC_N) ? 'N' : '-';
+	ccstr[1] = (cc & CC_Z) ? 'Z' : '-';
+	ccstr[2] = (cc & CC_V) ? 'V' : '-';
+	ccstr[3] = (cc & CC_C) ? 'C' : '-';
+	ccstr[4] = 0;
+
+	return ccstr;
+}
+
 //#define CPU_CLASS vax_cpuDevice
 //#include "dev/cpu/vax/executes.h"
