@@ -85,10 +85,13 @@ uint32_t vax_cpuDevice::readv(uint32_t vAddr, uint32_t size, uint32_t acc)
 	int      sc;
 
 	pAddr = vAddr & paMask;
+	printf("mem: Read %08X (scale %d)\n", pAddr, size);
 
 	// Check physical address is aligned
-	if ((pAddr & (size - 1)) == 0)
+	if ((pAddr & (size - 1)) == 0) {
+		printf("mem: Aligned %08X => %08X\n", pAddr, readp(pAddr, size));
 		return readp(pAddr, size);
+	}
 
 	pAddr1 = (pAddr + size) & paMask;
 
@@ -134,8 +137,10 @@ void vax_cpuDevice::writev(uint32_t vAddr, uint32_t data, uint32_t size, uint32_
 	pAddr = vAddr & paMask;
 
 	// Check physical address is aligned
-	if ((pAddr & (size - 1)) == 0)
-		return writep(pAddr, data, size);
+	if ((pAddr & (size - 1)) == 0) {
+		writep(pAddr, data, size);
+		return;
+	}
 
 	pAddr1 = (pAddr + size) & paMask;
 
@@ -180,11 +185,12 @@ uint32_t vax_cpuDevice::readvi(int size)
 {
 	int      boff = REG_PC & 03;
 	int      sc   = boff << 3;
-	uint32_t data;
+	uint32_t pAddr, data;
 
 	if ((boff + size) > ibCount) {
 		if (ibpAddr == ~0) {
-			ibpAddr  = (REG_PC + ibCount) & ~03;
+			pAddr    = REG_PC & paMask;
+			ibpAddr  = (pAddr + ibCount) & ~03;
 		}
 		ibData[ibCount >> SC_LONG] = readpl(ibpAddr);
 		ibpAddr += LN_LONG;
@@ -231,8 +237,9 @@ void vax_cpuDevice::flushci()
 
 int vax_cpuDevice::readci(uint32_t vAddr, uint32_t *data, int size)
 {
-	int boff = vAddr & 03;
-	int sc   = boff << 3;
+	int      boff = vAddr & 03;
+	int      sc   = boff << 3;
+	uint32_t pAddr;
 
 	// Flush instruction buffer
 	if (vAddr != cvAddr) {
@@ -243,7 +250,8 @@ int vax_cpuDevice::readci(uint32_t vAddr, uint32_t *data, int size)
 
 	if ((boff + size) > cibCount) {
 		if (cibAddr == ~0) {
-			cibAddr  = (vAddr + cibCount) & ~03;
+			pAddr    = vAddr & paMask;
+			cibAddr  = (pAddr + cibCount) & ~03;
 		}
 		cibData[cibCount >> SC_LONG] = readpl(cibAddr);
 		cibAddr  += LN_LONG;

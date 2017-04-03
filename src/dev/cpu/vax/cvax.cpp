@@ -128,6 +128,9 @@ void cvax_cpuDevice::reset()
 	PREG_CADR   = 0;
 	PREG_SISR   = 0;
 	PREG_ASTLVL = 0;
+
+	// Set 30-bit physical addressing mask
+	paMask = PA_MASK30;
 }
 
 int cvax_cpuDevice::boot()

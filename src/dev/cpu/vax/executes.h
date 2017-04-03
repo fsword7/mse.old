@@ -23,14 +23,22 @@ void CPU_CLASS::execute()
 	const vaxOpcode *opc;
 	register uint32_t src, srcl, srch;
 	register uint32_t dst, dstl, dsth;
+	register uint32_t mask;
 
 	// Reset instruction steam
 	flushvi();
+	flushci();
 
 	while (1) {
 		try {
-			// Fetch instruction from current stream
 			faultAddr = REG_PC;
+//#ifdef ENABLE_DEBUG
+//			if (dbgFlags & DBG_TRACE)
+//				disasm(faultAddr);
+//#endif /* ENABLE_DEBUG */
+			disasm(faultAddr);
+
+			// Fetch instruction from current stream
 			opCode = uint8_t(readvi(LN_BYTE));
 			if (opCode > OPC_nEXTEND) {
 				opCode  = (opCode - OPC_nEXTEND) << 8;
@@ -54,6 +62,8 @@ void CPU_CLASS::execute()
 				int opType = readvi(LN_BYTE);
 				int mode   = opType & OPR_MMASK;
 				int reg    = opType & OPR_RMASK;
+
+//				printf("opr: mode=%02X reg=%02X\n", mode, reg);
 
 				switch (mode) {
 				// Short literal mode
@@ -118,6 +128,7 @@ void CPU_CLASS::execute()
 					// Autoincrement mode
 					iAddr = gRegs[reg].l;
 					gRegs[reg].l += scale;
+					printf("reg: R%d => %08X\n", reg, iAddr);
 					break;
 
 				case AINCD: // Autoincrement deferred/absolute mode
@@ -130,29 +141,35 @@ void CPU_CLASS::execute()
 					break;
 
 				case BDP: // Byte displacement mode
-					iAddr = gRegs[reg].l + int8_t(readvi(LN_BYTE));
+					t1    = int8_t(readvi(LN_BYTE));
+					iAddr = gRegs[reg].l + t1;
 					break;
 
 				case BDPD: // Byte displacement deferred mode
-					t1    = gRegs[reg].l + int8_t(readvi(LN_BYTE));
+					t1    = int8_t(readvi(LN_BYTE));
+					t1    = gRegs[reg].l + t1;
 					iAddr = readv(t1, LN_LONG, RACC);
 					break;
 
 				case WDP: // Word displacement mode
-					iAddr = gRegs[reg].l + int16_t(readvi(LN_WORD));
+					t1    = int16_t(readvi(LN_WORD));
+					iAddr = gRegs[reg].l + t1;
 					break;
 
 				case WDPD: // Word displacement deferred mode
-					t1    = gRegs[reg].l + int16_t(readvi(LN_WORD));
+					t1    = int16_t(readvi(LN_WORD));
+					t1    = gRegs[reg].l + t1;
 					iAddr = readv(t1, LN_LONG, RACC);
 					break;
 
 				case LDP: // Longword displacement mode
-					iAddr = gRegs[reg].l + int32_t(readvi(LN_LONG));
+					t1    = int32_t(readvi(LN_LONG));
+					iAddr = gRegs[reg].l + t1;
 					break;
 
 				case LDPD: // Longword displacement deferred mode
-					t1    = gRegs[reg].l + int32_t(readvi(LN_LONG));
+					t1    = int32_t(readvi(LN_LONG));
+					t1    = gRegs[reg].l + t1;
 					iAddr = readv(t1, LN_LONG, RACC);
 					break;
 
@@ -196,29 +213,35 @@ void CPU_CLASS::execute()
 						break;
 
 					case BDP: // Byte displacement mode
-						iAddr += gRegs[reg].l + int8_t(readvi(LN_BYTE));
+						t1     = int8_t(readvi(LN_BYTE));
+						iAddr += gRegs[reg].l + t1;
 						break;
 
 					case BDPD: // Byte displacement deferred mode
-						t1     = gRegs[reg].l + int8_t(readvi(LN_BYTE));
+						t1     = int8_t(readvi(LN_BYTE));
+						t1     = gRegs[reg].l + t1;
 						iAddr += readv(t1, LN_LONG, RACC);
 						break;
 
 					case WDP: // Word displacement mode
-						iAddr += gRegs[reg].l + int16_t(readvi(LN_WORD));
+						t1     = int16_t(readvi(LN_WORD));
+						iAddr += gRegs[reg].l + t1;
 						break;
 
 					case WDPD: // Word displacement deferred mode
-						t1     = gRegs[reg].l + int16_t(readvi(LN_WORD));
+						t1     = int16_t(readvi(LN_WORD));
+						t1     = gRegs[reg].l + t1;
 						iAddr += readv(t1, LN_LONG, RACC);
 						break;
 
 					case LDP: // Longword displacement mode
-						iAddr += gRegs[reg].l + int32_t(readvi(LN_LONG));
+						t1     = int32_t(readvi(LN_LONG));
+						iAddr += gRegs[reg].l + t1;
 						break;
 
 					case LDPD: // Longword displacement deferred mode
-						t1     = gRegs[reg].l + int32_t(readvi(LN_LONG));
+						t1     = int32_t(readvi(LN_LONG));
+						t1     = gRegs[reg].l + t1;
 						iAddr += readv(t1, LN_LONG, RACC);
 						break;
 
@@ -244,10 +267,6 @@ void CPU_CLASS::execute()
 				}
 			}
 
-#ifdef ENABLE_DEBUG
-			if (dbgFlags & DBG_TRACE)
-				disasm(faultAddr);
-#endif /* ENABLE_DEBUG */
 
 			// Execute opcode
 			switch (opCode) {
@@ -259,15 +278,151 @@ void CPU_CLASS::execute()
 				// Do nothing...
 				break;
 
+			// MTPR/MFPR instructions
+			case OPC_nMTPR:
+				src = opRegs[0];
+				writepr(opRegs[1], src);
+				UpdateCC_IIZP_L(ccReg, src);
+				break;
+			case OPC_nMFPR:
+				src = readpr(opRegs[0]);
+				StoreL(opRegs[1], opRegs[2], src);
+				UpdateCC_IIZP_L(ccReg, src);
+				break;
+
+			// Bcc instructions - Branch On (condition)
+			//
+			// Opcodes: Condition
+			//   12     Z EQL 0         BNEQ  Branch on Not Equal (signed)
+			//   12     Z EQL 0         BNEQU Branch on Not Equal Unsigned
+			//   13     Z EQL 1         BEQL  Branch on Equal (signed)
+			//   13     Z EQL 1         BEQLU Branch on Equal Unsigned
+			//   14     (N OR Z) EQL 0  BGTR  Branch on Greater Than (signed)
+			//   15     (N OR Z) EQL 1  BLEQ  Branch on Less Than or Equal (signed)
+			//   18     N EQL 0         BGEQ  Branch on Greater Than or Equal (signed)
+			//   19     N EQL 1         BLSS  Branch on Less Than (signed)
+			//   1A     (C OR Z) EQL 0  BGTRU Branch on Greater Than Unsigned
+			//   1B     (C OR Z) EQL 1  BLEQU Branch on Less Than or Equal Unsigned
+			//   1C     V EQL 0         BVC   Branch on Overflow Clear
+			//   1D     V EQL 1         BVS   Branch on Overflow Set
+			//   1E     C EQL 0         BGEQU Branch on Greater Than or Equal Unsigned
+			//   1E     C EQL 0         BCC   Branch on Carry Clear
+			//   1F     C EQL 1         BLSSU Branch on Less Than Unsigned
+			//   1F     C EQL 1         BCS   Branch on Carry Set
+
+			case OPC_nBNEQ:
+				if ((ccReg & CC_Z) == 0) {
+					REG_PC = REG_PC + int8_t(brDisp);
+					flushvi();
+				}
+				break;
+
+			case OPC_nBEQL:
+				if (ccReg & CC_Z) {
+					REG_PC = REG_PC + int8_t(brDisp);
+					flushvi();
+				}
+				break;
+
+			case OPC_nBGTR:
+				if ((ccReg & (CC_N|CC_Z)) == 0) {
+					REG_PC = REG_PC + int8_t(brDisp);
+					flushvi();
+				}
+				break;
+
+			case OPC_nBLEQ:
+				if (ccReg & (CC_N|CC_Z)) {
+					REG_PC = REG_PC + int8_t(brDisp);
+					flushvi();
+				}
+				break;
+
+			case OPC_nBGEQ:
+				if ((ccReg & CC_N) == 0) {
+					REG_PC = REG_PC + int8_t(brDisp);
+					flushvi();
+				}
+				break;
+
+			case OPC_nBLSS:
+				if (ccReg & CC_N) {
+					REG_PC = REG_PC + int8_t(brDisp);
+					flushvi();
+				}
+				break;
+
+			case OPC_nBGTRU:
+				if ((ccReg & (CC_C|CC_Z)) == 0) {
+					REG_PC = REG_PC + int8_t(brDisp);
+					flushvi();
+				}
+				break;
+
+			case OPC_nBLEQU:
+				if (ccReg & (CC_C|CC_Z)) {
+					REG_PC = REG_PC + int8_t(brDisp);
+					flushvi();
+				}
+				break;
+
+			case OPC_nBVC:
+				if ((ccReg & CC_V) == 0) {
+					REG_PC = REG_PC + int8_t(brDisp);
+					flushvi();
+				}
+				break;
+
+			case OPC_nBVS:
+				if (ccReg & CC_V) {
+					REG_PC = REG_PC + int8_t(brDisp);
+					flushvi();
+				}
+				break;
+
+			case OPC_nBCC:
+				if ((ccReg & CC_C) == 0) {
+					REG_PC = REG_PC + int8_t(brDisp);
+					flushvi();
+				}
+				break;
+
+			case OPC_nBCS:
+				if (ccReg & CC_C) {
+					REG_PC = REG_PC + int8_t(brDisp);
+					flushvi();
+				}
+				break;
+
+			//  BRx instructions
+			case OPC_nBRB:
+				REG_PC = REG_PC + int8_t(brDisp);
+				flushvi();
+				break;
+			case OPC_nBRW:
+				REG_PC = REG_PC + int16_t(brDisp);
+				flushvi();
+				break;
+
+			// JMP instruction
+			case OPC_nJMP:
+				REG_PC = opRegs[0];
+				flushvi();
+				break;
+
 			// MOVx instructions
 			// MOVAx instructions
 			case OPC_nMOVB:
 				dst = opRegs[0];
 				StoreB(opRegs[1], opRegs[2], dst);
+				UpdateCC_IIZP_B(ccReg, dst);
+				printf("%s: Move %02X\n", devName.c_str(), uint8_t(dst));
 				break;
 			case OPC_nMOVW:
 				dst = opRegs[0];
 				StoreW(opRegs[1], opRegs[2], dst);
+				UpdateCC_IIZP_W(ccReg, dst);
+				printf("%s: Move %04X\n", devName.c_str(), uint16_t(dst));
 				break;
 			case OPC_nMOVL:
 			case OPC_nMOVAB:
@@ -276,35 +431,105 @@ void CPU_CLASS::execute()
 			case OPC_nMOVAQ:
 				dst = opRegs[0];
 				StoreL(opRegs[1], opRegs[2], dst);
+				UpdateCC_IIZP_L(ccReg, dst);
+				printf("%s: Move %08X\n", devName.c_str(), uint32_t(dst));
 				break;
 			case OPC_nMOVQ:
 				dstl = opRegs[0];
 				dsth = opRegs[1];
 				StoreQ(opRegs[2], opRegs[3], dstl, dsth);
+				UpdateCC_IIZP_Q(ccReg, dstl, dsth);
+				printf("%s: Move %08X %08X\n", devName.c_str(), uint32_t(dstl), uint32_t(dsth));
 				break;
 
 			// CLRx instructions
 			case OPC_nCLRB:
 				StoreB(opRegs[0], opRegs[1], 0);
+				UpdateCC_Z1ZP(ccReg);
 				break;
 			case OPC_nCLRW:
 				StoreW(opRegs[0], opRegs[1], 0);
+				UpdateCC_Z1ZP(ccReg);
 				break;
 			case OPC_nCLRL:
 				StoreL(opRegs[0], opRegs[1], 0);
+				UpdateCC_Z1ZP(ccReg);
 				break;
 			case OPC_nCLRQ:
 				StoreQ(opRegs[0], opRegs[1], 0, 0);
+				UpdateCC_Z1ZP(ccReg);
 				break;
 
-			// MTPR/MFPR instructions
-			case OPC_nMTPR:
+			// INCx instructions
+			case OPC_nINCB:
 				src = opRegs[0];
-				writepr(opRegs[1], src);
+				dst = src + 1;
+				StoreB(opRegs[1], opRegs[2], dst);
+				printf("%s: Inc %02X => %02X\n", devName.c_str(), uint8_t(src), uint8_t(dst));
 				break;
-			case OPC_nMFPR:
-				src = readpr(opRegs[0]);
-				StoreL(opRegs[1], opRegs[2], src);
+			case OPC_nINCW:
+				src = opRegs[0];
+				dst = src + 1;
+				StoreW(opRegs[1], opRegs[2], dst);
+				printf("%s: Inc %04X => %04X\n", devName.c_str(), uint16_t(src), uint16_t(dst));
+				break;
+			case OPC_nINCL:
+				src = opRegs[0];
+				dst = src + 1;
+				StoreL(opRegs[1], opRegs[2], dst);
+				printf("%s: Inc %08X => %08X\n", devName.c_str(), uint32_t(src), uint32_t(dst));
+				break;
+
+			// DECx instructions
+			case OPC_nDECB:
+				src = opRegs[0];
+				dst = src - 1;
+				StoreB(opRegs[1], opRegs[2], dst);
+				printf("%s: Dec %02X => %02X\n", devName.c_str(), uint8_t(src), uint8_t(dst));
+				break;
+			case OPC_nDECW:
+				src = opRegs[0];
+				dst = src - 1;
+				StoreW(opRegs[1], opRegs[2], dst);
+				printf("%s: Dec %04X => %04X\n", devName.c_str(), uint16_t(src), uint16_t(dst));
+				break;
+			case OPC_nDECL:
+				src = opRegs[0];
+				dst = src - 1;
+				StoreL(opRegs[1], opRegs[2], dst);
+				printf("%s: Dec %08X => %08X\n", devName.c_str(), uint32_t(src), uint32_t(dst));
+				break;
+
+			// XORx instructions
+			case OPC_nXORB2:
+			case OPC_nXORB3:
+				mask = opRegs[0];
+				src  = opRegs[1];
+				dst  = src ^ mask;
+				StoreB(opRegs[2], opRegs[3], dst);
+				UpdateCC_IIZP_B(ccReg, dst);
+				printf("%s: %02X ^ %02X => %02X\n", devName.c_str(),
+						uint8_t(src), uint8_t(mask), uint8_t(dst));
+				break;
+			case OPC_nXORW2:
+			case OPC_nXORW3:
+				mask = opRegs[0];
+				src  = opRegs[1];
+				dst  = src ^ mask;
+				StoreW(opRegs[2], opRegs[3], dst);
+				UpdateCC_IIZP_W(ccReg, dst);
+				printf("%s: %04X ^ %04X => %04X\n", devName.c_str(),
+						uint16_t(src), uint16_t(mask), uint16_t(dst));
+				break;
+			case OPC_nXORL2:
+			case OPC_nXORL3:
+				mask = opRegs[0];
+				src  = opRegs[1];
+				dst  = src ^ mask;
+				StoreL(opRegs[2], opRegs[3], dst);
+				UpdateCC_IIZP_L(ccReg, dst);
+				printf("%s: %08X ^ %08X => %08X\n", devName.c_str(),
+						uint32_t(src), uint32_t(mask), uint32_t(dst));
 				break;
 
 			// Illegal/unimplemented instruction

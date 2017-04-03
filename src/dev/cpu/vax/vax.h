@@ -173,6 +173,8 @@
 #define CWA              (CACC|WACC)        // Console read memory access
 #define ACC_MASK(am)     (1u << (am))       // Access mode mask
 
+#define PA_MASK30        0x3FFFFFFF         // 30-bit physical addressing
+
 // Exception Codes - Stop
 #define STOP_HALT		-1		// HALT opcode
 #define STOP_UOPC		-2		// Unimplemented opcode
@@ -182,29 +184,54 @@
 	if (op0 != OPR_MEM)       \
 		gRegs[op0].b  = d;    \
 	else                      \
-		writevb(op1, d, WACC);
+		writev(op1, d, LN_BYTE, WACC);
 
 #define StoreW(op0, op1, d)   \
 	if (op0 != OPR_MEM)       \
 		gRegs[op0].w  = d;    \
 	else                      \
-		writevw(op1, d, WACC);
+		writev(op1, d, LN_WORD, WACC);
 
 #define StoreL(op0, op1, d)   \
-	if (op0 != OPR_MEM)       \
+	if (op0 != OPR_MEM) {       \
 		gRegs[op0].l  = d;    \
-	else                      \
-		writevl(op1, d, WACC);
+		printf("reg: (w) %08X => R%d\n", d, op0); \
+	} else {                      \
+		writev(op1, d, LN_LONG, WACC); \
+		printf("mem: (w) %08X => %08X\n", d, op1); \
+    }
 
 #define StoreQ(op0, op1, dl, dh)        \
 	if (op0 != OPR_MEM) {               \
 		gRegs[op0].l  = dl;             \
 		gRegs[op0+1].l = dh;            \
 	} else {                            \
-		writevl(op1+LN_LONG, dh, WACC); \
-		writevl(op1, dl, WACC);         \
+		writev(op1+LN_LONG, dh, LN_LONG, WACC); \
+		writev(op1, dl, LN_LONG, WACC);         \
 	}
 
+#define UpdateCC_Z1ZP(cc) \
+	cc = CC_Z | ((cc) & CC_C);
+
+#define UpdateCC_IIZP_B(cc, d)                          \
+	if (int8_t(d) < 0)         cc = CC_N | (cc & CC_C); \
+	else if (int8_t(d) == 0)   cc = CC_Z | (cc & CC_C); \
+	else                       cc = cc & CC_C;
+
+#define UpdateCC_IIZP_W(cc, d)                          \
+	if (int16_t(d) < 0)        cc = CC_N | (cc & CC_C); \
+	else if (int16_t(d) == 0)  cc = CC_Z | (cc & CC_C); \
+	else                       cc = cc & CC_C;
+
+#define UpdateCC_IIZP_L(cc, d)                          \
+	if (int32_t(d) < 0)        cc = CC_N | (cc & CC_C); \
+	else if (int32_t(d) == 0)  cc = CC_Z | (cc & CC_C); \
+	else                       cc = cc & CC_C;
+
+#define UpdateCC_IIZP_Q(cc, dl, dh)                     \
+	if (int32_t(dh) < 0)       cc = CC_N | (cc & CC_C); \
+	else if (((dl)|(dh)) == 0) cc = CC_Z | (cc & CC_C); \
+	else                       cc = cc & CC_C;
 
 struct vaxOpcode {
 	const char *opName;           // Name of the Instruction
