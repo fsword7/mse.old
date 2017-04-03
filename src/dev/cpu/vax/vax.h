@@ -266,34 +266,16 @@
 #define UpdateCC_CMP_W(cc, s1, s2)   UpdateCC_CMP_I(cc, s1, s2)
 #define UpdateCC_CMP_L(cc, s1, s2)   UpdateCC_CMP_I(cc, s1, s2)
 
-//#define UpdateCC_CMP_B(cc, s1, s2)                   \
-//	if (int8_t(s1) < int8_t(s2))         cc  = CC_N; \
-//	else if (int8_t(s1) == int8_t(s2))   cc  = CC_Z; \
-//	else                                 cc  = 0;    \
-//	if (uint8_t(s1) < uint8_t(s2))       cc |= CC_C;
-//
-//#define UpdateCC_CMP_W(cc, s1, s2)                    \
-//	if (int16_t(s1) < int16_t(s2))        cc  = CC_N; \
-//	else if (int16_t(s1) == int16_t(s2))  cc  = CC_Z; \
-//	else                                  cc  = 0;    \
-//	if (uint16_t(s1) < uint16_t(s2))      cc |= CC_C;
-//
-//#define UpdateCC_CMP_L(cc, s1, s2)                    \
-//	if (int32_t(s1) < int32_t(s2))        cc  = CC_N; \
-//	else if (int32_t(s1) == int32_t(s2))  cc  = CC_Z; \
-//	else                                  cc  = 0;    \
-//	if (uint32_t(s1) < uint32_t(s2))      cc |= CC_C;
-
 #define UpdateV_ADD_B(cc, d, s1, s2) \
-	if (((~(s1) ^ (s1)) & ((s1) ^ (d))) & SIGN_B) \
+	if (((~(s1) ^ (s2)) & ((s1) ^ (d))) & SIGN_B) \
 		cc |= CC_V;
 
 #define UpdateV_ADD_W(cc, d, s1, s2) \
-	if (((~(s1) ^ (s1)) & ((s1) ^ (d))) & SIGN_W) \
+	if (((~(s1) ^ (s2)) & ((s1) ^ (d))) & SIGN_W) \
 		cc |= CC_V;
 
 #define UpdateV_ADD_L(cc, d, s1, s2) \
-	if (((~(s1) ^ (s1)) & ((s1) ^ (d))) & SIGN_L) \
+	if (((~(s1) ^ (s2)) & ((s1) ^ (d))) & SIGN_L) \
 		cc |= CC_V;
 
 #define UpdateCC_ADD(cc, d, s1, s2) \
@@ -313,6 +295,37 @@
 	UpdateCC_IIZZ_L(cc, d);           \
 	UpdateV_ADD_L(cc, d, s1, s2);     \
 	UpdateCC_ADD(cc, d, s1, s2)
+
+
+#define UpdateV_SUB_B(cc, d, s1, s2) \
+	if ((((s1) ^ (s2)) & (~(s1) ^ (d))) & SIGN_B) \
+		cc |= CC_V;
+
+#define UpdateV_SUB_W(cc, d, s1, s2) \
+	if ((((s1) ^ (s2)) & (~(s1) ^ (d))) & SIGN_W) \
+		cc |= CC_V;
+
+#define UpdateV_SUB_L(cc, d, s1, s2) \
+	if ((((s1) ^ (s2)) & (~(s1) ^ (d))) & SIGN_L) \
+		cc |= CC_V;
+
+#define UpdateCC_SUB(cc, d, s1, s2) \
+	if (ZXTL(d) < ZXTL(s2)) cc |= CC_C;
+
+#define UpdateCC_SUB_B(cc, d, s1, s2) \
+	UpdateCC_IIZZ_B(cc, d);           \
+	UpdateV_SUB_B(cc, d, s1, s2);     \
+	UpdateCC_SUB(cc, d, s1, s2)
+
+#define UpdateCC_SUB_W(cc, d, s1, s2) \
+	UpdateCC_IIZZ_W(cc, d);           \
+	UpdateV_SUB_W(cc, d, s1, s2);     \
+	UpdateCC_SUB(cc, d, s1, s2)
+
+#define UpdateCC_SUB_L(cc, d, s1, s2) \
+	UpdateCC_IIZZ_L(cc, d);           \
+	UpdateV_SUB_L(cc, d, s1, s2);     \
+	UpdateCC_SUB(cc, d, s1, s2)
 
 
 struct vaxOpcode {
@@ -346,6 +359,8 @@ public:
 	void assignMemory(uint8_t *mem, uint32_t memSize);
 	void setPCAddr(uint32_t pcAddr);
 	char *stringCC(uint32_t cc);
+	int getBit();
+	int setBit(int bit);
 
 	// Memory access routines
 	uint32_t readp(uint32_t addr, int size);                   // Read access (aligned)

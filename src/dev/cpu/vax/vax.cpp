@@ -70,5 +70,58 @@ char *vax_cpuDevice::stringCC(uint32_t cc)
 	return ccstr;
 }
 
+int vax_cpuDevice::getBit()
+{
+	int32_t  pos = opRegs[0];
+	int32_t  reg = opRegs[1];
+	uint32_t ea, src;
+
+	if (reg >= 0) {
+//		if (ZXTL(pos) > 31)
+//			throw ESC_RSVD_OPND_FAULT;
+		src = gRegs[reg].l;
+		printf("%s: R%d %08X<%d> => %d\n", devName.c_str(),
+			reg, src, pos, (src >> pos) & 1);
+	} else {
+		ea   = opRegs[2] + (pos >> 3);
+		src  = readv(ea, LN_BYTE, RACC);
+		pos &= 7;
+		printf("%s: %08X => %02X<%d> => %d\n", devName.c_str(),
+			ea, ZXTB(src), pos, (src >> pos) & 1);
+	}
+
+	return (src >> pos) & 1;
+}
+
+int vax_cpuDevice::setBit(int bit)
+{
+	int32_t  pos = opRegs[0];
+	int32_t  reg = opRegs[1];
+	uint32_t ea, src, dst;
+	int      obit;
+
+	if (reg >= 0) {
+//		if (ZXTL(pos) > 31)
+//			throw ESC_RSVD_OPND_FAULT;
+		src  = gRegs[reg].l;
+		obit = (src >> pos) & 1;
+		dst  = bit ? (src | (1u << pos)) : (src & ~(1u << pos));
+		gRegs[reg].l = dst;
+		printf("%s: R%d %08X<%d> (now: %08X) <= %d (old: %d)\n",
+			devName.c_str(), reg, src, dst, pos, bit, obit);
+	} else {
+		ea   = opRegs[2] + (pos >> 3);
+		src  = readv(ea, LN_BYTE, RACC);
+		pos &= 7;
+		obit = (src >> pos) & 1;
+		dst  = bit ? (src | (1u << pos)) : (src & ~(1u << pos));
+		writev(ea, dst, LN_BYTE, WACC);
+		printf("%s: %08X => %02X<%d> (now: %02X) <= %d (old: %d)\n",
+			devName.c_str(), ea, ZXTB(src), ZXTB(dst), pos, bit, obit);
+	}
+
+	return obit;
+}
+
 //#define CPU_CLASS vax_cpuDevice
 //#include "dev/cpu/vax/executes.h"

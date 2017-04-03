@@ -509,6 +509,64 @@ void CPU_CLASS::execute()
 					printf("%s: Jump into PC %08X\n", devName.c_str(), REG_PC);
 				break;
 
+			// BBx instructions
+			case OPC_nBBS:
+				if (getBit() == 1) {
+					REG_PC = REG_PC + SXTB(brDisp);
+					flushvi();
+				}
+				break;
+			case OPC_nBBC:
+				if (getBit() == 0) {
+					REG_PC = REG_PC + SXTB(brDisp);
+					flushvi();
+				}
+				break;
+			case OPC_nBBSSI:
+			case OPC_nBBSS:
+				if (setBit(1) == 1) {
+					REG_PC = REG_PC + SXTB(brDisp);
+					flushvi();
+				}
+				break;
+			case OPC_nBBSC:
+				if (setBit(0) == 1) {
+					REG_PC = REG_PC + SXTB(brDisp);
+					flushvi();
+				}
+				break;
+			case OPC_nBBCS:
+				if (setBit(1) == 0) {
+					REG_PC = REG_PC + SXTB(brDisp);
+					flushvi();
+				}
+				break;
+			case OPC_nBBCCI:
+			case OPC_nBBCC:
+				if (setBit(0) == 0) {
+					REG_PC = REG_PC + SXTB(brDisp);
+					flushvi();
+				}
+				break;
+
+			// BLBx instructions
+			case OPC_nBLBS:
+				src = opRegs[0];
+				if ((src & 1) == 1) {
+					REG_PC = REG_PC + SXTB(brDisp);
+					flushvi();
+				}
+				printf("%s: %08X & 1 => %d\n", devName.c_str(), src, src & 1);
+				break;
+			case OPC_nBLBC:
+				src = opRegs[0];
+				if ((src & 1) == 0) {
+					REG_PC = REG_PC + SXTB(brDisp);
+					flushvi();
+				}
+				printf("%s: %08X & 1 => %d\n", devName.c_str(), src, src & 1);
+				break;
+
 			// MOVx instructions
 			// MOVAx instructions
 			case OPC_nMOVB:
@@ -547,21 +605,21 @@ void CPU_CLASS::execute()
 				dst = ZXTB(opRegs[0]);
 				StoreW(opRegs[1], opRegs[2], dst);
 				UpdateCC_IIZP_W(ccReg, dst);
-				printf("%s: Move %02X => %04X: %s", devName.c_str(),
+				printf("%s: Move %02X => %04X: %s\n", devName.c_str(),
 					ZXTB(dst), ZXTW(dst), stringCC(ccReg));
 				break;
 			case OPC_nMOVZBL:
 				dst = ZXTB(opRegs[0]);
 				StoreL(opRegs[1], opRegs[2], dst);
 				UpdateCC_IIZP_L(ccReg, dst);
-				printf("%s: Move %02X => %08X: %s", devName.c_str(),
+				printf("%s: Move %02X => %08X: %s\n", devName.c_str(),
 					ZXTB(dst), ZXTL(dst), stringCC(ccReg));
 				break;
 			case OPC_nMOVZWL:
 				dst = ZXTW(opRegs[0]);
 				StoreL(opRegs[1], opRegs[2], dst);
 				UpdateCC_IIZP_L(ccReg, dst);
-				printf("%s: Move %04X => %08X: %s", devName.c_str(),
+				printf("%s: Move %04X => %08X: %s\n", devName.c_str(),
 					ZXTW(dst), ZXTL(dst), stringCC(ccReg));
 				break;
 
@@ -625,55 +683,67 @@ void CPU_CLASS::execute()
 
 			// INCx instructions
 			case OPC_nINCB:
-				src = opRegs[0];
-				dst = src + 1;
-				StoreB(opRegs[1], opRegs[2], dst);
-				printf("%s: Inc %02X => %02X\n", devName.c_str(), uint8_t(src), uint8_t(dst));
+				ssrc1 = SXTB(opRegs[0]);
+				sdst  = ssrc1 + 1;
+				StoreB(opRegs[1], opRegs[2], sdst);
+				UpdateCC_ADD_B(ccReg, sdst, 1, ssrc1);
+				printf("%s: %02X + 1 => %02X: %s\n",
+					devName.c_str(), ZXTB(ssrc1), ZXTB(sdst), stringCC(ccReg));
 				break;
 			case OPC_nINCW:
-				src = opRegs[0];
-				dst = src + 1;
-				StoreW(opRegs[1], opRegs[2], dst);
-				printf("%s: Inc %04X => %04X\n", devName.c_str(), uint16_t(src), uint16_t(dst));
+				ssrc1 = SXTW(opRegs[0]);
+				sdst  = ssrc1 + 1;
+				StoreW(opRegs[1], opRegs[2], sdst);
+				UpdateCC_ADD_W(ccReg, sdst, 1, ssrc1);
+				printf("%s: %04X + 1 => %04X: %s\n",
+					devName.c_str(), ZXTW(ssrc1), ZXTW(sdst), stringCC(ccReg));
 				break;
 			case OPC_nINCL:
-				src = opRegs[0];
-				dst = src + 1;
-				StoreL(opRegs[1], opRegs[2], dst);
-				printf("%s: Inc %08X => %08X\n", devName.c_str(), uint32_t(src), uint32_t(dst));
+				ssrc1 = SXTL(opRegs[0]);
+				sdst  = ssrc1 + 1;
+				StoreL(opRegs[1], opRegs[2], sdst);
+				UpdateCC_ADD_L(ccReg, sdst, 1, ssrc1);
+				printf("%s: %08X + 1 => %08X: %s\n",
+					devName.c_str(), ZXTL(ssrc1), ZXTL(sdst), stringCC(ccReg));
 				break;
 
 			// DECx instructions
 			case OPC_nDECB:
-				src = opRegs[0];
-				dst = src - 1;
-				StoreB(opRegs[1], opRegs[2], dst);
-				printf("%s: Dec %02X => %02X\n", devName.c_str(), uint8_t(src), uint8_t(dst));
+				ssrc1 = SXTB(opRegs[0]);
+				sdst = ssrc1 - 1;
+				StoreB(opRegs[1], opRegs[2], sdst);
+				UpdateCC_SUB_B(ccReg, sdst, 1, ssrc1);
+				printf("%s: %08X - 1 => %08X: %s\n",
+					devName.c_str(), ZXTB(ssrc1), ZXTB(sdst), stringCC(ccReg));
 				break;
 			case OPC_nDECW:
-				src = opRegs[0];
-				dst = src - 1;
-				StoreW(opRegs[1], opRegs[2], dst);
-				printf("%s: Dec %04X => %04X\n", devName.c_str(), uint16_t(src), uint16_t(dst));
+				ssrc1 = SXTW(opRegs[0]);
+				sdst = ssrc1 - 1;
+				StoreW(opRegs[1], opRegs[2], sdst);
+				UpdateCC_SUB_W(ccReg, sdst, 1, ssrc1);
+				printf("%s: %04X - 1 => %04X: %s\n",
+					devName.c_str(), ZXTW(ssrc1), ZXTW(sdst), stringCC(ccReg));
 				break;
 			case OPC_nDECL:
-				src = opRegs[0];
-				dst = src - 1;
-				StoreL(opRegs[1], opRegs[2], dst);
-				printf("%s: Dec %08X => %08X\n", devName.c_str(), uint32_t(src), uint32_t(dst));
+				ssrc1 = SXTL(opRegs[0]);
+				sdst = ssrc1 - 1;
+				StoreL(opRegs[1], opRegs[2], sdst);
+				UpdateCC_SUB_L(ccReg, sdst, 1, ssrc1);
+				printf("%s: %08X - 1 => %08X: %s\n",
+					devName.c_str(), ZXTL(ssrc1), ZXTL(sdst), stringCC(ccReg));
 				break;
 
 			// ADAWI instruction
 			case OPC_nADAWI:
 				ssrc1 = SXTW(opRegs[0]);
 				if (opRegs[1] != OPR_MEM) {
-					stmp = gRegs[opRegs[1]].l;
-					sdst  = ZXTW(ssrc1 + stmp);
-					gRegs[opRegs[1]].l = dst;
+					stmp = SXTW(gRegs[opRegs[1]].l);
+					sdst = ssrc1 + stmp;
+					gRegs[opRegs[1]].l = ZXTW(sdst);
 				} else {
 //					if (opRegs[1] & 1)
 //						throw EXC_RSVD_OPND_FAULT;
-					stmp = readv(opRegs[2], LN_WORD, RACC);
+					stmp = SXTW(readv(opRegs[2], LN_WORD, RACC));
 					sdst = ssrc1 + stmp;
 					writev(opRegs[2], sdst, LN_WORD, WACC);
 				}
