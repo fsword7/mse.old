@@ -21,9 +21,10 @@ void CPU_CLASS::execute()
 	uint32_t opCode;
 	int32_t  brDisp;
 	const vaxOpcode *opc;
-	register uint32_t src, src1, src2;
-	register int32_t  ssrc1, ssrc2, sdst, stmp;
-	register uint32_t dst, dst1, dst2;
+	register int32_t  src1, src2, carry;
+	register int32_t  dst1, dst2;
+	register int32_t  src, dst, tmp;
+	register uint32_t usrc, udst, utmp;
 	register uint32_t mask;
 	register int32_t  cnt;
 
@@ -300,6 +301,8 @@ void CPU_CLASS::execute()
 			case OPC_nMOVPSL:
 				dst = psReg | ccReg;
 				StoreL(opRegs[0], opRegs[1], dst);
+				printf("%s: PSL %08X: %s\n", devName.c_str(),
+						ZXTL(dst), stringCC(ccReg));
 				break;
 
 			// MTPR/MFPR instructions
@@ -467,45 +470,45 @@ void CPU_CLASS::execute()
 
 			// PUSHL instruction
 			case OPC_nPUSHL:
-				ssrc1 = opRegs[0];
-				writev(REG_SP - LN_LONG, ssrc1, LN_LONG, WACC);
+				src = opRegs[0];
+				writev(REG_SP - LN_LONG, src, LN_LONG, WACC);
 				REG_SP -= LN_LONG;
-				UpdateCC_IIZP_L(ccReg, ssrc1);
+				UpdateCC_IIZP_L(ccReg, src);
 				printf("%s: Push %08X to SP (%08X): %s\n", devName.c_str(),
-						ssrc1, REG_SP + LN_LONG, stringCC(ccReg));
+						src, REG_SP + LN_LONG, stringCC(ccReg));
 				break;
 
 			// AOB instructions
 			case OPC_nAOBLEQ:
-				ssrc1 = opRegs[0];
-				ssrc2 = opRegs[1];
-				sdst  = ssrc2 + 1;
-				StoreL(opRegs[2], opRegs[3], sdst);
-				UpdateCC_IIZP_L(ccReg, sdst);
-				UpdateV_ADD_L(ccReg, sdst, 1, ssrc2);
-				if (sdst <= src1) {
+				src1 = opRegs[0];
+				src2 = opRegs[1];
+				dst  = src2 + 1;
+				StoreL(opRegs[2], opRegs[3], dst);
+				UpdateCC_IIZP_L(ccReg, dst);
+				UpdateV_ADD_L(ccReg, dst, 1, src2);
+				if (dst <= src1) {
 					REG_PC = REG_PC + SXTB(brDisp);
 					flushvi();
 				}
 				printf("%s: Inc %08X => %08X <= %08X: %s\n", devName.c_str(),
-						ssrc2, sdst, ssrc1, stringCC(ccReg));
-				if (sdst <= src1)
+						src2, dst, src1, stringCC(ccReg));
+				if (dst <= src1)
 					printf("%s: Jump into PC %08X\n", devName.c_str(), REG_PC);
 				break;
 			case OPC_nAOBLSS:
-				ssrc1 = opRegs[0];
-				ssrc2 = opRegs[1];
-				sdst  = ssrc2 + 1;
-				StoreL(opRegs[2], opRegs[3], sdst);
-				UpdateCC_IIZP_L(ccReg, sdst);
-				UpdateV_ADD_L(ccReg, sdst, 1, ssrc2);
-				if (sdst < src1) {
+				src1 = opRegs[0];
+				src2 = opRegs[1];
+				dst  = src2 + 1;
+				StoreL(opRegs[2], opRegs[3], dst);
+				UpdateCC_IIZP_L(ccReg, dst);
+				UpdateV_ADD_L(ccReg, dst, 1, src2);
+				if (dst < src1) {
 					REG_PC = REG_PC + SXTB(brDisp);
 					flushvi();
 				}
 				printf("%s: Inc %08X => %08X < %08X: %s\n", devName.c_str(),
-						ssrc2, sdst, ssrc1, stringCC(ccReg));
-				if (sdst <= src1)
+						src2, dst, src1, stringCC(ccReg));
+				if (dst <= src1)
 					printf("%s: Jump into PC %08X\n", devName.c_str(), REG_PC);
 				break;
 
@@ -573,13 +576,15 @@ void CPU_CLASS::execute()
 				dst = opRegs[0];
 				StoreB(opRegs[1], opRegs[2], dst);
 				UpdateCC_IIZP_B(ccReg, dst);
-				printf("%s: Move %02X: %s\n", devName.c_str(), uint8_t(dst), stringCC(ccReg));
+				printf("%s: Move %02X: %s\n", devName.c_str(),
+						ZXTB(dst), stringCC(ccReg));
 				break;
 			case OPC_nMOVW:
 				dst = opRegs[0];
 				StoreW(opRegs[1], opRegs[2], dst);
 				UpdateCC_IIZP_W(ccReg, dst);
-				printf("%s: Move %04X: %s\n", devName.c_str(), uint16_t(dst), stringCC(ccReg));
+				printf("%s: Move %04X: %s\n", devName.c_str(),
+						ZXTW(dst), stringCC(ccReg));
 				break;
 			case OPC_nMOVL:
 			case OPC_nMOVAB:
@@ -589,7 +594,8 @@ void CPU_CLASS::execute()
 				dst = opRegs[0];
 				StoreL(opRegs[1], opRegs[2], dst);
 				UpdateCC_IIZP_L(ccReg, dst);
-				printf("%s: Move %08X: %s\n", devName.c_str(), uint32_t(dst), stringCC(ccReg));
+				printf("%s: Move %08X: %s\n", devName.c_str(),
+						ZXTL(dst), stringCC(ccReg));
 				break;
 			case OPC_nMOVQ:
 				dst1 = opRegs[0];
@@ -597,7 +603,7 @@ void CPU_CLASS::execute()
 				StoreQ(opRegs[2], opRegs[3], dst1, dst2);
 				UpdateCC_IIZP_Q(ccReg, dst1, dst2);
 				printf("%s: Move %08X %08X: %s\n", devName.c_str(),
-						uint32_t(dst1), uint32_t(dst2), stringCC(ccReg));
+						ZXTL(dst1), ZXTL(dst2), stringCC(ccReg));
 				break;
 
 			// MOVZx instructions
@@ -643,246 +649,339 @@ void CPU_CLASS::execute()
 
 			// CMPx instructions
 			case OPC_nCMPB:
-				ssrc1 = SXTB(opRegs[0]);
-				ssrc2 = SXTB(opRegs[1]);
-				UpdateCC_CMP_B(ccReg, ssrc1, ssrc2);
+				src1 = SXTB(opRegs[0]);
+				src2 = SXTB(opRegs[1]);
+				UpdateCC_CMP_B(ccReg, src1, src2);
 				printf("%s: Compare %02X with %02X: %s\n", devName.c_str(),
-						ZXTB(ssrc1), ZXTB(ssrc2), stringCC(ccReg));
+						ZXTB(src1), ZXTB(src2), stringCC(ccReg));
 				break;
 			case OPC_nCMPW:
-				ssrc1 = SXTW(opRegs[0]);
-				ssrc2 = SXTW(opRegs[1]);
-				UpdateCC_CMP_W(ccReg, ssrc1, ssrc2);
+				src1 = SXTW(opRegs[0]);
+				src2 = SXTW(opRegs[1]);
+				UpdateCC_CMP_W(ccReg, src1, src2);
 				printf("%s: Compare %04X with %04X: %s\n", devName.c_str(),
-						ZXTW(ssrc1), ZXTW(ssrc2), stringCC(ccReg));
+						ZXTW(src1), ZXTW(src2), stringCC(ccReg));
 				break;
 			case OPC_nCMPL:
-				ssrc1 = SXTL(opRegs[0]);
-				ssrc2 = SXTL(opRegs[1]);
-				UpdateCC_CMP_L(ccReg, ssrc1, ssrc2);
+				src1 = SXTL(opRegs[0]);
+				src2 = SXTL(opRegs[1]);
+				UpdateCC_CMP_L(ccReg, src1, src2);
 				printf("%s: Compare %08X with %08X: %s\n", devName.c_str(),
-						ZXTL(ssrc1), ZXTL(ssrc2), stringCC(ccReg));
+						ZXTL(src1), ZXTL(src2), stringCC(ccReg));
 				break;
 
 				// TSTx instructions
 			case OPC_nTSTB:
-				ssrc1 = SXTB(opRegs[0]);
-				UpdateCC_IIZZ_B(ccReg, ssrc1);
-				printf("%s: Test %02X: %s\n", devName.c_str(), ZXTB(ssrc1), stringCC(ccReg));
+				src = SXTB(opRegs[0]);
+				UpdateCC_IIZZ_B(ccReg, src);
+				printf("%s: Test %02X: %s\n", devName.c_str(),
+						ZXTB(src), stringCC(ccReg));
 				break;
 			case OPC_nTSTW:
-				ssrc1 = SXTW(opRegs[0]);
-				UpdateCC_IIZZ_W(ccReg, ssrc1);
-				printf("%s: Test %04X: %s\n", devName.c_str(), ZXTW(ssrc1), stringCC(ccReg));
+				src = SXTW(opRegs[0]);
+				UpdateCC_IIZZ_W(ccReg, src);
+				printf("%s: Test %04X: %s\n", devName.c_str(),
+						ZXTW(src), stringCC(ccReg));
 				break;
 			case OPC_nTSTL:
-				ssrc1 = SXTL(opRegs[0]);
-				UpdateCC_IIZZ_L(ccReg, ssrc1);
-				printf("%s: Test %08X: %s\n", devName.c_str(), ZXTL(ssrc1), stringCC(ccReg));
+				src = SXTL(opRegs[0]);
+				UpdateCC_IIZZ_L(ccReg, src);
+				printf("%s: Test %08X: %s\n", devName.c_str(),
+						ZXTL(src), stringCC(ccReg));
 				break;
 
 			// INCx instructions
 			case OPC_nINCB:
-				ssrc1 = SXTB(opRegs[0]);
-				sdst  = ssrc1 + 1;
-				StoreB(opRegs[1], opRegs[2], sdst);
-				UpdateCC_ADD_B(ccReg, sdst, 1, ssrc1);
+				src = SXTB(opRegs[0]);
+				dst = src + 1;
+				StoreB(opRegs[1], opRegs[2], dst);
+				UpdateCC_ADD_B(ccReg, dst, 1, src);
 				printf("%s: %02X + 1 => %02X: %s\n",
-					devName.c_str(), ZXTB(ssrc1), ZXTB(sdst), stringCC(ccReg));
+					devName.c_str(), ZXTB(src), ZXTB(dst), stringCC(ccReg));
 				break;
 			case OPC_nINCW:
-				ssrc1 = SXTW(opRegs[0]);
-				sdst  = ssrc1 + 1;
-				StoreW(opRegs[1], opRegs[2], sdst);
-				UpdateCC_ADD_W(ccReg, sdst, 1, ssrc1);
+				src = SXTW(opRegs[0]);
+				dst = src + 1;
+				StoreW(opRegs[1], opRegs[2], dst);
+				UpdateCC_ADD_W(ccReg, dst, 1, src);
 				printf("%s: %04X + 1 => %04X: %s\n",
-					devName.c_str(), ZXTW(ssrc1), ZXTW(sdst), stringCC(ccReg));
+					devName.c_str(), ZXTW(src), ZXTW(dst), stringCC(ccReg));
 				break;
 			case OPC_nINCL:
-				ssrc1 = SXTL(opRegs[0]);
-				sdst  = ssrc1 + 1;
-				StoreL(opRegs[1], opRegs[2], sdst);
-				UpdateCC_ADD_L(ccReg, sdst, 1, ssrc1);
+				src = SXTL(opRegs[0]);
+				dst = src + 1;
+				StoreL(opRegs[1], opRegs[2], dst);
+				UpdateCC_ADD_L(ccReg, dst, 1, src);
 				printf("%s: %08X + 1 => %08X: %s\n",
-					devName.c_str(), ZXTL(ssrc1), ZXTL(sdst), stringCC(ccReg));
+					devName.c_str(), ZXTL(src), ZXTL(dst), stringCC(ccReg));
 				break;
 
 			// DECx instructions
 			case OPC_nDECB:
-				ssrc1 = SXTB(opRegs[0]);
-				sdst = ssrc1 - 1;
-				StoreB(opRegs[1], opRegs[2], sdst);
-				UpdateCC_SUB_B(ccReg, sdst, 1, ssrc1);
+				src = SXTB(opRegs[0]);
+				dst = src - 1;
+				StoreB(opRegs[1], opRegs[2], dst);
+				UpdateCC_SUB_B(ccReg, dst, 1, src);
 				printf("%s: %08X - 1 => %08X: %s\n",
-					devName.c_str(), ZXTB(ssrc1), ZXTB(sdst), stringCC(ccReg));
+					devName.c_str(), ZXTB(src), ZXTB(dst), stringCC(ccReg));
 				break;
 			case OPC_nDECW:
-				ssrc1 = SXTW(opRegs[0]);
-				sdst = ssrc1 - 1;
-				StoreW(opRegs[1], opRegs[2], sdst);
-				UpdateCC_SUB_W(ccReg, sdst, 1, ssrc1);
+				src = SXTW(opRegs[0]);
+				dst = src - 1;
+				StoreW(opRegs[1], opRegs[2], dst);
+				UpdateCC_SUB_W(ccReg, dst, 1, src);
 				printf("%s: %04X - 1 => %04X: %s\n",
-					devName.c_str(), ZXTW(ssrc1), ZXTW(sdst), stringCC(ccReg));
+					devName.c_str(), ZXTW(src), ZXTW(dst), stringCC(ccReg));
 				break;
 			case OPC_nDECL:
-				ssrc1 = SXTL(opRegs[0]);
-				sdst = ssrc1 - 1;
-				StoreL(opRegs[1], opRegs[2], sdst);
-				UpdateCC_SUB_L(ccReg, sdst, 1, ssrc1);
+				src = SXTL(opRegs[0]);
+				dst = src - 1;
+				StoreL(opRegs[1], opRegs[2], dst);
+				UpdateCC_SUB_L(ccReg, dst, 1, src);
 				printf("%s: %08X - 1 => %08X: %s\n",
-					devName.c_str(), ZXTL(ssrc1), ZXTL(sdst), stringCC(ccReg));
+					devName.c_str(), ZXTL(src), ZXTL(dst), stringCC(ccReg));
 				break;
 
 			// ADAWI instruction
 			case OPC_nADAWI:
-				ssrc1 = SXTW(opRegs[0]);
+				src = SXTW(opRegs[0]);
 				if (opRegs[1] != OPR_MEM) {
-					stmp = SXTW(gRegs[opRegs[1]].l);
-					sdst = ssrc1 + stmp;
-					gRegs[opRegs[1]].l = ZXTW(sdst);
+					tmp = SXTW(gRegs[opRegs[1]].l);
+					dst = src + tmp;
+					gRegs[opRegs[1]].l = ZXTW(dst);
 				} else {
 //					if (opRegs[1] & 1)
 //						throw EXC_RSVD_OPND_FAULT;
-					stmp = SXTW(readv(opRegs[2], LN_WORD, RACC));
-					sdst = ssrc1 + stmp;
-					writev(opRegs[2], sdst, LN_WORD, WACC);
+					tmp = SXTW(readv(opRegs[2], LN_WORD, RACC));
+					dst = src + tmp;
+					writev(opRegs[2], dst, LN_WORD, WACC);
 				}
-				UpdateCC_ADD_W(ccReg, sdst, ssrc1, stmp);
+				UpdateCC_ADD_W(ccReg, dst, src, tmp);
 				printf("%s: %04X + %04X => %04X: %s\n", devName.c_str(),
-						ZXTW(ssrc1), ZXTW(stmp), ZXTW(sdst), stringCC(ccReg));
+						ZXTW(src), ZXTW(tmp), ZXTW(dst), stringCC(ccReg));
+				break;
+
+			// ADDx instructions
+			case OPC_nADDB2:
+			case OPC_nADDB3:
+				src1 = SXTB(opRegs[0]);
+				src2 = SXTB(opRegs[1]);
+				dst  = src2 + src1;
+				StoreB(opRegs[2], opRegs[3], dst);
+				UpdateCC_ADD_B(ccReg, dst, src1, src2);
+				printf("%s: %02X + %02X => %02X: %s\n", devName.c_str(),
+					ZXTB(src1), ZXTB(src2), ZXTB(dst), stringCC(ccReg));
+				break;
+			case OPC_nADDW2:
+			case OPC_nADDW3:
+				src1 = SXTW(opRegs[0]);
+				src2 = SXTW(opRegs[1]);
+				dst  = src2 + src1;
+				StoreW(opRegs[2], opRegs[3], dst);
+				UpdateCC_ADD_W(ccReg, dst, src1, src2);
+				printf("%s: %04X + %04X => %04X: %s\n", devName.c_str(),
+					ZXTW(src1), ZXTW(src2), ZXTW(dst), stringCC(ccReg));
+				break;
+			case OPC_nADDL2:
+			case OPC_nADDL3:
+				src1 = SXTL(opRegs[0]);
+				src2 = SXTL(opRegs[1]);
+				dst  = src2 + src1;
+				StoreL(opRegs[2], opRegs[3], dst);
+				UpdateCC_ADD_L(ccReg, dst, src1, src2);
+				printf("%s: %08X + %08X => %08X: %s\n", devName.c_str(),
+					ZXTL(src1), ZXTL(src2), ZXTL(dst), stringCC(ccReg));
+				break;
+
+			// SUBx instructions
+			case OPC_nSUBB2:
+			case OPC_nSUBB3:
+				src1 = SXTB(opRegs[0]);
+				src2 = SXTB(opRegs[1]);
+				dst  = src2 - src1;
+				StoreB(opRegs[2], opRegs[3], dst);
+				UpdateCC_SUB_B(ccReg, dst, src1, src2);
+				printf("%s: %02X - %02X => %02X: %s\n", devName.c_str(),
+					ZXTB(src1), ZXTB(src2), ZXTB(dst), stringCC(ccReg));
+				break;
+			case OPC_nSUBW2:
+			case OPC_nSUBW3:
+				src1 = SXTW(opRegs[0]);
+				src2 = SXTW(opRegs[1]);
+				dst  = src2 - src1;
+				StoreW(opRegs[2], opRegs[3], dst);
+				UpdateCC_SUB_W(ccReg, dst, src1, src2);
+				printf("%s: %04X - %04X => %04X: %s\n", devName.c_str(),
+					ZXTW(src1), ZXTW(src2), ZXTW(dst), stringCC(ccReg));
+				break;
+			case OPC_nSUBL2:
+			case OPC_nSUBL3:
+				src1 = SXTL(opRegs[0]);
+				src2 = SXTL(opRegs[1]);
+				dst  = src2 - src1;
+				StoreL(opRegs[2], opRegs[3], dst);
+				UpdateCC_SUB_L(ccReg, dst, src1, src2);
+				printf("%s: %08X - %08X => %08X: %s\n", devName.c_str(),
+					ZXTL(src1), ZXTL(src2), ZXTL(dst), stringCC(ccReg));
+				break;
+
+			// ADWC/SBWC instructions
+			case OPC_nADWC:
+				src1  = SXTL(opRegs[0]);
+				src2  = SXTL(opRegs[1]);
+				carry = ccReg & CC_C;
+				dst   = src2 + src1 + carry;
+				StoreL(opRegs[2], opRegs[3], dst);
+				UpdateCC_ADD_L(ccReg, dst, src1, src2);
+				if ((dst == src2) && src1 != 0)
+					ccReg |= CC_C;
+				printf("%s: %08X + %08X + %d => %08X: %s\n", devName.c_str(),
+					ZXTL(src1), ZXTL(src2), carry, ZXTL(dst), stringCC(ccReg));
+				break;
+			case OPC_nSBWC:
+				src1  = SXTL(opRegs[0]);
+				src2  = SXTL(opRegs[1]);
+				carry = ccReg & CC_C;
+				dst   = src2 - src1 - carry;
+				StoreL(opRegs[2], opRegs[3], dst);
+				UpdateCC_SUB_L(ccReg, dst, src1, src2);
+				if ((src1 == src2) && dst != 0)
+					ccReg |= CC_C;
+				printf("%s: %08X - %08X - %d => %08X: %s\n", devName.c_str(),
+					ZXTL(src1), ZXTL(src2), carry, ZXTL(dst), stringCC(ccReg));
 				break;
 
 			// BICx instructions
 			case OPC_nBICB2:
 			case OPC_nBICB3:
-				mask = opRegs[0];
-				src  = opRegs[1];
-				dst  = src & ~mask;
-				StoreB(opRegs[2], opRegs[3], dst);
-				UpdateCC_IIZP_B(ccReg, dst);
+				mask = ZXTB(opRegs[0]);
+				usrc = ZXTB(opRegs[1]);
+				udst = usrc & ~mask;
+				StoreB(opRegs[2], opRegs[3], udst);
+				UpdateCC_IIZP_B(ccReg, udst);
 				printf("%s: %02X & ~%02X => %02X\n", devName.c_str(),
-						uint8_t(src), uint8_t(mask), uint8_t(dst));
+						ZXTB(usrc), ZXTB(mask), ZXTB(udst), stringCC(ccReg));
 				break;
 			case OPC_nBICW2:
 			case OPC_nBICW3:
-				mask = opRegs[0];
-				src  = opRegs[1];
-				dst  = src & ~mask;
-				StoreW(opRegs[2], opRegs[3], dst);
-				UpdateCC_IIZP_W(ccReg, dst);
-				printf("%s: %04X & ~%04X => %04X\n", devName.c_str(),
-						uint16_t(src), uint16_t(mask), uint16_t(dst));
+				mask = ZXTW(opRegs[0]);
+				usrc = ZXTW(opRegs[1]);
+				udst = usrc & ~mask;
+				StoreW(opRegs[2], opRegs[3], udst);
+				UpdateCC_IIZP_W(ccReg, udst);
+				printf("%s: %04X & ~%04X => %04X: %s\n", devName.c_str(),
+						ZXTW(usrc), ZXTW(mask), ZXTW(udst), stringCC(ccReg));
 				break;
 			case OPC_nBICL2:
 			case OPC_nBICL3:
-				mask = opRegs[0];
-				src  = opRegs[1];
-				dst  = src & ~mask;
-				StoreL(opRegs[2], opRegs[3], dst);
-				UpdateCC_IIZP_L(ccReg, dst);
-				printf("%s: %08X & ~%08X => %08X\n", devName.c_str(),
-						uint32_t(src), uint32_t(mask), uint32_t(dst));
+				mask = ZXTL(opRegs[0]);
+				usrc = ZXTL(opRegs[1]);
+				udst = usrc & ~mask;
+				StoreL(opRegs[2], opRegs[3], udst);
+				UpdateCC_IIZP_L(ccReg, udst);
+				printf("%s: %08X & ~%08X => %08X: %s\n", devName.c_str(),
+						ZXTL(usrc), ZXTL(mask), ZXTL(udst), stringCC(ccReg));
 				break;
 
 			// BISx instructions
 			case OPC_nBISB2:
 			case OPC_nBISB3:
-				mask = opRegs[0];
-				src  = opRegs[1];
-				dst  = src | mask;
-				StoreB(opRegs[2], opRegs[3], dst);
-				UpdateCC_IIZP_B(ccReg, dst);
-				printf("%s: %02X | %02X => %02X\n", devName.c_str(),
-						uint8_t(src), uint8_t(mask), uint8_t(dst));
+				mask = ZXTB(opRegs[0]);
+				usrc = ZXTB(opRegs[1]);
+				udst = usrc | mask;
+				StoreB(opRegs[2], opRegs[3], udst);
+				UpdateCC_IIZP_B(ccReg, udst);
+				printf("%s: %02X | %02X => %02X: %s\n", devName.c_str(),
+						ZXTB(usrc), ZXTB(mask), ZXTB(udst), stringCC(ccReg));
 				break;
 			case OPC_nBISW2:
 			case OPC_nBISW3:
-				mask = opRegs[0];
-				src  = opRegs[1];
-				dst  = src | mask;
-				StoreW(opRegs[2], opRegs[3], dst);
-				UpdateCC_IIZP_W(ccReg, dst);
-				printf("%s: %04X | %04X => %04X\n", devName.c_str(),
-						uint16_t(src), uint16_t(mask), uint16_t(dst));
+				mask = ZXTW(opRegs[0]);
+				usrc = ZXTW(opRegs[1]);
+				udst = usrc | mask;
+				StoreW(opRegs[2], opRegs[3], udst);
+				UpdateCC_IIZP_W(ccReg, udst);
+				printf("%s: %04X | %04X => %04X: %s\n", devName.c_str(),
+						ZXTW(usrc), ZXTW(mask), ZXTW(udst), stringCC(ccReg));
 				break;
 			case OPC_nBISL2:
 			case OPC_nBISL3:
-				mask = opRegs[0];
-				src  = opRegs[1];
-				dst  = src | mask;
-				StoreL(opRegs[2], opRegs[3], dst);
-				UpdateCC_IIZP_L(ccReg, dst);
-				printf("%s: %08X | %08X => %08X\n", devName.c_str(),
-						uint32_t(src), uint32_t(mask), uint32_t(dst));
+				mask = ZXTL(opRegs[0]);
+				usrc = ZXTL(opRegs[1]);
+				udst = usrc | mask;
+				StoreL(opRegs[2], opRegs[3], udst);
+				UpdateCC_IIZP_L(ccReg, udst);
+				printf("%s: %08X | %08X => %08X: %s\n", devName.c_str(),
+						ZXTL(usrc), ZXTL(mask), ZXTL(udst), stringCC(ccReg));
 				break;
 
 			// BITx instructions
 			case OPC_nBITB:
-				mask = opRegs[0];
-				src  = opRegs[1];
-				dst  = src & mask;
-				UpdateCC_IIZP_B(ccReg, dst);
+				mask = ZXTB(opRegs[0]);
+				usrc = ZXTB(opRegs[1]);
+				udst = usrc & mask;
+				UpdateCC_IIZP_B(ccReg, udst);
 				printf("%s: %02X & %02X => %02X: %s\n", devName.c_str(),
-						ZXTB(src), ZXTB(mask), ZXTB(dst), stringCC(ccReg));
+						ZXTB(usrc), ZXTB(mask), ZXTB(udst), stringCC(ccReg));
 				break;
 			case OPC_nBITW:
-				mask = opRegs[0];
-				src  = opRegs[1];
-				dst  = src & mask;
-				UpdateCC_IIZP_W(ccReg, dst);
+				mask = ZXTW(opRegs[0]);
+				usrc = ZXTW(opRegs[1]);
+				udst = usrc & mask;
+				UpdateCC_IIZP_W(ccReg, udst);
 				printf("%s: %04X & %04X => %04X: %s\n", devName.c_str(),
-						ZXTW(src), ZXTW(mask), ZXTW(dst), stringCC(ccReg));
+						ZXTW(usrc), ZXTW(mask), ZXTW(udst), stringCC(ccReg));
 				break;
 			case OPC_nBITL:
-				mask = opRegs[0];
-				src  = opRegs[1];
-				dst  = src & mask;
-				UpdateCC_IIZP_L(ccReg, dst);
+				mask = ZXTL(opRegs[0]);
+				usrc = ZXTL(opRegs[1]);
+				udst = usrc & mask;
+				UpdateCC_IIZP_L(ccReg, udst);
 				printf("%s: %08X & %08X => %08X: %s\n", devName.c_str(),
-						ZXTL(src), ZXTL(mask), ZXTL(dst), stringCC(ccReg));
+						ZXTL(usrc), ZXTL(mask), ZXTL(udst), stringCC(ccReg));
 				break;
 
 			// XORx instructions
 			case OPC_nXORB2:
 			case OPC_nXORB3:
-				mask = opRegs[0];
-				src  = opRegs[1];
-				dst  = src ^ mask;
-				StoreB(opRegs[2], opRegs[3], dst);
-				UpdateCC_IIZP_B(ccReg, dst);
-				printf("%s: %02X ^ %02X => %02X\n", devName.c_str(),
-						uint8_t(src), uint8_t(mask), uint8_t(dst));
+				mask = ZXTB(opRegs[0]);
+				usrc = ZXTB(opRegs[1]);
+				udst = usrc ^ mask;
+				StoreB(opRegs[2], opRegs[3], udst);
+				UpdateCC_IIZP_B(ccReg, udst);
+				printf("%s: %02X ^ %02X => %02X: %s\n", devName.c_str(),
+						ZXTB(usrc), ZXTB(mask), ZXTB(udst), stringCC(ccReg));
 				break;
 			case OPC_nXORW2:
 			case OPC_nXORW3:
-				mask = opRegs[0];
-				src  = opRegs[1];
-				dst  = src ^ mask;
-				StoreW(opRegs[2], opRegs[3], dst);
-				UpdateCC_IIZP_W(ccReg, dst);
-				printf("%s: %04X ^ %04X => %04X\n", devName.c_str(),
-						uint16_t(src), uint16_t(mask), uint16_t(dst));
+				mask = ZXTW(opRegs[0]);
+				usrc = ZXTW(opRegs[1]);
+				udst = usrc ^ mask;
+				StoreW(opRegs[2], opRegs[3], udst);
+				UpdateCC_IIZP_W(ccReg, udst);
+				printf("%s: %04X ^ %04X => %04X: %s\n", devName.c_str(),
+						ZXTW(usrc), ZXTW(mask), ZXTW(udst), stringCC(ccReg));
 				break;
 			case OPC_nXORL2:
 			case OPC_nXORL3:
-				mask = opRegs[0];
-				src  = opRegs[1];
-				dst  = src ^ mask;
-				StoreL(opRegs[2], opRegs[3], dst);
-				UpdateCC_IIZP_L(ccReg, dst);
-				printf("%s: %08X ^ %08X => %08X\n", devName.c_str(),
-						uint32_t(src), uint32_t(mask), uint32_t(dst));
+				mask = ZXTL(opRegs[0]);
+				usrc = ZXTL(opRegs[1]);
+				udst = usrc ^ mask;
+				StoreL(opRegs[2], opRegs[3], udst);
+				UpdateCC_IIZP_L(ccReg, udst);
+				printf("%s: %08X ^ %08X => %08X: %s\n", devName.c_str(),
+						ZXTL(usrc), ZXTL(mask), ZXTL(udst), stringCC(ccReg));
 				break;
 
 			case OPC_nROTL:
-				cnt = ZXTB(opRegs[0]) % 32;
-				src = opRegs[1];
-				dst = (cnt != 0) ? ((src << cnt) | (src >> (32 - cnt))) : src;
-				StoreL(opRegs[2], opRegs[3], dst);
-				UpdateCC_IIZP_L(ccReg, dst);
+				cnt  = ZXTB(opRegs[0]) % 32;
+				usrc = ZXTL(opRegs[1]);
+				udst = (cnt != 0) ? ((usrc << cnt) | (usrc >> (32 - cnt))) : usrc;
+				StoreL(opRegs[2], opRegs[3], udst);
+				UpdateCC_IIZP_L(ccReg, udst);
 				printf("%s: %08X %s %d => %08X: %s\n", devName.c_str(),
-					ZXTL(src), ((cnt < 0) ? ">>" : "<<"), abs(cnt),
-					ZXTL(dst), stringCC(ccReg));
+					ZXTL(usrc), ((cnt < 0) ? ">>" : "<<"), abs(cnt),
+					ZXTL(udst), stringCC(ccReg));
 				break;
 
 			// Illegal/unimplemented instruction
