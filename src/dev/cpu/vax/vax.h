@@ -216,23 +216,28 @@
 
 
 #define UpdateCC_IIZZ_B(cc, d)            \
-	if (int8_t(d) < 0)         cc = CC_N; \
-	else if (int8_t(d) == 0)   cc = CC_Z; \
+	if (SXTB(d) < 0)           cc = CC_N; \
+	else if (SXTB(d) == 0)     cc = CC_Z; \
 	else                       cc = 0;
 
 #define UpdateCC_IIZZ_W(cc, d)            \
-	if (int16_t(d) < 0)        cc = CC_N; \
-	else if (int16_t(d) == 0)  cc = CC_Z; \
+	if (SXTW(d) < 0)           cc = CC_N; \
+	else if (SXTW(d) == 0)     cc = CC_Z; \
 	else                       cc = 0;
 
 #define UpdateCC_IIZZ_L(cc, d)            \
-	if (int32_t(d) < 0)        cc = CC_N; \
-	else if (int32_t(d) == 0)  cc = CC_Z; \
+	if (SXTL(d) < 0)           cc = CC_N; \
+	else if (SXTL(d) == 0)     cc = CC_Z; \
 	else                       cc = 0;
 
 #define UpdateCC_IIZZ_Q(cc, dl, dh)       \
-	if (int32_t(dh) < 0)       cc = CC_N; \
+	if (SXTL(dh) < 0)          cc = CC_N; \
 	else if (((dl)|(dh)) == 0) cc = CC_Z; \
+	else                       cc = 0;
+
+#define UpdateCC_IIZZ_64(cc, d)           \
+	if (SXTQ(d) < 0LL)         cc = CC_N; \
+	else if ((d) == 0LL)       cc = CC_Z; \
 	else                       cc = 0;
 
 
@@ -310,7 +315,7 @@
 		cc |= CC_V;
 
 #define UpdateCC_SUB(cc, d, s1, s2) \
-	if (ZXTL(d) < ZXTL(s2)) cc |= CC_C;
+	if (ZXTL(s2) < ZXTL(s1)) cc |= CC_C;
 
 #define UpdateCC_SUB_B(cc, d, s1, s2) \
 	UpdateCC_IIZZ_B(cc, d);           \

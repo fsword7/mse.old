@@ -20,10 +20,12 @@ void CPU_CLASS::execute()
 {
 	uint32_t opCode;
 	int32_t  brDisp;
+	bool     ovflg;
 	const vaxOpcode *opc;
 	register int32_t  src1, src2, carry;
 	register int32_t  dst1, dst2;
 	register int32_t  src, dst, tmp;
+	register int64_t  src64, dst64;
 	register uint32_t usrc, udst, utmp;
 	register uint32_t mask;
 	register int32_t  cnt;
@@ -629,6 +631,65 @@ void CPU_CLASS::execute()
 					ZXTW(dst), ZXTL(dst), stringCC(ccReg));
 				break;
 
+			// CVTx - Convert instructions
+			case OPC_nCVTBW:
+				src = SXTB(opRegs[0]);
+				dst = SXTW(src);
+				StoreW(opRegs[1], opRegs[2], dst);
+				UpdateCC_IIZZ_W(ccReg, dst);
+				printf("%s: %02X => %04X: %s\n", devName.c_str(),
+						ZXTB(src), ZXTW(dst), stringCC(ccReg));
+				break;
+			case OPC_nCVTBL:
+				src = SXTB(opRegs[0]);
+				dst = SXTL(src);
+				StoreL(opRegs[1], opRegs[2], dst);
+				UpdateCC_IIZZ_L(ccReg, dst);
+				printf("%s: %02X => %08X: %s\n", devName.c_str(),
+						ZXTB(src), ZXTL(dst), stringCC(ccReg));
+				break;
+			case OPC_nCVTWB:
+				src = SXTW(opRegs[0]);
+				dst = SXTB(src);
+				StoreB(opRegs[1], opRegs[2], dst);
+				UpdateCC_IIZZ_B(ccReg, dst);
+				if (src < -128 || src > 127) {
+					ccReg |= CC_V;
+				}
+				printf("%s: %04X => %02X: %s\n", devName.c_str(),
+						ZXTW(src), ZXTB(dst), stringCC(ccReg));
+				break;
+			case OPC_nCVTWL:
+				src = SXTW(opRegs[0]);
+				dst = SXTL(src);
+				StoreL(opRegs[1], opRegs[2], dst);
+				UpdateCC_IIZZ_L(ccReg, dst);
+				printf("%s: %04X => %08X: %s\n", devName.c_str(),
+						ZXTW(src), ZXTL(dst), stringCC(ccReg));
+				break;
+			case OPC_nCVTLB:
+				src = SXTL(opRegs[0]);
+				dst = SXTB(src);
+				StoreB(opRegs[1], opRegs[2], dst);
+				UpdateCC_IIZZ_B(ccReg, dst);
+				if (src < -128 || src > 127) {
+					ccReg |= CC_V;
+				}
+				printf("%s: %08X => %02X: %s\n", devName.c_str(),
+						ZXTL(src), ZXTB(dst), stringCC(ccReg));
+				break;
+			case OPC_nCVTLW:
+				src = SXTL(opRegs[0]);
+				dst = SXTW(src);
+				StoreW(opRegs[1], opRegs[2], dst);
+				UpdateCC_IIZZ_W(ccReg, dst);
+				if (src < -128 || src > 127) {
+					ccReg |= CC_V;
+				}
+				printf("%s: %08X => %04X: %s\n", devName.c_str(),
+						ZXTL(src), ZXTW(dst), stringCC(ccReg));
+				break;
+
 			// CLRx instructions
 			case OPC_nCLRB:
 				StoreB(opRegs[0], opRegs[1], 0);
@@ -971,6 +1032,59 @@ void CPU_CLASS::execute()
 				UpdateCC_IIZP_L(ccReg, udst);
 				printf("%s: %08X ^ %08X => %08X: %s\n", devName.c_str(),
 						ZXTL(usrc), ZXTL(mask), ZXTL(udst), stringCC(ccReg));
+				break;
+
+			// ASHx/ROTL - Shift instructions
+			case OPC_nASHL:
+				cnt   = SXTB(opRegs[0]);
+				src   = SXTL(opRegs[1]);
+				ovflg = false;
+				if (cnt == 0) {
+					dst = src;
+				} else if (cnt < 0) {
+					dst = (cnt > -32) ? (src >> -cnt) : (src < 0) ? -1 : 0;
+				} else {
+					if (cnt < 32) {
+						dst = ZXTL(src) << cnt;
+						ovflg = (src != (dst >> cnt));
+					} else {
+						dst = 0;
+						ovflg = (src != 0);
+					}
+				}
+				StoreL(opRegs[2], opRegs[3], dst);
+				UpdateCC_IIZZ_L(ccReg, dst);
+				if (ovflg)
+					ccReg |= CC_V;
+				printf("%s: %08X %s %d => %08X: %s\n", devName.c_str(),
+					ZXTL(src), ((cnt < 0) ? ">>" : "<<"), abs(cnt),
+					ZXTL(dst), stringCC(ccReg));
+				break;
+
+			case OPC_nASHQ:
+				cnt    = SXTB(opRegs[0]);
+				src64  = (ZXTQ(opRegs[2]) << 32) | ZXTL(opRegs[1]);
+				ovflg = false;
+				if (cnt == 0) {
+					dst64 = src64;
+				} else if (cnt < 0) {
+					dst64 = (cnt > -64) ? (src64 >> -cnt) : (src64 < 0) ? -1LL : 0LL;
+				} else {
+					if (cnt < 64) {
+						dst64 = ZXTL(src64) << cnt;
+						ovflg = (src64 != (dst64 >> cnt));
+					} else {
+						dst64 = 0LL;
+						ovflg = (src64 != 0);
+					}
+				}
+				StoreQ(opRegs[3], opRegs[4], SXTL(dst64), SXTL(dst64 >> 32));
+				UpdateCC_IIZZ_64(ccReg, dst64);
+				if (ovflg)
+					ccReg |= CC_V;
+				printf("%s: %08X %08X %s %d => %08X %08X: %s\n", devName.c_str(),
+					ZXTL(src64 >> 32), ZXTL(src64), ((cnt < 0) ? ">>" : "<<"), abs(cnt),
+					ZXTL(dst64 >> 32), ZXTL(dst64), stringCC(ccReg));
 				break;
 
 			case OPC_nROTL:
