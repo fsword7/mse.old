@@ -264,9 +264,12 @@ void CPU_CLASS::execute()
 						opRegs[opn++] = OPR_MEM;
 					opRegs[opn++] = iAddr;
 				} else {
-					opRegs[opn++] = readv(iAddr, scale, RACC);
-					if (scale > LN_LONG)
+					if (scale <= LN_LONG) {
+						opRegs[opn++] = readv(iAddr, scale, RACC);
+					} else {
 						opRegs[opn++] = readv(iAddr, LN_LONG, RACC);
+						opRegs[opn++] = readv(iAddr+LN_LONG, LN_LONG, RACC);
+					}
 					if (opMode & OPR_MODIFIED) {
 						opRegs[opn++] = OPR_MEM;
 						opRegs[opn++] = iAddr;
@@ -283,6 +286,21 @@ void CPU_CLASS::execute()
 
 			case OPC_nNOP:
 				// Do nothing...
+				break;
+
+			// INDEX - Index instruction
+			case OPC_nINDEX:
+				src  = SXTL(opRegs[0]);
+				src1 = SXTL(opRegs[3]);
+				src2 = SXTL(opRegs[4]);
+//				if (src < opRegs[1] || src > opRegs[2]));
+
+				dst = (src + src2) * src1;
+				StoreL(opRegs[5], opRegs[6], dst);
+				UpdateCC_IIZZ_L(ccReg, dst);
+				printf("%s: %08X (%08X to %08X) + %08X * %08X => %08X: %s\n", devName.c_str(),
+					ZXTL(src), ZXTL(opRegs[1]), ZXTL(opRegs[2]), ZXTL(src2), ZXTL(src1),
+					ZXTL(dst), stringCC(ccReg));
 				break;
 
 			// BIxPSW instructions
@@ -472,8 +490,12 @@ void CPU_CLASS::execute()
 				flushvi();
 				break;
 
-			// PUSHL instruction
+			// PUSHx/PUSHAx - Push instruction
 			case OPC_nPUSHL:
+			case OPC_nPUSHAB:
+			case OPC_nPUSHAW:
+			case OPC_nPUSHAL:
+			case OPC_nPUSHAQ:
 				src = opRegs[0];
 				writev(REG_SP - LN_LONG, src, LN_LONG, WACC);
 				REG_SP -= LN_LONG;
@@ -608,6 +630,58 @@ void CPU_CLASS::execute()
 				UpdateCC_IIZP_Q(ccReg, dst1, dst2);
 				printf("%s: Move %08X %08X: %s\n", devName.c_str(),
 						ZXTL(dst1), ZXTL(dst2), stringCC(ccReg));
+				break;
+
+			// MCOMx - Move complemented instructions
+			case OPC_nMCOMB:
+				src = SXTB(opRegs[0]);
+				dst = ~src;
+				StoreB(opRegs[1], opRegs[2], dst);
+				UpdateCC_IIZP_B(ccReg, dst);
+				printf("%s: Move ~%02X => %02X: %s\n", devName.c_str(),
+					ZXTB(src), ZXTB(dst), stringCC(ccReg));
+				break;
+			case OPC_nMCOMW:
+				src = SXTW(opRegs[0]);
+				dst = ~src;
+				StoreW(opRegs[1], opRegs[2], dst);
+				UpdateCC_IIZP_W(ccReg, dst);
+				printf("%s: Move ~%04X => %04X: %s\n", devName.c_str(),
+					ZXTW(src), ZXTW(dst), stringCC(ccReg));
+				break;
+			case OPC_nMCOML:
+				src = SXTL(opRegs[0]);
+				dst = ~src;
+				StoreL(opRegs[1], opRegs[2], dst);
+				UpdateCC_IIZP_L(ccReg, dst);
+				printf("%s: Move ~%08X => %08X: %s\n", devName.c_str(),
+					ZXTL(src), ZXTL(dst), stringCC(ccReg));
+				break;
+
+			// MNEGx - Move negated instructions
+			case OPC_nMNEGB:
+				src = SXTB(opRegs[0]);
+				dst = -src;
+				StoreB(opRegs[1], opRegs[2], dst);
+				UpdateCC_SUB_B(ccReg, dst, src, 0);
+				printf("%s: Move -%02X => %02X: %s\n", devName.c_str(),
+					ZXTB(src), ZXTB(dst), stringCC(ccReg));
+				break;
+			case OPC_nMNEGW:
+				src = SXTW(opRegs[0]);
+				dst = -src;
+				StoreW(opRegs[1], opRegs[2], dst);
+				UpdateCC_SUB_W(ccReg, dst, src, 0);
+				printf("%s: Move -%04X => %04X: %s\n", devName.c_str(),
+					ZXTW(src), ZXTW(dst), stringCC(ccReg));
+				break;
+			case OPC_nMNEGL:
+				src = SXTL(opRegs[0]);
+				dst = -src;
+				StoreL(opRegs[1], opRegs[2], dst);
+				UpdateCC_SUB_L(ccReg, dst, src, 0);
+				printf("%s: Move -%08X => %08X: %s\n", devName.c_str(),
+					ZXTL(src), ZXTL(dst), stringCC(ccReg));
 				break;
 
 			// MOVZx instructions
@@ -896,7 +970,7 @@ void CPU_CLASS::execute()
 				dst  = src2 * src1;
 				StoreB(opRegs[2], opRegs[3], dst);
 				UpdateCC_IIZZ_B(ccReg, dst);
-				if (dst < -128 || dst > 128)
+				if (dst < SCHAR_MIN || dst > SCHAR_MAX)
 					ccReg |= CC_V;
 				printf("%s: %02X * %02X => %02X: %s\n", devName.c_str(),
 					ZXTB(src2), ZXTB(src1), ZXTB(dst), stringCC(ccReg));
@@ -908,7 +982,7 @@ void CPU_CLASS::execute()
 				dst  = src2 * src1;
 				StoreW(opRegs[2], opRegs[3], dst);
 				UpdateCC_IIZZ_W(ccReg, dst);
-				if (dst < -128 || dst > 128)
+				if (dst < SHRT_MIN || dst > SHRT_MAX)
 					ccReg |= CC_V;
 				printf("%s: %02X * %02X => %02X: %s\n", devName.c_str(),
 					ZXTW(src2), ZXTW(src1), ZXTW(dst), stringCC(ccReg));
@@ -920,7 +994,9 @@ void CPU_CLASS::execute()
 				dstq  = srcq2 * srcq1;
 				StoreL(opRegs[2], opRegs[3], SXTL(dstq));
 				UpdateCC_IIZZ_L(ccReg, dstq);
-				if (SXTL(dstq >> 32) != (SXTL(dstq) & SGN_LONG) ? -1LL : 0LL)
+//				if (SXTL(dstq >> 32) != (SXTL(dstq) & SGN_LONG) ? -1LL : 0LL)
+//					ccReg |= CC_V;
+				if (dstq < LONG_MIN || dstq > LONG_MAX)
 					ccReg |= CC_V;
 				printf("%s: %08X * %08X => %08X: %s\n", devName.c_str(),
 					ZXTL(srcq2), ZXTL(srcq1), ZXTL(dstq), stringCC(ccReg));
