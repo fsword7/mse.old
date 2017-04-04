@@ -130,7 +130,9 @@ void cvax_cpuDevice::reset()
 	PREG_ASTLVL = 0;
 
 	// Set 30-bit physical addressing mask
-	paMask = PA_MASK30;
+	paMask  = PA_MASK30;
+	// Reset current access mode
+	curMode = ACC_MASK(PSL_GETCUR(psReg));
 }
 
 int cvax_cpuDevice::boot()

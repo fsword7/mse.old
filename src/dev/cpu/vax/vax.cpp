@@ -123,26 +123,33 @@ int vax_cpuDevice::setBit(int bit)
 	return obit;
 }
 
-const char *ieNames[] =
-{
-	"Interrupt",
-	"Exception",
-	"Severe Exception"
-};
+static const char *ieNames[]  = { "Interrupt", "Exception", "Severe Exception" };
+static const char *ieTypes[]  = { "INT", "EXC", "SVE" };
+static const char *accNames[] = { "Kernel", "Executive", "Supervisor", "User" };
+
+#define DSPL_CUR(mode) accNames[PSL_GETCUR(mode)]
+#define DSPL_PRV(mode) accNames[PSL_GETPRV(mode)]
 
 int vax_cpuDevice::exception(int ie, uint32_t vec, uint32_t ipl)
 {
-	uint32_t npc, opc = REG_PC;
-	uint32_t npsl, opsl = psReg|ccReg;
-	uint32_t prv = PSL_GETCUR(psReg);
+	uint32_t opsl = psReg|ccReg;
+	uint32_t opc  = REG_PC;
+	uint32_t osp  = REG_SP;
+	uint32_t prv  = PSL_GETCUR(psReg);
+	uint32_t npc, npsl;
+
+	// Set INIE flag
+	flags |= CPU_INIE;
+
+	// Clear all traps
 
 	// Get SCBB vector from memory
 	npc = readpl(PREG_SCBB + vec);
 	if (ie == IE_SVE)
 		npc |= 1;
 
-	printf("%s: SCB vector %04X  New PC: %08X(%1X) Type: %s\n",
-		devName.c_str(), vec, npc & ~03, npc & 03, ieNames[ie]);
+	printf("%s: (%s) SCB vector %04X  New PC: %08X(%1X) Type: %s\n", devName.c_str(),
+		ieTypes[ie], ZXTW(vec), ZXTL(npc & ~03), ZXTL(npc & 03), ieNames[ie]);
 
 	if (npc & 2) {
 		return STOP_ILLVEC;
@@ -162,7 +169,7 @@ int vax_cpuDevice::exception(int ie, uint32_t vec, uint32_t ipl)
 		}
 	}
 
-	// Update PSL register
+	// Set new PSL register
 	if (ie == IE_INT) {
 		psReg = npsl | PSL_SETIPL(ipl);
 	} else {
@@ -171,14 +178,26 @@ int vax_cpuDevice::exception(int ie, uint32_t vec, uint32_t ipl)
 	}
 	ccReg = 0;
 
-	// Reset access mode
-
-	// Save old PC and PSL into kernel/interrupt stack pointer
+	// Save old PC and PSL in kernel mode
+	curMode = ACC_MASK(AM_KERNEL);
 	writev(REG_SP - (LN_LONG*2), opc, LN_LONG, WACC);
 	writev(REG_SP - LN_LONG, opsl, LN_LONG, WACC);
 	REG_SP -= (LN_LONG*2);
 
+	// Set new PC address and reset opcode stream
 	REG_PC = npc & SCB_ADDR;
+	flushvi();
+
+	// Set new access mode
+	curMode = ACC_MASK(PSL_GETCUR(psReg));
+
+	// Clear INIE flag
+	flags &= ~CPU_INIE;
+
+	printf("%s: (%s) Old PC=%08X PSL=%08X SP=%08X Access: %s,%s\n", devName.c_str(),
+		ieTypes[ie], ZXTL(faultAddr), ZXTL(opsl), ZXTL(osp), DSPL_CUR(opsl), DSPL_PRV(opsl));
+	printf("%s: (%s) New PC=%08X PSL=%08X SP=%08X Access: %s,%s\n", devName.c_str(),
+		ieTypes[ie], ZXTL(REG_PC), ZXTL(psReg|ccReg), ZXTL(REG_SP), DSPL_CUR(npsl), DSPL_PRV(npsl));
 
 	return 0;
 }

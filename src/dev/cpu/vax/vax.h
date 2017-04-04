@@ -40,6 +40,9 @@
 #define REG_SP      gRegs[REG_nSP].l
 #define REG_PC      gRegs[REG_nPC].l
 
+// Processor flags
+#define CPU_INIE    0x80000000 // Interrupt/exception in progress
+
 // Processor Status Register definition
 //
 // +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---~
@@ -421,6 +424,8 @@ protected:
 	uint32_t  opRegs[VAX_nOPREGS]; // Operand registers
 	uint32_t  psReg;               // Processor status register
 	uint32_t  ccReg;               // Condition Code register (part of PSL register)
+
+	uint32_t  flags;               // Processor flags
 
 	// Opcode table for operand decoding and disassembler
 	const vaxOpcode *opCodes[VAX_nOPCTBL];
