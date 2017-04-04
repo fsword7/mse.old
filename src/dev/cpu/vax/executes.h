@@ -25,6 +25,8 @@ void CPU_CLASS::execute()
 	register int32_t  src1, src2, carry;
 	register int32_t  dst1, dst2;
 	register int32_t  src, dst, tmp;
+	register int64_t  srcq, srcq1, srcq2;
+	register int64_t  dstq, dstq1, dstq2;
 	register int64_t  src64, dst64;
 	register uint32_t usrc, udst, utmp;
 	register uint32_t mask;
@@ -884,6 +886,109 @@ void CPU_CLASS::execute()
 				UpdateCC_SUB_L(ccReg, dst, src1, src2);
 				printf("%s: %08X - %08X => %08X: %s\n", devName.c_str(),
 					ZXTL(src1), ZXTL(src2), ZXTL(dst), stringCC(ccReg));
+				break;
+
+			// MULx - Multiply instructions
+			case OPC_nMULB2:
+			case OPC_nMULB3:
+				src1 = SXTB(opRegs[0]);
+				src2 = SXTB(opRegs[1]);
+				dst  = src2 * src1;
+				StoreB(opRegs[2], opRegs[3], dst);
+				UpdateCC_IIZZ_B(ccReg, dst);
+				if (dst < -128 || dst > 128)
+					ccReg |= CC_V;
+				printf("%s: %02X * %02X => %02X: %s\n", devName.c_str(),
+					ZXTB(src2), ZXTB(src1), ZXTB(dst), stringCC(ccReg));
+				break;
+			case OPC_nMULW2:
+			case OPC_nMULW3:
+				src1 = SXTW(opRegs[0]);
+				src2 = SXTW(opRegs[1]);
+				dst  = src2 * src1;
+				StoreW(opRegs[2], opRegs[3], dst);
+				UpdateCC_IIZZ_W(ccReg, dst);
+				if (dst < -128 || dst > 128)
+					ccReg |= CC_V;
+				printf("%s: %02X * %02X => %02X: %s\n", devName.c_str(),
+					ZXTW(src2), ZXTW(src1), ZXTW(dst), stringCC(ccReg));
+				break;
+			case OPC_nMULL2:
+			case OPC_nMULL3:
+				srcq1 = SXTL(opRegs[0]);
+				srcq2 = SXTL(opRegs[1]);
+				dstq  = srcq2 * srcq1;
+				StoreL(opRegs[2], opRegs[3], SXTL(dstq));
+				UpdateCC_IIZZ_L(ccReg, dstq);
+				if (SXTL(dstq >> 32) != (SXTL(dstq) & SGN_LONG) ? -1LL : 0LL)
+					ccReg |= CC_V;
+				printf("%s: %08X * %08X => %08X: %s\n", devName.c_str(),
+					ZXTL(srcq2), ZXTL(srcq1), ZXTL(dstq), stringCC(ccReg));
+				break;
+
+			// DIVx - Divide instructions
+			case OPC_nDIVB2:
+			case OPC_nDIVB3:
+				src1 = SXTB(opRegs[0]);
+				src2 = SXTB(opRegs[1]);
+				if (src1 == 0) {
+					dst   = src2;
+					ovflg = true;
+				} else if (src1 == -1 && src2 == SCHAR_MIN) {
+					dst   = src2;
+					ovflg = true;
+				} else {
+					dst   = src2 / src1;
+					ovflg = false;
+				}
+				StoreB(opRegs[2], opRegs[3], dst);
+				UpdateCC_IIZZ_B(ccReg, dst);
+				if (ovflg)
+					ccReg |= CC_V;
+				printf("%s: %02X / %02X => %02X: %s\n", devName.c_str(),
+					ZXTB(src2), ZXTB(src1), ZXTB(dst), stringCC(ccReg));
+				break;
+			case OPC_nDIVW2:
+			case OPC_nDIVW3:
+				src1 = SXTW(opRegs[0]);
+				src2 = SXTW(opRegs[1]);
+				if (src1 == 0) {
+					dst   = src2;
+					ovflg = true;
+				} else if (src1 == -1 && src2 == SHRT_MIN) {
+					dst   = src2;
+					ovflg = true;
+				} else {
+					dst   = src2 / src1;
+					ovflg = false;
+				}
+				StoreW(opRegs[2], opRegs[3], dst);
+				UpdateCC_IIZZ_W(ccReg, dst);
+				if (ovflg)
+					ccReg |= CC_V;
+				printf("%s: %04X / %04X => %04X: %s\n", devName.c_str(),
+					ZXTW(src2), ZXTW(src1), ZXTW(dst), stringCC(ccReg));
+				break;
+			case OPC_nDIVL2:
+			case OPC_nDIVL3:
+				src1 = SXTL(opRegs[0]);
+				src2 = SXTL(opRegs[1]);
+				if (src1 == 0) {
+					dst   = src2;
+					ovflg = true;
+				} else if (src1 == -1 && src2 == LONG_MIN) {
+					dst   = src2;
+					ovflg = true;
+				} else {
+					dst   = src2 / src1;
+					ovflg = false;
+				}
+				StoreL(opRegs[2], opRegs[3], dst);
+				UpdateCC_IIZZ_L(ccReg, dst);
+				if (ovflg)
+					ccReg |= CC_V;
+				printf("%s: %08X / %08X => %08X: %s\n", devName.c_str(),
+					ZXTL(src2), ZXTL(src1), ZXTL(dst), stringCC(ccReg));
 				break;
 
 			// ADWC/SBWC instructions

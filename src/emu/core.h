@@ -31,9 +31,14 @@
 #define MSK_WORD 0x0000FFFF
 #define MSK_LONG 0xFFFFFFFF
 
+#define SGN_BYTE 0x00000080
+#define SGN_WORD 0x00008000
+#define SGN_LONG 0x80000000
+
 #define SIGN_B   0x80
 #define SIGN_W   0x8000
 #define SIGN_L   0x80000000
+
 
 #define ALIGN_BYTE (~0 << 0) // Aligned byte addressing mask
 #define ALIGN_WORD (~0 << 1) // Aligned word addressing mask
