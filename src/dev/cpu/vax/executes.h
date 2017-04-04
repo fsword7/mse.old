@@ -504,10 +504,119 @@ void CPU_CLASS::execute()
 						src, REG_SP + LN_LONG, stringCC(ccReg));
 				break;
 
-			// AOB instructions
+			// ACBx instructions
+			case OPC_nACBB:
+				src   = SXTB(opRegs[0]);
+				src1  = SXTB(opRegs[1]);
+				src2  = SXTB(opRegs[2]);
+				dst   = src2 + src1;
+				StoreB(opRegs[3], opRegs[4], dst);
+				UpdateCC_IIZP_B(ccReg, dst);
+				UpdateV_ADD_B(ccReg, dst, src1, src2);
+				if ((src1 < 0) ? (dst >= src) : (dst <= src)) {
+					REG_PC = REG_PC + SXTW(brDisp);
+					flushvi();
+				}
+				printf("%s: %02X + %02X => %02X: %s\n", devName.c_str(),
+					ZXTB(src2), ZXTB(src1), ZXTB(dst), stringCC(ccReg));
+				printf("%s: %02X %s %02X: %s\n", devName.c_str(),
+					ZXTB(dst), (src1 < 0) ? ">=" : "<=", ZXTB(src),
+					((src1 < 0) ? (dst >= src) : (dst <= src)) ? "Jumped" : "Continue");
+				break;
+			case OPC_nACBW:
+				src   = SXTW(opRegs[0]);
+				src1  = SXTW(opRegs[1]);
+				src2  = SXTW(opRegs[2]);
+				dst   = src2 + src1;
+				StoreW(opRegs[3], opRegs[4], dst);
+				UpdateCC_IIZP_W(ccReg, dst);
+				UpdateV_ADD_W(ccReg, dst, src1, src2);
+				if ((src1 < 0) ? (dst >= src) : (dst <= src)) {
+					REG_PC = REG_PC + SXTW(brDisp);
+					flushvi();
+				}
+				printf("%s: %04X + %04X => %04X: %s\n", devName.c_str(),
+					ZXTW(src2), ZXTW(src1), ZXTW(dst), stringCC(ccReg));
+				printf("%s: %04X %s %04X: %s\n", devName.c_str(),
+					ZXTW(dst), (src1 < 0) ? ">=" : "<=", ZXTW(src),
+					((src1 < 0) ? (dst >= src) : (dst <= src)) ? "Jumped" : "Continue");
+				break;
+			case OPC_nACBL:
+				src   = SXTL(opRegs[0]);
+				src1  = SXTL(opRegs[1]);
+				src2  = SXTL(opRegs[2]);
+				dst   = src2 + src1;
+				StoreL(opRegs[3], opRegs[4], dst);
+				UpdateCC_IIZP_L(ccReg, dst);
+				UpdateV_ADD_L(ccReg, dst, src1, src2);
+				if ((src1 < 0) ? (dst >= src) : (dst <= src)) {
+					REG_PC = REG_PC + SXTW(brDisp);
+					flushvi();
+				}
+				printf("%s: %08X + %08X => %08X: %s\n", devName.c_str(),
+					ZXTL(src2), ZXTL(src1), ZXTL(dst), stringCC(ccReg));
+				printf("%s: %08X %s %08X: %s\n", devName.c_str(),
+					ZXTL(dst), (src1 < 0) ? ">=" : "<=", ZXTL(src),
+					((src1 < 0) ? (dst >= src) : (dst <= src)) ? "Jumped" : "Continue");
+				break;
+
+			// CASEx - Case instructions
+			case OPC_nCASEB:
+				src1 = SXTB(opRegs[0]);
+				src2 = SXTB(opRegs[1]);
+				src  = SXTB(opRegs[2]);
+				dst  = src1 - src2;
+				UpdateCC_CMP_B(ccReg, dst, src);
+				if (ZXTB(dst) <= ZXTB(src)) {
+					brDisp = readv(REG_PC + (ZXTB(dst) << 1), LN_WORD, RACC);
+					REG_PC = REG_PC + SXTW(brDisp);
+				} else
+					REG_PC = REG_PC + ((ZXTB(src) << 1) + 2);
+				flushvi();
+				printf("%s: (%02X - %02X) => %02X <= %02X\n", devName.c_str(),
+					ZXTB(src1), ZXTB(src2), ZXTB(dst), ZXTB(src));
+//				if (ZXTB(dst) <= ZXTB(src))
+//					printf("%s: %08X + %02X => %08X\n", devName.c_str(),
+//						REG_PC, dst << 1, REG_PC + (dst << 1));
+//				else
+//					printf("%s: %08X + %02X + 2 => %08X\n", devName.c_str(),
+//						REG_PC, src << 1, REG_PC + (src << 1) + 2);
+				break;
+			case OPC_nCASEW:
+				src1 = SXTW(opRegs[0]);
+				src2 = SXTW(opRegs[1]);
+				src  = SXTW(opRegs[2]);
+				dst  = src1 - src2;
+				UpdateCC_CMP_W(ccReg, dst, src);
+				if (ZXTW(dst) <= ZXTW(src)) {
+					brDisp = readv(REG_PC + (ZXTW(dst) << 1), LN_WORD, RACC);
+					REG_PC = REG_PC + SXTW(brDisp);
+				} else
+					REG_PC = REG_PC + ((ZXTW(src) << 1) + 2);
+				flushvi();
+				printf("%s: (%04X - %04X) => %04X <= %04X\n", devName.c_str(),
+					ZXTW(src1), ZXTW(src2), ZXTW(dst), ZXTW(src));
+				break;
+			case OPC_nCASEL:
+				src1 = SXTL(opRegs[0]);
+				src2 = SXTL(opRegs[1]);
+				src  = SXTL(opRegs[2]);
+				dst  = src1 - src2;
+				UpdateCC_CMP_L(ccReg, dst, src);
+				if (ZXTL(dst) <= ZXTL(src)) {
+					brDisp = readv(REG_PC + (ZXTL(dst) << 1), LN_WORD, RACC);
+					REG_PC = REG_PC + SXTW(brDisp);
+				} else
+					REG_PC = REG_PC + ((ZXTL(src) << 1) + 2);
+				flushvi();
+				printf("%s: (%08X - %08X) => %08X <= %08X\n", devName.c_str(),
+					ZXTL(src1), ZXTL(src2), ZXTL(dst), ZXTL(src));
+				break;
+
+			// AOBcc instructions
 			case OPC_nAOBLEQ:
-				src1 = opRegs[0];
-				src2 = opRegs[1];
+				src1 = SXTL(opRegs[0]);
+				src2 = SXTL(opRegs[1]);
 				dst  = src2 + 1;
 				StoreL(opRegs[2], opRegs[3], dst);
 				UpdateCC_IIZP_L(ccReg, dst);
@@ -516,14 +625,14 @@ void CPU_CLASS::execute()
 					REG_PC = REG_PC + SXTB(brDisp);
 					flushvi();
 				}
-				printf("%s: Inc %08X => %08X <= %08X: %s\n", devName.c_str(),
-						src2, dst, src1, stringCC(ccReg));
+				printf("%s: %08X + 1 => %08X <= %08X: %s\n", devName.c_str(),
+						ZXTL(src2), ZXTL(dst), ZXTL(src1), stringCC(ccReg));
 				if (dst <= src1)
 					printf("%s: Jump into PC %08X\n", devName.c_str(), REG_PC);
 				break;
 			case OPC_nAOBLSS:
-				src1 = opRegs[0];
-				src2 = opRegs[1];
+				src1 = SXTL(opRegs[0]);
+				src2 = SXTL(opRegs[1]);
 				dst  = src2 + 1;
 				StoreL(opRegs[2], opRegs[3], dst);
 				UpdateCC_IIZP_L(ccReg, dst);
@@ -532,9 +641,41 @@ void CPU_CLASS::execute()
 					REG_PC = REG_PC + SXTB(brDisp);
 					flushvi();
 				}
-				printf("%s: Inc %08X => %08X < %08X: %s\n", devName.c_str(),
-						src2, dst, src1, stringCC(ccReg));
-				if (dst <= src1)
+				printf("%s: %08X + 1 => %08X < %08X: %s\n", devName.c_str(),
+						ZXTL(src2), ZXTL(dst), ZXTL(src1), stringCC(ccReg));
+				if (dst < src1)
+					printf("%s: Jump into PC %08X\n", devName.c_str(), REG_PC);
+				break;
+
+			// SOBcc instructions
+			case OPC_nSOBGEQ:
+				src = SXTL(opRegs[0]);
+				dst = src - 1;
+				StoreL(opRegs[1], opRegs[2], dst);
+				UpdateCC_IIZP_L(ccReg, dst);
+				UpdateV_SUB_L(ccReg, dst, 1, src);
+				if (dst >= 0) {
+					REG_PC = REG_PC + SXTB(brDisp);
+					flushvi();
+				}
+				printf("%s: %08X - 1 => %08X >= 0: %s\n", devName.c_str(),
+						ZXTL(src), ZXTL(dst), stringCC(ccReg));
+				if (dst >= 0)
+					printf("%s: Jump into PC %08X\n", devName.c_str(), REG_PC);
+				break;
+			case OPC_nSOBGTR:
+				src = SXTL(opRegs[0]);
+				dst = src - 1;
+				StoreL(opRegs[1], opRegs[2], dst);
+				UpdateCC_IIZP_L(ccReg, dst);
+				UpdateV_SUB_L(ccReg, dst, 1, src);
+				if (dst > 0) {
+					REG_PC = REG_PC + SXTB(brDisp);
+					flushvi();
+				}
+				printf("%s: %08X - 1 => %08X > 0: %s\n", devName.c_str(),
+						ZXTL(src), ZXTL(dst), stringCC(ccReg));
+				if (dst > 0)
 					printf("%s: Jump into PC %08X\n", devName.c_str(), REG_PC);
 				break;
 
@@ -1283,8 +1424,7 @@ void CPU_CLASS::execute()
 			default:
 				if (opc->opCode != OPC_nUOPC)
 					throw STOP_UOPC;
-//				throw EXC_ILLEGAL_INSTRUCTION;
-				break;
+				throw EXC_RSVD_INST_FAULT;
 			}
 		}
 
@@ -1298,6 +1438,24 @@ void CPU_CLASS::execute()
 				printf("%s: Opcode %s - Unimplemented opcode at PC %08X\n",
 						devName.c_str(), opc->opName, faultAddr);
 				return;
+
+			// Exception fault codes
+			case EXC_RSVD_INST_FAULT:
+				if (fault(SCB_RESIN))
+					return;
+				break;
+			case EXC_RSVD_ADDR_FAULT:
+				if (fault(SCB_RESAD))
+					return;
+				break;
+			case EXC_RSVD_OPND_FAULT:
+				if (fault(SCB_RESOP))
+					return;
+				break;
+			case EXC_PRIV_INST_FAULT:
+				if (fault(SCB_RESIN|SCB_NOPRIV))
+					return;
+				break;
 			}
 		}
 	}

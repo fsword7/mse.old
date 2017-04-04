@@ -154,6 +154,7 @@
 
 #define SCB_ADDR         ALIGN_LONG // SCB Address Mask
 #define SCB_VECTOR       ALIGN_LONG // SCB Vector Mask
+#define SCB_NOPRIV		 1
 
 // SISR register definitions
 #define SISR_MASK        0xFFFE
@@ -179,6 +180,13 @@
 // Exception Codes - Stop
 #define STOP_HALT		-1		// HALT opcode
 #define STOP_UOPC		-2		// Unimplemented opcode
+#define STOP_ILLVEC		-3		// Illegal vector
+
+// Exception Codes - Fault
+#define EXC_RSVD_INST_FAULT   1 // Reserved instruction fault
+#define EXC_RSVD_ADDR_FAULT   2 // Reserved address fault
+#define EXC_RSVD_OPND_FAULT   3 // Reserved operand fault
+#define EXC_PRIV_INST_FAULT   4 // Privileged instruction fault
 
 // Store data macro routines for instructions
 #define StoreB(op0, op1, d)   \
@@ -366,6 +374,10 @@ public:
 	char *stringCC(uint32_t cc);
 	int getBit();
 	int setBit(int bit);
+
+	// Interrupt/exception handler
+	int exception(int ie, uint32_t vec, uint32_t ipl);
+	int fault(uint32_t vec);
 
 	// Memory access routines
 	uint32_t readp(uint32_t addr, int size);                   // Read access (aligned)

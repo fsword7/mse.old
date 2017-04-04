@@ -123,5 +123,87 @@ int vax_cpuDevice::setBit(int bit)
 	return obit;
 }
 
+const char *ieNames[] =
+{
+	"Interrupt",
+	"Exception",
+	"Severe Exception"
+};
+
+int vax_cpuDevice::exception(int ie, uint32_t vec, uint32_t ipl)
+{
+	uint32_t npc, opc = REG_PC;
+	uint32_t npsl, opsl = psReg|ccReg;
+	uint32_t prv = PSL_GETCUR(psReg);
+
+	// Get SCBB vector from memory
+	npc = readpl(PREG_SCBB + vec);
+	if (ie == IE_SVE)
+		npc |= 1;
+
+	printf("%s: SCB vector %04X  New PC: %08X(%1X) Type: %s\n",
+		devName.c_str(), vec, npc & ~03, npc & 03, ieNames[ie]);
+
+	if (npc & 2) {
+		return STOP_ILLVEC;
+	}
+
+	// Switch SP registers
+	if (opsl & PSL_IS)
+		npsl = PSL_IS;
+	else {
+		pRegs[prv] = REG_SP;
+		if (npc & 1) {
+			npsl   = PSL_IS;
+			REG_SP = PREG_ISP;
+		} else {
+			npsl   = 0;
+			REG_SP = PREG_KSP;
+		}
+	}
+
+	// Update PSL register
+	if (ie == IE_INT) {
+		psReg = npsl | PSL_SETIPL(ipl);
+	} else {
+		psReg = npsl | ((npc & 1) ? PSL_IPL : (opsl & PSL_IPL)) |
+			PSL_SETPRV(prv);
+	}
+	ccReg = 0;
+
+	// Reset access mode
+
+	// Save old PC and PSL into kernel/interrupt stack pointer
+	writev(REG_SP - (LN_LONG*2), opc, LN_LONG, WACC);
+	writev(REG_SP - LN_LONG, opsl, LN_LONG, WACC);
+	REG_SP -= (LN_LONG*2);
+
+	REG_PC = npc & SCB_ADDR;
+
+	return 0;
+}
+
+int vax_cpuDevice::fault(uint32_t vec)
+{
+	int rc;
+
+	// Reset fault PC address
+	REG_PC = faultAddr;
+
+	switch (vec) {
+	case SCB_RESIN|SCB_NOPRIV:
+		vec &= ~SCB_NOPRIV;
+	case SCB_RESAD:
+	case SCB_RESOP:
+	case SCB_RESIN:
+		if ((rc = exception(IE_EXC, vec, 0)) != 0)
+			return rc;
+		break;
+
+	}
+
+	return 0;
+}
+
 //#define CPU_CLASS vax_cpuDevice
 //#include "dev/cpu/vax/executes.h"
