@@ -130,6 +130,53 @@ static const char *accNames[] = { "Kernel", "Executive", "Supervisor", "User" };
 #define DSPL_CUR(mode) accNames[PSL_GETCUR(mode)]
 #define DSPL_PRV(mode) accNames[PSL_GETPRV(mode)]
 
+static const uint32_t swMasks[IPL_SMAX] =
+{
+	0xFFFE, 0xFFFC, 0xFFF8, 0xFFF0, // IPL 00 - 03
+	0xFFE0, 0xFFC0, 0xFF80, 0xFF00, // IPL 04 - 07
+	0xFE00, 0xFC00, 0xF800, 0xF000, // IPL 08 - 0B
+	0xE000, 0xC000, 0x8000          // IPL 0C - 0E
+};
+
+// Evaluate IRQ levels
+int vax_cpuDevice::evaluate()
+{
+	uint32_t ipl = PSL_GETIPL(psReg);
+
+	// Evaluate software interrupt requests
+	if (ipl >= IPL_SMAX)
+		return 0;
+	if (PREG_SISR & swMasks[ipl]) {
+		for (int sidx = IPL_SMAX; sidx > 0; sidx--) {
+			if (PREG_SISR & swMasks[sidx-1])
+				return sidx;
+		}
+	}
+
+	// No interrupt pending
+	return 0;
+}
+
+void vax_cpuDevice::interrupt()
+{
+	uint32_t nipl;
+	uint32_t vec;
+
+	if ((nipl = IRQ_GETIPL(irqFlags)) != 0) {
+		if (nipl <= IPL_SMAX) {
+			// Software interrupts
+			PREG_SISR &= ~(1u << nipl);
+			vec = SCB_IPLSOFT + (nipl << 2);
+		} else
+			// Undefined IPL level
+			throw STOP_UIPL;
+
+		// perform exception routine
+		exception(IE_INT, vec, nipl);
+	} else
+		irqFlags = 0;
+}
+
 int vax_cpuDevice::exception(int ie, uint32_t vec, uint32_t ipl)
 {
 	uint32_t opsl = psReg|ccReg;
@@ -200,6 +247,87 @@ int vax_cpuDevice::exception(int ie, uint32_t vec, uint32_t ipl)
 		ieTypes[ie], ZXTL(REG_PC), ZXTL(psReg|ccReg), ZXTL(REG_SP), DSPL_CUR(npsl), DSPL_PRV(npsl));
 
 	return 0;
+}
+
+// Resume from exception/interrupt routine
+void vax_cpuDevice::resume()
+{
+	uint32_t npc, npsl;
+	uint32_t opc, opsl, osp;
+	uint32_t nacc, oacc;
+	uint32_t nipl, oipl;
+
+	opc  = REG_PC;
+	opsl = psReg|ccReg;
+	osp  = REG_SP;
+
+	// Get PC and PSL from kernel/interrupt stack
+	npc  = readv(REG_SP, LN_LONG, RACC);
+	npsl = readv(REG_SP+LN_LONG, LN_LONG, RACC);
+
+	// Get access mode from old and new PSL register
+	nacc = PSL_GETCUR(npsl);
+	oacc = PSL_GETCUR(psReg);
+	oipl = PSL_GETIPL(psReg);
+
+	// Check validation against MBZ and access modes
+	if ((npsl & PSL_MBZ) || (nacc < oacc))
+		throw EXC_RSVD_OPND_FAULT;
+	if (nacc == AM_KERNEL) {
+		// Check validation for kernel mode
+		nipl = PSL_GETIPL(npsl);
+		if ((npsl & PSL_IPL) && (((opsl & PSL_IS) == 0) || (nipl == 0)))
+			throw EXC_RSVD_OPND_FAULT;
+		if (nipl > PSL_GETIPL(opsl))
+			throw EXC_RSVD_OPND_FAULT;
+	} else {
+		// Check validation for non-kernel mode
+		if ((npsl & (PSL_IS|PSL_IPL)) || nacc > PSL_GETPRV(npsl))
+			throw EXC_RSVD_OPND_FAULT;
+	}
+	// Check compatibility mode
+	if (npsl & PSL_CM)
+		throw EXC_RSVD_OPND_FAULT;
+
+	// All validation check passed...
+	REG_SP += (LN_LONG*2);
+
+	// Save current SP register
+	if (psReg & PSL_IS)
+		PREG_ISP = REG_SP;
+	else
+		pRegs[oacc] = REG_SP;
+
+	// Set new PSL register
+	psReg = (psReg & PSL_TP) | (npsl & ~PSW_CC);
+	ccReg = npsl & PSW_CC;
+
+	// Set new PC register and reset opcode stream
+	REG_PC = npc;
+	flushvi();
+
+	// Set new SP register for new access mode
+	// Also check AST delivery request
+	if ((psReg & PSL_IS) == 0) {
+		REG_SP = pRegs[nacc];
+		// Request AST delivery (software IPL 2)
+		if (nacc >= PREG_ASTLVL)
+			PREG_SISR |= SISR_2;
+	}
+
+	// Update current access mode
+	curMode = ACC_MASK(PSL_GETCUR(psReg));
+
+	// Update IRQ requests
+	UpdateIRQ();
+
+	printf("%s: (REI) Old PC=%08X PSL=%08X SP=%08X Access: %s,%s\n", devName.c_str(),
+		ZXTL(opc), ZXTL(opsl), ZXTL(osp), DSPL_CUR(opsl), DSPL_PRV(opsl));
+	printf("%s: (REI) New PC=%08X PSL=%08X SP=%08X Access: %s,%s\n", devName.c_str(),
+		ZXTL(REG_PC), ZXTL(psReg|ccReg), ZXTL(REG_SP), DSPL_CUR(npsl), DSPL_PRV(npsl));
+	if ((psReg & PSL_IS) == 0 && nacc >= PREG_ASTLVL)
+		printf("%s: (REI) AST delivered (%d >= %d)\n", devName.c_str(),
+			nacc, PREG_ASTLVL);
 }
 
 int vax_cpuDevice::fault(uint32_t vec)

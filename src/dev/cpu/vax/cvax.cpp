@@ -133,6 +133,7 @@ void cvax_cpuDevice::reset()
 	paMask  = PA_MASK30;
 	// Reset current access mode
 	curMode = ACC_MASK(PSL_GETCUR(psReg));
+	irqFlags = 0;
 }
 
 int cvax_cpuDevice::boot()

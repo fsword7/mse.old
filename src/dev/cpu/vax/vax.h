@@ -180,10 +180,34 @@
 
 #define PA_MASK30        0x3FFFFFFF         // 30-bit physical addressing
 
+// Interrupt Priority Level
+#define IPL_MAX			0x1F
+// KA650 IPL levels
+#define IPL_MEMERR		0x1D
+#define IPL_CRDERR		0x1A
+// standard IPL levels
+#define IPL_HMAX		0x17
+#define IPL_HMIN		0x14
+#define IPL_SMAX		0x0F
+
+#define IRQ_TRAP        0x00E0 // Trap requests
+#define IRQ_IPL         0x001F // IPL requests
+#define IRQ_M_IPL       0x1F
+#define IRQ_M_TRAP      0x07
+#define IRQ_P_IPL       0
+#define IRQ_P_TRAP      5
+
+#define IRQ_GETIPL(irq)        (((irq) >> IRQ_P_IPL) & IRQ_M_IPL)
+#define IRQ_GETTRAP(irq)       (((irq) >> IRQ_P_TRAP) & IRQ_M_TRAP)
+
+#define UpdateIRQ() \
+	irqFlags = evaluate();
+
 // Exception Codes - Stop
 #define STOP_HALT		-1		// HALT opcode
 #define STOP_UOPC		-2		// Unimplemented opcode
 #define STOP_ILLVEC		-3		// Illegal vector
+#define STOP_UIPL       -4      // Undefined IPL level
 
 // Exception Codes - Fault
 #define EXC_RSVD_INST_FAULT   1 // Reserved instruction fault
@@ -378,9 +402,12 @@ public:
 	int getBit();
 	int setBit(int bit);
 
-	// Interrupt/exception handler
-	int exception(int ie, uint32_t vec, uint32_t ipl);
-	int fault(uint32_t vec);
+	// Interrupt/exception services
+	int  evaluate();
+	void interrupt();
+	int  exception(int ie, uint32_t vec, uint32_t ipl);
+	int  fault(uint32_t vec);
+	void resume();
 
 	// Memory access routines
 	uint32_t readp(uint32_t addr, int size);                   // Read access (aligned)
@@ -451,7 +478,9 @@ protected:
 
 	uint32_t  paMask;     // Physical addressing mask
 
-	uint32_t faultAddr;   // Faulting PC address
+	// Interrupt/exception services
+	uint32_t  faultAddr;   // Faulting PC address
+	uint32_t  irqFlags;
 
 private:
 #ifdef ENABLE_DEBUG

@@ -39,6 +39,14 @@ void CPU_CLASS::execute()
 	while (1) {
 		try {
 			faultAddr = REG_PC;
+
+			// Check trap and interrupt requests first
+			if (irqFlags != 0) {
+				interrupt();
+				UpdateIRQ();
+				continue;
+			}
+
 //#ifdef ENABLE_DEBUG
 //			if (dbgFlags & DBG_TRACE)
 //				disasm(faultAddr);
@@ -286,6 +294,10 @@ void CPU_CLASS::execute()
 
 			case OPC_nNOP:
 				// Do nothing...
+				break;
+
+			case OPC_nREI:
+				resume();
 				break;
 
 			// INDEX - Index instruction
