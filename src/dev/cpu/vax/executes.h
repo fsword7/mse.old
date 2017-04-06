@@ -83,8 +83,8 @@ void CPU_CLASS::execute()
 				// Short literal mode
 				case LIT0: case LIT1:
 				case LIT2: case LIT3:
-//					if (opMode & (OPR_VADDR|OPR_ADDR|OPR_MODIFIED|OPR_WRITE))
-//						throw EXC_RSVD_ADDR_FAULT;
+					if (opMode & (OPR_VADDR|OPR_ADDR|OPR_MODIFIED|OPR_WRITE))
+						throw EXC_RSVD_ADDR_FAULT;
 					if (opMode & OPR_FLOAT)
 						opRegs[opn++] = 0x4000 | (opType << (opMode & (OPR_FFLOAT|OPR_DFLOAT)) ? 4 : 1);
 					else
@@ -95,10 +95,10 @@ void CPU_CLASS::execute()
 
 				// Register mode
 				case REG:
-//					if (reg >= (REG_nPC - (scale > LN_LONG)))
-//						throw EXC_RSVD_ADDR_FAULT;
-//					if (opMode & OPR_ADDR)
-//						throw EXC_RSVD_ADDR_FAULT;
+					if (reg >= (REG_nPC - (scale > LN_LONG)))
+						throw EXC_RSVD_ADDR_FAULT;
+					if (opMode & OPR_ADDR)
+						throw EXC_RSVD_ADDR_FAULT;
 					if (opMode & (OPR_VADDR|OPR_WRITE)) {
 						opRegs[opn++] = reg;
 						opRegs[opn++] = gRegs[reg].l;
@@ -112,15 +112,15 @@ void CPU_CLASS::execute()
 					continue;
 
 				case ADEC: // Autodecrement mode
-//					if (reg == REG_nPC)
-//						throw EXC_RSVD_ADDR_FAULT;
+					if (reg == REG_nPC)
+						throw EXC_RSVD_ADDR_FAULT;
 					gRegs[reg].l -= scale;
 					iAddr = gRegs[reg].l;
 					break;
 
 				case REGD: // Register deferred mode
-//					if (reg == REG_nPC)
-//						throw EXC_RSVD_ADDR_FAULT;
+					if (reg == REG_nPC)
+						throw EXC_RSVD_ADDR_FAULT;
 					iAddr = gRegs[reg].l;
 					break;
 
@@ -188,8 +188,8 @@ void CPU_CLASS::execute()
 					break;
 
 				case IDX: // Indexed mode
-//					if (reg == REG_nPC)
-//						throw EXC_RSVD_ADDR_FAULT;
+					if (reg == REG_nPC)
+						throw EXC_RSVD_ADDR_FAULT;
 					iAddr = gRegs[reg].l * scale;
 
 					int opType = readvi(LN_BYTE);
@@ -198,21 +198,21 @@ void CPU_CLASS::execute()
 
 					switch (mode) {
 					case ADEC: // Autodecrement mode
-//						if (reg == REG_nPC)
-//							throw EXC_RSVD_ADDR_FAULT;
+						if (reg == REG_nPC)
+							throw EXC_RSVD_ADDR_FAULT;
 						gRegs[reg].l -= scale;
 						iAddr += gRegs[reg].l;
 						break;
 
 					case REGD: // Register deferred mode
-//						if (reg == REG_nPC)
-//							throw EXC_RSVD_ADDR_FAULT;
+						if (reg == REG_nPC)
+							throw EXC_RSVD_ADDR_FAULT;
 						iAddr += gRegs[reg].l;
 						break;
 
 					case AINC: // Autoincrement mode
-//						if (reg == REG_nPC)
-//							throw EXC_RSVD_ADDR_FAULT;
+						if (reg == REG_nPC)
+							throw EXC_RSVD_ADDR_FAULT;
 						iAddr += gRegs[reg].l;
 						gRegs[reg].l += scale;
 						break;
@@ -259,8 +259,8 @@ void CPU_CLASS::execute()
 						iAddr += readv(t1, LN_LONG, RACC);
 						break;
 
-//					default:
-//						throw EXC_RSVD_ADDR_FAULT;
+					default:
+						throw EXC_RSVD_ADDR_FAULT;
 					}
 					break;
 				}
@@ -327,15 +327,15 @@ void CPU_CLASS::execute()
 			// BIxPSW instructions
 			case OPC_nBICPSW:
 				mask = uint16_t(opRegs[0]);
-//				if (mask & PSW_MBZ)
-//					throw EXC_RSVD_OPND_FAULT;
+				if (mask & PSW_MBZ)
+					throw EXC_RSVD_OPND_FAULT;
 				psReg &= ~mask;
 				ccReg &= ~mask;
 				break;
 			case OPC_nBISPSW:
 				mask = uint16_t(opRegs[0]);
-//				if (mask & PSW_MBZ)
-//					throw EXC_RSVD_OPND_FAULT;
+				if (mask & PSW_MBZ)
+					throw EXC_RSVD_OPND_FAULT;
 				psReg |= (mask & ~PSW_CC);
 				ccReg |= (mask & PSW_CC);
 				break;
@@ -1035,8 +1035,8 @@ void CPU_CLASS::execute()
 					dst = src + tmp;
 					gRegs[opRegs[1]].l = ZXTW(dst);
 				} else {
-//					if (opRegs[1] & 1)
-//						throw EXC_RSVD_OPND_FAULT;
+					if (opRegs[2] & 1)
+						throw EXC_RSVD_OPND_FAULT;
 					tmp = SXTW(readv(opRegs[2], LN_WORD, RACC));
 					dst = src + tmp;
 					writev(opRegs[2], dst, LN_WORD, WACC);

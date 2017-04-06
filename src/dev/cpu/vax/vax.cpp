@@ -181,8 +181,8 @@ int vax_cpuDevice::getBit()
 	uint32_t ea, src;
 
 	if (reg >= 0) {
-//		if (ZXTL(pos) > 31)
-//			throw ESC_RSVD_OPND_FAULT;
+		if (ZXTL(pos) > 31)
+			throw EXC_RSVD_OPND_FAULT;
 		src = gRegs[reg].l;
 		printf("%s: R%d %08X<%d> => %d\n", devName.c_str(),
 			reg, src, pos, (src >> pos) & 1);
@@ -205,8 +205,8 @@ int vax_cpuDevice::setBit(int bit)
 	int      obit;
 
 	if (reg >= 0) {
-//		if (ZXTL(pos) > 31)
-//			throw ESC_RSVD_OPND_FAULT;
+		if (ZXTL(pos) > 31)
+			throw EXC_RSVD_OPND_FAULT;
 		src  = gRegs[reg].l;
 		obit = (src >> pos) & 1;
 		dst  = bit ? (src | (1u << pos)) : (src & ~(1u << pos));
@@ -245,8 +245,8 @@ int32_t vax_cpuDevice::getField(bool sign)
 
 	// Extract a field from one or two longwords.
 	if (reg != OPR_MEM) {
-		if (ZXTL(pos) > 31)
-			throw EXC_RSVD_OPND_FAULT;
+		if ((ZXTL(pos) > 31) && (reg >= REG_nSP))
+			throw EXC_RSVD_ADDR_FAULT;
 		src2 = ZXTL(gRegs[reg+1].l);
 	} else {
 		ea   = src1 + (pos >> 3);
