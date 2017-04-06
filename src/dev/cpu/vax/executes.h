@@ -27,7 +27,6 @@ void CPU_CLASS::execute()
 	register int32_t  src, dst, tmp;
 	register int64_t  srcq, srcq1, srcq2;
 	register int64_t  dstq, dstq1, dstq2;
-	register int64_t  src64, dst64;
 	register uint32_t usrc, udst, utmp;
 	register uint32_t mask;
 	register int32_t  cnt;
@@ -300,6 +299,16 @@ void CPU_CLASS::execute()
 				resume();
 				break;
 
+			case OPC_nBPT:
+				faultAddr = REG_PC;
+				exception(SCB_BPT, 0, IE_EXC);
+				break;
+
+			case OPC_nXFC:
+				faultAddr = REG_PC;
+				exception(SCB_XFC, 0, IE_EXC);
+				break;
+
 			// INDEX - Index instruction
 			case OPC_nINDEX:
 				src  = SXTL(opRegs[0]);
@@ -500,20 +509,6 @@ void CPU_CLASS::execute()
 				REG_PC  = readv(REG_SP, LN_LONG, RACC);
 				REG_SP += LN_LONG;
 				flushvi();
-				break;
-
-			// PUSHx/PUSHAx - Push instruction
-			case OPC_nPUSHL:
-			case OPC_nPUSHAB:
-			case OPC_nPUSHAW:
-			case OPC_nPUSHAL:
-			case OPC_nPUSHAQ:
-				src = opRegs[0];
-				writev(REG_SP - LN_LONG, src, LN_LONG, WACC);
-				REG_SP -= LN_LONG;
-				UpdateCC_IIZP_L(ccReg, src);
-				printf("%s: Push %08X to SP (%08X): %s\n", devName.c_str(),
-						src, REG_SP + LN_LONG, stringCC(ccReg));
 				break;
 
 			// ACBx instructions
@@ -1397,28 +1392,28 @@ void CPU_CLASS::execute()
 
 			case OPC_nASHQ:
 				cnt    = SXTB(opRegs[0]);
-				src64  = (ZXTQ(opRegs[2]) << 32) | ZXTL(opRegs[1]);
+				srcq  = (ZXTQ(opRegs[2]) << 32) | ZXTL(opRegs[1]);
 				ovflg = false;
 				if (cnt == 0) {
-					dst64 = src64;
+					dstq = srcq;
 				} else if (cnt < 0) {
-					dst64 = (cnt > -64) ? (src64 >> -cnt) : (src64 < 0) ? -1LL : 0LL;
+					dstq = (cnt > -64) ? (srcq >> -cnt) : (srcq < 0) ? -1LL : 0LL;
 				} else {
 					if (cnt < 64) {
-						dst64 = ZXTL(src64) << cnt;
-						ovflg = (src64 != (dst64 >> cnt));
+						dstq  = srcq << cnt;
+						ovflg = (srcq != (dstq >> cnt));
 					} else {
-						dst64 = 0LL;
-						ovflg = (src64 != 0);
+						dstq  = 0LL;
+						ovflg = (srcq != 0);
 					}
 				}
-				StoreQ(opRegs[3], opRegs[4], SXTL(dst64), SXTL(dst64 >> 32));
-				UpdateCC_IIZZ_64(ccReg, dst64);
+				StoreQ(opRegs[3], opRegs[4], SXTL(dstq), SXTL(dstq >> 32));
+				UpdateCC_IIZZ_64(ccReg, dstq);
 				if (ovflg)
 					ccReg |= CC_V;
 				printf("%s: %08X %08X %s %d => %08X %08X: %s\n", devName.c_str(),
-					ZXTL(src64 >> 32), ZXTL(src64), ((cnt < 0) ? ">>" : "<<"), abs(cnt),
-					ZXTL(dst64 >> 32), ZXTL(dst64), stringCC(ccReg));
+					ZXTL(srcq >> 32), ZXTL(srcq), ((cnt < 0) ? ">>" : "<<"), abs(cnt),
+					ZXTL(dstq >> 32), ZXTL(dstq), stringCC(ccReg));
 				break;
 
 			case OPC_nROTL:
@@ -1431,6 +1426,108 @@ void CPU_CLASS::execute()
 					ZXTL(usrc), ((cnt < 0) ? ">>" : "<<"), abs(cnt),
 					ZXTL(udst), stringCC(ccReg));
 				break;
+
+			// CMPV - Compare field instructions
+			case OPC_nCMPV:
+				dst = getField(true);
+				src = SXTL(opRegs[4]);
+				UpdateCC_CMP_L(ccReg, dst, src);
+				printf("%s: Compare %08X with %08X: %s\n", devName.c_str(),
+					ZXTL(dst), ZXTL(src), stringCC(ccReg));
+				break;
+			case OPC_nCMPZV:
+				dst = getField(false);
+				src = SXTL(opRegs[4]);
+				UpdateCC_CMP_L(ccReg, dst, src);
+				printf("%s: Compare %08X with %08X: %s\n", devName.c_str(),
+					ZXTL(dst), ZXTL(src), stringCC(ccReg));
+				break;
+
+			// EXTV - Extract field instructions
+			case OPC_nEXTV:
+				src = getField(true);
+				StoreL(opRegs[4], opRegs[5], src);
+				UpdateCC_IIZP_L(ccReg, src);
+				printf("%s: Extract %08X: %s\n", devName.c_str(),
+					ZXTL(src), stringCC(ccReg));
+				break;
+			case OPC_nEXTZV:
+				src = getField(false);
+				StoreL(opRegs[4], opRegs[5], src);
+				UpdateCC_IIZP_L(ccReg, src);
+				printf("%s: Extract %08X: %s\n", devName.c_str(),
+					ZXTL(src), stringCC(ccReg));
+				break;
+
+//			case OPC_nFFS:
+//			case OPC_nFFC:
+//			case OPC_nINSV:
+
+			// ******************
+			// Stack instructions
+			// ******************
+
+			// PUSHx/PUSHAx - Push instruction
+			case OPC_nPUSHL:
+			case OPC_nPUSHAB:
+			case OPC_nPUSHAW:
+			case OPC_nPUSHAL:
+			case OPC_nPUSHAQ:
+				src = opRegs[0];
+				writev(REG_SP - LN_LONG, src, LN_LONG, WACC);
+				REG_SP -= LN_LONG;
+				UpdateCC_IIZP_L(ccReg, src);
+				printf("%s: Push %08X to SP (%08X): %s\n", devName.c_str(),
+						src, REG_SP + LN_LONG, stringCC(ccReg));
+				break;
+
+			// PUSHR/POPR - Push/pop register instructions
+			case OPC_nPUSHR:
+				mask = SXTL(opRegs[0]) & STK_MASK;
+				// Check access for page faults
+
+				// Push registers into stack
+				for (int idx = REG_nSP; idx >= REG_nR0; idx--) {
+					if ((mask >> idx) & 1) {
+						writev(REG_SP - LN_LONG, gRegs[idx].l, LN_LONG, WACC);
+						printf("%s: R%d %08X => (SP) %08X\n", devName.c_str(),
+							idx, ZXTL(gRegs[idx].l), ZXTL(REG_SP));
+						REG_SP -= LN_LONG;
+					}
+				}
+				break;
+			case OPC_nPOPR:
+				mask = SXTL(opRegs[0]) & STK_MASK;
+				// Check access for page faults
+
+				// Push registers into stack
+				for (int idx = REG_nR0; idx <= REG_nSP; idx++) {
+					if ((mask >> idx) & 1) {
+						gRegs[idx].l = readv(REG_SP, LN_LONG, RACC);
+						printf("%s: R%d %08X <= (SP) %08X\n", devName.c_str(),
+							idx, ZXTL(gRegs[idx].l), ZXTL(REG_SP));
+						if (idx < REG_nSP)
+							REG_SP += LN_LONG;
+					}
+				}
+				break;
+
+			// CALLx - Call instructions
+			case OPC_nCALLS:
+				call(true);
+				break;
+			case OPC_nCALLG:
+				call(false);
+				break;
+
+			// RET - Return instruction
+			case OPC_nRET:
+				ret();
+				break;
+
+			case OPC_nCVTFD:
+			case OPC_nCVTLG:
+				throw EXC_RSVD_INST_FAULT;
 
 			// Illegal/unimplemented instruction
 			default:

@@ -105,6 +105,26 @@
 #define AM_SUPERVISOR	 2 // Supervisor mode for DCL (shell)
 #define AM_USER			 3 // User mode for normal programs
 
+
+// CALL instruction
+#define CALL_DV				0x8000
+#define CALL_IV				0x4000
+#define CALL_MBZ			0x3000
+#define CALL_MASK			0x0FFF
+
+// Call stack frame (2nd longword)
+#define CALL_SPA			0x03
+#define CALL_S				(1u << CALL_P_S)
+#define CALL_PSW			0x7FE0
+
+#define CALL_P_SPA			30
+#define CALL_P_S			29
+#define CALL_P_MASK			16
+
+// PUSHR/POPR instruction
+#define STK_MASK			0x7FFF
+
+
 // Interrupt/Exception Types
 #define IE_INT           0 // Interrupt
 #define IE_EXC           1 // Exception
@@ -401,6 +421,10 @@ public:
 	char *stringCC(uint32_t cc);
 	int getBit();
 	int setBit(int bit);
+	int32_t getField(bool sign);
+
+	void call(bool stkFlag);
+	void ret();
 
 	// Interrupt/exception services
 	int  evaluate();

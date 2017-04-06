@@ -70,6 +70,110 @@ char *vax_cpuDevice::stringCC(uint32_t cc)
 	return ccstr;
 }
 
+void vax_cpuDevice::call(bool stkFlag)
+{
+	uint32_t npc = ZXTL(opRegs[1]);
+	uint32_t mask, entry;
+	uint32_t tsp;
+	int      stkSize;
+
+	mask = readv(npc, LN_WORD, RACC);
+	if (mask & CALL_MBZ)
+		throw EXC_RSVD_OPND_FAULT;
+
+	// Check write access for page faults
+	stkSize = stkFlag ? 24 : 20;
+	for (int idx = REG_nR0; idx <= REG_nR11; idx++)
+		if ((mask >> idx) & 1)
+			stkSize += LN_WORD;
+
+	// Save registers into stack
+	if (stkFlag) {
+		writev(REG_SP - LN_LONG, opRegs[0], LN_LONG, WACC);
+		REG_SP -= LN_LONG;
+	}
+	entry = ((REG_SP & CALL_SPA) << CALL_P_SPA) |
+		    ((stkFlag ? 1u : 0u) << CALL_P_S) |
+		    ((psReg|ccReg) & CALL_PSW) |
+		    ((mask & CALL_MASK) << CALL_P_MASK);
+	tsp = REG_SP & ~CALL_SPA;
+	for (int idx = REG_nR11; idx >= REG_nR0; idx--) {
+		if ((mask >> idx) & 1) {
+			writev(tsp - LN_LONG, gRegs[idx].l, LN_LONG, WACC);
+			tsp -= LN_LONG;
+		}
+	}
+	writev(tsp - LN_LONG, REG_PC, LN_LONG, WACC);
+	writev(tsp - (LN_LONG*2), REG_FP, LN_LONG, WACC);
+	writev(tsp - (LN_LONG*3), REG_AP, LN_LONG, WACC);
+	writev(tsp - (LN_LONG*4), entry, LN_LONG, WACC);
+	writev(tsp - (LN_LONG*5), 0, LN_LONG, WACC);
+
+	// Set new registers
+	REG_AP = stkFlag ? REG_SP : opRegs[0];
+	REG_SP = tsp - (LN_LONG*5);
+	REG_FP = REG_SP;
+	REG_PC = npc + LN_WORD;
+	psReg = (psReg & ~(PSW_DV|PSW_FU|PSW_IV)) |
+			((mask & CALL_DV) ? PSW_DV : 0) |
+			((mask & CALL_IV) ? PSW_IV : 0);
+	ccReg = 0;
+
+	// Clear instruction look-ahead
+	flushvi();
+}
+
+void vax_cpuDevice::ret()
+{
+	uint32_t entry, mask;
+	uint32_t npc;
+	uint32_t tsp = REG_FP;
+	int      stkSize;
+
+	// Get entry mask from stack
+	entry = readv(tsp + LN_LONG, LN_LONG, RACC);
+	if (entry & CALL_MBZ)
+		throw EXC_RSVD_OPND_FAULT;
+	mask = (entry >> CALL_P_MASK) & CALL_MASK;
+
+	// Check read access for page faults
+	stkSize = (entry & CALL_S) ? 23 : 19;
+	for (int idx = REG_nR0; idx <= REG_nR11; idx++)
+		if ((mask >> idx) & 1)
+			stkSize += LN_LONG;
+
+	// Restore PC, FP, AP, and SP registers
+	REG_AP = readv(tsp + (LN_LONG*2), LN_LONG, RACC);
+	REG_FP = readv(tsp + (LN_LONG*3), LN_LONG, RACC);
+	npc    = readv(tsp + (LN_LONG*4), LN_LONG, RACC);
+	tsp   += LN_LONG*5;
+
+	// Restore registers from stack
+	for (int idx = REG_nR0; idx <= REG_nR11; idx++) {
+		if ((mask >> idx) & 1) {
+			gRegs[idx].l = readv(tsp, LN_LONG, RACC);
+			tsp += LN_LONG;
+		}
+	}
+
+	// Dealign stack pointer
+	REG_SP = tsp + ((entry >> CALL_P_SPA) & CALL_SPA);
+
+	// Pop old argument if CALLS instruction is used
+	if (entry & CALL_S) {
+		uint32_t tmp = readv(REG_SP, LN_LONG, RACC);
+		REG_SP += ((tmp & MSK_BYTE) << 2) + LN_LONG;
+	}
+
+	// Reset PSW register
+	psReg = (psReg & ~PSW_MASK) | (entry & (PSW_MASK & ~PSW_CC));
+	ccReg = entry & PSW_CC;
+
+	// Set new PC register and clear instruction look-ahead
+	REG_PC = npc;
+	flushvi();
+}
+
 int vax_cpuDevice::getBit()
 {
 	int32_t  pos = opRegs[0];
@@ -121,6 +225,47 @@ int vax_cpuDevice::setBit(int bit)
 	}
 
 	return obit;
+}
+
+int32_t vax_cpuDevice::getField(bool sign)
+{
+	int32_t  pos  = SXTL(opRegs[0]);
+	uint8_t  size = ZXTB(opRegs[1]);
+	uint32_t reg  = ZXTL(opRegs[2]);
+	uint32_t src1 = ZXTL(opRegs[3]);
+	uint32_t src2, ea;
+
+	// If size is zero, do nothing and return zero.
+	if (size == 0)
+		return 0;
+
+	// If size is more than 32, reserved operand fault.
+	if (size > 32)
+		throw EXC_RSVD_OPND_FAULT;
+
+	// Extract a field from one or two longwords.
+	if (reg != OPR_MEM) {
+		if (ZXTL(pos) > 31)
+			throw EXC_RSVD_OPND_FAULT;
+		src2 = ZXTL(gRegs[reg+1].l);
+	} else {
+		ea   = src1 + (pos >> 3);
+		pos  = (pos & 07) | ((ea & 03) << 3);
+		ea  &= ~03;
+		src1 = readv(ea, LN_LONG, RACC);
+		if ((pos + size) > 32)
+			src2 = readv(ea+LN_LONG, LN_LONG, RACC);
+	}
+	if (pos > 0)
+		src1 = (src1 >> pos) | (src2 << (32-pos));
+
+	// Zero or sign extension
+	src1 &= ~ZXTL(MSK_LONG << size);
+	if (sign && (src1 & (1u << size-1)))
+		src1 |= ZXTL(MSK_LONG << size);
+
+	// Return result
+	return src1;
 }
 
 static const char *ieNames[]  = { "Interrupt", "Exception", "Severe Exception" };
@@ -276,7 +421,7 @@ void vax_cpuDevice::resume()
 	if (nacc == AM_KERNEL) {
 		// Check validation for kernel mode
 		nipl = PSL_GETIPL(npsl);
-		if ((npsl & PSL_IPL) && (((opsl & PSL_IS) == 0) || (nipl == 0)))
+		if ((npsl & PSL_IS) && (((opsl & PSL_IS) == 0) || (nipl == 0)))
 			throw EXC_RSVD_OPND_FAULT;
 		if (nipl > PSL_GETIPL(opsl))
 			throw EXC_RSVD_OPND_FAULT;
