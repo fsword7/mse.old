@@ -249,13 +249,10 @@
 		writev(op1, d, LN_WORD, WACC);
 
 #define StoreL(op0, op1, d)   \
-	if (op0 != OPR_MEM) {       \
+	if (op0 != OPR_MEM)       \
 		gRegs[op0].l  = d;    \
-		printf("reg: (w) %08X => R%d\n", d, op0); \
-	} else {                      \
-		writev(op1, d, LN_LONG, WACC); \
-		printf("mem: (w) %08X => %08X\n", d, op1); \
-    }
+	else                      \
+		writev(op1, d, LN_LONG, WACC);
 
 #define StoreQ(op0, op1, dl, dh)        \
 	if (op0 != OPR_MEM) {               \

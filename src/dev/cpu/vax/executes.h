@@ -1215,6 +1215,52 @@ void CPU_CLASS::execute()
 					ZXTL(src2), ZXTL(src1), ZXTL(dst), stringCC(ccReg));
 				break;
 
+			// EMUL - Extended multiply instruction
+			case OPC_nEMUL:
+				srcq1 = SXTL(opRegs[0]);
+				srcq2 = SXTL(opRegs[1]);
+				srcq  = SXTL(opRegs[2]);
+				dstq  = (srcq2 * srcq1) + srcq;
+				StoreQ(opRegs[3], opRegs[4], ZXTL(dstq), ZXTL(dstq >> 32));
+				UpdateCC_IIZZ_64(ccReg, dstq);
+				printf("%s: (%08X * %08X) + %08X => %08X %08X: %s\n", devName.c_str(),
+					ZXTL(srcq2), ZXTL(srcq1), ZXTL(srcq), ZXTL(dstq >> 32), ZXTL(dstq),
+					stringCC(ccReg));
+				break;
+			// EDIV - Extended divide instruction
+			case OPC_nEDIV:
+				srcq1 = SXTL(opRegs[0]);
+				srcq2 = (ZXTQ(opRegs[2]) << 32) | ZXTQ(opRegs[1]);
+				ovflg = false;
+				if ((srcq1 == 0) || (srcq1 == -1LL && srcq2 == LLONG_MIN)) {
+					ovflg = true;
+				} else {
+//					printf("%s: %08X >= %08X\n", devName.c_str(),
+//						abs(srcq2 >> 32), abs(srcq1));
+					if (abs(srcq2 >> 32) >= abs(srcq1) && ZXTL(srcq1) != SGN_LONG)
+						ovflg = true;
+					else {
+						dstq1 = srcq2 / srcq1;
+						dstq2 = srcq2 % srcq1;
+						if ((dstq1 < LONG_MIN) || (dstq1 > LONG_MAX))
+							ovflg = true;
+					}
+				}
+
+				if (ovflg == true) {
+					dstq1 = srcq2;
+					dstq2 = 0;
+				}
+
+				StoreL(opRegs[3], opRegs[4], dstq1);
+				StoreL(opRegs[5], opRegs[6], dstq2);
+				UpdateCC_IIZZ_L(ccReg, dstq1);
+				ccReg |= ovflg ? CC_V : 0;
+				printf("%s: %08X %08X / %08X => %08X R %08X: %s\n", devName.c_str(),
+					ZXTL(srcq2 >> 32), ZXTL(srcq2), ZXTL(srcq1), ZXTL(dstq1), ZXTL(dstq2),
+					stringCC(ccReg));
+				break;
+
 			// ADWC/SBWC instructions
 			case OPC_nADWC:
 				src1  = SXTL(opRegs[0]);
