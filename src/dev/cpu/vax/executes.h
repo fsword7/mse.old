@@ -31,6 +31,8 @@ void CPU_CLASS::execute()
 	register uint32_t udst, utmp;
 	register uint32_t mask;
 	register int32_t  cnt;
+	register int32_t  entry, pred, succ, hdr;
+	register int32_t  a, b, c, ar;
 
 	// Reset instruction steam
 	flushvi();
@@ -1616,9 +1618,193 @@ void CPU_CLASS::execute()
 				ret();
 				break;
 
+			// Floating instructions
 			case OPC_nCVTFD:
+			case OPC_nCVTLF:
+			case OPC_nCVTLD:
 			case OPC_nCVTLG:
 				throw EXC_RSVD_INST_FAULT;
+
+			// Queue instructions
+			case OPC_nINSQUE:
+				entry = SXTL(opRegs[0]);
+				pred  = SXTL(opRegs[1]);
+				// Check write access first for page faults
+				succ = readv(pred, LN_LONG, WACC);
+				readv(succ+LN_LONG, LN_LONG, WACC);
+				readv(entry+LN_LONG, LN_LONG, WACC);
+				// Insert entry into queue
+				writev(entry, succ, LN_LONG, WACC);
+				writev(entry+LN_LONG, pred, LN_LONG, WACC);
+				writev(succ+LN_LONG, entry, LN_LONG, WACC);
+				writev(pred, entry, LN_LONG, WACC);
+				// Update condition codes
+				UpdateCC_CMP_L(ccReg, succ, pred);
+				printf("%s: Insert %08X to %08X with next %08X: %s\n",
+					devName.c_str(), ZXTL(entry), ZXTL(pred), ZXTL(succ),
+					stringCC(ccReg));
+				break;
+			case OPC_nINSQHI:
+				entry = SXTL(opRegs[0]);
+				hdr   = SXTL(opRegs[1]);
+				if ((entry == hdr) || ((entry|hdr) & 07))
+					throw EXC_RSVD_OPND_FAULT;
+				// Check write access for page faults
+				readv(entry, LN_LONG, WACC);
+				a = readv(hdr, LN_LONG, WACC);
+			OPC_INSQHI:
+				if (a & 06)
+					throw EXC_RSVD_OPND_FAULT;
+				if (a & 01)
+					ccReg = CC_C;
+				else {
+					writev(hdr, a | 1, LN_LONG, WACC);
+					a += hdr;
+					writev(hdr, a - hdr, LN_LONG, WACC);
+					writev(a+LN_LONG, entry - a, LN_LONG, WACC);
+					writev(entry, a - entry, LN_LONG, WACC);
+					writev(entry+LN_LONG, hdr-entry, LN_LONG, WACC);
+					writev(hdr, entry-hdr, LN_LONG, WACC);
+					ccReg = (a == hdr) ? CC_Z : 0;
+				}
+				break;
+			case OPC_nINSQTI:
+				entry = SXTL(opRegs[0]);
+				hdr   = SXTL(opRegs[1]);
+				if ((entry == hdr) || ((entry|hdr) & 07))
+					throw EXC_RSVD_OPND_FAULT;
+				// Check write access for page faults
+				readv(entry, LN_LONG, WACC);
+				a = readv(hdr, LN_LONG, WACC);
+				if (a == 0)
+					goto OPC_INSQHI;
+				if (a & 06)
+					throw EXC_RSVD_OPND_FAULT;
+				if (a & 01) {
+					// Busy signal...
+					ccReg = CC_C;
+				} else {
+					writev(hdr, a | 1, LN_LONG, WACC);
+					c = readv(hdr+LN_LONG, LN_LONG, RACC) + hdr;
+					if (c & 07) {
+						writev(hdr, a, LN_LONG, WACC);
+						throw EXC_RSVD_OPND_FAULT;
+					}
+					writev(hdr, a, LN_LONG, WACC);
+					writev(c, entry-c, LN_LONG, WACC);
+					writev(entry, hdr-entry, LN_LONG, WACC);
+					writev(entry+LN_LONG, c-entry, LN_LONG, WACC);
+					writev(hdr+LN_LONG, entry-hdr, LN_LONG, WACC);
+					writev(hdr, a, LN_LONG, WACC);
+					// Clear all condition codes
+					ccReg = 0;
+				}
+				break;
+			case OPC_nREMQUE:
+				entry = SXTL(opRegs[0]);
+				succ = readv(entry, LN_LONG, RACC);
+				pred = readv(entry+LN_LONG, LN_LONG, RACC);
+				// Update condition codes first
+				UpdateCC_CMP_L(ccReg, succ, pred);
+				if (entry != pred) {
+					// Check write access for page faults
+					readv(succ+LN_LONG, LN_LONG, WACC);
+					if (SXTL(opRegs[1]) != OPR_MEM)
+						readv(opRegs[2], LN_LONG, WACC);
+					// Remove entry from queue
+					writev(pred, succ, LN_LONG, WACC);
+					writev(succ+LN_LONG, pred, LN_LONG, WACC);
+				} else
+					ccReg |= CC_V;
+				StoreL(opRegs[1], opRegs[2], entry);
+				printf("%s: Remove %08X from %08X with next %08X: %s\n",
+					devName.c_str(), ZXTL(entry), ZXTL(pred), ZXTL(succ),
+					stringCC(ccReg));
+				break;
+			case OPC_nREMQHI:
+				hdr = SXTL(opRegs[0]);
+				if (hdr & 07)
+					throw EXC_RSVD_OPND_FAULT;
+				if (opRegs[1] == OPR_MEM) {
+					if (opRegs[2] == hdr)
+						throw EXC_RSVD_OPND_FAULT;
+					readv(opRegs[2], LN_LONG, WACC);
+				}
+				ar = readv(hdr, LN_LONG, WACC);
+			OPC_REMQHI:
+				if (ar & 06)
+					throw EXC_RSVD_OPND_FAULT;
+				if (ar & 01)
+					ccReg = CC_V|CC_C;
+				else {
+					a = ar + hdr;
+					if (ar != 0) {
+						writev(hdr, ar|1, LN_LONG, WACC);
+//						writev(hdr, ar, LN_LONG, WACC);
+						b = readv(a, LN_LONG, RACC) + a;
+						if (b & 07) {
+							writev(hdr, ar, LN_LONG, WACC);
+							throw EXC_RSVD_OPND_FAULT;
+						}
+//						writev(hdr, ar, LN_LONG, WACC);
+						writev(b+LN_LONG, hdr-b, LN_LONG, WACC);
+						writev(hdr, b-hdr, LN_LONG, WACC);
+					}
+					StoreL(opRegs[1], opRegs[2], a);
+					// Update condition codes
+					if (ar == 0)
+						ccReg = CC_Z|CC_V;
+					else if (b == hdr)
+						ccReg = CC_Z;
+					else
+						ccReg = 0;
+				}
+				break;
+			case OPC_nREMQTI:
+				hdr = SXTL(opRegs[0]);
+				if (hdr & 07)
+					throw EXC_RSVD_OPND_FAULT;
+				if (opRegs[1] == OPR_MEM) {
+					if (opRegs[2] == hdr)
+						throw EXC_RSVD_OPND_FAULT;
+					readv(opRegs[2], LN_LONG, WACC);
+				}
+				ar = readv(hdr, LN_LONG, WACC);
+				if (ar & 06)
+					throw EXC_RSVD_OPND_FAULT;
+				if (ar & 01)
+					ccReg = CC_V|CC_C;
+				else {
+					if (ar != 0) {
+						writev(hdr, ar|1, LN_LONG, WACC);
+						c = readv(hdr+LN_LONG, LN_LONG, RACC);
+						if (ar == c) {
+							writev(hdr, ar, LN_LONG, WACC);
+							goto OPC_REMQHI;
+						}
+						if (c & 07) {
+							writev(hdr, ar, LN_LONG, WACC);
+							throw EXC_RSVD_OPND_FAULT;
+						}
+						c += hdr;
+//						writev(hdr, ar, LN_LONG, WACC);
+						b = readv(c+LN_LONG, LN_LONG, RACC) + c;
+						if (b & 07) {
+							writev(hdr, ar, LN_LONG, WACC);
+							throw EXC_RSVD_OPND_FAULT;
+						}
+//						writev(hdr, ar, LN_LONG, WACC);
+						writev(b, hdr-b, LN_LONG, WACC);
+						writev(hdr+LN_LONG, b-hdr, LN_LONG, WACC);
+						writev(hdr, ar, LN_LONG, WACC);
+					} else
+						c = hdr;
+					StoreL(opRegs[1], opRegs[2], c);
+					// Update condition codes
+					ccReg = (ar == 0) ? (CC_Z|CC_V) : 0;
+				}
+				break;
+
 
 			// Illegal/unimplemented instruction
 			default:
