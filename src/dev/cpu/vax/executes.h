@@ -27,7 +27,8 @@ void CPU_CLASS::execute()
 	register int32_t  src, dst, tmp;
 	register int64_t  srcq, srcq1, srcq2;
 	register int64_t  dstq, dstq1, dstq2;
-	register uint32_t usrc, udst, utmp;
+	register uint32_t usrc, usrc1, usrc2;
+	register uint32_t udst, utmp;
 	register uint32_t mask;
 	register int32_t  cnt;
 
@@ -1505,9 +1506,53 @@ void CPU_CLASS::execute()
 					ZXTL(src), stringCC(ccReg));
 				break;
 
-//			case OPC_nFFS:
-//			case OPC_nFFC:
-//			case OPC_nINSV:
+			// FFS/FFC - First find instruction
+			case OPC_nFFS:
+				usrc1 = ZXTL(opRegs[0]);
+				usrc2 = ZXTB(opRegs[1]);
+				if (usrc2 > 0) {
+					int idx;
+					usrc = getField(false);
+					for (idx = 0; idx < usrc2; idx++)
+						if ((usrc >> idx) & 1)
+							break;
+					udst = usrc1 + idx;
+				} else {
+					usrc = 0;
+					udst = usrc1;
+				}
+				StoreL(opRegs[4], opRegs[5], udst);
+				ccReg = usrc != 0 ? 0 : CC_Z;
+				printf("%s: Find %08X<%d:%d> => %d: %s\n", devName.c_str(),
+					ZXTL(usrc), ZXTL(usrc1), ZXTB(usrc2), udst,
+					stringCC(ccReg));
+				break;
+			case OPC_nFFC:
+				usrc1 = ZXTL(opRegs[0]);
+				usrc2 = ZXTB(opRegs[1]);
+				if (usrc2 > 0) {
+					int idx;
+					usrc = getField(false) ^ mskList[usrc2];
+					printf("%s: %08X\n", devName.c_str(), usrc);
+					for (idx = 0; idx < usrc2; idx++)
+						if ((usrc >> idx) & 1)
+							break;
+					udst = usrc1 + idx;
+				} else {
+					usrc = 0;
+					udst = usrc1;
+				}
+				StoreL(opRegs[4], opRegs[5], udst);
+				ccReg = usrc != 0 ? 0 : CC_Z;
+				printf("%s: Find %08X<%d:%d> => %d: %s\n", devName.c_str(),
+					ZXTL(usrc), ZXTL(usrc1), ZXTB(usrc2), udst,
+					stringCC(ccReg));
+				break;
+
+			// INSV - Insert field instruction
+			case OPC_nINSV:
+				putField();
+				break;
 
 			// ******************
 			// Stack instructions

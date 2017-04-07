@@ -415,10 +415,13 @@ public:
 
 	void assignMemory(uint8_t *mem, uint32_t memSize);
 	void setPCAddr(uint32_t pcAddr);
+
+protected:
 	char *stringCC(uint32_t cc);
 	int getBit();
 	int setBit(int bit);
 	int32_t getField(bool sign);
+	void putField();
 
 	void call(bool stkFlag);
 	void ret();
@@ -430,6 +433,7 @@ public:
 	int  fault(uint32_t vec);
 	void resume();
 
+public:
 	// Memory access routines
 	uint32_t readp(uint32_t addr, int size);                   // Read access (aligned)
 	uint32_t readpl(uint32_t pAddr);                           // Longword read access (aligned)
@@ -477,6 +481,9 @@ protected:
 
 	// Opcode table for operand decoding and disassembler
 	const vaxOpcode *opCodes[VAX_nOPCTBL];
+
+	static const uint32_t mskList[];
+	static const uint32_t sgnList[];
 
 	// Mirror of system memory (from system device)
 	uint32_t  memSize;

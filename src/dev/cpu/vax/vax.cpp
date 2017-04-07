@@ -11,7 +11,7 @@
 #include "dev/cpu/vax/vax.h"
 #include "dev/cpu/vax/opcodes.h"
 
-const uint32_t mskList[] = {
+const uint32_t vax_cpuDevice::mskList[] = {
 	0x00000000,
 	0x00000001, 0x00000003, 0x00000007, 0x0000000F,
 	0x0000001F, 0x0000003F, 0x0000007F, 0x000000FF,
@@ -23,7 +23,7 @@ const uint32_t mskList[] = {
 	0x1FFFFFFF, 0x3FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFF
 };
 
-const uint32_t sgnList[] = {
+const uint32_t vax_cpuDevice::sgnList[] = {
 	0x00000000,
 	0x00000001, 0x00000002, 0x00000004, 0x00000008,
 	0x00000010, 0x00000020, 0x00000040, 0x00000080,
@@ -296,6 +296,60 @@ int32_t vax_cpuDevice::getField(bool sign)
 
 	// Return result
 	return src1;
+}
+
+void vax_cpuDevice::putField()
+{
+	uint32_t src  = ZXTL(opRegs[0]);
+	int32_t  pos  = SXTL(opRegs[1]);
+	uint8_t  size = ZXTB(opRegs[2]);
+	uint32_t reg  = ZXTL(opRegs[3]);
+	uint32_t src1, src2;
+	uint32_t dst1, dst2;
+	uint32_t ea, mask;
+
+	// If size is zero, do nothing and return zero.
+	if (size == 0)
+		return;
+
+	// If size is more than 32, reserved operand fault.
+	if (size > 32)
+		throw EXC_RSVD_OPND_FAULT;
+
+	// Extract a field from one or two longwords.
+	if (reg != OPR_MEM) {
+		if (ZXTL(pos) > 31)
+			throw EXC_RSVD_ADDR_FAULT;
+		if (ZXTL(pos + size) > 32) {
+			if (reg >= REG_nSP)
+				throw EXC_RSVD_OPND_FAULT;
+			mask = mskList[pos + size - 32];
+			src2 = gRegs[reg+1].l;
+			dst2 = ((src >> (32 - pos)) & mask) | (src2 & ~mask);
+			gRegs[reg+1].l = dst2;
+		}
+		src1 = gRegs[reg].l;
+		mask = mskList[size] << pos;
+		dst1 = ((src << pos) & mask) | (src1 & ~mask);
+		gRegs[reg].l = dst1;
+	} else {
+		ea   = opRegs[4] + (pos >> 3);
+		pos  = (pos & 07) | ((ea & 03) << 3);
+		ea  &= ~03;
+		src1 = readv(ea, LN_LONG, RACC);
+		if ((pos + size) > 32) {
+			src2 = readv(ea+LN_LONG, LN_LONG, RACC);
+			mask = mskList[pos + size - 32];
+			dst2 = ((src >> (32 - pos)) & mask) | (src2 & ~mask);
+			writev(ea+LN_LONG, dst2, LN_LONG, WACC);
+		}
+		mask = mskList[size] << pos;
+		dst1 = ((src << pos) & mask) | (src1 & ~mask);
+		writev(ea, dst1, LN_LONG, WACC);
+//		printf("%s: Mask=%08X Pos=%d Size=%d\n", devName.c_str(),
+//			mask, pos, size);
+//		printf("%s: %08X => %08X\n", devName.c_str(), src1, dst1);
+	}
 }
 
 static const char *ieNames[]  = { "Interrupt", "Exception", "Severe Exception" };
