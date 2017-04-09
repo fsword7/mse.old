@@ -87,7 +87,7 @@ void CPU_CLASS::execute()
 				case LIT0: case LIT1:
 				case LIT2: case LIT3:
 					if (opMode & (OPR_VADDR|OPR_ADDR|OPR_MODIFIED|OPR_WRITE))
-						throw EXC_RSVD_ADDR_FAULT;
+						throw RSVD_ADDR_FAULT;
 					if (opMode & OPR_FLOAT)
 						opRegs[opn++] = 0x4000 | (opType << (opMode & (OPR_FFLOAT|OPR_DFLOAT)) ? 4 : 1);
 					else
@@ -99,9 +99,9 @@ void CPU_CLASS::execute()
 				// Register mode
 				case REG:
 					if (reg >= (REG_nPC - (scale > LN_LONG)))
-						throw EXC_RSVD_ADDR_FAULT;
+						throw RSVD_ADDR_FAULT;
 					if (opMode & OPR_ADDR)
-						throw EXC_RSVD_ADDR_FAULT;
+						throw RSVD_ADDR_FAULT;
 					if (opMode & (OPR_VADDR|OPR_WRITE)) {
 						opRegs[opn++] = reg;
 						opRegs[opn++] = gRegs[reg].l;
@@ -116,14 +116,14 @@ void CPU_CLASS::execute()
 
 				case ADEC: // Autodecrement mode
 					if (reg == REG_nPC)
-						throw EXC_RSVD_ADDR_FAULT;
+						throw RSVD_ADDR_FAULT;
 					gRegs[reg].l -= scale;
 					iAddr = gRegs[reg].l;
 					break;
 
 				case REGD: // Register deferred mode
 					if (reg == REG_nPC)
-						throw EXC_RSVD_ADDR_FAULT;
+						throw RSVD_ADDR_FAULT;
 					iAddr = gRegs[reg].l;
 					break;
 
@@ -192,7 +192,7 @@ void CPU_CLASS::execute()
 
 				case IDX: // Indexed mode
 					if (reg == REG_nPC)
-						throw EXC_RSVD_ADDR_FAULT;
+						throw RSVD_ADDR_FAULT;
 					iAddr = gRegs[reg].l * scale;
 
 					int opType = readvi(LN_BYTE);
@@ -202,20 +202,20 @@ void CPU_CLASS::execute()
 					switch (mode) {
 					case ADEC: // Autodecrement mode
 						if (reg == REG_nPC)
-							throw EXC_RSVD_ADDR_FAULT;
+							throw RSVD_ADDR_FAULT;
 						gRegs[reg].l -= scale;
 						iAddr += gRegs[reg].l;
 						break;
 
 					case REGD: // Register deferred mode
 						if (reg == REG_nPC)
-							throw EXC_RSVD_ADDR_FAULT;
+							throw RSVD_ADDR_FAULT;
 						iAddr += gRegs[reg].l;
 						break;
 
 					case AINC: // Autoincrement mode
 						if (reg == REG_nPC)
-							throw EXC_RSVD_ADDR_FAULT;
+							throw RSVD_ADDR_FAULT;
 						iAddr += gRegs[reg].l;
 						gRegs[reg].l += scale;
 						break;
@@ -263,7 +263,7 @@ void CPU_CLASS::execute()
 						break;
 
 					default:
-						throw EXC_RSVD_ADDR_FAULT;
+						throw RSVD_ADDR_FAULT;
 					}
 					break;
 				}
@@ -331,14 +331,14 @@ void CPU_CLASS::execute()
 			case OPC_nBICPSW:
 				mask = uint16_t(opRegs[0]);
 				if (mask & PSW_MBZ)
-					throw EXC_RSVD_OPND_FAULT;
+					throw RSVD_OPND_FAULT;
 				psReg &= ~mask;
 				ccReg &= ~mask;
 				break;
 			case OPC_nBISPSW:
 				mask = uint16_t(opRegs[0]);
 				if (mask & PSW_MBZ)
-					throw EXC_RSVD_OPND_FAULT;
+					throw RSVD_OPND_FAULT;
 				psReg |= (mask & ~PSW_CC);
 				ccReg |= (mask & PSW_CC);
 				break;
@@ -1039,7 +1039,7 @@ void CPU_CLASS::execute()
 					gRegs[opRegs[1]].l = ZXTW(dst);
 				} else {
 					if (opRegs[2] & 1)
-						throw EXC_RSVD_OPND_FAULT;
+						throw RSVD_OPND_FAULT;
 					tmp = SXTW(readv(opRegs[2], LN_WORD, RACC));
 					dst = src + tmp;
 					writev(opRegs[2], dst, LN_WORD, WACC);
@@ -1623,7 +1623,7 @@ void CPU_CLASS::execute()
 			case OPC_nCVTLF:
 			case OPC_nCVTLD:
 			case OPC_nCVTLG:
-				throw EXC_RSVD_INST_FAULT;
+				throw RSVD_INST_FAULT;
 
 			// Queue instructions
 			case OPC_nINSQUE:
@@ -1648,13 +1648,13 @@ void CPU_CLASS::execute()
 				entry = SXTL(opRegs[0]);
 				hdr   = SXTL(opRegs[1]);
 				if ((entry == hdr) || ((entry|hdr) & 07))
-					throw EXC_RSVD_OPND_FAULT;
+					throw RSVD_OPND_FAULT;
 				// Check write access for page faults
 				readv(entry, LN_LONG, WACC);
 				a = readv(hdr, LN_LONG, WACC);
 			OPC_INSQHI:
 				if (a & 06)
-					throw EXC_RSVD_OPND_FAULT;
+					throw RSVD_OPND_FAULT;
 				if (a & 01)
 					ccReg = CC_C;
 				else {
@@ -1672,14 +1672,14 @@ void CPU_CLASS::execute()
 				entry = SXTL(opRegs[0]);
 				hdr   = SXTL(opRegs[1]);
 				if ((entry == hdr) || ((entry|hdr) & 07))
-					throw EXC_RSVD_OPND_FAULT;
+					throw RSVD_OPND_FAULT;
 				// Check write access for page faults
 				readv(entry, LN_LONG, WACC);
 				a = readv(hdr, LN_LONG, WACC);
 				if (a == 0)
 					goto OPC_INSQHI;
 				if (a & 06)
-					throw EXC_RSVD_OPND_FAULT;
+					throw RSVD_OPND_FAULT;
 				if (a & 01) {
 					// Busy signal...
 					ccReg = CC_C;
@@ -1688,7 +1688,7 @@ void CPU_CLASS::execute()
 					c = readv(hdr+LN_LONG, LN_LONG, RACC) + hdr;
 					if (c & 07) {
 						writev(hdr, a, LN_LONG, WACC);
-						throw EXC_RSVD_OPND_FAULT;
+						throw RSVD_OPND_FAULT;
 					}
 					writev(hdr, a, LN_LONG, WACC);
 					writev(c, entry-c, LN_LONG, WACC);
@@ -1724,16 +1724,16 @@ void CPU_CLASS::execute()
 			case OPC_nREMQHI:
 				hdr = SXTL(opRegs[0]);
 				if (hdr & 07)
-					throw EXC_RSVD_OPND_FAULT;
+					throw RSVD_OPND_FAULT;
 				if (opRegs[1] == OPR_MEM) {
 					if (opRegs[2] == hdr)
-						throw EXC_RSVD_OPND_FAULT;
+						throw RSVD_OPND_FAULT;
 					readv(opRegs[2], LN_LONG, WACC);
 				}
 				ar = readv(hdr, LN_LONG, WACC);
 			OPC_REMQHI:
 				if (ar & 06)
-					throw EXC_RSVD_OPND_FAULT;
+					throw RSVD_OPND_FAULT;
 				if (ar & 01)
 					ccReg = CC_V|CC_C;
 				else {
@@ -1744,7 +1744,7 @@ void CPU_CLASS::execute()
 						b = readv(a, LN_LONG, RACC) + a;
 						if (b & 07) {
 							writev(hdr, ar, LN_LONG, WACC);
-							throw EXC_RSVD_OPND_FAULT;
+							throw RSVD_OPND_FAULT;
 						}
 //						writev(hdr, ar, LN_LONG, WACC);
 						writev(b+LN_LONG, hdr-b, LN_LONG, WACC);
@@ -1763,15 +1763,15 @@ void CPU_CLASS::execute()
 			case OPC_nREMQTI:
 				hdr = SXTL(opRegs[0]);
 				if (hdr & 07)
-					throw EXC_RSVD_OPND_FAULT;
+					throw RSVD_OPND_FAULT;
 				if (opRegs[1] == OPR_MEM) {
 					if (opRegs[2] == hdr)
-						throw EXC_RSVD_OPND_FAULT;
+						throw RSVD_OPND_FAULT;
 					readv(opRegs[2], LN_LONG, WACC);
 				}
 				ar = readv(hdr, LN_LONG, WACC);
 				if (ar & 06)
-					throw EXC_RSVD_OPND_FAULT;
+					throw RSVD_OPND_FAULT;
 				if (ar & 01)
 					ccReg = CC_V|CC_C;
 				else {
@@ -1784,14 +1784,14 @@ void CPU_CLASS::execute()
 						}
 						if (c & 07) {
 							writev(hdr, ar, LN_LONG, WACC);
-							throw EXC_RSVD_OPND_FAULT;
+							throw RSVD_OPND_FAULT;
 						}
 						c += hdr;
 //						writev(hdr, ar, LN_LONG, WACC);
 						b = readv(c+LN_LONG, LN_LONG, RACC) + c;
 						if (b & 07) {
 							writev(hdr, ar, LN_LONG, WACC);
-							throw EXC_RSVD_OPND_FAULT;
+							throw RSVD_OPND_FAULT;
 						}
 //						writev(hdr, ar, LN_LONG, WACC);
 						writev(b, hdr-b, LN_LONG, WACC);
@@ -1805,12 +1805,33 @@ void CPU_CLASS::execute()
 				}
 				break;
 
+			// *******************
+			// String instructions
+			// *******************
+
+			// MOVC3 - Move characters (3 registers)
+			// MOVC5 - Move characters (5 registers)
+			case OPC_nMOVC3:
+				movc(0);
+				break;
+			case OPC_nMOVC5:
+				movc(1);
+				break;
+
+			// CMPC3 - Compare characters (3 registers)
+			// CMPC5 - Compare characters (5 registers)
+			case OPC_nCMPC3:
+				cmpc(0);
+				break;
+			case OPC_nCMPC5:
+				cmpc(1);
+				break;
 
 			// Illegal/unimplemented instruction
 			default:
 				if (opc->opCode != OPC_nUOPC)
 					throw STOP_UOPC;
-				throw EXC_RSVD_INST_FAULT;
+				throw RSVD_INST_FAULT;
 			}
 		}
 
@@ -1826,19 +1847,19 @@ void CPU_CLASS::execute()
 				return;
 
 			// Exception fault codes
-			case EXC_RSVD_INST_FAULT:
+			case RSVD_INST_FAULT:
 				if (fault(SCB_RESIN))
 					return;
 				break;
-			case EXC_RSVD_ADDR_FAULT:
+			case RSVD_ADDR_FAULT:
 				if (fault(SCB_RESAD))
 					return;
 				break;
-			case EXC_RSVD_OPND_FAULT:
+			case RSVD_OPND_FAULT:
 				if (fault(SCB_RESOP))
 					return;
 				break;
-			case EXC_PRIV_INST_FAULT:
+			case PRIV_INST_FAULT:
 				if (fault(SCB_RESIN|SCB_NOPRIV))
 					return;
 				break;

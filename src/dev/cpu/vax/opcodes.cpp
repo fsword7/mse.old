@@ -79,8 +79,8 @@ const vaxOpcode vaxOpcodes[] = {
 	OPC("CMPC3",    OPC_nCMPC3,    3, OPR({ RW, AB, AB, 0,  0,  0  }), OPC_REG),
 	OPC("SCANC",    OPC_nSCANC,    4, OPR({ RW, AB, AB, RB, 0,  0  }), OPC_REG),
 	OPC("SPANC",    OPC_nSPANC,    4, OPR({ RW, AB, AB, RB, 0,  0  }), OPC_REG),
-	OPC("MOVC5",    OPC_nMOVC5,    5, OPR({ RW, AB, AB, RW, AB, 0  }), OPC_REG),
-	OPC("CMPC5",    OPC_nCMPC5,    5, OPR({ RW, AB, AB, RW, AB, 0  }), OPC_REG),
+	OPC("MOVC5",    OPC_nMOVC5,    5, OPR({ RW, AB, RB, RW, AB, 0  }), OPC_REG),
+	OPC("CMPC5",    OPC_nCMPC5,    5, OPR({ RW, AB, RB, RW, AB, 0  }), OPC_REG),
 	OPC("MOVTC",    OPC_nMOVTC,    6, OPR({ RW, AB, RB, AB, RW, AB }), OPC_REG),
 	OPC("MOVTUC",   OPC_nMOVTUC,   6, OPR({ RW, AB, RB, AB, RW, AB }), OPC_REG),
 

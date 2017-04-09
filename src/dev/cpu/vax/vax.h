@@ -35,10 +35,27 @@
 #define REG_nSP		REG_nR14 // Stack Pointer
 #define REG_nPC		REG_nR15 // Program Counter
 
-#define REG_AP      gRegs[REG_nAP].l
-#define REG_FP      gRegs[REG_nFP].l
-#define REG_SP      gRegs[REG_nSP].l
-#define REG_PC      gRegs[REG_nPC].l
+#define REG_R0		gRegs[REG_nR0].l
+#define REG_R1		gRegs[REG_nR1].l
+#define REG_R2		gRegs[REG_nR2].l
+#define REG_R3		gRegs[REG_nR3].l
+#define REG_R4		gRegs[REG_nR4].l
+#define REG_R5		gRegs[REG_nR5].l
+#define REG_R6		gRegs[REG_nR6].l
+#define REG_R7		gRegs[REG_nR7].l
+#define REG_R8		gRegs[REG_nR8].l
+#define REG_R9		gRegs[REG_nR9].l
+#define REG_R10		gRegs[REG_nR10].l
+#define REG_R11		gRegs[REG_nR11].l
+#define REG_R12		gRegs[REG_nR12].l
+#define REG_R13		gRegs[REG_nR13].l
+#define REG_R14		gRegs[REG_nR14].l
+#define REG_R15		gRegs[REG_nR15].l
+
+#define REG_AP		gRegs[REG_nAP].l
+#define REG_FP		gRegs[REG_nFP].l
+#define REG_SP		gRegs[REG_nSP].l
+#define REG_PC		gRegs[REG_nPC].l
 
 // Processor flags
 #define CPU_INIE    0x80000000 // Interrupt/exception in progress
@@ -46,7 +63,7 @@
 // Processor Status Register definition
 //
 // +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---~
-// |CM |TP | 0   0 |FP |IS |  CUR  |  PRV  | 0 |        IPL        |
+// |CM |TP | 0   0 |FPD|IS |  CUR  |  PRV  | 0 |        IPL        |
 // +---+---+---+---^---+---+---+---^---+---+---+---^---+---+---+---~
 //  31  30  29  28  27  26  25  24  23  22  21  20  19  18  17  16
 //
@@ -124,6 +141,33 @@
 // PUSHR/POPR instruction
 #define STK_MASK			0x7FFF
 
+// MOVC instruction
+#define MVC_FWD				0
+#define MVC_BACK			1
+#define MVC_FILL			3
+#define MVC_M_STATE			0x03
+#define MVC_P_CC			2
+
+// String instructions
+//
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |  Delta PC     |Fill Character |            Length             |
+// +-+-+-+-^-+-+-+-^-+-+-+-^-+-+-+-^-+-+-+-^-+-+-+-^-+-+-+-^-+-+-+-+
+//
+
+#define STR_M_DPC			0xFF   // Delta PC address
+#define STR_M_CHR			0xFF   // Fill character
+#define STR_M_LEN			0xFFFF // String length
+#define STR_P_DPC			24
+#define STR_P_CHR			16
+
+#define STR_GETDPC(d)		(((d) >> STR_P_DPC) & STR_M_DPC)
+#define STR_GETCHR(d)		(((d) >> STR_P_CHR) & STR_M_CHR)
+#define STR_GETLEN(d)		((d) & STR_M_LEN)
+#define STR_SETDPC(d)		(((d) & STR_M_DPC) << STR_P_DPC)
+#define STR_SETCHR(d)		(((d) & STR_M_CHR) << STR_P_CHR)
+#define STR_SETLEN(d)		((d) & STR_M_LEN)
+#define STR_PACK(dpc,f,ln)	(STR_SETDPC(dpc) | STR_SETCHR(f) | STR_SETLEN(ln))
 
 // Interrupt/Exception Types
 #define IE_INT           0 // Interrupt
@@ -224,16 +268,16 @@
 	irqFlags = evaluate();
 
 // Exception Codes - Stop
-#define STOP_HALT		-1		// HALT opcode
-#define STOP_UOPC		-2		// Unimplemented opcode
-#define STOP_ILLVEC		-3		// Illegal vector
-#define STOP_UIPL       -4      // Undefined IPL level
+#define STOP_HALT			-1		// HALT opcode
+#define STOP_UOPC			-2		// Unimplemented opcode
+#define STOP_ILLVEC			-3		// Illegal vector
+#define STOP_UIPL			-4      // Undefined IPL level
 
 // Exception Codes - Fault
-#define EXC_RSVD_INST_FAULT   1 // Reserved instruction fault
-#define EXC_RSVD_ADDR_FAULT   2 // Reserved address fault
-#define EXC_RSVD_OPND_FAULT   3 // Reserved operand fault
-#define EXC_PRIV_INST_FAULT   4 // Privileged instruction fault
+#define RSVD_INST_FAULT		1 // Reserved instruction fault
+#define RSVD_ADDR_FAULT		2 // Reserved address fault
+#define RSVD_OPND_FAULT		3 // Reserved operand fault
+#define PRIV_INST_FAULT		4 // Privileged instruction fault
 
 // Store data macro routines for instructions
 #define StoreB(op0, op1, d)   \
@@ -384,6 +428,79 @@
 	UpdateV_SUB_L(cc, d, s1, s2);     \
 	UpdateCC_SUB(cc, d, s1, s2)
 
+// Update Condition Codes (new)
+
+// Set Z flag for CLR Instructions
+#define SetZ(cc)  cc = (((cc) & CC_C) | CC_Z)
+
+// Set N and Z flag
+#define SetNZ(cc, res, src, flg)                 \
+	if ((res) < (src))        cc = CC_N | (flg); \
+	else if ((res) == (src))  cc = CC_Z | (flg); \
+	else                      cc = (flg);
+
+#define SetNZQ(cc, low, high, flg)                   \
+	if ((high) < 0)               cc = CC_N | (flg); \
+	else if (((low)|(high)) == 0) cc = CC_Z | (flg); \
+	else                          cc = (flg);
+
+#define pSetNZO(cc, src, flg)                          \
+	if (SXTL(src[3]) < 0)       cc = CC_N | (flg);     \
+	else if ((src[0] | src[1] | src[2] | src[3]) == 0) \
+		cc = CC_Z | (flg);                             \
+	else    cc = (flg);
+
+// Set C flag (Unsigned)
+#define SetC(cc, res, src) \
+	if ((res) < (src)) cc |= CC_C;
+
+// Set V flag
+//#define SetV(cc) \
+//	{ (cc) |= CC_V; if (VAX_PSW & PSW_IV) SET_TRAP(CPU_TIRQ, TRAP_INTOVF); }
+
+// ADD/SUB Results for Overflow bit
+#define SetV_ADD(cc, res, src, add, sign) \
+	if (~(src ^ add) & (res ^ add) & sign) SetV(cc);
+#define SetV_SUB(cc, res, src, sub, sign) \
+	if ((src ^ sub) & (res ^ ~sub) & sign) SetV(cc);
+
+// ADD/SUB Results for Carry bit
+#define SetC_ADD(cc, res, src)  \
+	if (res < src) (cc) |= CC_C;
+#define SetC_SUB(cc, src, sub)  \
+	if (src < sub) (cc) |= CC_C;
+
+// ADD Results for Condition Codes
+#define SetCC_ADD_B(cc, res, src, add)   \
+	SetNZ(cc, SXTB(res), 0, 0);          \
+	SetC_ADD(cc, ZXTB(res), ZXTB(src));  \
+	SetV_ADD(cc, res, src, add, B_SIGN);
+
+#define SetCC_ADD_W(cc, res, src, add)   \
+	SetNZ(cc, SXTW(res), 0, 0);          \
+	SetC_ADD(cc, ZXTW(res), ZXTW(src));  \
+	SetV_ADD(cc, res, src, add, W_SIGN);
+
+#define SetCC_ADD_L(cc, res, src, add)   \
+	SetNZ(cc, SXTL(res), 0, 0);          \
+	SetC_ADD(cc, ZXTL(res), ZXTL(src));  \
+	SetV_ADD(cc, res, src, add, L_SIGN);
+
+// SUB Results for Condition Codes
+#define SetCC_SUB_B(cc, res, src, sub)   \
+	SetNZ(cc, SXTB(res), 0, 0);          \
+	SetC_SUB(cc, ZXTB(src), ZXTB(sub));  \
+	SetV_SUB(cc, res, src, sub, B_SIGN);
+
+#define SetCC_SUB_W(cc, res, src, sub)   \
+	SetNZ(cc, SXTW(res), 0, 0);          \
+	SetC_SUB(cc, ZXTW(src), ZXTW(sub));  \
+	SetV_SUB(cc, res, src, sub, W_SIGN);
+
+#define SetCC_SUB_L(cc, res, src, sub)   \
+	SetNZ(cc, SXTL(res), 0, 0);          \
+	SetC_SUB(cc, ZXTL(src), ZXTL(sub));  \
+	SetV_SUB(cc, res, src, sub, L_SIGN);
 
 struct vaxOpcode {
 	const char *opName;           // Name of the Instruction
@@ -425,6 +542,8 @@ protected:
 
 	void call(bool stkFlag);
 	void ret();
+	void movc(int c5flg);
+	void cmpc(int c5flg);
 
 	// Interrupt/exception services
 	int  evaluate();

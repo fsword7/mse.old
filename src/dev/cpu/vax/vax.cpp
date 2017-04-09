@@ -94,6 +94,7 @@ char *vax_cpuDevice::stringCC(uint32_t cc)
 	return ccstr;
 }
 
+// For CALLG/CALLS instruction
 void vax_cpuDevice::call(bool stkFlag)
 {
 	uint32_t npc = ZXTL(opRegs[1]);
@@ -103,7 +104,7 @@ void vax_cpuDevice::call(bool stkFlag)
 
 	mask = readv(npc, LN_WORD, RACC);
 	if (mask & CALL_MBZ)
-		throw EXC_RSVD_OPND_FAULT;
+		throw RSVD_OPND_FAULT;
 
 	// Check write access for page faults
 	stkSize = stkFlag ? 24 : 20;
@@ -147,6 +148,7 @@ void vax_cpuDevice::call(bool stkFlag)
 	flushvi();
 }
 
+// For RET instruction
 void vax_cpuDevice::ret()
 {
 	uint32_t entry, mask;
@@ -157,7 +159,7 @@ void vax_cpuDevice::ret()
 	// Get entry mask from stack
 	entry = readv(tsp + LN_LONG, LN_LONG, RACC);
 	if (entry & CALL_MBZ)
-		throw EXC_RSVD_OPND_FAULT;
+		throw RSVD_OPND_FAULT;
 	mask = (entry >> CALL_P_MASK) & CALL_MASK;
 
 	// Check read access for page faults
@@ -206,7 +208,7 @@ int vax_cpuDevice::getBit()
 
 	if (reg >= 0) {
 		if (ZXTL(pos) > 31)
-			throw EXC_RSVD_OPND_FAULT;
+			throw RSVD_OPND_FAULT;
 		src = gRegs[reg].l;
 		printf("%s: R%d %08X<%d> => %d\n", devName.c_str(),
 			reg, src, pos, (src >> pos) & 1);
@@ -230,7 +232,7 @@ int vax_cpuDevice::setBit(int bit)
 
 	if (reg >= 0) {
 		if (ZXTL(pos) > 31)
-			throw EXC_RSVD_OPND_FAULT;
+			throw RSVD_OPND_FAULT;
 		src  = gRegs[reg].l;
 		obit = (src >> pos) & 1;
 		dst  = bit ? (src | (1u << pos)) : (src & ~(1u << pos));
@@ -265,12 +267,12 @@ int32_t vax_cpuDevice::getField(bool sign)
 
 	// If size is more than 32, reserved operand fault.
 	if (size > 32)
-		throw EXC_RSVD_OPND_FAULT;
+		throw RSVD_OPND_FAULT;
 
 	// Extract a field from one or two longwords.
 	if (reg != OPR_MEM) {
 		if ((ZXTL(pos) > 31) && (reg >= REG_nSP))
-			throw EXC_RSVD_ADDR_FAULT;
+			throw RSVD_ADDR_FAULT;
 		src2 = ZXTL(gRegs[reg+1].l);
 	} else {
 		ea   = src1 + (pos >> 3);
@@ -314,15 +316,15 @@ void vax_cpuDevice::putField()
 
 	// If size is more than 32, reserved operand fault.
 	if (size > 32)
-		throw EXC_RSVD_OPND_FAULT;
+		throw RSVD_OPND_FAULT;
 
 	// Extract a field from one or two longwords.
 	if (reg != OPR_MEM) {
 		if (ZXTL(pos) > 31)
-			throw EXC_RSVD_ADDR_FAULT;
+			throw RSVD_ADDR_FAULT;
 		if (ZXTL(pos + size) > 32) {
 			if (reg >= REG_nSP)
-				throw EXC_RSVD_OPND_FAULT;
+				throw RSVD_OPND_FAULT;
 			mask = mskList[pos + size - 32];
 			src2 = gRegs[reg+1].l;
 			dst2 = ((src >> (32 - pos)) & mask) | (src2 & ~mask);
@@ -351,6 +353,7 @@ void vax_cpuDevice::putField()
 //		printf("%s: %08X => %08X\n", devName.c_str(), src1, dst1);
 	}
 }
+
 
 static const char *ieNames[]  = { "Interrupt", "Exception", "Severe Exception" };
 static const char *ieTypes[]  = { "INT", "EXC", "SVE" };
@@ -501,22 +504,22 @@ void vax_cpuDevice::resume()
 
 	// Check validation against MBZ and access modes
 	if ((npsl & PSL_MBZ) || (nacc < oacc))
-		throw EXC_RSVD_OPND_FAULT;
+		throw RSVD_OPND_FAULT;
 	if (nacc == AM_KERNEL) {
 		// Check validation for kernel mode
 		nipl = PSL_GETIPL(npsl);
 		if ((npsl & PSL_IS) && (((opsl & PSL_IS) == 0) || (nipl == 0)))
-			throw EXC_RSVD_OPND_FAULT;
+			throw RSVD_OPND_FAULT;
 		if (nipl > PSL_GETIPL(opsl))
-			throw EXC_RSVD_OPND_FAULT;
+			throw RSVD_OPND_FAULT;
 	} else {
 		// Check validation for non-kernel mode
 		if ((npsl & (PSL_IS|PSL_IPL)) || nacc > PSL_GETPRV(npsl))
-			throw EXC_RSVD_OPND_FAULT;
+			throw RSVD_OPND_FAULT;
 	}
 	// Check compatibility mode
 	if (npsl & PSL_CM)
-		throw EXC_RSVD_OPND_FAULT;
+		throw RSVD_OPND_FAULT;
 
 	// All validation check passed...
 	REG_SP += (LN_LONG*2);
