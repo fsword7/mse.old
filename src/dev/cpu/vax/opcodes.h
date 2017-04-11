@@ -23,106 +23,215 @@
 #define OPC_nEXTEND  0xFC // Extended opcode offset for opcode table
 
 // Operand type definitions
-#define OPR_BYTE    1 // Operand is a byte      (1 byte)
-#define OPR_WORD    2 // Operand is a word      (2 bytes)
-#define OPR_LONG    4 // Operand is a longword  (4 bytes)
-#define OPR_QUAD    8 // Operand is a quadword  (8 bytes)
-#define OPR_OCTA   16 // Operand is a octaword  (16 bytes)
+//#define OPR_BYTE    1 // Operand is a byte      (1 byte)
+//#define OPR_WORD    2 // Operand is a word      (2 bytes)
+//#define OPR_LONG    4 // Operand is a longword  (4 bytes)
+//#define OPR_QUAD    8 // Operand is a quadword  (8 bytes)
+//#define OPR_OCTA   16 // Operand is a octaword  (16 bytes)
+//
+//#define OPR_SCALE    0x000FF // Scale Mask
+//#define OPR_FLOAT    0x00F00 // Operand is floating point (otherwise - integer)
+//#define OPR_FFLOAT   0x00100 // Operand is F_floating type
+//#define OPR_DFLOAT   0x00200 // Operand is D_floating type
+//#define OPR_GFLOAT   0x00400 // Operand is G_floating type
+//#define OPR_HFLOAT   0x00800 // Operand is H_floating type
+//#define OPR_WRITE    0x01000 // Operand is writable (otherwise - readable)
+//#define OPR_MODIFIED 0x02000 // Operand is modifiable
+//#define OPR_IMMED    0x04000 // Operand is immediate
+//#define OPR_ADDR     0x08000 // Operand is address
+//#define OPR_VADDR    0x10000 // Operand is variable-length address
+//#define OPR_BRANCH   0x20000 // Operand is a branch displacement
 
-#define OPR_SCALE    0x000FF // Scale Mask
-#define OPR_FLOAT    0x00F00 // Operand is floating point (otherwise - integer)
-#define OPR_FFLOAT   0x00100 // Operand is F_floating type
-#define OPR_DFLOAT   0x00200 // Operand is D_floating type
-#define OPR_GFLOAT   0x00400 // Operand is G_floating type
-#define OPR_HFLOAT   0x00800 // Operand is H_floating type
-#define OPR_WRITE    0x01000 // Operand is writable (otherwise - readable)
-#define OPR_MODIFIED 0x02000 // Operand is modifiable
-#define OPR_IMMED    0x04000 // Operand is immediate
-#define OPR_ADDR     0x08000 // Operand is address
-#define OPR_VADDR    0x10000 // Operand is variable-length address
-#define OPR_BRANCH   0x20000 // Operand is a branch displacement
-
-// Read-Only Integer Operands
-#define RB    (OPR_BYTE)
-#define RW    (OPR_WORD)
-#define RL    (OPR_LONG)
-#define RQ    (OPR_QUAD)
-#define RO    (OPR_OCTA)
-
-// Read/Write Integer Operands
-#define MB    (OPR_MODIFIED|OPR_BYTE)
-#define MW    (OPR_MODIFIED|OPR_WORD)
-#define ML    (OPR_MODIFIED|OPR_LONG)
-#define MQ    (OPR_MODIFIED|OPR_QUAD)
-#define MO    (OPR_MODIFIED|OPR_OCTA)
-
-// Write-Only Integer Operands
-#define WB    (OPR_WRITE|OPR_BYTE)
-#define WW    (OPR_WRITE|OPR_WORD)
-#define WL    (OPR_WRITE|OPR_LONG)
-#define WQ    (OPR_WRITE|OPR_QUAD)
-#define WO    (OPR_WRITE|OPR_OCTA)
-
-// Read-Only Floating Operands
-#define RF    (OPR_FFLOAT|OPR_LONG)
-#define RD    (OPR_DFLOAT|OPR_QUAD)
-#define RG    (OPR_GFLOAT|OPR_QUAD)
-#define RH    (OPR_HFLOAT|OPR_OCTA)
-
-// Read/Write Floating Operands
-#define MF    (OPR_FFLOAT|OPR_MODIFIED|OPR_LONG)
-#define MD    (OPR_DFLOAT|OPR_MODIFIED|OPR_QUAD)
-#define MG    (OPR_GFLOAT|OPR_MODIFIED|OPR_QUAD)
-#define MH    (OPR_HFLOAT|OPR_MODIFIED|OPR_OCTA)
-
-// Write-Only Floating Operands
-#define WF    (OPR_FFLOAT|OPR_WRITE|OPR_LONG)
-#define WD    (OPR_DFLOAT|OPR_WRITE|OPR_QUAD)
-#define WG    (OPR_GFLOAT|OPR_WRITE|OPR_QUAD)
-#define WH    (OPR_HFLOAT|OPR_WRITE|OPR_OCTA)
-
-// Address Operands
-#define AB    (OPR_ADDR|OPR_BYTE)
-#define AW    (OPR_ADDR|OPR_WORD)
-#define AL    (OPR_ADDR|OPR_LONG)
-#define AQ    (OPR_ADDR|OPR_QUAD)
-#define AO    (OPR_ADDR|OPR_OCTA)
-#define AF    (OPR_ADDR|OPR_FFLOAT|OPR_LONG)
-#define AD    (OPR_ADDR|OPR_DFLOAT|OPR_QUAD)
-#define AG    (OPR_ADDR|OPR_GFLOAT|OPR_QUAD)
-#define AH    (OPR_ADDR|OPR_HFLOAT|OPR_OCTA)
-
-// Branch/Misc Operands
-#define BB    (OPR_BRANCH|OPR_BYTE)
-#define BW    (OPR_BRANCH|OPR_WORD)
-#define VB    (OPR_VADDR|OPR_BYTE)
-
-// Immediate Operands
-#define IB    (OPR_IMMED|OPR_BYTE)
-#define IW    (OPR_IMMED|OPR_WORD)
-#define IL    (OPR_IMMED|OPR_LONG)
+//// Read-Only Integer Operands
+//#define RB    (OPR_BYTE)
+//#define RW    (OPR_WORD)
+//#define RL    (OPR_LONG)
+//#define RQ    (OPR_QUAD)
+//#define RO    (OPR_OCTA)
+//
+//// Read/Write Integer Operands
+//#define MB    (OPR_MODIFIED|OPR_BYTE)
+//#define MW    (OPR_MODIFIED|OPR_WORD)
+//#define ML    (OPR_MODIFIED|OPR_LONG)
+//#define MQ    (OPR_MODIFIED|OPR_QUAD)
+//#define MO    (OPR_MODIFIED|OPR_OCTA)
+//
+//// Write-Only Integer Operands
+//#define WB    (OPR_WRITE|OPR_BYTE)
+//#define WW    (OPR_WRITE|OPR_WORD)
+//#define WL    (OPR_WRITE|OPR_LONG)
+//#define WQ    (OPR_WRITE|OPR_QUAD)
+//#define WO    (OPR_WRITE|OPR_OCTA)
+//
+//// Read-Only Floating Operands
+//#define RF    (OPR_FFLOAT|OPR_LONG)
+//#define RD    (OPR_DFLOAT|OPR_QUAD)
+//#define RG    (OPR_GFLOAT|OPR_QUAD)
+//#define RH    (OPR_HFLOAT|OPR_OCTA)
+//
+//// Read/Write Floating Operands
+//#define MF    (OPR_FFLOAT|OPR_MODIFIED|OPR_LONG)
+//#define MD    (OPR_DFLOAT|OPR_MODIFIED|OPR_QUAD)
+//#define MG    (OPR_GFLOAT|OPR_MODIFIED|OPR_QUAD)
+//#define MH    (OPR_HFLOAT|OPR_MODIFIED|OPR_OCTA)
+//
+//// Write-Only Floating Operands
+//#define WF    (OPR_FFLOAT|OPR_WRITE|OPR_LONG)
+//#define WD    (OPR_DFLOAT|OPR_WRITE|OPR_QUAD)
+//#define WG    (OPR_GFLOAT|OPR_WRITE|OPR_QUAD)
+//#define WH    (OPR_HFLOAT|OPR_WRITE|OPR_OCTA)
+//
+//// Address Operands
+//#define AB    (OPR_ADDR|OPR_BYTE)
+//#define AW    (OPR_ADDR|OPR_WORD)
+//#define AL    (OPR_ADDR|OPR_LONG)
+//#define AQ    (OPR_ADDR|OPR_QUAD)
+//#define AO    (OPR_ADDR|OPR_OCTA)
+//#define AF    (OPR_ADDR|OPR_FFLOAT|OPR_LONG)
+//#define AD    (OPR_ADDR|OPR_DFLOAT|OPR_QUAD)
+//#define AG    (OPR_ADDR|OPR_GFLOAT|OPR_QUAD)
+//#define AH    (OPR_ADDR|OPR_HFLOAT|OPR_OCTA)
+//
+//// Branch/Misc Operands
+//#define BB    (OPR_BRANCH|OPR_BYTE)
+//#define BW    (OPR_BRANCH|OPR_WORD)
+//#define VB    (OPR_VADDR|OPR_BYTE)
+//
+//// Immediate Operands
+//#define IB    (OPR_IMMED|OPR_BYTE)
+//#define IW    (OPR_IMMED|OPR_WORD)
+//#define IL    (OPR_IMMED|OPR_LONG)
 
 // Operand mode definitions
 #define OPR_MMASK     0xF0
 #define OPR_RMASK     0x0F
 #define OPR_MEM       -1
 
-#define LIT0  0x00 // Short Literal
-#define LIT1  0x10
-#define LIT2  0x20
-#define LIT3  0x30
-#define IDX   0x40 // Indexed
-#define REG   0x50 // Register
-#define REGD  0x60 // Register Deferred
-#define ADEC  0x70 // Autodecrement
-#define AINC  0x80 // Autoincrement
-#define AINCD 0x90 // Autoincrement Deferred
-#define BDP   0xA0 // Byte Displacement
-#define BDPD  0xB0 // Byte Displacement Deferred
-#define WDP   0xC0 // Word Displacement
-#define WDPD  0xD0 // Word Displacement Deferred
-#define LDP   0xE0 // Longword Displacement
-#define LDPD  0xF0 // Longword Displacement Deferred
+// Operand Mode Mask Definitions
+#define OPM_ACC         0x0300 // Access Mask
+#define OPM_MODE        0x00F0 // Operand Mode Mask
+#define OPM_SPF         0x0008 // Special Flag
+#define OPM_LEN         0x0007 // Length Mask (1 << n)
+// Operand Access Type Definitions
+#define OPM_ADR         0x0000 // Address Operand
+#define OPM_RD          0x0100 // Read Operand
+#define OPM_WR          0x0200 // Write Operand
+#define OPM_MD          0x0300 // Modify Operand
+// Operand Macro Definitions
+#define OPM_SCALE(spec) (spec & OPM_LEN)
+#define OPM_SIZE(spec)  (1u << OPM_SCALE(spec))
+#define OPM_TYPE(spec)  ((spec) & OPM_ACC)
+
+// Address Modes for Operand Decoder
+#define LIT0   0x00 // Short Literal (00-3F)
+#define LIT1   0x10
+#define LIT2   0x20
+#define LIT3   0x30
+#define IDX    0x40 // Indexed Registers
+#define REG    0x50 // Register
+#define REGD   0x60 // Register Deferred
+#define ADEC   0x70 // Auto-Decrement Register
+#define AINC   0x80 // Auto-Increment Register
+#define AINCD  0x90 // Auto-Increment Register Deferred
+#define BDP    0xA0 // Byte-Displacement
+#define BDPD   0xB0 // Byte-Displacement Deferred
+#define WDP    0xC0 // Word-Displacement
+#define WDPD   0xD0 // Word-Displacement Deferred
+#define LDP    0xE0 // Longword-Displacement
+#define LDPD   0xF0 // Longword-Displacement Deferred
+
+// Operand Types
+#define RB     (OPM_RD|0)  // .rb - Read Byte
+#define RW     (OPM_RD|1)  // .rw - Read Word
+#define RL     (OPM_RD|2)  // .rl - Read Longword
+#define RQ     (OPM_RD|3)  // .rq - Read Quadword
+#define RO     (OPM_RD|4)  // .ro - Read Octaword
+
+#define MB     (OPM_MD|0)  // .mb - Modify Byte
+#define MW     (OPM_MD|1)  // .mw - Modify Word
+#define ML     (OPM_MD|2)  // .ml - Modify Longword
+#define MQ     (OPM_MD|3)  // .mq - Modify Quadword
+#define MO     (OPM_MD|4)  // .mo - Modify Octaword
+
+#define WB     (OPM_WR|0)  // .wb - Write Byte
+#define WW     (OPM_WR|1)  // .ww - Write Word
+#define WL     (OPM_WR|2)  // .wl - Write Longword
+#define WQ     (OPM_WR|3)  // .wq - Write Quadword
+#define WO     (OPM_WR|4)  // .wo - Write Octaword
+
+#define AB     (OPM_ADR|0) // .ab - Byte Address
+#define AW     (OPM_ADR|1) // .aw - Word Address
+#define AL     (OPM_ADR|2) // .al - Longword Address
+#define AQ     (OPM_ADR|3) // .aq - Quadword Address
+#define AO     (OPM_ADR|4) // .ao - Quadword Address
+
+#define VB     (WB|OPM_SPF)   // .vb - Variable Bit Address
+#define BB     (AB|OPM_SPF)   // .bb - Byte-Displacement Branch
+#define BW     (AW|OPM_SPF)   // .bw - Word-Displacement Branch
+#define IW     (MW|OPM_SPF)   // Bugcheck Immediate Word
+#define IL     (ML|OPM_SPF)   // Bugcheck Immediate Longword
+
+#define RF     (RL|OPM_SPF) // .rf - Read F_floating (Longword)
+#define RD     (RQ|OPM_SPF) // .rd - Read D_floating (Quadword)
+#define RG     (MQ|OPM_SPF) // .rg - Read G_floating (Quadword)
+#define RH     (RO|OPM_SPF) // .rh - Read H_floating (Octaword)
+
+#define MF     ML // .mf - Modify F_floating (Longword)
+#define MD     MQ // .md - Modify D_floating (Quadword)
+#define MG     MQ // .mg - Modify G_floating (Quadword)
+#define MH     MO // .mh - Modify H_floating (Octaword)
+
+#define WF     WL // .wf - Write F_floating (Longword)
+#define WD     WQ // .wd - Write D_floating (Quadword)
+#define WG     WQ // .wg - Write G_floating (Quadword)
+#define WH     WO // .wh - Write H_floating (Octaword)
+
+#define AF     AL // .af - F_floating Address (Longword)
+#define AD     AQ // .ad - D_floating Address (Quadword)
+#define AG     AQ // .ag - G_floating Address (Quadword)
+#define AH     AO // .ah - H_floating Address (Octaword)
+
+#define OP_ISREG(reg)         (ZXTL(reg) > -CPU_nGREGS)
+#define OP_GETREG(reg)        (CPU_REGUL(~(reg)))
+#define OP_GETREG1(reg)       (CPU_REGUL((~(reg)+1) & REG_MASK))
+#define OP_SETREG(reg, data)  CPU_REGUL(~(reg)) = (data)
+#define OP_SETREG1(reg, data) CPU_REGUL((~(reg)+1) & REG_MASK) = (data)
+
+// Compatibility Mode: Opcode Format Definitions
+#define OPCM_WIDTH  16
+#define OPCM_SIZE   (1u << OPCM_WIDTH)
+#define OPCM_INST   OPCM_SIZE
+
+#define OPCM_TYPE   0377
+#define OPCM_FLOAT  0400
+
+// Compatibility Mode: Opcode Types
+#define OPCM_AFOP  15
+#define OPCM_ASMD  14
+#define OPCM_ASOP  13
+#define OPCM_FOP   12
+#define OPCM_CCC   11  // Cxx Instructions
+#define OPCM_SCC   10  // Sxx Instructions
+#define OPCM_REG   9
+#define OPCM_8BIT  8
+#define OPCM_6BIT  7
+#define OPCM_3BIT  6
+#define OPCM_SOB   5   // SOB Instruction
+#define OPCM_BR    4   // Branch Instructions
+#define OPCM_RSOP  3
+#define OPCM_DOP   2   // Instructions with two operands
+#define OPCM_SOP   1   // Instructions with one operand
+#define OPCM_NPN   0   // Instructions with no operands
+
+#define OPCM_FOP_F   OPCM_FOP
+#define OPCM_FOP_D   OPCM_FOP
+#define OPCM_AFOP_F  OPCM_AFOP
+#define OPCM_AFOP_D  OPCM_AFOP
+#define OPCM_ASMD_F  OPCM_ASMD
+#define OPCM_ASMD_D  OPCM_ASMD
+#define OPCM_ASMD_FL OPCM_ASMD
+#define OPCM_ASMD_DL OPCM_ASMD
+
 
 // Instruction Data Structure Definitions
 // Instruction Table for Assembler, Disassembler, and Execution

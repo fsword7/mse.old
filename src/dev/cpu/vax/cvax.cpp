@@ -15,8 +15,8 @@
 #include "dev/cpu/vax/cvax.h"
 #include "dev/cpu/vax/opcodes.h"
 
-static int   regSize = 0x40;
-static const char *regNames[] = {
+static int   iprSize = 0x40;
+static const char *iprName[] = {
 	"KSP",     // (R/W) 00 Kernel Stack Pointer
 	"ESP",     // (R/W) 01 Executive Stack Pointer
 	"SSP",     // (R/W) 02 Supervisor Stack Pointer
@@ -110,8 +110,8 @@ cvax_cpuDevice *cvax_cpuDevice::create(std::string devName)
 void cvax_cpuDevice::reset()
 {
 	// Initialize all working registers
-	for (int idx = 0; idx < VAX_nGREGS; idx++)
-		gRegs[idx].l = 0;
+	for (int idx = 0; idx < CPU_nGREGS; idx++)
+		gpReg[idx].l = 0;
 
 	// Powerup initialization
 	psReg  = PSL_IS | PSL_IPL;
@@ -119,15 +119,15 @@ void cvax_cpuDevice::reset()
 	REG_SP = 0x00000000;
 	REG_PC = 0; /* ROM_BASE */
 
-	PREG_SID    = (SID_ID|SID_UCODE);
-	PREG_CONPC  = 0;
-	PREG_CONPSL = PSL_IS | PSL_IPL | CON_PWRUP;
-	PREG_MAPEN  = 0;
-	PREG_ICCS   = 0;
-	PREG_MSER   = 0;
-	PREG_CADR   = 0;
-	PREG_SISR   = 0;
-	PREG_ASTLVL = 0;
+	IPR_SID    = (SID_ID|SID_UCODE);
+	IPR_CONPC  = 0;
+	IPR_CONPSL = PSL_IS | PSL_IPL | CON_PWRUP;
+	IPR_MAPEN  = 0;
+	IPR_ICCS   = 0;
+	IPR_MSER   = 0;
+	IPR_CADR   = 0;
+	IPR_SISR   = 0;
+	IPR_ASTLVL = 0;
 
 	// Set 30-bit physical addressing mask
 	paMask  = PA_MASK30;
@@ -146,42 +146,42 @@ int cvax_cpuDevice::boot()
 #include "dev/cpu/vax/executes.h"
 
 // Read Privileged Register
-uint32_t cvax_cpuDevice::readpr(uint32_t pReg)
+uint32_t cvax_cpuDevice::readpr(uint32_t rn)
 {
 	uint32_t data;
 
-	switch (pReg) {
-		case PR_KSP:
-			data = (psReg & PSL_IS) ? pRegs[PR_KSP] : gRegs[REG_nSP].l;
+	switch (rn) {
+		case IPR_nKSP:
+			data = (psReg & PSL_IS) ? ipReg[IPR_nKSP] : gpReg[REG_nSP].l;
 			break;
 
-		case PR_ISP:
-			data = (psReg & PSL_IS) ? gRegs[REG_nSP].l : pRegs[PR_ISP];
+		case IPR_nISP:
+			data = (psReg & PSL_IS) ? gpReg[REG_nSP].l : ipReg[IPR_nISP];
 			break;
 
-		case PR_IPL:
+		case IPR_nIPL:
 			data = PSL_GETIPL(psReg);
-//			pRegs[PR_IPL] = data;
+//			ipReg[IPR_nIPL] = data;
 			break;
 
-		case PR_RXCS:
+		case IPR_nRXCS:
 //			data = vax_ReadRXCS(vax);
 			break;
 
-		case PR_RXDB:
+		case IPR_nRXDB:
 //			data = vax_ReadRXDB(vax);
 			break;
 
-		case PR_TXCS:
+		case IPR_nTXCS:
 //			data = vax_ReadTXCS(vax);
 			break;
 
-//		case PR_TXDB:
+//		case PR_nTXDB:
 //			data = vax_ReadTXDB(vax);
 //			break;
 
 		default:
-			data = (pReg < VAX_nPREGS) ? pRegs[pReg] : 0;
+			data = (rn < CPU_nPREGS) ? ipReg[rn] : 0;
 			break;
 	}
 
@@ -195,78 +195,78 @@ uint32_t cvax_cpuDevice::readpr(uint32_t pReg)
 //#endif /* DEBUG */
 
 	const char *name = "Undefined Register";
-	if ((pReg < regSize) && regNames[pReg])
-		name = regNames[pReg];
-	printf("%s: (R) %s (%02X) => %08X\n", devName.c_str(), name, pReg, data);
+	if ((rn < iprSize) && iprName[rn])
+		name = iprName[rn];
+	printf("%s: (R) %s (%02X) => %08X\n", devName.c_str(), name, rn, data);
 
 	return data;
 }
 
-void cvax_cpuDevice::writepr(uint32_t pReg, uint32_t data) //throw(uint32_t)
+void cvax_cpuDevice::writepr(uint32_t rn, uint32_t data) //throw(uint32_t)
 {
-	switch (pReg) {
-		case PR_KSP: // Kernel Stack Pointer
+	switch (rn) {
+		case IPR_nKSP: // Kernel Stack Pointer
 			if (psReg & PSL_IS)
-				pRegs[PR_KSP] = data;
+				ipReg[IPR_nKSP] = data;
 			else
-				gRegs[REG_nSP].l = data;
+				gpReg[REG_nSP].l = data;
 			break;
 
-		case PR_ESP: // Executive Stack Pointer
-		case PR_SSP: // Supervisor Stack Pointer
-		case PR_USP: // User Stack Pointer
-			pRegs[pReg] = data;
+		case IPR_nESP: // Executive Stack Pointer
+		case IPR_nSSP: // Supervisor Stack Pointer
+		case IPR_nUSP: // User Stack Pointer
+			ipReg[rn] = data;
 			break;
 
-		case PR_ISP: // Interrupt Stack Pointer
+		case IPR_nISP: // Interrupt Stack Pointer
 			if (psReg & PSL_IS)
-				gRegs[REG_nSP].l = data;
+				gpReg[REG_nSP].l = data;
 			else
-				pRegs[PR_ISP] = data;
+				ipReg[IPR_nISP] = data;
 			break;
 
-		case PR_P0BR:
-		case PR_P1BR:
-		case PR_SBR:
-			pRegs[pReg] = data & BR_MASK;
+		case IPR_nP0BR:
+		case IPR_nP1BR:
+		case IPR_nSBR:
+			ipReg[rn] = data & BR_MASK;
 //			vax_ClearTBTable(vax, pReg == PR_SBR);
 			break;
 
-		case PR_P0LR:
-		case PR_P1LR:
-		case PR_SLR:
-			pRegs[pReg] = data & LR_MASK;
+		case IPR_nP0LR:
+		case IPR_nP1LR:
+		case IPR_nSLR:
+			ipReg[rn] = data & LR_MASK;
 //			vax_ClearTBTable(vax, pReg == PR_SLR);
 			break;
 
-		case PR_PCBB:
-		case PR_SCBB:
-			pRegs[pReg] = data & ALIGN_LONG;
+		case IPR_nPCBB:
+		case IPR_nSCBB:
+			ipReg[rn] = data & ALIGN_LONG;
 			break;
 
-		case PR_IPL:
-			pRegs[PR_IPL] = data & PSL_M_IPL;
+		case IPR_nIPL:
+			ipReg[rn] = data & PSL_M_IPL;
 			psReg &= ~PSL_IPL;
 			psReg |= PSL_SETIPL(data);
 			break;
 
-		case PR_SIRR:
-//			if ((data > 0xF) || (data == 0))
-//				throw EXC_RSVD_OPND_FAULT;
-			pRegs[PR_SIRR] |= (1 << data);
+		case IPR_nSIRR:
+			if ((data > 0xF) || (data == 0))
+				throw RSVD_OPND_FAULT;
+			ipReg[rn] |= (1 << data);
 			break;
 
-		case PR_SISR:
-			pRegs[PR_SISR] = data & SISR_MASK;
+		case IPR_nSISR:
+			ipReg[rn] = data & SISR_MASK;
 			break;
 
-		case PR_ASTLVL:
-//			if ((uint32)data > AST_MAX)
-//				throw EXC_RSVD_OPND_FAULT;
-			pRegs[PR_ASTLVL] = data;
+		case IPR_nASTLVL:
+			if (ZXTL(data) > AST_MAX)
+				throw RSVD_OPND_FAULT;
+			ipReg[rn] = data;
 			break;
 
-		case PR_ICCS:
+		case IPR_nICCS:
 			// Subset implementation in MicroVAX series
 //			pRegs[PR_ICCS] = data & ICCS_WMASK;
 //#ifdef DEBUG
@@ -276,54 +276,54 @@ void cvax_cpuDevice::writepr(uint32_t pReg, uint32_t data) //throw(uint32_t)
 //#endif /* DEBUG */
 			break;
 
-		case PR_RXCS:
+		case IPR_nRXCS:
 //			if (data & RXCS_MBZ)
-//				throw EXC_RSVD_OPND_FAULT;
+//				throw RSVD_OPND_FAULT;
 //			vax_WriteRXCS(vax, data);
 			break;
 
-		case PR_RXDB:
+		case IPR_nRXDB:
 //			vax_WriteRXDB(vax, data);
 			break;
 
-		case PR_TXCS:
+		case IPR_nTXCS:
 //			if (data & TXCS_MBZ)
-//				throw EXC_RSVD_OPND_FAULT;
+//				throw RSVD_OPND_FAULT;
 //			vax_WriteTXCS(vax, data);
 			break;
 
-		case PR_TXDB:
+		case IPR_nTXDB:
 //			vax_WriteTXDB(vax, data);
 			break;
 
-		case PR_CADR:
-//			pRegs[pReg] = (data & CADR_RW) | CADR_MBO;
+		case IPR_nCADR:
+//			pRegs[rn] = (data & CADR_RW) | CADR_MBO;
 			break;
 
-		case PR_MSER:
-//			pRegs[pReg] &= MSER_HM;
+		case IPR_nMSER:
+//			pRegs[rn] &= MSER_HM;
 			break;
 
-		case PR_CONPC:
-		case PR_CONPSL:
-//			pRegs[pReg] = data;
+		case IPR_nCONPC:
+		case IPR_nCONPSL:
+//			pRegs[rn] = data;
 			break;
 
-		case PR_IORESET:
+		case IPR_nIORESET:
 //			cq_ResetAll(((KA650_DEVICE *)vax)->qba);
 			break;
 
-		case PR_MAPEN:
-//			pRegs[PR_MAPEN] = data & 1;
-		case PR_TBIA:
+		case IPR_nMAPEN:
+//			pRegs[rn] = data & 1;
+		case IPR_nTBIA:
 //			vax_ClearTBTable(vax, 1);
 			break;
 
-		case PR_TBIS:
+		case IPR_nTBIS:
 //			vax_ClearTBEntry(vax, data);
 			break;
 
-		case PR_TBCHK:
+		case IPR_nTBCHK:
 //			if (vax_CheckTBEntry(vax, data))
 //				CC |= CC_V;
 			break;
@@ -339,8 +339,8 @@ void cvax_cpuDevice::writepr(uint32_t pReg, uint32_t data) //throw(uint32_t)
 //#endif /* DEBUG */
 
 	const char *name = "Undefined Register";
-	if ((pReg < regSize) && regNames[pReg])
-		name = regNames[pReg];
-	printf("%s: (W) %s (%02X) <= %08X\n", devName.c_str(), name, pReg, data);
+	if ((rn < iprSize) && iprName[rn])
+		name = iprName[rn];
+	printf("%s: (W) %s (%02X) <= %08X\n", devName.c_str(), name, rn, data);
 }
 

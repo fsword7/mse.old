@@ -26,11 +26,11 @@ void vax_cpuDevice::movc(int c5flg)
 	if ((psReg & PSL_FPD) == 0) {
 		if (c5flg & 1) {
 			// For MOVC5 instruction
-			slen = ZXTW(opRegs[0]);
-			src  = ZXTL(opRegs[1]);
-			fill = ZXTB(opRegs[2]);
-			dlen = ZXTW(opRegs[3]);
-			dst  = ZXTL(opRegs[4]);
+			slen = ZXTW(opReg[0]);
+			src  = ZXTL(opReg[1]);
+			fill = ZXTB(opReg[2]);
+			dlen = ZXTW(opReg[3]);
+			dst  = ZXTL(opReg[4]);
 
 			// Set R0-R4 registers
 			REG_R1 = src;
@@ -43,9 +43,9 @@ void vax_cpuDevice::movc(int c5flg)
 			SetC(ccReg, ZXTW(slen), ZXTW(dlen));
 		} else {
 			// For MOVC3 instruction
-			slen = ZXTW(opRegs[0]);
-			src  = ZXTL(opRegs[1]);
-			dst  = ZXTL(opRegs[2]);
+			slen = ZXTW(opReg[0]);
+			src  = ZXTL(opReg[1]);
+			dst  = ZXTL(opReg[2]);
 			dlen = slen;
 			fill = 0;
 
@@ -182,11 +182,11 @@ void vax_cpuDevice::cmpc(int c5flg)
 	if ((psReg & PSL_FPD) == 0) {
 		if (c5flg & 1) {
 			// For CMPC5 instruction
-			slen = ZXTW(opRegs[0]);
-			src  = ZXTL(opRegs[1]);
-			fill = ZXTB(opRegs[2]);
-			dlen = ZXTW(opRegs[3]);
-			dst  = ZXTL(opRegs[4]);
+			slen = ZXTW(opReg[0]);
+			src  = ZXTL(opReg[1]);
+			fill = ZXTB(opReg[2]);
+			dlen = ZXTW(opReg[3]);
+			dst  = ZXTL(opReg[4]);
 
 			// Set R1-R3 registers
 			REG_R1 = src;
@@ -194,9 +194,9 @@ void vax_cpuDevice::cmpc(int c5flg)
 			REG_R3 = dst;
 		} else {
 			// For CMPC3 instruction
-			slen = ZXTW(opRegs[0]);
-			src  = ZXTL(opRegs[1]);
-			dst  = ZXTL(opRegs[2]);
+			slen = ZXTW(opReg[0]);
+			src  = ZXTL(opReg[1]);
+			dst  = ZXTL(opReg[2]);
 			dlen = slen;
 			fill = 0;
 
@@ -251,4 +251,86 @@ void vax_cpuDevice::cmpc(int c5flg)
 	printf("%s: CC Status: %s\n", devName.c_str(), stringCC(ccReg));
 	// Reset R0 register
 	REG_R0 &= STR_M_LEN;
+}
+
+void vax_cpuDevice::locc(bool skpflg)
+{
+	uint8_t  ch, match;
+	uint32_t dpc;
+
+	if ((psReg & PSL_FPD) == 0) {
+		match   = opReg[0];
+		dpc     = REG_PC - faultAddr;
+		REG_R0  = STR_PACK(dpc, match, opReg[1]);
+		REG_R1  = opReg[2];
+		// Set "First Part Done" flag.
+		psReg |= PSL_FPD;
+	} else {
+		match = STR_GETCHR(REG_R0);
+
+		// Reset PC address
+		REG_PC += STR_GETDPC(REG_R0);
+		flushvi();
+	}
+
+	while (REG_R0 & STR_M_LEN) {
+		// Check character to match or not.
+		// If found, get out of loop.
+		ch = readv(REG_R1, LN_BYTE, RACC);
+		if ((ch == match) ^ skpflg)
+			break;
+		// Next Character
+		REG_R0 = (REG_R0 & ~STR_M_LEN) |
+			((REG_R0 - 1) & STR_M_LEN);
+		REG_R1++;
+	}
+
+	// Reset R0 register.
+	REG_R0 &= STR_M_LEN;
+	// Clear "First Part Done" flag when done.
+	psReg  &= ~PSL_FPD;
+	// Update Condition Codes
+	ccReg = (REG_R0 > 0) ? 0 : CC_Z;
+}
+
+void vax_cpuDevice::scanc(bool spnflg)
+{
+	uint8_t  ch, tch, mask;
+	uint32_t dpc;
+
+	if ((psReg & PSL_FPD) == 0) {
+		mask    = opReg[3];
+		dpc     = REG_PC - faultAddr;
+		REG_R0  = STR_PACK(dpc, mask, opReg[0]);
+		REG_R1  = opReg[1];
+		REG_R3  = opReg[2];
+		// Set "First Part Done" flag.
+		psReg |= PSL_FPD;
+	} else {
+		mask = STR_GETCHR(REG_R0);
+		// Reset PC address
+		REG_PC += STR_GETDPC(REG_R0);
+		flushvi();
+	}
+
+	while (REG_R0 & STR_M_LEN) {
+		// Check character to match or not.
+		// If found, get out of loop.
+		ch  = readv(REG_R1, LN_BYTE, RACC);
+		tch = readv(REG_R3 + ch, LN_BYTE, RACC);
+		if (((tch & mask) != 0) ^ spnflg)
+			break;
+		// Next Character
+		REG_R0 = (REG_R0 & ~STR_M_LEN) |
+			((REG_R0 - 1) & STR_M_LEN);
+		REG_R1++;
+	}
+
+	// Reset R0 register.
+	REG_R0 &= STR_M_LEN;
+	REG_R2  = 0;
+	// Clear "First Part Done" flag when done.
+	psReg &= ~PSL_FPD;
+	// Update Condition Codes
+	ccReg = (REG_R0 > 0) ? 0 : CC_Z;
 }

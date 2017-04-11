@@ -20,143 +20,146 @@ static const char *regNames[] =
 };
 
 
-int vax_cpuDevice::disasmOperand(char **ptr, uint32_t &vAddr, const vaxOpcode *opc, int opn, bool idxFlag)
+int vax_cpuDevice::disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **ptr)
 {
-	int      oprFlags = opc->oprMode[opn];
-	int      scale    = oprFlags & 0xFF;
-	uint32_t oprType;
+	int      opMode, opScale;
+	uint32_t opType;
 	uint32_t data;
-	int      mode, reg;
+	int      rn, irn;
 	char     fmt[64];
 
-	if ((opn > 0) && !idxFlag)
-		*(*ptr)++ = ',';
+	for (int opn = 0; opn < opc->nOperands; opn++) {
+		if (opn > 0)
+			*(*ptr)++ = ',';
 
-	if (oprFlags & OPR_IMMED) {
-		readci(vAddr, &data, scale);
-		vAddr += scale;
-		sprintf(fmt, "#%%0%dX", scale*2);
-		*ptr += sprintf(*ptr, fmt, data);
+		opMode  = opc->oprMode[opn];
+		opScale = OPM_SIZE(opMode);
 
-		return 0;
-	}
+		switch (opMode) {
+		case BB: case BW:
+			data = readci(vAddr, opScale);
+			vAddr += opScale;
+			// Extend signed bit
+			data = (opScale == LN_BYTE) ? SXTB(data) : SXTW(data);
+			*ptr += sprintf(*ptr, "%08X", vAddr + data);
+			continue;
 
-	if (oprFlags & OPR_BRANCH) {
-		readci(vAddr, &data, scale);
-		vAddr += scale;
+		case IW:
+			data = readci(vAddr, opScale);
+			vAddr += opScale;
+			*ptr += sprintf(*ptr, "%04X", data);
+			continue;
 
-		// Extend signed bit
-		data = (scale == LN_BYTE) ? int8_t(data)  :
-			   (scale == LN_WORD) ? int16_t(data) : data;
+		case IL:
+			data = readci(vAddr, opScale);
+			vAddr += opScale;
+			*ptr += sprintf(*ptr, "%08X", data);
+			continue;
 
-		*ptr += sprintf(*ptr, "%08X", vAddr + int32_t(data));
+		default:
+			opType = readci(vAddr++, LN_BYTE);
+			if ((opType & OPR_MMASK) == IDX) {
+				irn = opType & OPR_RMASK;
+				opType = readci(vAddr++, LN_BYTE);
+			} else
+				irn = -1;
+			rn = opType & OPR_RMASK;
+			break;
+		}
 
-		return 0;
-	}
+		switch (opType & OPR_MMASK) {
+		case LIT0: case LIT1: // Literal
+		case LIT2: case LIT3:
+			*ptr += sprintf(*ptr, "S^#%02X", opType);
+			break;
 
-	readci(vAddr++, &oprType, LN_BYTE);
-	mode = (oprType >> 4) & 0x0F;
-	reg  = oprType & 0x0F;
+		case REG: // Register
+			*ptr += sprintf(*ptr, "%s", regNames[rn]);
+			break;
 
-	switch (mode) {
-	case 0x00: case 0x01: // Literal
-	case 0x02: case 0x03:
-		*ptr += sprintf(*ptr, "S^#%02X", oprType);
-		break;
+		case REGD: // Register deferred
+			*ptr += sprintf(*ptr, "(%s)", regNames[rn]);
+			break;
 
-	case 0x04: // Indexed
-		disasmOperand(ptr, vAddr, opc, opn, true);
-		*ptr += sprintf(*ptr, "[%s]", regNames[reg]);
-		break;
+		case ADEC: // Autodecrement
+			*ptr += sprintf(*ptr, "-(%s)", regNames[rn]);
+			break;
 
-	case 0x05: // Register
-		*ptr += sprintf(*ptr, "%s", regNames[reg]);
-		break;
-
-	case 0x06: // Register deferred
-		*ptr += sprintf(*ptr, "(%s)", regNames[reg]);
-		break;
-
-	case 0x07: // Autodecrement
-		*ptr += sprintf(*ptr, "-(%s)", regNames[reg]);
-		break;
-
-	case 0x08: // Autoincrement/Immediate
-		if (reg < 0x0F)
-			*ptr += sprintf(*ptr, "(%s)+", regNames[reg]);
-		else {
-			readci(vAddr, &data, scale);
-			switch (scale) {
-			case LN_BYTE:
-				*ptr += sprintf(*ptr, "I^#%02X", data);
-				break;
-			case LN_WORD:
-				*ptr += sprintf(*ptr, "I^#%04X", data);
-				break;
-			case LN_LONG:
-			case LN_QUAD:
-				*ptr += sprintf(*ptr, "I^#%08X", data);
-				break;
+		case AINC: // Autoincrement/Immediate
+			if (rn < REG_nPC)
+				*ptr += sprintf(*ptr, "(%s)+", regNames[rn]);
+			else {
+				data = readci(vAddr, opScale);
+				switch (opScale) {
+				case LN_BYTE:
+					*ptr += sprintf(*ptr, "#%02X", data);
+					break;
+				case LN_WORD:
+					*ptr += sprintf(*ptr, "#%04X", data);
+					break;
+				case LN_LONG:
+					*ptr += sprintf(*ptr, "#%08X", data);
+					break;
+				case LN_QUAD:
+					*ptr  += sprintf(*ptr, "#%08X", data);
+					data  = readci(vAddr+LN_LONG, LN_LONG);
+					*ptr  += sprintf(*ptr, "%08X", data);
+					break;
+				case LN_OCTA:
+					*ptr  += sprintf(*ptr, "#%08X", data);
+					data  = readci(vAddr+LN_LONG, LN_LONG);
+					*ptr  += sprintf(*ptr, "%08X", data);
+					data  = readci(vAddr+(LN_LONG*2), LN_LONG);
+					*ptr  += sprintf(*ptr, "%08X", data);
+					data  = readci(vAddr+(LN_LONG*3), LN_LONG);
+					*ptr  += sprintf(*ptr, "%08X", data);
+					break;
+				}
+				vAddr += opScale;
 			}
-			vAddr += scale;
-		}
-		break;
+			break;
 
-	case 0x09: // Autoincrement deferred/Absolute
-		if (reg < 0x0F)
-			*ptr += sprintf(*ptr, "@(%s)+", regNames[reg]);
-		else {
-			readci(vAddr, &data, LN_LONG);
-			*ptr += sprintf(*ptr, "@#%08X", data);
+		case AINCD: // Autoincrement deferred/Absolute
+			if (rn < REG_nPC)
+				*ptr += sprintf(*ptr, "@(%s)+", regNames[rn]);
+			else {
+				data = readci(vAddr, LN_LONG);
+				*ptr += sprintf(*ptr, "@#%08X", data);
+				vAddr += LN_LONG;
+			}
+			break;
+
+		case BDPD:
+			*(*ptr)++ = '@';
+		case BDP: // Byte displacement/relative
+			data = readci(vAddr++, LN_BYTE);
+			*ptr += sprintf(*ptr, "B^%02X", data);
+			if (rn < REG_nPC)
+				*ptr += sprintf(*ptr, "(%s)", regNames[rn]);
+			break;
+
+		case WDPD:
+			*(*ptr)++ = '@';
+		case WDP: // Word displacement/relative
+			data = readci(vAddr, LN_WORD);
+			vAddr += LN_WORD;
+			*ptr += sprintf(*ptr, "W^%04X", data);
+			if (rn < REG_nPC)
+				*ptr += sprintf(*ptr, "(%s)", regNames[rn]);
+			break;
+
+		case LDPD:
+			*(*ptr)++ = '@';
+		case LDP: // Longword displacement/relative
+			data = readci(vAddr, LN_LONG);
 			vAddr += LN_LONG;
+			*ptr += sprintf(*ptr, "L^%08X", data);
+			if (rn < REG_nPC)
+				*ptr += sprintf(*ptr, "(%s)", regNames[rn]);
+			break;
 		}
-		break;
-
-	case 0x0A: // Byte displacement/relative
-		readci(vAddr++, &data, LN_BYTE);
-		*ptr += sprintf(*ptr, "B^%02X", data);
-		if (reg < 0x0F)
-			*ptr += sprintf(*ptr, "(%s)", regNames[reg]);
-		break;
-
-	case 0x0B: // Deferred byte displacement/relative
-		readci(vAddr++, &data, LN_BYTE);
-		*ptr += sprintf(*ptr, "@B^%02X", data);
-		if (reg < 0x0F)
-			*ptr += sprintf(*ptr, "(%s)", regNames[reg]);
-		break;
-
-	case 0x0C: // Word displacement/relative
-		readci(vAddr, &data, LN_WORD);
-		vAddr += LN_WORD;
-		*ptr += sprintf(*ptr, "W^%04X", data);
-		if (reg < 0x0F)
-			*ptr += sprintf(*ptr, "(%s)", regNames[reg]);
-		break;
-
-	case 0x0D: // Deferred word displacement/relative
-		readci(vAddr, &data, LN_WORD);
-		vAddr += LN_WORD;
-		*ptr += sprintf(*ptr, "@W^%04X", data);
-		if (reg < 0x0F)
-			*ptr += sprintf(*ptr, "(%s)", regNames[reg]);
-		break;
-
-	case 0x0E: // Longword displacement/relative
-		readci(vAddr, &data, LN_LONG);
-		vAddr += LN_LONG;
-		*ptr += sprintf(*ptr, "L^%08X", data);
-		if (reg < 0x0F)
-			*ptr += sprintf(*ptr, "(%s)", regNames[reg]);
-		break;
-
-	case 0x0F: // Deferred longword displacement/relative
-		readci(vAddr, &data, LN_LONG);
-		vAddr += LN_LONG;
-		*ptr += sprintf(*ptr, "@L^%08X", data);
-		if (reg < 0x0F)
-			*ptr += sprintf(*ptr, "(%s)", regNames[reg]);
-		break;
+		if (irn >= 0)
+			*ptr += sprintf(*ptr, "[%s]", regNames[irn]);
 	}
 
 	return 0;
@@ -172,24 +175,24 @@ int vax_cpuDevice::disasm(uint32_t vAddr)
 	ptr += sprintf(ptr, "%08X ", pcAddr);
 
 	// Fetch 1 or 2 bytes opcode
-	readci(pcAddr++, &opCode, OPR_BYTE);
+	opCode = readci(pcAddr++, LN_BYTE);
 	if (opCode > OPC_nEXTEND) {
 		opExtend = (opCode - OPC_nEXTEND) << 8;
-		readci(pcAddr++, &opCode, OPR_BYTE);
+		opCode = readci(pcAddr++, LN_BYTE);
 		opCode |= opExtend;
 	}
 	opc = opCodes[opCode];
 
 	if (opc->opCode != OPC_nUOPC) {
 		ptr += sprintf(ptr, "%-8s", opc->opName);
-		for (int opn = 0; opn < opc->nOperands; opn++)
-			disasmOperand(&ptr, pcAddr, opc, opn, false);
+		disasmOperand(pcAddr, opc, &ptr);
 	} else {
 		if (opCode > OPC_nEXTEND)
 			ptr += sprintf(ptr, ".BYTE %02X,%02X", (opCode >> 8) + OPC_nEXTEND, opCode & 0xFF);
 		else
 			ptr += sprintf(ptr, ".BYTE %02X", opCode);
 	}
+	*ptr++ = '\0';
 
 #ifdef ENABLE_DEBUG
 	dbg::log("%s", line);

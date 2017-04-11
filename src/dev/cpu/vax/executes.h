@@ -11,6 +11,9 @@
 #define CPU_CLASS vax_cpuDevice
 #endif
 
+// Register validation check
+#define Validate(rn, max) if ((rn) >= (max)) throw RSVD_ADDR_FAULT;
+
 static const char *stopNames[] =
 {
 	"HALT Instruction"
@@ -62,231 +65,872 @@ void CPU_CLASS::execute()
 				opCode |= uint8_t(readvi(LN_BYTE));
 			}
 
+
 			// Decode operands
 			opc = opCodes[opCode];
-			for (int idx = 0, opn = 0; idx < opc->nOperands; idx++) {
-				int     opMode = opc->oprMode[idx];
-				int     scale  = opMode & OPR_SCALE;
-				int32_t iAddr, t1;
 
-				if (opMode & OPR_IMMED)
-					break;
-				if (opMode & OPR_BRANCH) {
-					brDisp = readvi(scale);
-					break;
+			rqCount = 0;
+			for (int idx = 0, opidx = 0; idx < opc->nOperands; idx++) {
+				int opr = opc->oprMode[idx];
+				int rn, ireg, spec;
+				uint32_t mAddr, off;
+
+				switch (opr) {
+					case BB: // Byte Branch Mode
+						opReg[opidx++] = SXTB(readvi(LN_BYTE));
+						continue;
+
+					case BW: // Word Branch Mode
+						opReg[opidx++] = SXTW(readvi(LN_WORD));
+						continue;
+
+					default:
+						spec  = readvi(LN_BYTE);
+						rn    = spec & 0xF;
+						opr  |= (spec & 0xF0);
 				}
 
-				int opType = readvi(LN_BYTE);
-				int mode   = opType & OPR_MMASK;
-				int reg    = opType & OPR_RMASK;
+#ifdef DEBUG
+//		PrintLog3(LOG_TRACE, NULL,
+//			"%s: (OPR) %02X => R%d (%04X) %d\n",
+//				IO_DEVNAME(cpu), spec, rn, opr, opIdx);
+#endif /* DEBUG */
 
-//				printf("opr: mode=%02X reg=%02X\n", mode, reg);
+				switch(opr) {
+					// Short Literal Address Mode
+					//   Only read access is allowed.
+					case LIT0|RB: case LIT0|RW: case LIT0|RL:
+					case LIT1|RB: case LIT1|RW: case LIT1|RL:
+					case LIT2|RB: case LIT2|RW: case LIT2|RL:
+					case LIT3|RB: case LIT3|RW: case LIT3|RL:
+						opReg[opidx++] = spec;
+						continue;
+					case LIT0|RQ: case LIT1|RQ: case LIT2|RQ: case LIT3|RQ:
+						opReg[opidx++] = spec;
+						opReg[opidx++] = 0;
+						continue;
+					case LIT0|RO: case LIT1|RO: case LIT2|RO: case LIT3|RO:
+						opReg[opidx++] = spec;
+						opReg[opidx++] = 0;
+						opReg[opidx++] = 0;
+						opReg[opidx++] = 0;
+						continue;
 
-				switch (mode) {
-				// Short literal mode
-				case LIT0: case LIT1:
-				case LIT2: case LIT3:
-					if (opMode & (OPR_VADDR|OPR_ADDR|OPR_MODIFIED|OPR_WRITE))
-						throw RSVD_ADDR_FAULT;
-					if (opMode & OPR_FLOAT)
-						opRegs[opn++] = 0x4000 | (opType << (opMode & (OPR_FFLOAT|OPR_DFLOAT)) ? 4 : 1);
-					else
-						opRegs[opn++] = opType;
-					if (scale > LN_LONG)
-						opRegs[opn++] = 0;
-					continue;
+					case LIT0|RF: case LIT1|RF: case LIT2|RF: case LIT3|RF:
+						opReg[opidx++] = (spec << 4) | 0x4000;
+						continue;
+					case LIT0|RD: case LIT1|RD: case LIT2|RD: case LIT3|RD:
+						opReg[opidx++] = (spec << 4) | 0x4000;
+						opReg[opidx++] = 0;
+						continue;
+					case LIT0|RG: case LIT1|RG: case LIT2|RG: case LIT3|RG:
+						opReg[opidx++] = (spec << 1) | 0x4000;
+						opReg[opidx++] = 0;
+						continue;
+					case LIT0|RH: case LIT1|RH: case LIT2|RH: case LIT3|RH:
+						opReg[opidx++] =
+							((spec & 7) << 29) | (0x4000 | ((spec >> 3) & 7));
+						opReg[opidx++] = 0;
+						opReg[opidx++] = 0;
+						opReg[opidx++] = 0;
+						continue;
 
-				// Register mode
-				case REG:
-					if (reg >= (REG_nPC - (scale > LN_LONG)))
-						throw RSVD_ADDR_FAULT;
-					if (opMode & OPR_ADDR)
-						throw RSVD_ADDR_FAULT;
-					if (opMode & (OPR_VADDR|OPR_WRITE)) {
-						opRegs[opn++] = reg;
-						opRegs[opn++] = gRegs[reg].l;
-					} else {
-						opRegs[opn++] = gRegs[reg].l;
-						if (scale > LN_LONG)
-							opRegs[opn++] = gRegs[reg+1].l;
-						if (opMode & OPR_MODIFIED)
-							opRegs[opn++] = reg;
-					}
-					continue;
 
-				case ADEC: // Autodecrement mode
-					if (reg == REG_nPC)
-						throw RSVD_ADDR_FAULT;
-					gRegs[reg].l -= scale;
-					iAddr = gRegs[reg].l;
-					break;
+					// Register Address Mode
+					// Read Access for General Registers
+					case REG|RB:
+						Validate(rn, REG_nPC);
+						opReg[opidx++] = CPU_REGUB(rn);
+						continue;
+					case REG|RW:
+						Validate(rn, REG_nPC);
+						opReg[opidx++] = CPU_REGUW(rn);
+						continue;
+					case REG|RL: case REG|RF:
+						Validate(rn, REG_nPC);
+						opReg[opidx++] = CPU_REGUL(rn);
+						continue;
+					case REG|RQ: case REG|RD: case REG|RG:
+						Validate(rn, REG_nSP);
+						opReg[opidx++] = CPU_REGUL(rn);
+						opReg[opidx++] = CPU_REGUL(rn+1);
+						continue;
+					case REG|RO: case REG|RH:
+						Validate(rn, REG_nAP);
+						opReg[opidx++] = CPU_REGUL(rn);
+						opReg[opidx++] = CPU_REGUL(rn+1);
+						opReg[opidx++] = CPU_REGUL(rn+2);
+						opReg[opidx++] = CPU_REGUL(rn+3);
+						continue;
 
-				case REGD: // Register deferred mode
-					if (reg == REG_nPC)
-						throw RSVD_ADDR_FAULT;
-					iAddr = gRegs[reg].l;
-					break;
+					// Modify Access for General Registers
+					case REG|MB:
+						Validate(rn, REG_nPC);
+						opReg[opidx++] = CPU_REGUB(rn);
+						opReg[opidx++] = ~rn;
+						continue;
+					case REG|MW:
+						Validate(rn, REG_nPC);
+						opReg[opidx++] = CPU_REGUW(rn);
+						opReg[opidx++] = ~rn;
+						continue;
+					case REG|ML:
+						Validate(rn, REG_nPC);
+						opReg[opidx++] = CPU_REGUL(rn);
+						opReg[opidx++] = ~rn;
+						continue;
+					case REG|MQ:
+						Validate(rn, REG_nSP);
+						opReg[opidx++] = CPU_REGUL(rn);
+						opReg[opidx++] = CPU_REGUL(rn+1);
+						opReg[opidx++] = ~rn;
+						continue;
+					case REG|MO:
+						Validate(rn, REG_nAP);
+						opReg[opidx++] = CPU_REGUL(rn);
+						opReg[opidx++] = CPU_REGUL(rn+1);
+						opReg[opidx++] = CPU_REGUL(rn+2);
+						opReg[opidx++] = CPU_REGUL(rn+3);
+						opReg[opidx++] = ~rn;
+						continue;
 
-				case AINC: // Autoincrement/immediate mode
-					if (reg == REG_nPC) {
-						// Immediate mode
-						if (opMode & (OPR_VADDR|OPR_ADDR|OPR_WRITE)) {
-							if (opMode & (OPR_VADDR|OPR_WRITE))
-								opRegs[opn++] = OPR_MEM;
-							opRegs[opn++] = gRegs[reg].l;
-							for (int sidx = 0; sidx < scale; sidx += LN_LONG)
-								readvi(std::min(scale, LN_LONG));
+					// Write Access for General Registers
+					case REG|WB: case REG|WW: case REG|WL: case REG|WQ:
+					case REG|WO: case REG|VB:
+						Validate(rn, REG_nPC);
+						opReg[opidx++] = ~rn;
+						continue;
+
+
+					// Register Deferred Address Mode (Rn)
+					case REGD|RB: case REGD|RW: case REGD|RL: case REGD|RF:
+						Validate(rn, REG_nPC);
+						opReg[opidx++] = readv(CPU_REGUL(rn), OPM_SIZE(opr), RACC);
+						continue;
+					case REGD|RQ: case REGD|RD: case REGD|RG:
+						Validate(rn, REG_nPC);
+						opReg[opidx++] = readv(CPU_REGUL(rn),   LN_LONG, RACC);
+						opReg[opidx++] = readv(CPU_REGUL(rn)+4, LN_LONG, RACC);
+						continue;
+					case REGD|RO: case REGD|RH:
+						Validate(rn, REG_nPC);
+						opReg[opidx++] = readv(CPU_REGUL(rn),    LN_LONG, RACC);
+						opReg[opidx++] = readv(CPU_REGUL(rn)+4,  LN_LONG, RACC);
+						opReg[opidx++] = readv(CPU_REGUL(rn)+8,  LN_LONG, RACC);
+						opReg[opidx++] = readv(CPU_REGUL(rn)+12, LN_LONG, RACC);
+						continue;
+
+					case REGD|MB: case REGD|MW: case REGD|ML:
+						Validate(rn, REG_nPC);
+						opReg[opidx++] = readv(CPU_REGUL(rn), OPM_SIZE(opr), WACC);
+						opReg[opidx++] = CPU_REGUL(rn);
+						continue;
+					case REGD|MQ:
+						Validate(rn, REG_nPC);
+						opReg[opidx++] = readv(CPU_REGUL(rn),   LN_LONG, WACC);
+						opReg[opidx++] = readv(CPU_REGUL(rn)+4, LN_LONG, WACC);
+						opReg[opidx++] = CPU_REGUL(rn);
+						continue;
+					case REGD|MO:
+						Validate(rn, REG_nPC);
+						opReg[opidx++] = readv(CPU_REGUL(rn),    LN_LONG, WACC);
+						opReg[opidx++] = readv(CPU_REGUL(rn)+4,  LN_LONG, WACC);
+						opReg[opidx++] = readv(CPU_REGUL(rn)+8,  LN_LONG, WACC);
+						opReg[opidx++] = readv(CPU_REGUL(rn)+12, LN_LONG, WACC);
+						opReg[opidx++] = CPU_REGUL(rn);
+						continue;
+
+					case REGD|WB: case REGD|WW: case REGD|WL: case REGD|WQ:
+					case REGD|AB: case REGD|AW: case REGD|AL: case REGD|AQ:
+					case REGD|WO: case REGD|AO: case REGD|VB:
+						Validate(rn, REG_nPC);
+						opReg[opidx++] = CPU_REGUL(rn);
+						continue;
+
+
+					// Autodecrement Address Mode -(Rn)
+					case ADEC|RB: case ADEC|RW: case ADEC|RL: case ADEC|RF:
+						Validate(rn, REG_nPC);
+						gpReg[rn].l     -= OPM_SIZE(opr);
+						rqReg[rqCount++] = (OPM_SIZE(opr) << 4) | rn;
+						opReg[opidx++]   = readv(CPU_REGUL(rn), OPM_SIZE(opr), RACC);
+						continue;
+					case ADEC|RQ: case ADEC|RD: case ADEC|RG:
+						Validate(rn, REG_nPC);
+						gpReg[rn].l     -= LN_QUAD;
+						rqReg[rqCount++] = (LN_QUAD << 4) | rn;
+						opReg[opidx++]   = readv(CPU_REGUL(rn),   LN_LONG, RACC);
+						opReg[opidx++]   = readv(CPU_REGUL(rn)+4, LN_LONG, RACC);
+						continue;
+					case ADEC|RO: case ADEC|RH:
+						Validate(rn, REG_nPC);
+						gpReg[rn].l     -= LN_OCTA;
+						rqReg[rqCount++] = (LN_OCTA << 4) | rn;
+						opReg[opidx++]   = readv(CPU_REGUL(rn),    LN_LONG, RACC);
+						opReg[opidx++]   = readv(CPU_REGUL(rn)+4,  LN_LONG, RACC);
+						opReg[opidx++]   = readv(CPU_REGUL(rn)+8,  LN_LONG, RACC);
+						opReg[opidx++]   = readv(CPU_REGUL(rn)+12, LN_LONG, RACC);
+						continue;
+
+					case ADEC|MB: case ADEC|MW: case ADEC|ML:
+						Validate(rn, REG_nPC);
+						gpReg[rn].l     -= OPM_SIZE(opr);
+						rqReg[rqCount++] = (OPM_SIZE(opr) << 4) | rn;
+						opReg[opidx++]   = readv(CPU_REGUL(rn), OPM_SIZE(opr), WACC);
+						opReg[opidx++]   = CPU_REGUL(rn);
+						continue;
+					case ADEC|MQ:
+						Validate(rn, REG_nPC);
+						gpReg[rn].l     -= LN_QUAD;
+						rqReg[rqCount++] = (LN_QUAD << 4) | rn;
+						opReg[opidx++]   = readv(CPU_REGUL(rn),   LN_LONG, WACC);
+						opReg[opidx++]   = readv(CPU_REGUL(rn)+4, LN_LONG, WACC);
+						opReg[opidx++]   = CPU_REGUL(rn);
+						continue;
+					case ADEC|MO:
+						Validate(rn, REG_nPC);
+						gpReg[rn].l     -= LN_OCTA;
+						rqReg[rqCount++] = (LN_OCTA << 4) | rn;
+						opReg[opidx++]   = readv(CPU_REGUL(rn),    LN_LONG, WACC);
+						opReg[opidx++]   = readv(CPU_REGUL(rn)+4,  LN_LONG, WACC);
+						opReg[opidx++]   = readv(CPU_REGUL(rn)+8,  LN_LONG, WACC);
+						opReg[opidx++]   = readv(CPU_REGUL(rn)+12, LN_LONG, WACC);
+						opReg[opidx++]   = CPU_REGUL(rn);
+						continue;
+
+					case ADEC|WB: case ADEC|WW: case ADEC|WL: case ADEC|WQ:
+					case ADEC|AB: case ADEC|AW: case ADEC|AL: case ADEC|AQ:
+					case ADEC|WO: case ADEC|AO: case ADEC|VB:
+						Validate(rn, REG_nPC);
+						gpReg[rn].l     -= OPM_SIZE(opr);
+						rqReg[rqCount++] = (OPM_SIZE(opr) << 4) | rn;
+						opReg[opidx++]   = CPU_REGUL(rn);
+						continue;
+
+					// Autoincrement/Immediate Address Mode
+					case AINC|RB: case AINC|RW: case AINC|RL: case AINC|RF:
+						if (rn < REG_nPC) {
+							opReg[opidx++]   = readv(CPU_REGUL(rn), OPM_SIZE(opr), RACC);
+							rqReg[rqCount++] = (-OPM_SIZE(opr) << 4) | rn;
+							gpReg[rn].l     += OPM_SIZE(opr);
+						} else
+							opReg[opidx++] = readvi(OPM_SIZE(opr));
+						continue;
+
+					case AINC|RQ: case AINC|RD: case AINC|RG:
+						if (rn < REG_nPC) {
+							opReg[opidx++]   = readv(CPU_REGUL(rn),   LN_LONG, RACC);
+							opReg[opidx++]   = readv(CPU_REGUL(rn)+4, LN_LONG, RACC);
+							rqReg[rqCount++] = (-LN_QUAD << 4) | rn;
+							gpReg[rn].l     += LN_QUAD;
 						} else {
-							for (int sidx = 0; sidx < scale; sidx += LN_LONG)
-								opRegs[opn++] = readvi(std::min(scale, LN_LONG));
+							opReg[opidx++] = readvi(LN_LONG);
+							opReg[opidx++] = readvi(LN_LONG);
 						}
 						continue;
-					}
-					// Autoincrement mode
-					iAddr = gRegs[reg].l;
-					gRegs[reg].l += scale;
-//					printf("reg: R%d => %08X\n", reg, iAddr);
-					break;
 
-				case AINCD: // Autoincrement deferred/absolute mode
-					if (reg == REG_nPC) {
-						iAddr = readvi(LN_LONG);
-					} else {
-						iAddr = readv(gRegs[reg].l, LN_LONG, RACC);
-						gRegs[reg].l += LN_LONG;
-					}
-					break;
-
-				case BDP: // Byte displacement mode
-					t1    = int8_t(readvi(LN_BYTE));
-					iAddr = gRegs[reg].l + t1;
-					break;
-
-				case BDPD: // Byte displacement deferred mode
-					t1    = int8_t(readvi(LN_BYTE));
-					t1    = gRegs[reg].l + t1;
-					iAddr = readv(t1, LN_LONG, RACC);
-					break;
-
-				case WDP: // Word displacement mode
-					t1    = int16_t(readvi(LN_WORD));
-					iAddr = gRegs[reg].l + t1;
-					break;
-
-				case WDPD: // Word displacement deferred mode
-					t1    = int16_t(readvi(LN_WORD));
-					t1    = gRegs[reg].l + t1;
-					iAddr = readv(t1, LN_LONG, RACC);
-					break;
-
-				case LDP: // Longword displacement mode
-					t1    = int32_t(readvi(LN_LONG));
-					iAddr = gRegs[reg].l + t1;
-					break;
-
-				case LDPD: // Longword displacement deferred mode
-					t1    = int32_t(readvi(LN_LONG));
-					t1    = gRegs[reg].l + t1;
-					iAddr = readv(t1, LN_LONG, RACC);
-					break;
-
-				case IDX: // Indexed mode
-					if (reg == REG_nPC)
-						throw RSVD_ADDR_FAULT;
-					iAddr = gRegs[reg].l * scale;
-
-					int opType = readvi(LN_BYTE);
-					int mode   = opType & OPR_MMASK;
-					int reg    = opType & OPR_RMASK;
-
-					switch (mode) {
-					case ADEC: // Autodecrement mode
-						if (reg == REG_nPC)
-							throw RSVD_ADDR_FAULT;
-						gRegs[reg].l -= scale;
-						iAddr += gRegs[reg].l;
-						break;
-
-					case REGD: // Register deferred mode
-						if (reg == REG_nPC)
-							throw RSVD_ADDR_FAULT;
-						iAddr += gRegs[reg].l;
-						break;
-
-					case AINC: // Autoincrement mode
-						if (reg == REG_nPC)
-							throw RSVD_ADDR_FAULT;
-						iAddr += gRegs[reg].l;
-						gRegs[reg].l += scale;
-						break;
-
-					case AINCD: // Autoincrement deferred/absolute mode
-						if (reg == REG_nPC) {
-							iAddr += readvi(LN_LONG);
+					case AINC|RO: case AINC|RH:
+						if (rn < REG_nPC) {
+							opReg[opidx++]   = readv(CPU_REGUL(rn),    LN_LONG, RACC);
+							opReg[opidx++]   = readv(CPU_REGUL(rn)+4,  LN_LONG, RACC);
+							opReg[opidx++]   = readv(CPU_REGUL(rn)+8,  LN_LONG, RACC);
+							opReg[opidx++]   = readv(CPU_REGUL(rn)+12, LN_LONG, RACC);
+							rqReg[rqCount++] = (-LN_OCTA << 4) | rn;
+							gpReg[rn].l     += LN_OCTA;
 						} else {
-							iAddr += readv(gRegs[reg].l, LN_LONG, RACC);
-							gRegs[reg].l += LN_LONG;
+							opReg[opidx++] = readvi(LN_LONG);
+							opReg[opidx++] = readvi(LN_LONG);
+							opReg[opidx++] = readvi(LN_LONG);
+							opReg[opidx++] = readvi(LN_LONG);
 						}
-						break;
+						continue;
 
-					case BDP: // Byte displacement mode
-						t1     = int8_t(readvi(LN_BYTE));
-						iAddr += gRegs[reg].l + t1;
-						break;
+					case AINC|MB: case AINC|MW: case AINC|ML:
+						Validate(rn, REG_nPC);
+						opReg[opidx++]   = readv(CPU_REGUL(rn), OPM_SIZE(opr), WACC);
+						opReg[opidx++]   = CPU_REGUL(rn);
+						rqReg[rqCount++] = (-OPM_SIZE(opr) << 4) | rn;
+						gpReg[rn].l     += OPM_SIZE(opr);
+						continue;
 
-					case BDPD: // Byte displacement deferred mode
-						t1     = int8_t(readvi(LN_BYTE));
-						t1     = gRegs[reg].l + t1;
-						iAddr += readv(t1, LN_LONG, RACC);
-						break;
+					case AINC|MQ:
+						Validate(rn, REG_nPC);
+						opReg[opidx++]   = readv(CPU_REGUL(rn),   LN_LONG, WACC);
+						opReg[opidx++]   = readv(CPU_REGUL(rn)+4, LN_LONG, WACC);
+						opReg[opidx++]   = CPU_REGUL(rn);
+						rqReg[rqCount++] = (-LN_QUAD << 4) | rn;
+						gpReg[rn].l     += LN_QUAD;
+						continue;
 
-					case WDP: // Word displacement mode
-						t1     = int16_t(readvi(LN_WORD));
-						iAddr += gRegs[reg].l + t1;
-						break;
+					case AINC|MO:
+						Validate(rn, REG_nPC);
+						opReg[opidx++]   = readv(CPU_REGUL(rn),    LN_LONG, WACC);
+						opReg[opidx++]   = readv(CPU_REGUL(rn)+4,  LN_LONG, WACC);
+						opReg[opidx++]   = readv(CPU_REGUL(rn)+8,  LN_LONG, WACC);
+						opReg[opidx++]   = readv(CPU_REGUL(rn)+12, LN_LONG, WACC);
+						opReg[opidx++]   = CPU_REGUL(rn);
+						rqReg[rqCount++] = (-LN_OCTA << 4) | rn;
+						gpReg[rn].l     += LN_OCTA;
+						continue;
 
-					case WDPD: // Word displacement deferred mode
-						t1     = int16_t(readvi(LN_WORD));
-						t1     = gRegs[reg].l + t1;
-						iAddr += readv(t1, LN_LONG, RACC);
-						break;
+					case AINC|WB: case AINC|WW: case AINC|WL:
+					case AINC|AB: case AINC|AW: case AINC|AL:
+					case AINC|VB:
+						opReg[opidx++] = CPU_REGUL(rn);
+						if (rn < REG_nPC) {
+							rqReg[rqCount++] = (-OPM_SIZE(opr) << 4) | rn;
+							gpReg[rn].l     += OPM_SIZE(opr);
+						} else
+							readvi(OPM_SIZE(opr));
+						continue;
 
-					case LDP: // Longword displacement mode
-						t1     = int32_t(readvi(LN_LONG));
-						iAddr += gRegs[reg].l + t1;
-						break;
+					case AINC|WQ: case AINC|AQ:
+						opReg[opidx++] = CPU_REGUL(rn);
+						if (rn < REG_nPC) {
+							rqReg[rqCount++] = (-OPM_SIZE(opr) << 4) | rn;
+							gpReg[rn].l     += OPM_SIZE(opr);
+						} else {
+							readvi(LN_LONG);
+							readvi(LN_LONG);
+						}
+						continue;
 
-					case LDPD: // Longword displacement deferred mode
-						t1     = int32_t(readvi(LN_LONG));
-						t1     = gRegs[reg].l + t1;
-						iAddr += readv(t1, LN_LONG, RACC);
+					case AINC|WO: case AINC|AO:
+						opReg[opidx++] = CPU_REGUL(rn);
+						if (rn < REG_nPC) {
+							rqReg[rqCount++] = (-OPM_SIZE(opr) << 4) | rn;
+							gpReg[rn].l     += OPM_SIZE(opr);
+						} else {
+							readvi(LN_LONG);
+							readvi(LN_LONG);
+							readvi(LN_LONG);
+							readvi(LN_LONG);
+						}
+						continue;
+
+					// Autoincrement Deferred Address Mode
+					case AINCD|RB: case AINCD|RW: case AINCD|RL: case AINCD|RF:
+						if (rn < REG_nPC) {
+							mAddr            = readv(CPU_REGUL(rn), LN_LONG, RACC);
+							rqReg[rqCount++] = (-LN_LONG << 4) | rn;
+							gpReg[rn].l     += LN_LONG;
+						} else
+							mAddr = readvi(LN_LONG);
+						opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), RACC);
+						continue;
+
+					case AINCD|RQ: case AINCD|RD: case AINCD|RG:
+						if (rn < REG_nPC) {
+							mAddr            = readv(CPU_REGUL(rn), LN_LONG, RACC);
+							rqReg[rqCount++] = (-LN_LONG << 4) | rn;
+							gpReg[rn].l     += LN_LONG;
+						} else
+							mAddr = readvi(LN_LONG);
+						opReg[opidx++] = readv(mAddr,   LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr+4, LN_LONG, RACC);
+						continue;
+
+					case AINCD|RO: case AINCD|RH:
+						if (rn < REG_nPC) {
+							mAddr            = readv(CPU_REGUL(rn), LN_LONG, RACC);
+							rqReg[rqCount++] = (-LN_LONG << 4) | rn;
+							gpReg[rn].l     += LN_LONG;
+						} else
+							mAddr = readvi(LN_LONG);
+						opReg[opidx++] = readv(mAddr,    LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr+4,  LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr+8,  LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr+12, LN_LONG, RACC);
+						continue;
+
+					case AINCD|MB: case AINCD|MW: case AINCD|ML:
+						if (rn < REG_nPC) {
+							mAddr            = readv(CPU_REGUL(rn), LN_LONG, RACC);
+							rqReg[rqCount++] = (-LN_LONG << 4) | rn;
+							gpReg[rn].l     += LN_LONG;
+						} else
+							mAddr = readvi(LN_LONG);
+						opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), WACC);
+						opReg[opidx++] = mAddr;
+						continue;
+
+					case AINCD|MQ:
+						if (rn < REG_nPC) {
+							mAddr            = readv(CPU_REGUL(rn), LN_LONG, RACC);
+							rqReg[rqCount++] = (-LN_LONG << 4) | rn;
+							gpReg[rn].l     += LN_LONG;
+						} else
+							mAddr = readvi(LN_LONG);
+						opReg[opidx++] = readv(mAddr,   LN_LONG, WACC);
+						opReg[opidx++] = readv(mAddr+4, LN_LONG, WACC);
+						opReg[opidx++] = mAddr;
+						continue;
+
+					case AINCD|MO:
+						if (rn < REG_nPC) {
+							mAddr            = readv(CPU_REGUL(rn), LN_LONG, RACC);
+							rqReg[rqCount++] = (-LN_LONG << 4) | rn;
+							gpReg[rn].l     += LN_LONG;
+						} else
+							mAddr = readvi(LN_LONG);
+						opReg[opidx++] = readv(mAddr,    LN_LONG, WACC);
+						opReg[opidx++] = readv(mAddr+4,  LN_LONG, WACC);
+						opReg[opidx++] = readv(mAddr+8,  LN_LONG, WACC);
+						opReg[opidx++] = readv(mAddr+12, LN_LONG, WACC);
+						opReg[opidx++] = mAddr;
+						continue;
+
+					case AINCD|WB: case AINCD|WW: case AINCD|WL: case AINCD|WQ:
+					case AINCD|AB: case AINCD|AW: case AINCD|AL: case AINCD|AQ:
+					case AINCD|WO: case AINCD|AO: case AINCD|VB:
+						if (rn < REG_nPC) {
+							opReg[opidx++]   = readv(CPU_REGUL(rn), LN_LONG, RACC);
+							rqReg[rqCount++] = (-LN_LONG << 4) | rn;
+							gpReg[rn].l     += LN_LONG;
+						} else
+							opReg[opidx++] = readvi(LN_LONG);
+						continue;
+
+
+					// Byte-Displacement Address Mode
+					case BDP|RB: case BDP|RW: case BDP|RL: case BDP|RF:
+						off   = SXTB(readvi(LN_BYTE));
+						mAddr = CPU_REGUL(rn) + off;
+						opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), RACC);
+						continue;
+					case BDP|RQ: case BDP|RG: case BDP|RD:
+						off   = SXTB(readvi(LN_BYTE));
+						mAddr = CPU_REGUL(rn) + off;
+						opReg[opidx++] = readv(mAddr,   LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr+4, LN_LONG, RACC);
+						continue;
+					case BDP|RO: case BDP|RH:
+						off   = SXTB(readvi(LN_BYTE));
+						mAddr = CPU_REGUL(rn) + off;
+						opReg[opidx++] = readv(mAddr,    LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr+4,  LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr+8,  LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr+12, LN_LONG, RACC);
+						continue;
+
+					case BDP|MB: case BDP|MW: case BDP|ML:
+						off   = SXTB(readvi(LN_BYTE));
+						mAddr = CPU_REGUL(rn) + off;
+						opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), WACC);
+						opReg[opidx++] = mAddr;
+						continue;
+					case BDP|MQ:
+						off   = SXTB(readvi(LN_BYTE));
+						mAddr = CPU_REGUL(rn) + off;
+						opReg[opidx++] = readv(mAddr,   LN_LONG, WACC);
+						opReg[opidx++] = readv(mAddr+4, LN_LONG, WACC);
+						opReg[opidx++] = mAddr;
+						continue;
+					case BDP|MO:
+						off   = SXTB(readvi(LN_BYTE));
+						mAddr = CPU_REGUL(rn) + off;
+						opReg[opidx++] = readv(mAddr,    LN_LONG, WACC);
+						opReg[opidx++] = readv(mAddr+4,  LN_LONG, WACC);
+						opReg[opidx++] = readv(mAddr+8,  LN_LONG, WACC);
+						opReg[opidx++] = readv(mAddr+12, LN_LONG, WACC);
+						opReg[opidx++] = mAddr;
+						continue;
+
+					case BDP|WB: case BDP|WW: case BDP|WL: case BDP|WQ:
+					case BDP|AB: case BDP|AW: case BDP|AL: case BDP|AQ:
+					case BDP|WO: case BDP|AO: case BDP|VB:
+						off   = SXTB(readvi(LN_BYTE));
+						mAddr = CPU_REGUL(rn) + off;
+						opReg[opidx++] = mAddr;
+		//				PrintLog3(LOG_TRACE, NULL,
+		//					"%s: (BDP) R%d => %08X + %08X => %08X\n",
+		//						IO_DEVNAME(cpu), rn, CPU_REGUL(rn), off, mAddr);
+						continue;
+
+					// Byte-Displacement Deferred Address Mode
+					case BDPD|RB: case BDPD|RW: case BDPD|RL: case BDPD|RF:
+						off   = SXTB(readvi(LN_BYTE));
+						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), RACC);
+						continue;
+					case BDPD|RQ: case BDPD|RG: case BDPD|RD:
+						off   = SXTB(readvi(LN_BYTE));
+						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr,   LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr+4, LN_LONG, RACC);
+						continue;
+					case BDPD|RO: case BDPD|RH:
+						off   = SXTB(readvi(LN_BYTE));
+						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr,    LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr+4,  LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr+8,  LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr+12, LN_LONG, RACC);
+						continue;
+
+					case BDPD|MB: case BDPD|MW: case BDPD|ML:
+						off   = SXTB(readvi(LN_BYTE));
+						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), WACC);
+						opReg[opidx++] = mAddr;
+						continue;
+					case BDPD|MQ:
+						off   = SXTB(readvi(LN_BYTE));
+						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr,   LN_LONG, WACC);
+						opReg[opidx++] = readv(mAddr+4, LN_LONG, WACC);
+						opReg[opidx++] = mAddr;
+						continue;
+					case BDPD|MO:
+						off   = SXTB(readvi(LN_BYTE));
+						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr,    LN_LONG, WACC);
+						opReg[opidx++] = readv(mAddr+4,  LN_LONG, WACC);
+						opReg[opidx++] = readv(mAddr+8,  LN_LONG, WACC);
+						opReg[opidx++] = readv(mAddr+12, LN_LONG, WACC);
+						opReg[opidx++] = mAddr;
+						continue;
+
+					case BDPD|WB: case BDPD|WW: case BDPD|WL: case BDPD|WQ:
+					case BDPD|AB: case BDPD|AW: case BDPD|AL: case BDPD|AQ:
+					case BDPD|WO: case BDPD|AO: case BDPD|VB:
+						off   = SXTB(readvi(LN_BYTE));
+						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+						opReg[opidx++] = mAddr;
+						continue;
+
+					// Word-Displacement Address Mode
+					case WDP|RB: case WDP|RW: case WDP|RL: case WDP|RF:
+						off   = SXTW(readvi(LN_WORD));
+						mAddr = CPU_REGUL(rn) + off;
+						opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), RACC);
+						continue;
+					case WDP|RQ: case WDP|RG: case WDP|RD:
+						off   = SXTW(readvi(LN_WORD));
+						mAddr = CPU_REGUL(rn) + off;
+						opReg[opidx++] = readv(mAddr,   LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr+4, LN_LONG, RACC);
+						continue;
+					case WDP|RO: case WDP|RH:
+						off   = SXTW(readvi(LN_WORD));
+						mAddr = CPU_REGUL(rn) + off;
+						opReg[opidx++] = readv(mAddr,    LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr+4,  LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr+8,  LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr+12, LN_LONG, RACC);
+						continue;
+
+					case WDP|MB: case WDP|MW: case WDP|ML:
+						off   = SXTW(readvi(LN_WORD));
+						mAddr = CPU_REGUL(rn) + off;
+						opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), WACC);
+						opReg[opidx++] = mAddr;
+						continue;
+					case WDP|MQ:
+						off   = SXTW(readvi(LN_WORD));
+						mAddr = CPU_REGUL(rn) + off;
+						opReg[opidx++] = readv(mAddr,   LN_LONG, WACC);
+						opReg[opidx++] = readv(mAddr+4, LN_LONG, WACC);
+						opReg[opidx++] = mAddr;
+						continue;
+					case WDP|MO:
+						off   = SXTW(readvi(LN_WORD));
+						mAddr = CPU_REGUL(rn) + off;
+						opReg[opidx++] = readv(mAddr,    LN_LONG, WACC);
+						opReg[opidx++] = readv(mAddr+4,  LN_LONG, WACC);
+						opReg[opidx++] = readv(mAddr+8,  LN_LONG, WACC);
+						opReg[opidx++] = readv(mAddr+12, LN_LONG, WACC);
+						opReg[opidx++] = mAddr;
+						continue;
+
+					case WDP|WB: case WDP|WW: case WDP|WL: case WDP|WQ:
+					case WDP|AB: case WDP|AW: case WDP|AL: case WDP|AQ:
+					case WDP|WO: case WDP|AO: case WDP|VB:
+						off   = SXTW(readvi(LN_WORD));
+						mAddr = CPU_REGUL(rn) + off;
+						opReg[opidx++] = mAddr;
+						continue;
+
+					// Word-Displacement Deferred Address Mode
+					case WDPD|RB: case WDPD|RW: case WDPD|RL: case WDPD|RF:
+						off   = SXTW(readvi(LN_WORD));
+						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), RACC);
+						continue;
+					case WDPD|RQ: case WDPD|RG: case WDPD|RD:
+						off   = SXTW(readvi(LN_WORD));
+						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr,   LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr+4, LN_LONG, RACC);
+						continue;
+					case WDPD|RO: case WDPD|RH:
+						off   = SXTW(readvi(LN_WORD));
+						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr,    LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr+4,  LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr+8,  LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr+12, LN_LONG, RACC);
+						continue;
+
+					case WDPD|MB: case WDPD|MW: case WDPD|ML:
+						off   = SXTW(readvi(LN_WORD));
+						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), WACC);
+						opReg[opidx++] = mAddr;
+						continue;
+					case WDPD|MQ:
+						off   = SXTW(readvi(LN_WORD));
+						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr,   LN_LONG, WACC);
+						opReg[opidx++] = readv(mAddr+4, LN_LONG, WACC);
+						opReg[opidx++] = mAddr;
+						continue;
+					case WDPD|MO:
+						off   = SXTW(readvi(LN_WORD));
+						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr,    LN_LONG, WACC);
+						opReg[opidx++] = readv(mAddr+4,  LN_LONG, WACC);
+						opReg[opidx++] = readv(mAddr+8,  LN_LONG, WACC);
+						opReg[opidx++] = readv(mAddr+12, LN_LONG, WACC);
+						opReg[opidx++] = mAddr;
+						continue;
+
+					case WDPD|WB: case WDPD|WW: case WDPD|WL: case WDPD|WQ:
+					case WDPD|AB: case WDPD|AW: case WDPD|AL: case WDPD|AQ:
+					case WDPD|WO: case WDPD|AO: case WDPD|VB:
+						off   = SXTW(readvi(LN_WORD));
+						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+						opReg[opidx++] = mAddr;
+						continue;
+
+					// Longword-Displacement Address Mode
+					case LDP|RB: case LDP|RW: case LDP|RL: case LDP|RF:
+						off   = SXTL(readvi(LN_LONG));
+						mAddr = CPU_REGUL(rn) + off;
+						opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), RACC);
+						continue;
+					case LDP|RQ: case LDP|RG: case LDP|RD:
+						off   = SXTL(readvi(LN_LONG));
+						mAddr = CPU_REGUL(rn) + off;
+						opReg[opidx++] = readv(mAddr,   LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr+4, LN_LONG, RACC);
+						continue;
+					case LDP|RO: case LDP|RH:
+						off   = SXTL(readvi(LN_LONG));
+						mAddr = CPU_REGUL(rn) + off;
+						opReg[opidx++] = readv(mAddr,    LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr+4,  LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr+8,  LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr+12, LN_LONG, RACC);
+						continue;
+
+					case LDP|MB: case LDP|MW: case LDP|ML:
+						off   = SXTL(readvi(LN_LONG));
+						mAddr = CPU_REGUL(rn) + off;
+						opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), WACC);
+						opReg[opidx++] = mAddr;
+						continue;
+					case LDP|MQ:
+						off   = SXTL(readvi(LN_LONG));
+						mAddr = CPU_REGUL(rn) + off;
+						opReg[opidx++] = readv(mAddr,   LN_LONG, WACC);
+						opReg[opidx++] = readv(mAddr+4, LN_LONG, WACC);
+						opReg[opidx++] = mAddr;
+						continue;
+					case LDP|MO:
+						off   = SXTL(readvi(LN_LONG));
+						mAddr = CPU_REGUL(rn) + off;
+						opReg[opidx++] = readv(mAddr,    LN_LONG, WACC);
+						opReg[opidx++] = readv(mAddr+4,  LN_LONG, WACC);
+						opReg[opidx++] = readv(mAddr+8,  LN_LONG, WACC);
+						opReg[opidx++] = readv(mAddr+12, LN_LONG, WACC);
+						opReg[opidx++] = mAddr;
+						continue;
+
+					case LDP|WB: case LDP|WW: case LDP|WL: case LDP|WQ:
+					case LDP|AB: case LDP|AW: case LDP|AL: case LDP|AQ:
+					case LDP|WO: case LDP|AO: case LDP|VB:
+						off   = SXTL(readvi(LN_LONG));
+						mAddr = CPU_REGUL(rn) + off;
+						opReg[opidx++] = mAddr;
+						continue;
+
+					// Longword-Displacement Deferred Address Mode
+					case LDPD|RB: case LDPD|RW: case LDPD|RL: case LDPD|RF:
+						off   = SXTL(readvi(LN_LONG));
+						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), RACC);
+						continue;
+					case LDPD|RQ: case LDPD|RG: case LDPD|RD:
+						off   = SXTL(readvi(LN_LONG));
+						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr,   LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr+4, LN_LONG, RACC);
+						continue;
+					case LDPD|RO: case LDPD|RH:
+						off   = SXTL(readvi(LN_LONG));
+						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr,    LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr+4,  LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr+8,  LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr+12, LN_LONG, RACC);
+						continue;
+
+					case LDPD|MB: case LDPD|MW: case LDPD|ML:
+						off   = SXTL(readvi(LN_LONG));
+						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), WACC);
+						opReg[opidx++] = mAddr;
+						continue;
+					case LDPD|MQ:
+						off   = SXTL(readvi(LN_LONG));
+						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr,   LN_LONG, WACC);
+						opReg[opidx++] = readv(mAddr+4, LN_LONG, WACC);
+						opReg[opidx++] = mAddr;
+						continue;
+					case LDPD|MO:
+						off   = SXTL(readvi(LN_LONG));
+						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+						opReg[opidx++] = readv(mAddr,    LN_LONG, WACC);
+						opReg[opidx++] = readv(mAddr+4,  LN_LONG, WACC);
+						opReg[opidx++] = readv(mAddr+8,  LN_LONG, WACC);
+						opReg[opidx++] = readv(mAddr+12, LN_LONG, WACC);
+						opReg[opidx++] = mAddr;
+						continue;
+
+					case LDPD|WB: case LDPD|WW: case LDPD|WL: case LDPD|WQ:
+					case LDPD|AB: case LDPD|AW: case LDPD|AL: case LDPD|AQ:
+					case LDPD|WO: case LDPD|AO: case LDPD|VB:
+						off   = SXTL(readvi(LN_LONG));
+						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+						opReg[opidx++] = mAddr;
+						continue;
+
+					// Indexed Register
+					case IDX|RB: case IDX|RW: case IDX|RL: case IDX|RQ: case IDX|RO:
+					case IDX|MB: case IDX|MW: case IDX|ML: case IDX|MQ: case IDX|MO:
+					case IDX|WB: case IDX|WW: case IDX|WL: case IDX|WQ: case IDX|WO:
+					case IDX|AB: case IDX|AW: case IDX|AL: case IDX|AQ: case IDX|AO:
+					case IDX|RF: case IDX|RD: case IDX|RG: case IDX|RH: case IDX|VB:
+						Validate(rn, REG_nPC);
+						ireg = CPU_REGUL(rn) << OPM_SCALE(opr);
+						spec = readvi(LN_BYTE);
+						rn   = spec & 0xF;
 						break;
 
 					default:
 						throw RSVD_ADDR_FAULT;
-					}
-					break;
 				}
 
-				// Write operands
-				if (opMode & (OPR_VADDR|OPR_ADDR|OPR_WRITE)) {
-					if (opMode & (OPR_VADDR|OPR_WRITE))
-						opRegs[opn++] = OPR_MEM;
-					opRegs[opn++] = iAddr;
-				} else {
-					if (scale <= LN_LONG) {
-						opRegs[opn++] = readv(iAddr, scale, RACC);
-					} else {
-						opRegs[opn++] = readv(iAddr, LN_LONG, RACC);
-						opRegs[opn++] = readv(iAddr+LN_LONG, LN_LONG, RACC);
-					}
-					if (opMode & OPR_MODIFIED) {
-						opRegs[opn++] = OPR_MEM;
-						opRegs[opn++] = iAddr;
-					}
+		#ifdef DEBUG
+		//		PrintLog3(LOG_TRACE, NULL,
+		//			"%s: (OPR) Index %08X (Operand %02X)\n",
+		//				IO_DEVNAME(cpu), idxReg, spec);
+		#endif /* DEBUG */
+
+				// Indexed Register
+				switch(spec & 0xF0) {
+					case REGD:
+						Validate(rn, REG_nPC);
+						ireg += CPU_REGUL(rn);
+						break;
+
+					case ADEC:
+						Validate(rn, REG_nPC);
+						rqReg[rqCount++] = (OPM_SIZE(opr) << 4) | rn;
+						gpReg[rn].l     -= OPM_SIZE(opr);
+						ireg            += CPU_REGUL(rn);
+						break;
+
+					case AINC:
+						Validate(rn, REG_nPC);
+						ireg            += CPU_REGUL(rn);
+						rqReg[rqCount++] = (-OPM_SIZE(opr) << 4) | rn;
+						gpReg[rn].l     += OPM_SIZE(opr);
+						break;
+
+					case AINCD:
+						if (rn < REG_nPC) {
+							ireg            += readv(CPU_REGUL(rn), LN_LONG, RACC);
+							rqReg[rqCount++] = (-LN_LONG << 4) | rn;
+							gpReg[rn].l     += LN_LONG;
+						} else
+							ireg += readvi(LN_LONG);
+						break;
+
+					case BDP:
+						off     = SXTB(readvi(LN_BYTE));
+						ireg += CPU_REGUL(rn) + off;
+						break;
+
+					case BDPD:
+						off     = SXTB(readvi(LN_BYTE));
+						ireg += readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+						break;
+
+					case WDP:
+						off     = SXTW(readvi(LN_WORD));
+						ireg += CPU_REGUL(rn) + off;
+						break;
+
+					case WDPD:
+						off     = SXTW(readvi(LN_WORD));
+						ireg += readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+						break;
+
+					case LDP:
+						off     = SXTL(readvi(LN_LONG));
+						ireg += CPU_REGUL(rn) + off;
+						break;
+
+					case LDPD:
+						off     = SXTL(readvi(LN_LONG));
+						ireg += readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+						break;
+
+					default:
+						throw RSVD_ADDR_FAULT;
+				}
+
+				switch(opr & (OPM_ACC|OPM_LEN)) {
+					case RB: case RW: case RL:
+						opReg[opidx++] = readv(ireg, OPM_SIZE(opr), RACC);
+						break;
+					case RQ:
+						opReg[opidx++] = readv(ireg,   LN_LONG, RACC);
+						opReg[opidx++] = readv(ireg+4, LN_LONG, RACC);
+						break;
+					case RO:
+						opReg[opidx++] = readv(ireg,    LN_LONG, RACC);
+						opReg[opidx++] = readv(ireg+4,  LN_LONG, RACC);
+						opReg[opidx++] = readv(ireg+8,  LN_LONG, RACC);
+						opReg[opidx++] = readv(ireg+12, LN_LONG, RACC);
+						break;
+
+					case MB: case MW: case ML:
+						opReg[opidx++] = readv(ireg, OPM_SIZE(opr), WACC);
+						opReg[opidx++] = ireg;
+						break;
+					case MQ:
+						opReg[opidx++] = readv(ireg,   LN_LONG, WACC);
+						opReg[opidx++] = readv(ireg+4, LN_LONG, WACC);
+						opReg[opidx++] = ireg;
+						break;
+					case MO:
+						opReg[opidx++] = readv(ireg,    LN_LONG, WACC);
+						opReg[opidx++] = readv(ireg+4,  LN_LONG, WACC);
+						opReg[opidx++] = readv(ireg+8,  LN_LONG, WACC);
+						opReg[opidx++] = readv(ireg+12, LN_LONG, WACC);
+						opReg[opidx++] = ireg;
+						break;
+
+					case WB: case WW: case WL: case WQ: case WO:
+					case AB: case AW: case AL: case AQ: case AO:
+						opReg[opidx++] = ireg;
+						break;
 				}
 			}
-
 
 			// Execute opcode
 			switch (opCode) {
@@ -314,29 +958,29 @@ void CPU_CLASS::execute()
 
 			// INDEX - Index instruction
 			case OPC_nINDEX:
-				src  = SXTL(opRegs[0]);
-				src1 = SXTL(opRegs[3]);
-				src2 = SXTL(opRegs[4]);
+				src  = SXTL(opReg[0]);
+				src1 = SXTL(opReg[3]);
+				src2 = SXTL(opReg[4]);
 //				if (src < opRegs[1] || src > opRegs[2]));
 
 				dst = (src + src2) * src1;
-				StoreL(opRegs[5], opRegs[6], dst);
+				storel(opReg[5], dst);
 				UpdateCC_IIZZ_L(ccReg, dst);
 				printf("%s: %08X (%08X to %08X) + %08X * %08X => %08X: %s\n", devName.c_str(),
-					ZXTL(src), ZXTL(opRegs[1]), ZXTL(opRegs[2]), ZXTL(src2), ZXTL(src1),
+					ZXTL(src), ZXTL(opReg[1]), ZXTL(opReg[2]), ZXTL(src2), ZXTL(src1),
 					ZXTL(dst), stringCC(ccReg));
 				break;
 
 			// BIxPSW instructions
 			case OPC_nBICPSW:
-				mask = uint16_t(opRegs[0]);
+				mask = uint16_t(opReg[0]);
 				if (mask & PSW_MBZ)
 					throw RSVD_OPND_FAULT;
 				psReg &= ~mask;
 				ccReg &= ~mask;
 				break;
 			case OPC_nBISPSW:
-				mask = uint16_t(opRegs[0]);
+				mask = uint16_t(opReg[0]);
 				if (mask & PSW_MBZ)
 					throw RSVD_OPND_FAULT;
 				psReg |= (mask & ~PSW_CC);
@@ -346,20 +990,26 @@ void CPU_CLASS::execute()
 			// MOVPSL instruction
 			case OPC_nMOVPSL:
 				dst = psReg | ccReg;
-				StoreL(opRegs[0], opRegs[1], dst);
+				storel(opReg[0], dst);
 				printf("%s: PSL %08X: %s\n", devName.c_str(),
 						ZXTL(dst), stringCC(ccReg));
 				break;
 
 			// MTPR/MFPR instructions
 			case OPC_nMTPR:
-				src = opRegs[0];
-				writepr(opRegs[1], src);
+				// Must be kernel mode
+				if (PSL_GETCUR(psReg) != AM_KERNEL)
+					throw PRIV_INST_FAULT;
+				src = opReg[0];
+				writepr(opReg[1], src);
 				UpdateCC_IIZP_L(ccReg, src);
 				break;
 			case OPC_nMFPR:
-				src = readpr(opRegs[0]);
-				StoreL(opRegs[1], opRegs[2], src);
+				// Must be kernel mode
+				if (PSL_GETCUR(psReg) != AM_KERNEL)
+					throw PRIV_INST_FAULT;
+				src = readpr(opReg[0]);
+				storel(opReg[1], src);
 				UpdateCC_IIZP_L(ccReg, src);
 				break;
 
@@ -385,84 +1035,84 @@ void CPU_CLASS::execute()
 
 			case OPC_nBNEQ:
 				if ((ccReg & CC_Z) == 0) {
-					REG_PC = REG_PC + int8_t(brDisp);
+					REG_PC += opReg[0];
 					flushvi();
 				}
 				break;
 
 			case OPC_nBEQL:
 				if (ccReg & CC_Z) {
-					REG_PC = REG_PC + int8_t(brDisp);
+					REG_PC += opReg[0];
 					flushvi();
 				}
 				break;
 
 			case OPC_nBGTR:
 				if ((ccReg & (CC_N|CC_Z)) == 0) {
-					REG_PC = REG_PC + int8_t(brDisp);
+					REG_PC += opReg[0];
 					flushvi();
 				}
 				break;
 
 			case OPC_nBLEQ:
 				if (ccReg & (CC_N|CC_Z)) {
-					REG_PC = REG_PC + int8_t(brDisp);
+					REG_PC += opReg[0];
 					flushvi();
 				}
 				break;
 
 			case OPC_nBGEQ:
 				if ((ccReg & CC_N) == 0) {
-					REG_PC = REG_PC + int8_t(brDisp);
+					REG_PC += opReg[0];
 					flushvi();
 				}
 				break;
 
 			case OPC_nBLSS:
 				if (ccReg & CC_N) {
-					REG_PC = REG_PC + int8_t(brDisp);
+					REG_PC += opReg[0];
 					flushvi();
 				}
 				break;
 
 			case OPC_nBGTRU:
 				if ((ccReg & (CC_C|CC_Z)) == 0) {
-					REG_PC = REG_PC + int8_t(brDisp);
+					REG_PC += opReg[0];
 					flushvi();
 				}
 				break;
 
 			case OPC_nBLEQU:
 				if (ccReg & (CC_C|CC_Z)) {
-					REG_PC = REG_PC + int8_t(brDisp);
+					REG_PC += opReg[0];
 					flushvi();
 				}
 				break;
 
 			case OPC_nBVC:
 				if ((ccReg & CC_V) == 0) {
-					REG_PC = REG_PC + int8_t(brDisp);
+					REG_PC += opReg[0];
 					flushvi();
 				}
 				break;
 
 			case OPC_nBVS:
 				if (ccReg & CC_V) {
-					REG_PC = REG_PC + int8_t(brDisp);
+					REG_PC += opReg[0];
 					flushvi();
 				}
 				break;
 
 			case OPC_nBCC:
 				if ((ccReg & CC_C) == 0) {
-					REG_PC = REG_PC + int8_t(brDisp);
+					REG_PC += opReg[0];
 					flushvi();
 				}
 				break;
 
 			case OPC_nBCS:
 				if (ccReg & CC_C) {
-					REG_PC = REG_PC + int8_t(brDisp);
+					REG_PC += opReg[0];
 					flushvi();
 				}
 				break;
@@ -470,17 +1120,17 @@ void CPU_CLASS::execute()
 
 			//  BRx instructions
 			case OPC_nBRB:
-				REG_PC = REG_PC + int8_t(brDisp);
+				REG_PC += opReg[0];
 				flushvi();
 				break;
 			case OPC_nBRW:
-				REG_PC = REG_PC + int16_t(brDisp);
+				REG_PC += opReg[0];
 				flushvi();
 				break;
 
 			// JMP instruction
 			case OPC_nJMP:
-				REG_PC = opRegs[0];
+				REG_PC = opReg[0];
 				flushvi();
 				break;
 
@@ -489,13 +1139,13 @@ void CPU_CLASS::execute()
 			case OPC_nBSBB:
 				writev(REG_SP - LN_LONG, REG_PC, LN_LONG, WACC);
 				REG_SP -= LN_LONG;
-				REG_PC = REG_PC + int8_t(brDisp);
+				REG_PC += opReg[0];
 				flushvi();
 				break;
 			case OPC_nBSBW:
 				writev(REG_SP - LN_LONG, REG_PC, LN_LONG, WACC);
 				REG_SP -= LN_LONG;
-				REG_PC = REG_PC + int16_t(brDisp);
+				REG_PC += opReg[0];
 				flushvi();
 				break;
 
@@ -503,7 +1153,7 @@ void CPU_CLASS::execute()
 			case OPC_nJSB:
 				writev(REG_SP - LN_LONG, REG_PC, LN_LONG, WACC);
 				REG_SP -= LN_LONG;
-				REG_PC = opRegs[0];
+				REG_PC = opReg[0];
 				flushvi();
 				break;
 
@@ -516,15 +1166,15 @@ void CPU_CLASS::execute()
 
 			// ACBx instructions
 			case OPC_nACBB:
-				src   = SXTB(opRegs[0]);
-				src1  = SXTB(opRegs[1]);
-				src2  = SXTB(opRegs[2]);
+				src   = SXTB(opReg[0]);
+				src1  = SXTB(opReg[1]);
+				src2  = SXTB(opReg[2]);
 				dst   = src2 + src1;
-				StoreB(opRegs[3], opRegs[4], dst);
+				storeb(opReg[3], dst);
 				UpdateCC_IIZP_B(ccReg, dst);
 				UpdateV_ADD_B(ccReg, dst, src1, src2);
 				if ((src1 < 0) ? (dst >= src) : (dst <= src)) {
-					REG_PC = REG_PC + SXTW(brDisp);
+					REG_PC += opReg[4];
 					flushvi();
 				}
 				printf("%s: %02X + %02X => %02X: %s\n", devName.c_str(),
@@ -534,15 +1184,15 @@ void CPU_CLASS::execute()
 					((src1 < 0) ? (dst >= src) : (dst <= src)) ? "Jumped" : "Continue");
 				break;
 			case OPC_nACBW:
-				src   = SXTW(opRegs[0]);
-				src1  = SXTW(opRegs[1]);
-				src2  = SXTW(opRegs[2]);
+				src   = SXTW(opReg[0]);
+				src1  = SXTW(opReg[1]);
+				src2  = SXTW(opReg[2]);
 				dst   = src2 + src1;
-				StoreW(opRegs[3], opRegs[4], dst);
+				storew(opReg[3], dst);
 				UpdateCC_IIZP_W(ccReg, dst);
 				UpdateV_ADD_W(ccReg, dst, src1, src2);
 				if ((src1 < 0) ? (dst >= src) : (dst <= src)) {
-					REG_PC = REG_PC + SXTW(brDisp);
+					REG_PC += opReg[4];
 					flushvi();
 				}
 				printf("%s: %04X + %04X => %04X: %s\n", devName.c_str(),
@@ -552,15 +1202,15 @@ void CPU_CLASS::execute()
 					((src1 < 0) ? (dst >= src) : (dst <= src)) ? "Jumped" : "Continue");
 				break;
 			case OPC_nACBL:
-				src   = SXTL(opRegs[0]);
-				src1  = SXTL(opRegs[1]);
-				src2  = SXTL(opRegs[2]);
+				src   = SXTL(opReg[0]);
+				src1  = SXTL(opReg[1]);
+				src2  = SXTL(opReg[2]);
 				dst   = src2 + src1;
-				StoreL(opRegs[3], opRegs[4], dst);
+				storel(opReg[3], dst);
 				UpdateCC_IIZP_L(ccReg, dst);
 				UpdateV_ADD_L(ccReg, dst, src1, src2);
 				if ((src1 < 0) ? (dst >= src) : (dst <= src)) {
-					REG_PC = REG_PC + SXTW(brDisp);
+					REG_PC += opReg[4];
 					flushvi();
 				}
 				printf("%s: %08X + %08X => %08X: %s\n", devName.c_str(),
@@ -572,16 +1222,16 @@ void CPU_CLASS::execute()
 
 			// CASEx - Case instructions
 			case OPC_nCASEB:
-				src1 = SXTB(opRegs[0]);
-				src2 = SXTB(opRegs[1]);
-				src  = SXTB(opRegs[2]);
+				src1 = SXTB(opReg[0]);
+				src2 = SXTB(opReg[1]);
+				src  = SXTB(opReg[2]);
 				dst  = src1 - src2;
 				UpdateCC_CMP_B(ccReg, dst, src);
 				if (ZXTB(dst) <= ZXTB(src)) {
 					brDisp = readv(REG_PC + (ZXTB(dst) << 1), LN_WORD, RACC);
-					REG_PC = REG_PC + SXTW(brDisp);
+					REG_PC += SXTW(brDisp);
 				} else
-					REG_PC = REG_PC + ((ZXTB(src) << 1) + 2);
+					REG_PC += ((ZXTB(src) << 1) + 2);
 				flushvi();
 				printf("%s: (%02X - %02X) => %02X <= %02X\n", devName.c_str(),
 					ZXTB(src1), ZXTB(src2), ZXTB(dst), ZXTB(src));
@@ -593,31 +1243,31 @@ void CPU_CLASS::execute()
 //						REG_PC, src << 1, REG_PC + (src << 1) + 2);
 				break;
 			case OPC_nCASEW:
-				src1 = SXTW(opRegs[0]);
-				src2 = SXTW(opRegs[1]);
-				src  = SXTW(opRegs[2]);
+				src1 = SXTW(opReg[0]);
+				src2 = SXTW(opReg[1]);
+				src  = SXTW(opReg[2]);
 				dst  = src1 - src2;
 				UpdateCC_CMP_W(ccReg, dst, src);
 				if (ZXTW(dst) <= ZXTW(src)) {
 					brDisp = readv(REG_PC + (ZXTW(dst) << 1), LN_WORD, RACC);
-					REG_PC = REG_PC + SXTW(brDisp);
+					REG_PC += SXTW(brDisp);
 				} else
-					REG_PC = REG_PC + ((ZXTW(src) << 1) + 2);
+					REG_PC += ((ZXTW(src) << 1) + 2);
 				flushvi();
 				printf("%s: (%04X - %04X) => %04X <= %04X\n", devName.c_str(),
 					ZXTW(src1), ZXTW(src2), ZXTW(dst), ZXTW(src));
 				break;
 			case OPC_nCASEL:
-				src1 = SXTL(opRegs[0]);
-				src2 = SXTL(opRegs[1]);
-				src  = SXTL(opRegs[2]);
+				src1 = SXTL(opReg[0]);
+				src2 = SXTL(opReg[1]);
+				src  = SXTL(opReg[2]);
 				dst  = src1 - src2;
 				UpdateCC_CMP_L(ccReg, dst, src);
 				if (ZXTL(dst) <= ZXTL(src)) {
 					brDisp = readv(REG_PC + (ZXTL(dst) << 1), LN_WORD, RACC);
-					REG_PC = REG_PC + SXTW(brDisp);
+					REG_PC += SXTW(brDisp);
 				} else
-					REG_PC = REG_PC + ((ZXTL(src) << 1) + 2);
+					REG_PC += ((ZXTL(src) << 1) + 2);
 				flushvi();
 				printf("%s: (%08X - %08X) => %08X <= %08X\n", devName.c_str(),
 					ZXTL(src1), ZXTL(src2), ZXTL(dst), ZXTL(src));
@@ -625,14 +1275,14 @@ void CPU_CLASS::execute()
 
 			// AOBcc instructions
 			case OPC_nAOBLEQ:
-				src1 = SXTL(opRegs[0]);
-				src2 = SXTL(opRegs[1]);
+				src1 = SXTL(opReg[0]);
+				src2 = SXTL(opReg[1]);
 				dst  = src2 + 1;
-				StoreL(opRegs[2], opRegs[3], dst);
+				storel(opReg[2], dst);
 				UpdateCC_IIZP_L(ccReg, dst);
 				UpdateV_ADD_L(ccReg, dst, 1, src2);
 				if (dst <= src1) {
-					REG_PC = REG_PC + SXTB(brDisp);
+					REG_PC += opReg[3];;
 					flushvi();
 				}
 				printf("%s: %08X + 1 => %08X <= %08X: %s\n", devName.c_str(),
@@ -641,14 +1291,14 @@ void CPU_CLASS::execute()
 					printf("%s: Jump into PC %08X\n", devName.c_str(), REG_PC);
 				break;
 			case OPC_nAOBLSS:
-				src1 = SXTL(opRegs[0]);
-				src2 = SXTL(opRegs[1]);
+				src1 = SXTL(opReg[0]);
+				src2 = SXTL(opReg[1]);
 				dst  = src2 + 1;
-				StoreL(opRegs[2], opRegs[3], dst);
+				storel(opReg[2], dst);
 				UpdateCC_IIZP_L(ccReg, dst);
 				UpdateV_ADD_L(ccReg, dst, 1, src2);
 				if (dst < src1) {
-					REG_PC = REG_PC + SXTB(brDisp);
+					REG_PC += opReg[3];
 					flushvi();
 				}
 				printf("%s: %08X + 1 => %08X < %08X: %s\n", devName.c_str(),
@@ -659,13 +1309,13 @@ void CPU_CLASS::execute()
 
 			// SOBcc instructions
 			case OPC_nSOBGEQ:
-				src = SXTL(opRegs[0]);
+				src = SXTL(opReg[0]);
 				dst = src - 1;
-				StoreL(opRegs[1], opRegs[2], dst);
+				storel(opReg[1], dst);
 				UpdateCC_IIZP_L(ccReg, dst);
 				UpdateV_SUB_L(ccReg, dst, 1, src);
 				if (dst >= 0) {
-					REG_PC = REG_PC + SXTB(brDisp);
+					REG_PC += opReg[2];
 					flushvi();
 				}
 				printf("%s: %08X - 1 => %08X >= 0: %s\n", devName.c_str(),
@@ -674,13 +1324,13 @@ void CPU_CLASS::execute()
 					printf("%s: Jump into PC %08X\n", devName.c_str(), REG_PC);
 				break;
 			case OPC_nSOBGTR:
-				src = SXTL(opRegs[0]);
+				src = SXTL(opReg[0]);
 				dst = src - 1;
-				StoreL(opRegs[1], opRegs[2], dst);
+				storel(opReg[1], dst);
 				UpdateCC_IIZP_L(ccReg, dst);
 				UpdateV_SUB_L(ccReg, dst, 1, src);
 				if (dst > 0) {
-					REG_PC = REG_PC + SXTB(brDisp);
+					REG_PC += opReg[2];
 					flushvi();
 				}
 				printf("%s: %08X - 1 => %08X > 0: %s\n", devName.c_str(),
@@ -692,56 +1342,56 @@ void CPU_CLASS::execute()
 			// BBx instructions
 			case OPC_nBBS:
 				if (getBit() == 1) {
-					REG_PC = REG_PC + SXTB(brDisp);
+					REG_PC += opReg[2];
 					flushvi();
 				}
 				break;
 			case OPC_nBBC:
 				if (getBit() == 0) {
-					REG_PC = REG_PC + SXTB(brDisp);
+					REG_PC += opReg[2];
 					flushvi();
 				}
 				break;
 			case OPC_nBBSSI:
 			case OPC_nBBSS:
 				if (setBit(1) == 1) {
-					REG_PC = REG_PC + SXTB(brDisp);
+					REG_PC += opReg[2];
 					flushvi();
 				}
 				break;
 			case OPC_nBBSC:
 				if (setBit(0) == 1) {
-					REG_PC = REG_PC + SXTB(brDisp);
+					REG_PC += opReg[2];
 					flushvi();
 				}
 				break;
 			case OPC_nBBCS:
 				if (setBit(1) == 0) {
-					REG_PC = REG_PC + SXTB(brDisp);
+					REG_PC += opReg[2];
 					flushvi();
 				}
 				break;
 			case OPC_nBBCCI:
 			case OPC_nBBCC:
 				if (setBit(0) == 0) {
-					REG_PC = REG_PC + SXTB(brDisp);
+					REG_PC += opReg[2];
 					flushvi();
 				}
 				break;
 
 			// BLBx instructions
 			case OPC_nBLBS:
-				src = opRegs[0];
+				src = opReg[0];
 				if ((src & 1) == 1) {
-					REG_PC = REG_PC + SXTB(brDisp);
+					REG_PC += opReg[1];
 					flushvi();
 				}
 				printf("%s: %08X & 1 => %d\n", devName.c_str(), src, src & 1);
 				break;
 			case OPC_nBLBC:
-				src = opRegs[0];
+				src = opReg[0];
 				if ((src & 1) == 0) {
-					REG_PC = REG_PC + SXTB(brDisp);
+					REG_PC += opReg[1];
 					flushvi();
 				}
 				printf("%s: %08X & 1 => %d\n", devName.c_str(), src, src & 1);
@@ -750,15 +1400,15 @@ void CPU_CLASS::execute()
 			// MOVx instructions
 			// MOVAx instructions
 			case OPC_nMOVB:
-				dst = opRegs[0];
-				StoreB(opRegs[1], opRegs[2], dst);
+				dst = opReg[0];
+				storeb(opReg[1], dst);
 				UpdateCC_IIZP_B(ccReg, dst);
 				printf("%s: Move %02X: %s\n", devName.c_str(),
 						ZXTB(dst), stringCC(ccReg));
 				break;
 			case OPC_nMOVW:
-				dst = opRegs[0];
-				StoreW(opRegs[1], opRegs[2], dst);
+				dst = opReg[0];
+				storew(opReg[1], dst);
 				UpdateCC_IIZP_W(ccReg, dst);
 				printf("%s: Move %04X: %s\n", devName.c_str(),
 						ZXTW(dst), stringCC(ccReg));
@@ -768,16 +1418,16 @@ void CPU_CLASS::execute()
 			case OPC_nMOVAW:
 			case OPC_nMOVAL:
 			case OPC_nMOVAQ:
-				dst = opRegs[0];
-				StoreL(opRegs[1], opRegs[2], dst);
+				dst = opReg[0];
+				storel(opReg[1], dst);
 				UpdateCC_IIZP_L(ccReg, dst);
 				printf("%s: Move %08X: %s\n", devName.c_str(),
 						ZXTL(dst), stringCC(ccReg));
 				break;
 			case OPC_nMOVQ:
-				dst1 = opRegs[0];
-				dst2 = opRegs[1];
-				StoreQ(opRegs[2], opRegs[3], dst1, dst2);
+				dst1 = opReg[0];
+				dst2 = opReg[1];
+				storeq(opReg[2], dst1, dst2);
 				UpdateCC_IIZP_Q(ccReg, dst1, dst2);
 				printf("%s: Move %08X %08X: %s\n", devName.c_str(),
 						ZXTL(dst1), ZXTL(dst2), stringCC(ccReg));
@@ -785,25 +1435,25 @@ void CPU_CLASS::execute()
 
 			// MCOMx - Move complemented instructions
 			case OPC_nMCOMB:
-				src = SXTB(opRegs[0]);
+				src = SXTB(opReg[0]);
 				dst = ~src;
-				StoreB(opRegs[1], opRegs[2], dst);
+				storeb(opReg[1], dst);
 				UpdateCC_IIZP_B(ccReg, dst);
 				printf("%s: Move ~%02X => %02X: %s\n", devName.c_str(),
 					ZXTB(src), ZXTB(dst), stringCC(ccReg));
 				break;
 			case OPC_nMCOMW:
-				src = SXTW(opRegs[0]);
+				src = SXTW(opReg[0]);
 				dst = ~src;
-				StoreW(opRegs[1], opRegs[2], dst);
+				storew(opReg[1], dst);
 				UpdateCC_IIZP_W(ccReg, dst);
 				printf("%s: Move ~%04X => %04X: %s\n", devName.c_str(),
 					ZXTW(src), ZXTW(dst), stringCC(ccReg));
 				break;
 			case OPC_nMCOML:
-				src = SXTL(opRegs[0]);
+				src = SXTL(opReg[0]);
 				dst = ~src;
-				StoreL(opRegs[1], opRegs[2], dst);
+				storel(opReg[1], dst);
 				UpdateCC_IIZP_L(ccReg, dst);
 				printf("%s: Move ~%08X => %08X: %s\n", devName.c_str(),
 					ZXTL(src), ZXTL(dst), stringCC(ccReg));
@@ -811,25 +1461,25 @@ void CPU_CLASS::execute()
 
 			// MNEGx - Move negated instructions
 			case OPC_nMNEGB:
-				src = SXTB(opRegs[0]);
+				src = SXTB(opReg[0]);
 				dst = -src;
-				StoreB(opRegs[1], opRegs[2], dst);
+				storeb(opReg[1], dst);
 				UpdateCC_SUB_B(ccReg, dst, src, 0);
 				printf("%s: Move -%02X => %02X: %s\n", devName.c_str(),
 					ZXTB(src), ZXTB(dst), stringCC(ccReg));
 				break;
 			case OPC_nMNEGW:
-				src = SXTW(opRegs[0]);
+				src = SXTW(opReg[0]);
 				dst = -src;
-				StoreW(opRegs[1], opRegs[2], dst);
+				storew(opReg[1], dst);
 				UpdateCC_SUB_W(ccReg, dst, src, 0);
 				printf("%s: Move -%04X => %04X: %s\n", devName.c_str(),
 					ZXTW(src), ZXTW(dst), stringCC(ccReg));
 				break;
 			case OPC_nMNEGL:
-				src = SXTL(opRegs[0]);
+				src = SXTL(opReg[0]);
 				dst = -src;
-				StoreL(opRegs[1], opRegs[2], dst);
+				storel(opReg[1], dst);
 				UpdateCC_SUB_L(ccReg, dst, src, 0);
 				printf("%s: Move -%08X => %08X: %s\n", devName.c_str(),
 					ZXTL(src), ZXTL(dst), stringCC(ccReg));
@@ -837,22 +1487,22 @@ void CPU_CLASS::execute()
 
 			// MOVZx instructions
 			case OPC_nMOVZBW:
-				dst = ZXTB(opRegs[0]);
-				StoreW(opRegs[1], opRegs[2], dst);
+				dst = ZXTB(opReg[0]);
+				storew(opReg[1], dst);
 				UpdateCC_IIZP_W(ccReg, dst);
 				printf("%s: Move %02X => %04X: %s\n", devName.c_str(),
 					ZXTB(dst), ZXTW(dst), stringCC(ccReg));
 				break;
 			case OPC_nMOVZBL:
-				dst = ZXTB(opRegs[0]);
-				StoreL(opRegs[1], opRegs[2], dst);
+				dst = ZXTB(opReg[0]);
+				storel(opReg[1], dst);
 				UpdateCC_IIZP_L(ccReg, dst);
 				printf("%s: Move %02X => %08X: %s\n", devName.c_str(),
 					ZXTB(dst), ZXTL(dst), stringCC(ccReg));
 				break;
 			case OPC_nMOVZWL:
-				dst = ZXTW(opRegs[0]);
-				StoreL(opRegs[1], opRegs[2], dst);
+				dst = ZXTW(opReg[0]);
+				storel(opReg[1], dst);
 				UpdateCC_IIZP_L(ccReg, dst);
 				printf("%s: Move %04X => %08X: %s\n", devName.c_str(),
 					ZXTW(dst), ZXTL(dst), stringCC(ccReg));
@@ -860,25 +1510,25 @@ void CPU_CLASS::execute()
 
 			// CVTx - Convert instructions
 			case OPC_nCVTBW:
-				src = SXTB(opRegs[0]);
+				src = SXTB(opReg[0]);
 				dst = SXTW(src);
-				StoreW(opRegs[1], opRegs[2], dst);
+				storew(opReg[1], dst);
 				UpdateCC_IIZZ_W(ccReg, dst);
 				printf("%s: %02X => %04X: %s\n", devName.c_str(),
 						ZXTB(src), ZXTW(dst), stringCC(ccReg));
 				break;
 			case OPC_nCVTBL:
-				src = SXTB(opRegs[0]);
+				src = SXTB(opReg[0]);
 				dst = SXTL(src);
-				StoreL(opRegs[1], opRegs[2], dst);
+				storel(opReg[1], dst);
 				UpdateCC_IIZZ_L(ccReg, dst);
 				printf("%s: %02X => %08X: %s\n", devName.c_str(),
 						ZXTB(src), ZXTL(dst), stringCC(ccReg));
 				break;
 			case OPC_nCVTWB:
-				src = SXTW(opRegs[0]);
+				src = SXTW(opReg[0]);
 				dst = SXTB(src);
-				StoreB(opRegs[1], opRegs[2], dst);
+				storeb(opReg[1], dst);
 				UpdateCC_IIZZ_B(ccReg, dst);
 				if (src < -128 || src > 127) {
 					ccReg |= CC_V;
@@ -887,17 +1537,17 @@ void CPU_CLASS::execute()
 						ZXTW(src), ZXTB(dst), stringCC(ccReg));
 				break;
 			case OPC_nCVTWL:
-				src = SXTW(opRegs[0]);
+				src = SXTW(opReg[0]);
 				dst = SXTL(src);
-				StoreL(opRegs[1], opRegs[2], dst);
+				storel(opReg[1], dst);
 				UpdateCC_IIZZ_L(ccReg, dst);
 				printf("%s: %04X => %08X: %s\n", devName.c_str(),
 						ZXTW(src), ZXTL(dst), stringCC(ccReg));
 				break;
 			case OPC_nCVTLB:
-				src = SXTL(opRegs[0]);
+				src = SXTL(opReg[0]);
 				dst = SXTB(src);
-				StoreB(opRegs[1], opRegs[2], dst);
+				storeb(opReg[1], dst);
 				UpdateCC_IIZZ_B(ccReg, dst);
 				if (src < -128 || src > 127) {
 					ccReg |= CC_V;
@@ -906,9 +1556,9 @@ void CPU_CLASS::execute()
 						ZXTL(src), ZXTB(dst), stringCC(ccReg));
 				break;
 			case OPC_nCVTLW:
-				src = SXTL(opRegs[0]);
+				src = SXTL(opReg[0]);
 				dst = SXTW(src);
-				StoreW(opRegs[1], opRegs[2], dst);
+				storew(opReg[1], dst);
 				UpdateCC_IIZZ_W(ccReg, dst);
 				if (src < -128 || src > 127) {
 					ccReg |= CC_V;
@@ -919,40 +1569,40 @@ void CPU_CLASS::execute()
 
 			// CLRx instructions
 			case OPC_nCLRB:
-				StoreB(opRegs[0], opRegs[1], 0);
-				UpdateCC_Z1ZP(ccReg);
+				storeb(opReg[0], 0);
+				SetZ(ccReg);
 				break;
 			case OPC_nCLRW:
-				StoreW(opRegs[0], opRegs[1], 0);
-				UpdateCC_Z1ZP(ccReg);
+				storew(opReg[0], 0);
+				SetZ(ccReg);
 				break;
 			case OPC_nCLRL:
-				StoreL(opRegs[0], opRegs[1], 0);
-				UpdateCC_Z1ZP(ccReg);
+				storel(opReg[0], 0);
+				SetZ(ccReg);
 				break;
 			case OPC_nCLRQ:
-				StoreQ(opRegs[0], opRegs[1], 0, 0);
-				UpdateCC_Z1ZP(ccReg);
+				storeq(opReg[0], 0, 0);
+				SetZ(ccReg);
 				break;
 
 			// CMPx instructions
 			case OPC_nCMPB:
-				src1 = SXTB(opRegs[0]);
-				src2 = SXTB(opRegs[1]);
+				src1 = SXTB(opReg[0]);
+				src2 = SXTB(opReg[1]);
 				UpdateCC_CMP_B(ccReg, src1, src2);
 				printf("%s: Compare %02X with %02X: %s\n", devName.c_str(),
 						ZXTB(src1), ZXTB(src2), stringCC(ccReg));
 				break;
 			case OPC_nCMPW:
-				src1 = SXTW(opRegs[0]);
-				src2 = SXTW(opRegs[1]);
+				src1 = SXTW(opReg[0]);
+				src2 = SXTW(opReg[1]);
 				UpdateCC_CMP_W(ccReg, src1, src2);
 				printf("%s: Compare %04X with %04X: %s\n", devName.c_str(),
 						ZXTW(src1), ZXTW(src2), stringCC(ccReg));
 				break;
 			case OPC_nCMPL:
-				src1 = SXTL(opRegs[0]);
-				src2 = SXTL(opRegs[1]);
+				src1 = SXTL(opReg[0]);
+				src2 = SXTL(opReg[1]);
 				UpdateCC_CMP_L(ccReg, src1, src2);
 				printf("%s: Compare %08X with %08X: %s\n", devName.c_str(),
 						ZXTL(src1), ZXTL(src2), stringCC(ccReg));
@@ -960,19 +1610,19 @@ void CPU_CLASS::execute()
 
 				// TSTx instructions
 			case OPC_nTSTB:
-				src = SXTB(opRegs[0]);
+				src = SXTB(opReg[0]);
 				UpdateCC_IIZZ_B(ccReg, src);
 				printf("%s: Test %02X: %s\n", devName.c_str(),
 						ZXTB(src), stringCC(ccReg));
 				break;
 			case OPC_nTSTW:
-				src = SXTW(opRegs[0]);
+				src = SXTW(opReg[0]);
 				UpdateCC_IIZZ_W(ccReg, src);
 				printf("%s: Test %04X: %s\n", devName.c_str(),
 						ZXTW(src), stringCC(ccReg));
 				break;
 			case OPC_nTSTL:
-				src = SXTL(opRegs[0]);
+				src = SXTL(opReg[0]);
 				UpdateCC_IIZZ_L(ccReg, src);
 				printf("%s: Test %08X: %s\n", devName.c_str(),
 						ZXTL(src), stringCC(ccReg));
@@ -980,25 +1630,25 @@ void CPU_CLASS::execute()
 
 			// INCx instructions
 			case OPC_nINCB:
-				src = SXTB(opRegs[0]);
+				src = SXTB(opReg[0]);
 				dst = src + 1;
-				StoreB(opRegs[1], opRegs[2], dst);
+				storeb(opReg[1], dst);
 				UpdateCC_ADD_B(ccReg, dst, 1, src);
 				printf("%s: %02X + 1 => %02X: %s\n",
 					devName.c_str(), ZXTB(src), ZXTB(dst), stringCC(ccReg));
 				break;
 			case OPC_nINCW:
-				src = SXTW(opRegs[0]);
+				src = SXTW(opReg[0]);
 				dst = src + 1;
-				StoreW(opRegs[1], opRegs[2], dst);
+				storew(opReg[1], dst);
 				UpdateCC_ADD_W(ccReg, dst, 1, src);
 				printf("%s: %04X + 1 => %04X: %s\n",
 					devName.c_str(), ZXTW(src), ZXTW(dst), stringCC(ccReg));
 				break;
 			case OPC_nINCL:
-				src = SXTL(opRegs[0]);
+				src = SXTL(opReg[0]);
 				dst = src + 1;
-				StoreL(opRegs[1], opRegs[2], dst);
+				storel(opReg[1], dst);
 				UpdateCC_ADD_L(ccReg, dst, 1, src);
 				printf("%s: %08X + 1 => %08X: %s\n",
 					devName.c_str(), ZXTL(src), ZXTL(dst), stringCC(ccReg));
@@ -1006,25 +1656,25 @@ void CPU_CLASS::execute()
 
 			// DECx instructions
 			case OPC_nDECB:
-				src = SXTB(opRegs[0]);
+				src = SXTB(opReg[0]);
 				dst = src - 1;
-				StoreB(opRegs[1], opRegs[2], dst);
+				storeb(opReg[1], dst);
 				UpdateCC_SUB_B(ccReg, dst, 1, src);
 				printf("%s: %08X - 1 => %08X: %s\n",
 					devName.c_str(), ZXTB(src), ZXTB(dst), stringCC(ccReg));
 				break;
 			case OPC_nDECW:
-				src = SXTW(opRegs[0]);
+				src = SXTW(opReg[0]);
 				dst = src - 1;
-				StoreW(opRegs[1], opRegs[2], dst);
+				storew(opReg[1], dst);
 				UpdateCC_SUB_W(ccReg, dst, 1, src);
 				printf("%s: %04X - 1 => %04X: %s\n",
 					devName.c_str(), ZXTW(src), ZXTW(dst), stringCC(ccReg));
 				break;
 			case OPC_nDECL:
-				src = SXTL(opRegs[0]);
+				src = SXTL(opReg[0]);
 				dst = src - 1;
-				StoreL(opRegs[1], opRegs[2], dst);
+				storel(opReg[1], dst);
 				UpdateCC_SUB_L(ccReg, dst, 1, src);
 				printf("%s: %08X - 1 => %08X: %s\n",
 					devName.c_str(), ZXTL(src), ZXTL(dst), stringCC(ccReg));
@@ -1032,17 +1682,17 @@ void CPU_CLASS::execute()
 
 			// ADAWI instruction
 			case OPC_nADAWI:
-				src = SXTW(opRegs[0]);
-				if (opRegs[1] != OPR_MEM) {
-					tmp = SXTW(gRegs[opRegs[1]].l);
+				src = SXTW(opReg[0]);
+				if (OP_ISREG(opReg[1])) {
+					tmp = SXTW(gpReg[~opReg[1]].l);
 					dst = src + tmp;
-					gRegs[opRegs[1]].l = ZXTW(dst);
+					gpReg[~opReg[1]].l = ZXTW(dst);
 				} else {
-					if (opRegs[2] & 1)
+					if (opReg[1] & 1)
 						throw RSVD_OPND_FAULT;
-					tmp = SXTW(readv(opRegs[2], LN_WORD, RACC));
+					tmp = SXTW(readv(opReg[1], LN_WORD, RACC));
 					dst = src + tmp;
-					writev(opRegs[2], dst, LN_WORD, WACC);
+					writev(opReg[1], dst, LN_WORD, WACC);
 				}
 				UpdateCC_ADD_W(ccReg, dst, src, tmp);
 				printf("%s: %04X + %04X => %04X: %s\n", devName.c_str(),
@@ -1052,30 +1702,30 @@ void CPU_CLASS::execute()
 			// ADDx instructions
 			case OPC_nADDB2:
 			case OPC_nADDB3:
-				src1 = SXTB(opRegs[0]);
-				src2 = SXTB(opRegs[1]);
+				src1 = SXTB(opReg[0]);
+				src2 = SXTB(opReg[1]);
 				dst  = src2 + src1;
-				StoreB(opRegs[2], opRegs[3], dst);
+				storeb(opReg[2], dst);
 				UpdateCC_ADD_B(ccReg, dst, src1, src2);
 				printf("%s: %02X + %02X => %02X: %s\n", devName.c_str(),
 					ZXTB(src1), ZXTB(src2), ZXTB(dst), stringCC(ccReg));
 				break;
 			case OPC_nADDW2:
 			case OPC_nADDW3:
-				src1 = SXTW(opRegs[0]);
-				src2 = SXTW(opRegs[1]);
+				src1 = SXTW(opReg[0]);
+				src2 = SXTW(opReg[1]);
 				dst  = src2 + src1;
-				StoreW(opRegs[2], opRegs[3], dst);
+				storew(opReg[2], dst);
 				UpdateCC_ADD_W(ccReg, dst, src1, src2);
 				printf("%s: %04X + %04X => %04X: %s\n", devName.c_str(),
 					ZXTW(src1), ZXTW(src2), ZXTW(dst), stringCC(ccReg));
 				break;
 			case OPC_nADDL2:
 			case OPC_nADDL3:
-				src1 = SXTL(opRegs[0]);
-				src2 = SXTL(opRegs[1]);
+				src1 = SXTL(opReg[0]);
+				src2 = SXTL(opReg[1]);
 				dst  = src2 + src1;
-				StoreL(opRegs[2], opRegs[3], dst);
+				storel(opReg[2], dst);
 				UpdateCC_ADD_L(ccReg, dst, src1, src2);
 				printf("%s: %08X + %08X => %08X: %s\n", devName.c_str(),
 					ZXTL(src1), ZXTL(src2), ZXTL(dst), stringCC(ccReg));
@@ -1084,30 +1734,30 @@ void CPU_CLASS::execute()
 			// SUBx instructions
 			case OPC_nSUBB2:
 			case OPC_nSUBB3:
-				src1 = SXTB(opRegs[0]);
-				src2 = SXTB(opRegs[1]);
+				src1 = SXTB(opReg[0]);
+				src2 = SXTB(opReg[1]);
 				dst  = src2 - src1;
-				StoreB(opRegs[2], opRegs[3], dst);
+				storeb(opReg[2], dst);
 				UpdateCC_SUB_B(ccReg, dst, src1, src2);
 				printf("%s: %02X - %02X => %02X: %s\n", devName.c_str(),
 					ZXTB(src1), ZXTB(src2), ZXTB(dst), stringCC(ccReg));
 				break;
 			case OPC_nSUBW2:
 			case OPC_nSUBW3:
-				src1 = SXTW(opRegs[0]);
-				src2 = SXTW(opRegs[1]);
+				src1 = SXTW(opReg[0]);
+				src2 = SXTW(opReg[1]);
 				dst  = src2 - src1;
-				StoreW(opRegs[2], opRegs[3], dst);
+				storew(opReg[2], dst);
 				UpdateCC_SUB_W(ccReg, dst, src1, src2);
 				printf("%s: %04X - %04X => %04X: %s\n", devName.c_str(),
 					ZXTW(src1), ZXTW(src2), ZXTW(dst), stringCC(ccReg));
 				break;
 			case OPC_nSUBL2:
 			case OPC_nSUBL3:
-				src1 = SXTL(opRegs[0]);
-				src2 = SXTL(opRegs[1]);
+				src1 = SXTL(opReg[0]);
+				src2 = SXTL(opReg[1]);
 				dst  = src2 - src1;
-				StoreL(opRegs[2], opRegs[3], dst);
+				storel(opReg[2], dst);
 				UpdateCC_SUB_L(ccReg, dst, src1, src2);
 				printf("%s: %08X - %08X => %08X: %s\n", devName.c_str(),
 					ZXTL(src1), ZXTL(src2), ZXTL(dst), stringCC(ccReg));
@@ -1116,10 +1766,10 @@ void CPU_CLASS::execute()
 			// MULx - Multiply instructions
 			case OPC_nMULB2:
 			case OPC_nMULB3:
-				src1 = SXTB(opRegs[0]);
-				src2 = SXTB(opRegs[1]);
+				src1 = SXTB(opReg[0]);
+				src2 = SXTB(opReg[1]);
 				dst  = src2 * src1;
-				StoreB(opRegs[2], opRegs[3], dst);
+				storeb(opReg[2], dst);
 				UpdateCC_IIZZ_B(ccReg, dst);
 				if (dst < SCHAR_MIN || dst > SCHAR_MAX)
 					ccReg |= CC_V;
@@ -1128,10 +1778,10 @@ void CPU_CLASS::execute()
 				break;
 			case OPC_nMULW2:
 			case OPC_nMULW3:
-				src1 = SXTW(opRegs[0]);
-				src2 = SXTW(opRegs[1]);
+				src1 = SXTW(opReg[0]);
+				src2 = SXTW(opReg[1]);
 				dst  = src2 * src1;
-				StoreW(opRegs[2], opRegs[3], dst);
+				storew(opReg[2], dst);
 				UpdateCC_IIZZ_W(ccReg, dst);
 				if (dst < SHRT_MIN || dst > SHRT_MAX)
 					ccReg |= CC_V;
@@ -1140,10 +1790,10 @@ void CPU_CLASS::execute()
 				break;
 			case OPC_nMULL2:
 			case OPC_nMULL3:
-				srcq1 = SXTL(opRegs[0]);
-				srcq2 = SXTL(opRegs[1]);
+				srcq1 = SXTL(opReg[0]);
+				srcq2 = SXTL(opReg[1]);
 				dstq  = srcq2 * srcq1;
-				StoreL(opRegs[2], opRegs[3], SXTL(dstq));
+				storel(opReg[2], SXTL(dstq));
 				UpdateCC_IIZZ_L(ccReg, dstq);
 //				if (SXTL(dstq >> 32) != (SXTL(dstq) & SGN_LONG) ? -1LL : 0LL)
 //					ccReg |= CC_V;
@@ -1156,8 +1806,8 @@ void CPU_CLASS::execute()
 			// DIVx - Divide instructions
 			case OPC_nDIVB2:
 			case OPC_nDIVB3:
-				src1 = SXTB(opRegs[0]);
-				src2 = SXTB(opRegs[1]);
+				src1 = SXTB(opReg[0]);
+				src2 = SXTB(opReg[1]);
 				if (src1 == 0) {
 					dst   = src2;
 					ovflg = true;
@@ -1168,7 +1818,7 @@ void CPU_CLASS::execute()
 					dst   = src2 / src1;
 					ovflg = false;
 				}
-				StoreB(opRegs[2], opRegs[3], dst);
+				storeb(opReg[2], dst);
 				UpdateCC_IIZZ_B(ccReg, dst);
 				if (ovflg)
 					ccReg |= CC_V;
@@ -1177,8 +1827,8 @@ void CPU_CLASS::execute()
 				break;
 			case OPC_nDIVW2:
 			case OPC_nDIVW3:
-				src1 = SXTW(opRegs[0]);
-				src2 = SXTW(opRegs[1]);
+				src1 = SXTW(opReg[0]);
+				src2 = SXTW(opReg[1]);
 				if (src1 == 0) {
 					dst   = src2;
 					ovflg = true;
@@ -1189,7 +1839,7 @@ void CPU_CLASS::execute()
 					dst   = src2 / src1;
 					ovflg = false;
 				}
-				StoreW(opRegs[2], opRegs[3], dst);
+				storew(opReg[2], dst);
 				UpdateCC_IIZZ_W(ccReg, dst);
 				if (ovflg)
 					ccReg |= CC_V;
@@ -1198,8 +1848,8 @@ void CPU_CLASS::execute()
 				break;
 			case OPC_nDIVL2:
 			case OPC_nDIVL3:
-				src1 = SXTL(opRegs[0]);
-				src2 = SXTL(opRegs[1]);
+				src1 = SXTL(opReg[0]);
+				src2 = SXTL(opReg[1]);
 				if (src1 == 0) {
 					dst   = src2;
 					ovflg = true;
@@ -1210,7 +1860,7 @@ void CPU_CLASS::execute()
 					dst   = src2 / src1;
 					ovflg = false;
 				}
-				StoreL(opRegs[2], opRegs[3], dst);
+				storel(opReg[2], dst);
 				UpdateCC_IIZZ_L(ccReg, dst);
 				if (ovflg)
 					ccReg |= CC_V;
@@ -1220,11 +1870,11 @@ void CPU_CLASS::execute()
 
 			// EMUL - Extended multiply instruction
 			case OPC_nEMUL:
-				srcq1 = SXTL(opRegs[0]);
-				srcq2 = SXTL(opRegs[1]);
-				srcq  = SXTL(opRegs[2]);
+				srcq1 = SXTL(opReg[0]);
+				srcq2 = SXTL(opReg[1]);
+				srcq  = SXTL(opReg[2]);
 				dstq  = (srcq2 * srcq1) + srcq;
-				StoreQ(opRegs[3], opRegs[4], ZXTL(dstq), ZXTL(dstq >> 32));
+				storeq(opReg[3], ZXTL(dstq), ZXTL(dstq >> 32));
 				UpdateCC_IIZZ_64(ccReg, dstq);
 				printf("%s: (%08X * %08X) + %08X => %08X %08X: %s\n", devName.c_str(),
 					ZXTL(srcq2), ZXTL(srcq1), ZXTL(srcq), ZXTL(dstq >> 32), ZXTL(dstq),
@@ -1232,8 +1882,8 @@ void CPU_CLASS::execute()
 				break;
 			// EDIV - Extended divide instruction
 			case OPC_nEDIV:
-				srcq1 = SXTL(opRegs[0]);
-				srcq2 = (ZXTQ(opRegs[2]) << 32) | ZXTQ(opRegs[1]);
+				srcq1 = SXTL(opReg[0]);
+				srcq2 = (ZXTQ(opReg[2]) << 32) | ZXTQ(opReg[1]);
 				ovflg = false;
 				if ((srcq1 == 0) || (srcq1 == -1LL && srcq2 == LLONG_MIN)) {
 					ovflg = true;
@@ -1255,8 +1905,8 @@ void CPU_CLASS::execute()
 					dstq2 = 0;
 				}
 
-				StoreL(opRegs[3], opRegs[4], dstq1);
-				StoreL(opRegs[5], opRegs[6], dstq2);
+				storel(opReg[3], dstq1);
+				storel(opReg[4], dstq2);
 				UpdateCC_IIZZ_L(ccReg, dstq1);
 				ccReg |= ovflg ? CC_V : 0;
 				printf("%s: %08X %08X / %08X => %08X R %08X: %s\n", devName.c_str(),
@@ -1266,11 +1916,11 @@ void CPU_CLASS::execute()
 
 			// ADWC/SBWC instructions
 			case OPC_nADWC:
-				src1  = SXTL(opRegs[0]);
-				src2  = SXTL(opRegs[1]);
+				src1  = SXTL(opReg[0]);
+				src2  = SXTL(opReg[1]);
 				carry = ccReg & CC_C;
 				dst   = src2 + src1 + carry;
-				StoreL(opRegs[2], opRegs[3], dst);
+				storel(opReg[2], dst);
 				UpdateCC_ADD_L(ccReg, dst, src1, src2);
 				if ((dst == src2) && src1 != 0)
 					ccReg |= CC_C;
@@ -1278,11 +1928,11 @@ void CPU_CLASS::execute()
 					ZXTL(src1), ZXTL(src2), carry, ZXTL(dst), stringCC(ccReg));
 				break;
 			case OPC_nSBWC:
-				src1  = SXTL(opRegs[0]);
-				src2  = SXTL(opRegs[1]);
+				src1  = SXTL(opReg[0]);
+				src2  = SXTL(opReg[1]);
 				carry = ccReg & CC_C;
 				dst   = src2 - src1 - carry;
-				StoreL(opRegs[2], opRegs[3], dst);
+				storel(opReg[2], dst);
 				UpdateCC_SUB_L(ccReg, dst, src1, src2);
 				if ((src1 == src2) && dst != 0)
 					ccReg |= CC_C;
@@ -1293,30 +1943,30 @@ void CPU_CLASS::execute()
 			// BICx instructions
 			case OPC_nBICB2:
 			case OPC_nBICB3:
-				mask = ZXTB(opRegs[0]);
-				usrc = ZXTB(opRegs[1]);
+				mask = ZXTB(opReg[0]);
+				usrc = ZXTB(opReg[1]);
 				udst = usrc & ~mask;
-				StoreB(opRegs[2], opRegs[3], udst);
+				storeb(opReg[2], udst);
 				UpdateCC_IIZP_B(ccReg, udst);
 				printf("%s: %02X & ~%02X => %02X\n", devName.c_str(),
 						ZXTB(usrc), ZXTB(mask), ZXTB(udst), stringCC(ccReg));
 				break;
 			case OPC_nBICW2:
 			case OPC_nBICW3:
-				mask = ZXTW(opRegs[0]);
-				usrc = ZXTW(opRegs[1]);
+				mask = ZXTW(opReg[0]);
+				usrc = ZXTW(opReg[1]);
 				udst = usrc & ~mask;
-				StoreW(opRegs[2], opRegs[3], udst);
+				storew(opReg[2], udst);
 				UpdateCC_IIZP_W(ccReg, udst);
 				printf("%s: %04X & ~%04X => %04X: %s\n", devName.c_str(),
 						ZXTW(usrc), ZXTW(mask), ZXTW(udst), stringCC(ccReg));
 				break;
 			case OPC_nBICL2:
 			case OPC_nBICL3:
-				mask = ZXTL(opRegs[0]);
-				usrc = ZXTL(opRegs[1]);
+				mask = ZXTL(opReg[0]);
+				usrc = ZXTL(opReg[1]);
 				udst = usrc & ~mask;
-				StoreL(opRegs[2], opRegs[3], udst);
+				storel(opReg[2], udst);
 				UpdateCC_IIZP_L(ccReg, udst);
 				printf("%s: %08X & ~%08X => %08X: %s\n", devName.c_str(),
 						ZXTL(usrc), ZXTL(mask), ZXTL(udst), stringCC(ccReg));
@@ -1325,30 +1975,30 @@ void CPU_CLASS::execute()
 			// BISx instructions
 			case OPC_nBISB2:
 			case OPC_nBISB3:
-				mask = ZXTB(opRegs[0]);
-				usrc = ZXTB(opRegs[1]);
+				mask = ZXTB(opReg[0]);
+				usrc = ZXTB(opReg[1]);
 				udst = usrc | mask;
-				StoreB(opRegs[2], opRegs[3], udst);
+				storeb(opReg[2], udst);
 				UpdateCC_IIZP_B(ccReg, udst);
 				printf("%s: %02X | %02X => %02X: %s\n", devName.c_str(),
 						ZXTB(usrc), ZXTB(mask), ZXTB(udst), stringCC(ccReg));
 				break;
 			case OPC_nBISW2:
 			case OPC_nBISW3:
-				mask = ZXTW(opRegs[0]);
-				usrc = ZXTW(opRegs[1]);
+				mask = ZXTW(opReg[0]);
+				usrc = ZXTW(opReg[1]);
 				udst = usrc | mask;
-				StoreW(opRegs[2], opRegs[3], udst);
+				storew(opReg[2], udst);
 				UpdateCC_IIZP_W(ccReg, udst);
 				printf("%s: %04X | %04X => %04X: %s\n", devName.c_str(),
 						ZXTW(usrc), ZXTW(mask), ZXTW(udst), stringCC(ccReg));
 				break;
 			case OPC_nBISL2:
 			case OPC_nBISL3:
-				mask = ZXTL(opRegs[0]);
-				usrc = ZXTL(opRegs[1]);
+				mask = ZXTL(opReg[0]);
+				usrc = ZXTL(opReg[1]);
 				udst = usrc | mask;
-				StoreL(opRegs[2], opRegs[3], udst);
+				storel(opReg[2], udst);
 				UpdateCC_IIZP_L(ccReg, udst);
 				printf("%s: %08X | %08X => %08X: %s\n", devName.c_str(),
 						ZXTL(usrc), ZXTL(mask), ZXTL(udst), stringCC(ccReg));
@@ -1356,24 +2006,24 @@ void CPU_CLASS::execute()
 
 			// BITx instructions
 			case OPC_nBITB:
-				mask = ZXTB(opRegs[0]);
-				usrc = ZXTB(opRegs[1]);
+				mask = ZXTB(opReg[0]);
+				usrc = ZXTB(opReg[1]);
 				udst = usrc & mask;
 				UpdateCC_IIZP_B(ccReg, udst);
 				printf("%s: %02X & %02X => %02X: %s\n", devName.c_str(),
 						ZXTB(usrc), ZXTB(mask), ZXTB(udst), stringCC(ccReg));
 				break;
 			case OPC_nBITW:
-				mask = ZXTW(opRegs[0]);
-				usrc = ZXTW(opRegs[1]);
+				mask = ZXTW(opReg[0]);
+				usrc = ZXTW(opReg[1]);
 				udst = usrc & mask;
 				UpdateCC_IIZP_W(ccReg, udst);
 				printf("%s: %04X & %04X => %04X: %s\n", devName.c_str(),
 						ZXTW(usrc), ZXTW(mask), ZXTW(udst), stringCC(ccReg));
 				break;
 			case OPC_nBITL:
-				mask = ZXTL(opRegs[0]);
-				usrc = ZXTL(opRegs[1]);
+				mask = ZXTL(opReg[0]);
+				usrc = ZXTL(opReg[1]);
 				udst = usrc & mask;
 				UpdateCC_IIZP_L(ccReg, udst);
 				printf("%s: %08X & %08X => %08X: %s\n", devName.c_str(),
@@ -1383,30 +2033,30 @@ void CPU_CLASS::execute()
 			// XORx instructions
 			case OPC_nXORB2:
 			case OPC_nXORB3:
-				mask = ZXTB(opRegs[0]);
-				usrc = ZXTB(opRegs[1]);
+				mask = ZXTB(opReg[0]);
+				usrc = ZXTB(opReg[1]);
 				udst = usrc ^ mask;
-				StoreB(opRegs[2], opRegs[3], udst);
+				storeb(opReg[2], udst);
 				UpdateCC_IIZP_B(ccReg, udst);
 				printf("%s: %02X ^ %02X => %02X: %s\n", devName.c_str(),
 						ZXTB(usrc), ZXTB(mask), ZXTB(udst), stringCC(ccReg));
 				break;
 			case OPC_nXORW2:
 			case OPC_nXORW3:
-				mask = ZXTW(opRegs[0]);
-				usrc = ZXTW(opRegs[1]);
+				mask = ZXTW(opReg[0]);
+				usrc = ZXTW(opReg[1]);
 				udst = usrc ^ mask;
-				StoreW(opRegs[2], opRegs[3], udst);
+				storew(opReg[2], udst);
 				UpdateCC_IIZP_W(ccReg, udst);
 				printf("%s: %04X ^ %04X => %04X: %s\n", devName.c_str(),
 						ZXTW(usrc), ZXTW(mask), ZXTW(udst), stringCC(ccReg));
 				break;
 			case OPC_nXORL2:
 			case OPC_nXORL3:
-				mask = ZXTL(opRegs[0]);
-				usrc = ZXTL(opRegs[1]);
+				mask = ZXTL(opReg[0]);
+				usrc = ZXTL(opReg[1]);
 				udst = usrc ^ mask;
-				StoreL(opRegs[2], opRegs[3], udst);
+				storel(opReg[2], udst);
 				UpdateCC_IIZP_L(ccReg, udst);
 				printf("%s: %08X ^ %08X => %08X: %s\n", devName.c_str(),
 						ZXTL(usrc), ZXTL(mask), ZXTL(udst), stringCC(ccReg));
@@ -1414,8 +2064,8 @@ void CPU_CLASS::execute()
 
 			// ASHx/ROTL - Shift instructions
 			case OPC_nASHL:
-				cnt   = SXTB(opRegs[0]);
-				src   = SXTL(opRegs[1]);
+				cnt   = SXTB(opReg[0]);
+				src   = SXTL(opReg[1]);
 				ovflg = false;
 				if (cnt == 0) {
 					dst = src;
@@ -1430,7 +2080,7 @@ void CPU_CLASS::execute()
 						ovflg = (src != 0);
 					}
 				}
-				StoreL(opRegs[2], opRegs[3], dst);
+				storel(opReg[2], dst);
 				UpdateCC_IIZZ_L(ccReg, dst);
 				if (ovflg)
 					ccReg |= CC_V;
@@ -1440,8 +2090,8 @@ void CPU_CLASS::execute()
 				break;
 
 			case OPC_nASHQ:
-				cnt    = SXTB(opRegs[0]);
-				srcq  = (ZXTQ(opRegs[2]) << 32) | ZXTL(opRegs[1]);
+				cnt    = SXTB(opReg[0]);
+				srcq  = (ZXTQ(opReg[2]) << 32) | ZXTL(opReg[1]);
 				ovflg = false;
 				if (cnt == 0) {
 					dstq = srcq;
@@ -1456,7 +2106,7 @@ void CPU_CLASS::execute()
 						ovflg = (srcq != 0);
 					}
 				}
-				StoreQ(opRegs[3], opRegs[4], SXTL(dstq), SXTL(dstq >> 32));
+				storeq(opReg[3], SXTL(dstq), SXTL(dstq >> 32));
 				UpdateCC_IIZZ_64(ccReg, dstq);
 				if (ovflg)
 					ccReg |= CC_V;
@@ -1466,10 +2116,10 @@ void CPU_CLASS::execute()
 				break;
 
 			case OPC_nROTL:
-				cnt  = ZXTB(opRegs[0]) % 32;
-				usrc = ZXTL(opRegs[1]);
+				cnt  = ZXTB(opReg[0]) % 32;
+				usrc = ZXTL(opReg[1]);
 				udst = (cnt != 0) ? ((usrc << cnt) | (usrc >> (32 - cnt))) : usrc;
-				StoreL(opRegs[2], opRegs[3], udst);
+				storel(opReg[2], udst);
 				UpdateCC_IIZP_L(ccReg, udst);
 				printf("%s: %08X %s %d => %08X: %s\n", devName.c_str(),
 					ZXTL(usrc), ((cnt < 0) ? ">>" : "<<"), abs(cnt),
@@ -1479,14 +2129,14 @@ void CPU_CLASS::execute()
 			// CMPV - Compare field instructions
 			case OPC_nCMPV:
 				dst = getField(true);
-				src = SXTL(opRegs[4]);
+				src = SXTL(opReg[3]);
 				UpdateCC_CMP_L(ccReg, dst, src);
 				printf("%s: Compare %08X with %08X: %s\n", devName.c_str(),
 					ZXTL(dst), ZXTL(src), stringCC(ccReg));
 				break;
 			case OPC_nCMPZV:
 				dst = getField(false);
-				src = SXTL(opRegs[4]);
+				src = SXTL(opReg[3]);
 				UpdateCC_CMP_L(ccReg, dst, src);
 				printf("%s: Compare %08X with %08X: %s\n", devName.c_str(),
 					ZXTL(dst), ZXTL(src), stringCC(ccReg));
@@ -1495,14 +2145,14 @@ void CPU_CLASS::execute()
 			// EXTV - Extract field instructions
 			case OPC_nEXTV:
 				src = getField(true);
-				StoreL(opRegs[4], opRegs[5], src);
+				storel(opReg[3], src);
 				UpdateCC_IIZP_L(ccReg, src);
 				printf("%s: Extract %08X: %s\n", devName.c_str(),
 					ZXTL(src), stringCC(ccReg));
 				break;
 			case OPC_nEXTZV:
 				src = getField(false);
-				StoreL(opRegs[4], opRegs[5], src);
+				storel(opReg[3], src);
 				UpdateCC_IIZP_L(ccReg, src);
 				printf("%s: Extract %08X: %s\n", devName.c_str(),
 					ZXTL(src), stringCC(ccReg));
@@ -1510,8 +2160,8 @@ void CPU_CLASS::execute()
 
 			// FFS/FFC - First find instruction
 			case OPC_nFFS:
-				usrc1 = ZXTL(opRegs[0]);
-				usrc2 = ZXTB(opRegs[1]);
+				usrc1 = ZXTL(opReg[0]);
+				usrc2 = ZXTB(opReg[1]);
 				if (usrc2 > 0) {
 					int idx;
 					usrc = getField(false);
@@ -1523,15 +2173,15 @@ void CPU_CLASS::execute()
 					usrc = 0;
 					udst = usrc1;
 				}
-				StoreL(opRegs[4], opRegs[5], udst);
+				storel(opReg[3], udst);
 				ccReg = usrc != 0 ? 0 : CC_Z;
 				printf("%s: Find %08X<%d:%d> => %d: %s\n", devName.c_str(),
 					ZXTL(usrc), ZXTL(usrc1), ZXTB(usrc2), udst,
 					stringCC(ccReg));
 				break;
 			case OPC_nFFC:
-				usrc1 = ZXTL(opRegs[0]);
-				usrc2 = ZXTB(opRegs[1]);
+				usrc1 = ZXTL(opReg[0]);
+				usrc2 = ZXTB(opReg[1]);
 				if (usrc2 > 0) {
 					int idx;
 					usrc = getField(false) ^ mskList[usrc2];
@@ -1544,7 +2194,7 @@ void CPU_CLASS::execute()
 					usrc = 0;
 					udst = usrc1;
 				}
-				StoreL(opRegs[4], opRegs[5], udst);
+				storel(opReg[3], udst);
 				ccReg = usrc != 0 ? 0 : CC_Z;
 				printf("%s: Find %08X<%d:%d> => %d: %s\n", devName.c_str(),
 					ZXTL(usrc), ZXTL(usrc1), ZXTB(usrc2), udst,
@@ -1566,7 +2216,7 @@ void CPU_CLASS::execute()
 			case OPC_nPUSHAW:
 			case OPC_nPUSHAL:
 			case OPC_nPUSHAQ:
-				src = opRegs[0];
+				src = opReg[0];
 				writev(REG_SP - LN_LONG, src, LN_LONG, WACC);
 				REG_SP -= LN_LONG;
 				UpdateCC_IIZP_L(ccReg, src);
@@ -1576,29 +2226,29 @@ void CPU_CLASS::execute()
 
 			// PUSHR/POPR - Push/pop register instructions
 			case OPC_nPUSHR:
-				mask = SXTL(opRegs[0]) & STK_MASK;
+				mask = SXTL(opReg[0]) & STK_MASK;
 				// Check access for page faults
 
 				// Push registers into stack
 				for (int idx = REG_nSP; idx >= REG_nR0; idx--) {
 					if ((mask >> idx) & 1) {
-						writev(REG_SP - LN_LONG, gRegs[idx].l, LN_LONG, WACC);
+						writev(REG_SP - LN_LONG, gpReg[idx].l, LN_LONG, WACC);
 						printf("%s: R%d %08X => (SP) %08X\n", devName.c_str(),
-							idx, ZXTL(gRegs[idx].l), ZXTL(REG_SP));
+							idx, ZXTL(gpReg[idx].l), ZXTL(REG_SP));
 						REG_SP -= LN_LONG;
 					}
 				}
 				break;
 			case OPC_nPOPR:
-				mask = SXTL(opRegs[0]) & STK_MASK;
+				mask = SXTL(opReg[0]) & STK_MASK;
 				// Check access for page faults
 
 				// Push registers into stack
 				for (int idx = REG_nR0; idx <= REG_nSP; idx++) {
 					if ((mask >> idx) & 1) {
-						gRegs[idx].l = readv(REG_SP, LN_LONG, RACC);
+						gpReg[idx].l = readv(REG_SP, LN_LONG, RACC);
 						printf("%s: R%d %08X <= (SP) %08X\n", devName.c_str(),
-							idx, ZXTL(gRegs[idx].l), ZXTL(REG_SP));
+							idx, ZXTL(gpReg[idx].l), ZXTL(REG_SP));
 						if (idx < REG_nSP)
 							REG_SP += LN_LONG;
 					}
@@ -1627,8 +2277,8 @@ void CPU_CLASS::execute()
 
 			// Queue instructions
 			case OPC_nINSQUE:
-				entry = SXTL(opRegs[0]);
-				pred  = SXTL(opRegs[1]);
+				entry = SXTL(opReg[0]);
+				pred  = SXTL(opReg[1]);
 				// Check write access first for page faults
 				succ = readv(pred, LN_LONG, WACC);
 				readv(succ+LN_LONG, LN_LONG, WACC);
@@ -1645,8 +2295,8 @@ void CPU_CLASS::execute()
 					stringCC(ccReg));
 				break;
 			case OPC_nINSQHI:
-				entry = SXTL(opRegs[0]);
-				hdr   = SXTL(opRegs[1]);
+				entry = SXTL(opReg[0]);
+				hdr   = SXTL(opReg[1]);
 				if ((entry == hdr) || ((entry|hdr) & 07))
 					throw RSVD_OPND_FAULT;
 				// Check write access for page faults
@@ -1669,8 +2319,8 @@ void CPU_CLASS::execute()
 				}
 				break;
 			case OPC_nINSQTI:
-				entry = SXTL(opRegs[0]);
-				hdr   = SXTL(opRegs[1]);
+				entry = SXTL(opReg[0]);
+				hdr   = SXTL(opReg[1]);
 				if ((entry == hdr) || ((entry|hdr) & 07))
 					throw RSVD_OPND_FAULT;
 				// Check write access for page faults
@@ -1701,7 +2351,7 @@ void CPU_CLASS::execute()
 				}
 				break;
 			case OPC_nREMQUE:
-				entry = SXTL(opRegs[0]);
+				entry = SXTL(opReg[0]);
 				succ = readv(entry, LN_LONG, RACC);
 				pred = readv(entry+LN_LONG, LN_LONG, RACC);
 				// Update condition codes first
@@ -1709,26 +2359,26 @@ void CPU_CLASS::execute()
 				if (entry != pred) {
 					// Check write access for page faults
 					readv(succ+LN_LONG, LN_LONG, WACC);
-					if (SXTL(opRegs[1]) != OPR_MEM)
-						readv(opRegs[2], LN_LONG, WACC);
+					if (SXTL(opReg[1]) != OPR_MEM)
+						readv(opReg[2], LN_LONG, WACC);
 					// Remove entry from queue
 					writev(pred, succ, LN_LONG, WACC);
 					writev(succ+LN_LONG, pred, LN_LONG, WACC);
 				} else
 					ccReg |= CC_V;
-				StoreL(opRegs[1], opRegs[2], entry);
+				storel(opReg[1], entry);
 				printf("%s: Remove %08X from %08X with next %08X: %s\n",
 					devName.c_str(), ZXTL(entry), ZXTL(pred), ZXTL(succ),
 					stringCC(ccReg));
 				break;
 			case OPC_nREMQHI:
-				hdr = SXTL(opRegs[0]);
+				hdr = SXTL(opReg[0]);
 				if (hdr & 07)
 					throw RSVD_OPND_FAULT;
-				if (opRegs[1] == OPR_MEM) {
-					if (opRegs[2] == hdr)
+				if (!OP_ISREG(opReg[1])) {
+					if (opReg[1] == hdr)
 						throw RSVD_OPND_FAULT;
-					readv(opRegs[2], LN_LONG, WACC);
+					readv(opReg[1], LN_LONG, WACC);
 				}
 				ar = readv(hdr, LN_LONG, WACC);
 			OPC_REMQHI:
@@ -1750,7 +2400,7 @@ void CPU_CLASS::execute()
 						writev(b+LN_LONG, hdr-b, LN_LONG, WACC);
 						writev(hdr, b-hdr, LN_LONG, WACC);
 					}
-					StoreL(opRegs[1], opRegs[2], a);
+					storel(opReg[1], a);
 					// Update condition codes
 					if (ar == 0)
 						ccReg = CC_Z|CC_V;
@@ -1761,13 +2411,13 @@ void CPU_CLASS::execute()
 				}
 				break;
 			case OPC_nREMQTI:
-				hdr = SXTL(opRegs[0]);
+				hdr = SXTL(opReg[0]);
 				if (hdr & 07)
 					throw RSVD_OPND_FAULT;
-				if (opRegs[1] == OPR_MEM) {
-					if (opRegs[2] == hdr)
+				if (!OP_ISREG(opReg[1])) {
+					if (opReg[1] == hdr)
 						throw RSVD_OPND_FAULT;
-					readv(opRegs[2], LN_LONG, WACC);
+					readv(opReg[1], LN_LONG, WACC);
 				}
 				ar = readv(hdr, LN_LONG, WACC);
 				if (ar & 06)
@@ -1799,7 +2449,7 @@ void CPU_CLASS::execute()
 						writev(hdr, ar, LN_LONG, WACC);
 					} else
 						c = hdr;
-					StoreL(opRegs[1], opRegs[2], c);
+					storel(opReg[1], c);
 					// Update condition codes
 					ccReg = (ar == 0) ? (CC_Z|CC_V) : 0;
 				}
@@ -1825,6 +2475,42 @@ void CPU_CLASS::execute()
 				break;
 			case OPC_nCMPC5:
 				cmpc(1);
+				break;
+
+			// LOCC - Locate character
+			// SKPC - skip character
+			case OPC_nLOCC:
+				locc(false);
+				break;
+			case OPC_nSKPC:
+				locc(true);
+				break;
+
+			// SCANC - scan character
+			// SPANC - span character
+			case OPC_nSCANC:
+				scanc(false);
+				break;
+			case OPC_nSPANC:
+				scanc(true);
+				break;
+
+			// ****************
+			// CIS instructions
+			// ****************
+
+			case OPC_nMOVP:
+			case OPC_nADDP4:  case OPC_nADDP6:
+			case OPC_nSUBP4:  case OPC_nSUBP6:
+			case OPC_nMULP6:  case OPC_nDIVP6:
+			case OPC_nCMPP3:  case OPC_nCMPP4:
+			case OPC_nCVTPL:  case OPC_nCVTLP:
+			case OPC_nCVTPS:  case OPC_nCVTSP:
+			case OPC_nCVTPT:  case OPC_nCVTTP:
+			case OPC_nASHP:   case OPC_nCRC:
+			case OPC_nMOVTC:  case OPC_nMOVTUC:
+			case OPC_nMATCHC: case OPC_nEDITPC:
+				emulate(opCode);
 				break;
 
 			// Illegal/unimplemented instruction

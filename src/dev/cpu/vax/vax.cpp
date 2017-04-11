@@ -97,7 +97,7 @@ char *vax_cpuDevice::stringCC(uint32_t cc)
 // For CALLG/CALLS instruction
 void vax_cpuDevice::call(bool stkFlag)
 {
-	uint32_t npc = ZXTL(opRegs[1]);
+	uint32_t npc = ZXTL(opReg[1]);
 	uint32_t mask, entry;
 	uint32_t tsp;
 	int      stkSize;
@@ -114,7 +114,7 @@ void vax_cpuDevice::call(bool stkFlag)
 
 	// Save registers into stack
 	if (stkFlag) {
-		writev(REG_SP - LN_LONG, opRegs[0], LN_LONG, WACC);
+		writev(REG_SP - LN_LONG, opReg[0], LN_LONG, WACC);
 		REG_SP -= LN_LONG;
 	}
 	entry = ((REG_SP & CALL_SPA) << CALL_P_SPA) |
@@ -124,7 +124,7 @@ void vax_cpuDevice::call(bool stkFlag)
 	tsp = REG_SP & ~CALL_SPA;
 	for (int idx = REG_nR11; idx >= REG_nR0; idx--) {
 		if ((mask >> idx) & 1) {
-			writev(tsp - LN_LONG, gRegs[idx].l, LN_LONG, WACC);
+			writev(tsp - LN_LONG, gpReg[idx].l, LN_LONG, WACC);
 			tsp -= LN_LONG;
 		}
 	}
@@ -135,7 +135,7 @@ void vax_cpuDevice::call(bool stkFlag)
 	writev(tsp - (LN_LONG*5), 0, LN_LONG, WACC);
 
 	// Set new registers
-	REG_AP = stkFlag ? REG_SP : opRegs[0];
+	REG_AP = stkFlag ? REG_SP : opReg[0];
 	REG_SP = tsp - (LN_LONG*5);
 	REG_FP = REG_SP;
 	REG_PC = npc + LN_WORD;
@@ -177,7 +177,7 @@ void vax_cpuDevice::ret()
 	// Restore registers from stack
 	for (int idx = REG_nR0; idx <= REG_nR11; idx++) {
 		if ((mask >> idx) & 1) {
-			gRegs[idx].l = readv(tsp, LN_LONG, RACC);
+			gpReg[idx].l = readv(tsp, LN_LONG, RACC);
 			tsp += LN_LONG;
 		}
 	}
@@ -202,18 +202,18 @@ void vax_cpuDevice::ret()
 
 int vax_cpuDevice::getBit()
 {
-	int32_t  pos = opRegs[0];
-	int32_t  reg = opRegs[1];
+	int32_t  pos = opReg[0];
+	int32_t  reg = opReg[1];
 	uint32_t ea, src;
 
-	if (reg >= 0) {
+	if (OP_ISREG(reg)) {
 		if (ZXTL(pos) > 31)
 			throw RSVD_OPND_FAULT;
-		src = gRegs[reg].l;
+		src = gpReg[~reg].l;
 		printf("%s: R%d %08X<%d> => %d\n", devName.c_str(),
 			reg, src, pos, (src >> pos) & 1);
 	} else {
-		ea   = opRegs[2] + (pos >> 3);
+		ea   = opReg[1] + (pos >> 3);
 		src  = readv(ea, LN_BYTE, RACC);
 		pos &= 7;
 		printf("%s: %08X => %02X<%d> => %d\n", devName.c_str(),
@@ -225,22 +225,22 @@ int vax_cpuDevice::getBit()
 
 int vax_cpuDevice::setBit(int bit)
 {
-	int32_t  pos = opRegs[0];
-	int32_t  reg = opRegs[1];
+	int32_t  pos = opReg[0];
+	int32_t  reg = opReg[1];
 	uint32_t ea, src, dst;
 	int      obit;
 
-	if (reg >= 0) {
+	if (OP_ISREG(reg)) {
 		if (ZXTL(pos) > 31)
 			throw RSVD_OPND_FAULT;
-		src  = gRegs[reg].l;
+		src  = gpReg[~reg].l;
 		obit = (src >> pos) & 1;
 		dst  = bit ? (src | (1u << pos)) : (src & ~(1u << pos));
-		gRegs[reg].l = dst;
+		gpReg[~reg].l = dst;
 		printf("%s: R%d %08X<%d> (now: %08X) <= %d (old: %d)\n",
 			devName.c_str(), reg, src, dst, pos, bit, obit);
 	} else {
-		ea   = opRegs[2] + (pos >> 3);
+		ea   = opReg[1] + (pos >> 3);
 		src  = readv(ea, LN_BYTE, RACC);
 		pos &= 7;
 		obit = (src >> pos) & 1;
@@ -255,11 +255,10 @@ int vax_cpuDevice::setBit(int bit)
 
 int32_t vax_cpuDevice::getField(bool sign)
 {
-	int32_t  pos  = SXTL(opRegs[0]);
-	uint8_t  size = ZXTB(opRegs[1]);
-	uint32_t reg  = ZXTL(opRegs[2]);
-	uint32_t src1 = ZXTL(opRegs[3]);
-	uint32_t src2, ea;
+	int32_t  pos  = SXTL(opReg[0]);
+	uint8_t  size = ZXTB(opReg[1]);
+	uint32_t reg  = ZXTL(opReg[2]);
+	uint32_t src1, src2, ea;
 
 	// If size is zero, do nothing and return zero.
 	if (size == 0)
@@ -270,12 +269,14 @@ int32_t vax_cpuDevice::getField(bool sign)
 		throw RSVD_OPND_FAULT;
 
 	// Extract a field from one or two longwords.
-	if (reg != OPR_MEM) {
-		if ((ZXTL(pos) > 31) && (reg >= REG_nSP))
+	if (OP_ISREG(reg)) {
+		if ((ZXTL(pos) > 31) && (~reg >= REG_nSP))
 			throw RSVD_ADDR_FAULT;
-		src2 = ZXTL(gRegs[reg+1].l);
+		src1 = ZXTL(gpReg[~reg].l);
+		if ((pos + size) > 32)
+			src2 = ZXTL(gpReg[(~reg)+1].l);
 	} else {
-		ea   = src1 + (pos >> 3);
+		ea   = reg + (pos >> 3);
 		pos  = (pos & 07) | ((ea & 03) << 3);
 		ea  &= ~03;
 		src1 = readv(ea, LN_LONG, RACC);
@@ -302,10 +303,10 @@ int32_t vax_cpuDevice::getField(bool sign)
 
 void vax_cpuDevice::putField()
 {
-	uint32_t src  = ZXTL(opRegs[0]);
-	int32_t  pos  = SXTL(opRegs[1]);
-	uint8_t  size = ZXTB(opRegs[2]);
-	uint32_t reg  = ZXTL(opRegs[3]);
+	uint32_t src  = ZXTL(opReg[0]);
+	int32_t  pos  = SXTL(opReg[1]);
+	uint8_t  size = ZXTB(opReg[2]);
+	uint32_t reg  = ZXTL(opReg[3]);
 	uint32_t src1, src2;
 	uint32_t dst1, dst2;
 	uint32_t ea, mask;
@@ -319,23 +320,23 @@ void vax_cpuDevice::putField()
 		throw RSVD_OPND_FAULT;
 
 	// Extract a field from one or two longwords.
-	if (reg != OPR_MEM) {
+	if (OP_ISREG(reg)) {
 		if (ZXTL(pos) > 31)
 			throw RSVD_ADDR_FAULT;
 		if (ZXTL(pos + size) > 32) {
-			if (reg >= REG_nSP)
+			if (~reg >= REG_nSP)
 				throw RSVD_OPND_FAULT;
 			mask = mskList[pos + size - 32];
-			src2 = gRegs[reg+1].l;
+			src2 = gpReg[(~reg)+1].l;
 			dst2 = ((src >> (32 - pos)) & mask) | (src2 & ~mask);
-			gRegs[reg+1].l = dst2;
+			gpReg[(~reg)+1].l = dst2;
 		}
-		src1 = gRegs[reg].l;
+		src1 = gpReg[~reg].l;
 		mask = mskList[size] << pos;
 		dst1 = ((src << pos) & mask) | (src1 & ~mask);
-		gRegs[reg].l = dst1;
+		gpReg[~reg].l = dst1;
 	} else {
-		ea   = opRegs[4] + (pos >> 3);
+		ea   = opReg[3] + (pos >> 3);
 		pos  = (pos & 07) | ((ea & 03) << 3);
 		ea  &= ~03;
 		src1 = readv(ea, LN_LONG, RACC);
@@ -378,9 +379,9 @@ int vax_cpuDevice::evaluate()
 	// Evaluate software interrupt requests
 	if (ipl >= IPL_SMAX)
 		return 0;
-	if (PREG_SISR & swMasks[ipl]) {
+	if (IPR_SISR & swMasks[ipl]) {
 		for (int sidx = IPL_SMAX; sidx > 0; sidx--) {
-			if (PREG_SISR & swMasks[sidx-1])
+			if (IPR_SISR & swMasks[sidx-1])
 				return sidx;
 		}
 	}
@@ -397,7 +398,7 @@ void vax_cpuDevice::interrupt()
 	if ((nipl = IRQ_GETIPL(irqFlags)) != 0) {
 		if (nipl <= IPL_SMAX) {
 			// Software interrupts
-			PREG_SISR &= ~(1u << nipl);
+			IPR_SISR &= ~(1u << nipl);
 			vec = SCB_IPLSOFT + (nipl << 2);
 		} else
 			// Undefined IPL level
@@ -423,7 +424,7 @@ int vax_cpuDevice::exception(int ie, uint32_t vec, uint32_t ipl)
 	// Clear all traps
 
 	// Get SCBB vector from memory
-	npc = readpl(PREG_SCBB + vec);
+	npc = readpl(IPR_SCBB + vec);
 	if (ie == IE_SVE)
 		npc |= 1;
 
@@ -438,13 +439,13 @@ int vax_cpuDevice::exception(int ie, uint32_t vec, uint32_t ipl)
 	if (opsl & PSL_IS)
 		npsl = PSL_IS;
 	else {
-		pRegs[prv] = REG_SP;
+		ipReg[prv] = REG_SP;
 		if (npc & 1) {
 			npsl   = PSL_IS;
-			REG_SP = PREG_ISP;
+			REG_SP = IPR_ISP;
 		} else {
 			npsl   = 0;
-			REG_SP = PREG_KSP;
+			REG_SP = IPR_KSP;
 		}
 	}
 
@@ -479,6 +480,58 @@ int vax_cpuDevice::exception(int ie, uint32_t vec, uint32_t ipl)
 		ieTypes[ie], ZXTL(REG_PC), ZXTL(psReg|ccReg), ZXTL(REG_SP), DSPL_CUR(npsl), DSPL_PRV(npsl));
 
 	return 0;
+}
+
+// Emulate the instruction
+void vax_cpuDevice::emulate(uint32_t opCode)
+{
+	uint32_t vec, npc;
+	uint32_t opc, osp, opsl;
+
+	opc  = faultAddr;
+	osp  = REG_SP;
+	opsl = psReg|ccReg;
+
+	if ((psReg & PSL_FPD) == 0) {
+		vec = SCB_EMULATE;
+		// Save operand registers into stack
+		writev(REG_SP - (LN_LONG*12), opCode, LN_LONG, WACC);
+		writev(REG_SP - (LN_LONG*11), faultAddr, LN_LONG, WACC);
+		writev(REG_SP - (LN_LONG*10), opReg[0], LN_LONG, WACC);
+		writev(REG_SP - (LN_LONG*9),  opReg[1], LN_LONG, WACC);
+		writev(REG_SP - (LN_LONG*8),  opReg[2], LN_LONG, WACC);
+		writev(REG_SP - (LN_LONG*7),  opReg[3], LN_LONG, WACC);
+		writev(REG_SP - (LN_LONG*6),  opReg[4], LN_LONG, WACC);
+		writev(REG_SP - (LN_LONG*5),  opReg[5], LN_LONG, WACC);
+		writev(REG_SP - (LN_LONG*2),  REG_PC, LN_LONG, WACC);
+		writev(REG_SP - (LN_LONG*1),  psReg|ccReg, LN_LONG, WACC);
+		REG_SP -= 48;
+	} else {
+		vec = SCB_EMULFPD;
+		writev(REG_SP - (LN_LONG*2),  faultAddr, LN_LONG, WACC);
+		writev(REG_SP - (LN_LONG*1),  psReg|ccReg, LN_LONG, WACC);
+		REG_SP -= 8;
+	}
+
+	// Get new PC address from SCB block
+	npc = readpl((IPR_SCBB + vec) & ALIGN_LONG);
+
+	// Clear some PSL registers
+	psReg &= ~(PSL_TP|PSL_FPD|PSW_DV|PSW_FU|PSW_IV|PSW_T);
+	ccReg  = 0;
+
+	// Set PC address and clear instruction look-ahead
+	REG_PC = npc & SCB_ADDR;
+	flushvi();
+
+	printf("%s: (EMU) Emulated instruction (opcode %04X) at PC %08X\n", devName.c_str(),
+		opCode + ((opCode > OPC_nXFC) ? (OPC_nXFC << 8) : 0), opc);
+	printf("%s: (EMU) SCB vector %04X  New PC: %08X(%1X) Type: Emulate\n", devName.c_str(),
+		ZXTW(vec), ZXTL(npc & ~03), ZXTL(npc & 03));
+	printf("%s: (EMU) Old PC=%08X PSL=%08X SP=%08X Access: %s,%s\n", devName.c_str(),
+		ZXTL(opc), ZXTL(opsl), ZXTL(osp), DSPL_CUR(opsl), DSPL_PRV(opsl));
+	printf("%s: (EMU) New PC=%08X PSL=%08X SP=%08X Access: %s,%s\n", devName.c_str(),
+		ZXTL(REG_PC), ZXTL(psReg|ccReg), ZXTL(REG_SP), DSPL_CUR(psReg), DSPL_PRV(psReg));
 }
 
 // Resume from exception/interrupt routine
@@ -526,9 +579,9 @@ void vax_cpuDevice::resume()
 
 	// Save current SP register
 	if (psReg & PSL_IS)
-		PREG_ISP = REG_SP;
+		IPR_ISP = REG_SP;
 	else
-		pRegs[oacc] = REG_SP;
+		ipReg[oacc] = REG_SP;
 
 	// Set new PSL register
 	psReg = (psReg & PSL_TP) | (npsl & ~PSW_CC);
@@ -541,10 +594,10 @@ void vax_cpuDevice::resume()
 	// Set new SP register for new access mode
 	// Also check AST delivery request
 	if ((psReg & PSL_IS) == 0) {
-		REG_SP = pRegs[nacc];
+		REG_SP = ipReg[nacc];
 		// Request AST delivery (software IPL 2)
-		if (nacc >= PREG_ASTLVL)
-			PREG_SISR |= SISR_2;
+		if (nacc >= IPR_ASTLVL)
+			IPR_SISR |= SISR_2;
 	}
 
 	// Update current access mode
@@ -557,9 +610,9 @@ void vax_cpuDevice::resume()
 		ZXTL(opc), ZXTL(opsl), ZXTL(osp), DSPL_CUR(opsl), DSPL_PRV(opsl));
 	printf("%s: (REI) New PC=%08X PSL=%08X SP=%08X Access: %s,%s\n", devName.c_str(),
 		ZXTL(REG_PC), ZXTL(psReg|ccReg), ZXTL(REG_SP), DSPL_CUR(npsl), DSPL_PRV(npsl));
-	if ((psReg & PSL_IS) == 0 && nacc >= PREG_ASTLVL)
+	if ((psReg & PSL_IS) == 0 && nacc >= IPR_ASTLVL)
 		printf("%s: (REI) AST delivered (%d >= %d)\n", devName.c_str(),
-			nacc, PREG_ASTLVL);
+			nacc, IPR_ASTLVL);
 }
 
 int vax_cpuDevice::fault(uint32_t vec)

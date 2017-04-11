@@ -33,9 +33,9 @@ uint32_t vax_cpuDevice::readpl(uint32_t pAddr)
 uint32_t vax_cpuDevice::readp(uint32_t pAddr, int size)
 {
 	if (pAddr < memSize) {
-		if (size == OPR_LONG)
+		if (size == LN_LONG)
 			return MEML(pAddr >> 2);
-		if (size == OPR_WORD)
+		if (size == LN_WORD)
 			return MEMW(pAddr >> 1);
 		return MEMB(pAddr);
 	}
@@ -53,9 +53,9 @@ void vax_cpuDevice::writepl(uint32_t pAddr, uint32_t data)
 void vax_cpuDevice::writep(uint32_t pAddr, uint32_t data, int size)
 {
 	if (pAddr < memSize) {
-		if (size == OPR_LONG)
+		if (size == LN_LONG)
 			MEML(pAddr >> 2) = data;
-		if (size == OPR_WORD)
+		if (size == LN_WORD)
 			MEMW(pAddr >> 1) = data;
 		else
 			MEMB(pAddr) = data;
@@ -235,11 +235,12 @@ void vax_cpuDevice::flushci()
 	cibRight = 0;
 }
 
-int vax_cpuDevice::readci(uint32_t vAddr, uint32_t *data, int size)
+uint32_t vax_cpuDevice::readci(uint32_t vAddr, int size)
 {
 	int      boff = vAddr & 03;
 	int      sc   = boff << 3;
 	uint32_t pAddr;
+	uint32_t data;
 
 	// Flush instruction buffer
 	if (vAddr != cvAddr) {
@@ -260,15 +261,15 @@ int vax_cpuDevice::readci(uint32_t vAddr, uint32_t *data, int size)
 
 	// Extract data from aligned longwords
 	if (size == LN_BYTE)
-		*data = (cibLeft >> sc) & MSK_BYTE;
+		data = (cibLeft >> sc) & MSK_BYTE;
 	else if (size == LN_WORD) {
-		*data = (cibLeft >> sc) & MSK_WORD;
+		data = (cibLeft >> sc) & MSK_WORD;
 		if (boff == 3)
-			*data |= (cibRight << (32 - sc)) & MSK_WORD;
+			data |= (cibRight << (32 - sc)) & MSK_WORD;
 	} else if (boff == 0)
-		*data = cibLeft;
+		data = cibLeft;
 	else
-		*data = (cibLeft >> sc) | (cibRight << (32 - sc));
+		data = (cibLeft >> sc) | (cibRight << (32 - sc));
 
 	// Ahead access to next data
 	cvAddr += size;
@@ -277,7 +278,7 @@ int vax_cpuDevice::readci(uint32_t vAddr, uint32_t *data, int size)
 		cibCount -= LN_LONG;
 	}
 
-	return 0;
+	return data;
 }
 
 int vax_cpuDevice::readc(uint32_t vAddr, uint32_t *data, int size)

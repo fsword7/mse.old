@@ -477,7 +477,7 @@ void vax_cpuDevice::buildOpcodes()
 	uint16_t opCode;
 
 	// Initialize all opcode table as default unimplemented opcode
-	for (int idx = 0; idx < VAX_nOPCTBL; idx++)
+	for (int idx = 0; idx < CPU_nOPCTBL; idx++)
 		opCodes[idx] = &vaxOpcodes[0];
 
 	// Initialize opcode table

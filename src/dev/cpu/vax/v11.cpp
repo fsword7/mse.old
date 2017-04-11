@@ -27,7 +27,7 @@ v11_cpuDevice::~v11_cpuDevice()
 void v11_cpuDevice::reset()
 {
 	// Initialize SID register
-	pRegs[PR_SID] = (SID_ID|SID_CPUREV|SID_PATREV|SID_MBO|SID_UCODE);
+	ipReg[IPR_nSID] = (SID_ID|SID_CPUREV|SID_PATREV|SID_MBO|SID_UCODE);
 }
 
 #define CPU_V11

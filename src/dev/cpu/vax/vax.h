@@ -7,55 +7,65 @@
 
 #pragma once
 
-#define VAX_nGREGS  16
-#define VAX_nPREGS  256
-#define VAX_nOPREGS 9
-#define VAX_nOPCTBL 1024
+// Number of registers
+#define CPU_nGREGS		16
+#define CPU_nOREGS		20
+#define CPU_nPREGS		256
+#define CPU_nNREGS		16
+#define CPU_nOPCTBL		1024
 
 // Register List
-#define REG_nR0		0
-#define REG_nR1		1
-#define REG_nR2		2
-#define REG_nR3		3
-#define REG_nR4		4
-#define REG_nR5		5
-#define REG_nR6		6
-#define REG_nR7		7
-#define REG_nR8		8
-#define REG_nR9		9
-#define REG_nR10	10
-#define REG_nR11	11
-#define REG_nR12	12
-#define REG_nR13	13
-#define REG_nR14	14
-#define REG_nR15	15
+#define REG_nR0			0
+#define REG_nR1			1
+#define REG_nR2			2
+#define REG_nR3			3
+#define REG_nR4			4
+#define REG_nR5			5
+#define REG_nR6			6
+#define REG_nR7			7
+#define REG_nR8			8
+#define REG_nR9			9
+#define REG_nR10		10
+#define REG_nR11		11
+#define REG_nR12		12
+#define REG_nR13		13
+#define REG_nR14		14
+#define REG_nR15		15
 
-#define REG_nAP		REG_nR12 // Argument Pointer
-#define REG_nFP		REG_nR13 // Frame Pointer
-#define REG_nSP		REG_nR14 // Stack Pointer
-#define REG_nPC		REG_nR15 // Program Counter
+#define REG_nAP			REG_nR12 // Argument Pointer
+#define REG_nFP			REG_nR13 // Frame Pointer
+#define REG_nSP			REG_nR14 // Stack Pointer
+#define REG_nPC			REG_nR15 // Program Counter
 
-#define REG_R0		gRegs[REG_nR0].l
-#define REG_R1		gRegs[REG_nR1].l
-#define REG_R2		gRegs[REG_nR2].l
-#define REG_R3		gRegs[REG_nR3].l
-#define REG_R4		gRegs[REG_nR4].l
-#define REG_R5		gRegs[REG_nR5].l
-#define REG_R6		gRegs[REG_nR6].l
-#define REG_R7		gRegs[REG_nR7].l
-#define REG_R8		gRegs[REG_nR8].l
-#define REG_R9		gRegs[REG_nR9].l
-#define REG_R10		gRegs[REG_nR10].l
-#define REG_R11		gRegs[REG_nR11].l
-#define REG_R12		gRegs[REG_nR12].l
-#define REG_R13		gRegs[REG_nR13].l
-#define REG_R14		gRegs[REG_nR14].l
-#define REG_R15		gRegs[REG_nR15].l
+#define REG_R0			gpReg[REG_nR0].l
+#define REG_R1			gpReg[REG_nR1].l
+#define REG_R2			gpReg[REG_nR2].l
+#define REG_R3			gpReg[REG_nR3].l
+#define REG_R4			gpReg[REG_nR4].l
+#define REG_R5			gpReg[REG_nR5].l
+#define REG_R6			gpReg[REG_nR6].l
+#define REG_R7			gpReg[REG_nR7].l
+#define REG_R8			gpReg[REG_nR8].l
+#define REG_R9			gpReg[REG_nR9].l
+#define REG_R10			gpReg[REG_nR10].l
+#define REG_R11			gpReg[REG_nR11].l
+#define REG_R12			gpReg[REG_nR12].l
+#define REG_R13			gpReg[REG_nR13].l
+#define REG_R14			gpReg[REG_nR14].l
+#define REG_R15			gpReg[REG_nR15].l
 
-#define REG_AP		gRegs[REG_nAP].l
-#define REG_FP		gRegs[REG_nFP].l
-#define REG_SP		gRegs[REG_nSP].l
-#define REG_PC		gRegs[REG_nPC].l
+#define REG_AP			gpReg[REG_nAP].l
+#define REG_FP			gpReg[REG_nFP].l
+#define REG_SP			gpReg[REG_nSP].l
+#define REG_PC			gpReg[REG_nPC].l
+
+// Register definition
+#define CPU_REGUB(rn)	ZXTB(gpReg[rn].b)
+#define CPU_REGUW(rn)	ZXTW(gpReg[rn].w)
+#define CPU_REGUL(rn)	ZXTL(gpReg[rn].l)
+#define CPU_REGSB(rn)	SXTB(gpReg[rn].b)
+#define CPU_REGSW(rn)	SXTW(gpReg[rn].w)
+#define CPU_REGSL(rn)	SXTL(gpReg[rn].l)
 
 // Processor flags
 #define CPU_INIE    0x80000000 // Interrupt/exception in progress
@@ -280,32 +290,32 @@
 #define PRIV_INST_FAULT		4 // Privileged instruction fault
 
 // Store data macro routines for instructions
-#define StoreB(op0, op1, d)   \
-	if (op0 != OPR_MEM)       \
-		gRegs[op0].b  = d;    \
-	else                      \
-		writev(op1, d, LN_BYTE, WACC);
-
-#define StoreW(op0, op1, d)   \
-	if (op0 != OPR_MEM)       \
-		gRegs[op0].w  = d;    \
-	else                      \
-		writev(op1, d, LN_WORD, WACC);
-
-#define StoreL(op0, op1, d)   \
-	if (op0 != OPR_MEM)       \
-		gRegs[op0].l  = d;    \
-	else                      \
-		writev(op1, d, LN_LONG, WACC);
-
-#define StoreQ(op0, op1, dl, dh)        \
-	if (op0 != OPR_MEM) {               \
-		gRegs[op0].l  = dl;             \
-		gRegs[op0+1].l = dh;            \
-	} else {                            \
-		writev(op1+LN_LONG, dh, LN_LONG, WACC); \
-		writev(op1, dl, LN_LONG, WACC);         \
-	}
+//#define StoreB(op0, op1, d)   \
+//	if (op0 != OPR_MEM)       \
+//		gpReg[op0].b  = d;    \
+//	else                      \
+//		writev(op1, d, LN_BYTE, WACC);
+//
+//#define StoreW(op0, op1, d)   \
+//	if (op0 != OPR_MEM)       \
+//		gpReg[op0].w  = d;    \
+//	else                      \
+//		writev(op1, d, LN_WORD, WACC);
+//
+//#define StoreL(op0, op1, d)   \
+//	if (op0 != OPR_MEM)       \
+//		gpReg[op0].l  = d;    \
+//	else                      \
+//		writev(op1, d, LN_LONG, WACC);
+//
+//#define StoreQ(op0, op1, dl, dh)        \
+//	if (op0 != OPR_MEM) {               \
+//		gpReg[op0].l  = dl;             \
+//		gpReg[op0+1].l = dh;            \
+//	} else {                            \
+//		writev(op1+LN_LONG, dh, LN_LONG, WACC); \
+//		writev(op1, dl, LN_LONG, WACC);         \
+//	}
 
 #define UpdateCC_Z1ZP(cc) \
 	cc = CC_Z | ((cc) & CC_C);
@@ -527,7 +537,7 @@ public:
 	virtual int  boot();
 //	void execute();
 
-	int disasmOperand(char **ptr, uint32_t &vAddr, const vaxOpcode *opc, int opn, bool idxFlag);
+	int disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **str);
 	int disasm(uint32_t pcAddr);
 
 	void assignMemory(uint8_t *mem, uint32_t memSize);
@@ -544,13 +554,77 @@ protected:
 	void ret();
 	void movc(int c5flg);
 	void cmpc(int c5flg);
+	void locc(bool skpflg);
+	void scanc(bool spnflg);
 
 	// Interrupt/exception services
 	int  evaluate();
 	void interrupt();
 	int  exception(int ie, uint32_t vec, uint32_t ipl);
+	void emulate(uint32_t opc);
 	int  fault(uint32_t vec);
 	void resume();
+
+	inline void storeb(register uint32_t op, register uint8_t data)
+	{
+		if (op > -CPU_nGREGS)
+			gpReg[~op].b = data;
+		else
+			writev(op, data, LN_BYTE, WACC);
+	}
+
+	inline void storew(register uint32_t op, register uint16_t data)
+	{
+		if (op > -CPU_nGREGS)
+			gpReg[~op].w = data;
+		else
+			writev(op, data, LN_WORD, WACC);
+	}
+
+	inline void storel(register uint32_t op, register uint32_t data)
+	{
+		if (op > -CPU_nGREGS)
+			gpReg[~op].l = data;
+		else
+			writev(op, data, LN_LONG, WACC);
+	}
+
+	inline void storeq(register uint32_t op, register uint32_t wd1, register uint32_t wd2)
+	{
+		if (op > -CPU_nGREGS) {
+			gpReg[~op].l     = wd1;
+			gpReg[(~op)+1].l = wd2;
+		} else {
+			writev(op+LN_LONG, wd2, LN_LONG, WACC);
+			writev(op,         wd1, LN_LONG, WACC);
+		}
+	}
+
+	inline void storeqp(register uint32_t op, register uint32_t *wd)
+	{
+		if (op > -CPU_nGREGS) {
+			gpReg[~op].l     = wd[0];
+			gpReg[(~op)+1].l = wd[1];
+		} else {
+			writev(op+LN_LONG, wd[1], LN_LONG, WACC);
+			writev(op,         wd[0], LN_LONG, WACC);
+		}
+	}
+
+	inline void storeo(register uint32_t op, register uint32_t *wd)
+	{
+		if (op > -CPU_nGREGS) {
+			gpReg[~op].l     = wd[0];
+			gpReg[(~op)+1].l = wd[1];
+			gpReg[(~op)+2].l = wd[2];
+			gpReg[(~op)+3].l = wd[3];
+		} else {
+			writev(op,    wd[0], LN_LONG, WACC);
+			writev(op+4,  wd[1], LN_LONG, WACC);
+			writev(op+8,  wd[2], LN_LONG, WACC);
+			writev(op+12, wd[3], LN_LONG, WACC);
+		}
+	}
 
 public:
 	// Memory access routines
@@ -585,21 +659,30 @@ public:
 //	}
 
 	// Console memory access routines (unaligned)
-	void flushci();
-	int  readci(uint32_t addr, uint32_t *data, int size); // Instruction read access
-	int  readc(uint32_t addr, uint32_t *data, int size);  // Data read access
+	void     flushci();
+	uint32_t readci(uint32_t addr, int size); // Instruction read access
+	int      readc(uint32_t addr, uint32_t *data, int size);  // Data read access
 
 protected:
-	scale32_t gRegs[VAX_nGREGS];   // General registers
-	uint32_t  pRegs[VAX_nPREGS];   // Processor registers
-	uint32_t  opRegs[VAX_nOPREGS]; // Operand registers
+	scale32_t gpReg[CPU_nGREGS];  // General registers
+	uint32_t  ipReg[CPU_nPREGS];  // Processor registers
+	uint32_t  opReg[CPU_nOREGS];  // Operand registers
+	uint32_t  rqReg[CPU_nOREGS];  // Recovery registers
+	uint32_t  paReg[CPU_nNREGS];  // Parameter registers
+
 	uint32_t  psReg;               // Processor status register
-	uint32_t  ccReg;               // Condition Code register (part of PSL register)
+	uint32_t  ccReg;               //    Condition Codes
+	uint32_t  accMode;             //    Access Mode
+
+	uint32_t  opCode;              // Current opcode
+	uint32_t  opCount;             // Number of operand registers
+	uint32_t  rqCount;             // Number of recovery registers
+	uint32_t  paCount;             // Number of parameter registers
 
 	uint32_t  flags;               // Processor flags
 
 	// Opcode table for operand decoding and disassembler
-	const vaxOpcode *opCodes[VAX_nOPCTBL];
+	const vaxOpcode *opCodes[CPU_nOPCTBL];
 
 	static const uint32_t mskList[];
 	static const uint32_t sgnList[];
