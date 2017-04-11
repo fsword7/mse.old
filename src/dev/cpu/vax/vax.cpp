@@ -200,6 +200,138 @@ void vax_cpuDevice::ret()
 	flushvi();
 }
 
+void vax_cpuDevice::ldpctx()
+{
+	uint32_t npc, npsl;
+	uint32_t pcb, data;
+
+	// Must be in kernel mode
+	if (PSL_GETCUR(psReg) != AM_KERNEL)
+		throw PRIV_INST_FAULT;
+
+	// Restore all registers from PCB block
+	pcb = IPR_PCBB & ALIGN_LONG;
+	IPR_KSP = readpl(pcb);
+	IPR_ESP = readpl(pcb+4);
+	IPR_SSP = readpl(pcb+8);
+	IPR_USP = readpl(pcb+12);
+	REG_R0  = readpl(pcb+16);
+	REG_R1  = readpl(pcb+20);
+	REG_R2  = readpl(pcb+24);
+	REG_R3  = readpl(pcb+28);
+	REG_R4  = readpl(pcb+32);
+	REG_R5  = readpl(pcb+36);
+	REG_R6  = readpl(pcb+40);
+	REG_R7  = readpl(pcb+44);
+	REG_R8  = readpl(pcb+48);
+	REG_R9  = readpl(pcb+52);
+	REG_R10 = readpl(pcb+56);
+	REG_R11 = readpl(pcb+60);
+	REG_R12 = readpl(pcb+64);
+	REG_R13 = readpl(pcb+68);
+	npc     = readpl(pcb+72);
+	npsl    = readpl(pcb+76);
+
+	// Load P0BR register
+	data = readpl(pcb+80);
+	if (IPR_BR_TEST(data))
+		throw RSVD_OPND_FAULT;
+	IPR_P0BR = data & BR_MASK;
+
+	// Load P0LR register
+	data = readpl(pcb+84);
+	if (LP_P0LR_TEST(data))
+		throw RSVD_OPND_FAULT;
+	if (IPR_LR_TEST(data & LR_MASK))
+		throw RSVD_OPND_FAULT;
+	IPR_P0LR = data & LR_MASK;
+
+	// Load ASTLVL register
+	data = (data >> 24) & AST_MASK;
+	if (LP_AST_TEST(data))
+		throw RSVD_OPND_FAULT;
+	IPR_ASTLVL = data;
+
+	// Load P1BR register
+	data = readpl(pcb+88);
+	if (IPR_BR_TEST(data + 0x800000))
+		throw RSVD_OPND_FAULT;
+	IPR_P1BR = data & BR_MASK;
+
+	// Load P1LR register
+	data = readpl(pcb+92);
+	if (LP_P1LR_TEST(data))
+		throw RSVD_OPND_FAULT;
+	if (IPR_LR_TEST(data & LR_MASK))
+		throw RSVD_OPND_FAULT;
+	IPR_P1LR = data & LR_MASK;
+
+	// Load PME register
+	IPR_PME = (data >> 31) & 1;
+
+	// Flush all process table entries
+
+	// Switch to kernel mode
+	if ((psReg & PSL_IS) != 0) {
+		psReg &= ~PSL_IS;
+		IPR_ISP = REG_SP;
+		REG_SP  = IPR_KSP;
+	}
+
+	// Push new PC and PSL into stack for REI instruction
+	REG_SP -= (LN_LONG*2);
+	writev(REG_SP, npc, LN_LONG, WACC);
+	writev(REG_SP+LN_LONG, npsl, LN_LONG, WACC);
+
+}
+
+void vax_cpuDevice::svpctx()
+{
+	uint32_t svpc, svpsl;
+	uint32_t pcb;
+
+	// Must be in kernel mode
+	if (PSL_GETCUR(psReg) != AM_KERNEL)
+		throw PRIV_INST_FAULT;
+
+	// Get saved PC and PSL registers from stack
+	svpc    = readv(REG_SP, LN_LONG, RACC);
+	svpsl   = readv(REG_SP+LN_LONG, LN_LONG, RACC);
+	REG_SP += (LN_LONG*2);
+
+	// Switch to interrupt mode with IPL 1
+	if ((psReg & PSL_IS) == 0) {
+		IPR_KSP = REG_SP;
+		REG_SP  = IPR_ISP;
+		if (PSL_GETIPL(psReg) == 0)
+			psReg |= PSL_SETIPL(1);
+		psReg |= PSL_IS;
+	}
+
+	// Save all registers into PCB block
+	pcb = IPR_PCBB & ALIGN_LONG;
+	writepl(pcb,    IPR_KSP);
+	writepl(pcb+4,  IPR_ESP);
+	writepl(pcb+8,  IPR_SSP);
+	writepl(pcb+12, IPR_USP);
+	writepl(pcb+16, REG_R0);
+	writepl(pcb+20, REG_R1);
+	writepl(pcb+24, REG_R2);
+	writepl(pcb+28, REG_R3);
+	writepl(pcb+32, REG_R4);
+	writepl(pcb+36, REG_R5);
+	writepl(pcb+40, REG_R6);
+	writepl(pcb+44, REG_R7);
+	writepl(pcb+48, REG_R8);
+	writepl(pcb+52, REG_R9);
+	writepl(pcb+56, REG_R10);
+	writepl(pcb+60, REG_R11);
+	writepl(pcb+64, REG_R12);
+	writepl(pcb+68, REG_R13);
+	writepl(pcb+72, svpc);
+	writepl(pcb+76, svpsl);
+}
+
 int vax_cpuDevice::getBit()
 {
 	int32_t  pos = opReg[0];
@@ -459,7 +591,7 @@ int vax_cpuDevice::exception(int ie, uint32_t vec, uint32_t ipl)
 	ccReg = 0;
 
 	// Save old PC and PSL in kernel mode
-	curMode = ACC_MASK(AM_KERNEL);
+	curMode = AM_MASK(AM_KERNEL);
 	writev(REG_SP - (LN_LONG*2), opc, LN_LONG, WACC);
 	writev(REG_SP - LN_LONG, opsl, LN_LONG, WACC);
 	REG_SP -= (LN_LONG*2);
@@ -469,7 +601,7 @@ int vax_cpuDevice::exception(int ie, uint32_t vec, uint32_t ipl)
 	flushvi();
 
 	// Set new access mode
-	curMode = ACC_MASK(PSL_GETCUR(psReg));
+	curMode = AM_MASK(PSL_GETCUR(psReg));
 
 	// Clear INIE flag
 	flags &= ~CPU_INIE;
@@ -601,7 +733,7 @@ void vax_cpuDevice::resume()
 	}
 
 	// Update current access mode
-	curMode = ACC_MASK(PSL_GETCUR(psReg));
+	curMode = AM_MASK(PSL_GETCUR(psReg));
 
 	// Update IRQ requests
 	UpdateIRQ();

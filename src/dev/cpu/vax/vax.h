@@ -101,14 +101,18 @@
 #define PSL_M_ISCUR      0x07 // Access Mode Mask with IS flag
 #define PSL_M_MODE       0x03 // Access Mode Mask
 
-#define PSL_GETIPL(ps)   (((ps) >> PSL_P_IPL) & PSL_M_IPL)
-#define PSL_GETCUR(ps)   (((ps) >> PSL_P_CUR) & PSL_M_MODE)
-#define PSL_GETISCUR(ps) (((ps) >> PSL_P_CUR) & PSL_M_ISCUR)
-#define PSL_GETPRV(ps)   (((ps) >> PSL_P_PRV) & PSL_M_MODE)
+#define IPL_MASK		0x1F // Interrupt Priority Level Mask
+#define ACC_MASK		0x03 // Access Mode Mask
+#define ACI_MASK		0x07 // Access/Interrupt Mode Mask
 
-#define PSL_SETIPL(ipl)  ((ipl) << PSL_P_IPL)
-#define PSL_SETCUR(acc)  ((acc) << PSL_P_CUR)
-#define PSL_SETPRV(acc)  ((acc) << PSL_P_PRV)
+#define PSL_GETIPL(ps)   (((ps) >> PSL_P_IPL) & IPL_MASK)
+#define PSL_GETPRV(ps)   (((ps) >> PSL_P_PRV) & ACC_MASK)
+#define PSL_GETCUR(ps)   (((ps) >> PSL_P_CUR) & ACC_MASK)
+#define PSL_GETICUR(ps)  (((ps) >> PSL_P_CUR) & ACI_MASK)
+
+#define PSL_SETIPL(ipl)  (((ipl) & IPL_MASK) << PSL_P_IPL)
+#define PSL_SETCUR(acc)  (((acc) & ACC_MASK) << PSL_P_CUR)
+#define PSL_SETPRV(acc)  (((acc) & ACC_MASK) << PSL_P_PRV)
 
 // PSW - Processor Status Word for User mode
 #define PSW_MASK         0xFFFF // PSW User Mask
@@ -131,7 +135,7 @@
 #define AM_EXECUTIVE	 1 // Executive mode for file system
 #define AM_SUPERVISOR	 2 // Supervisor mode for DCL (shell)
 #define AM_USER			 3 // User mode for normal programs
-
+#define AM_INTERRUPT     4 // Interrupt mode
 
 // CALL instruction
 #define CALL_DV				0x8000
@@ -238,11 +242,22 @@
 #define SISR_2           (1u << 2)
 
 // ASTLVL register definition
-#define AST_MASK         0x00000007
+#define AST_MASK         0x07
 #define AST_MAX          4
 
 #define BR_MASK          ALIGN_LONG
 #define LR_MASK          0x003FFFFF
+
+// IPR Registers - Validity Checks
+#define IPR_PA_TEST(pa) ((pa) & 0xC0000003)
+#define IPR_LR_TEST(lr) (ZXTL(lr) > 0x200000)
+#define IPR_BR_TEST(br) \
+	((((br) & 0xC0000000) != 0x80000000) || ((br) & 0x00000003))
+
+// LDPCTX Instruction - Validity Checks
+#define LP_AST_TEST(ast) ((ast) > AST_MAX)
+#define LP_P0LR_TEST(lp) ((lp) & 0xF8C00000)
+#define LP_P1LR_TEST(lp) ((lp) & 0x7FC00000)
 
 // Read/write memory access
 #define CACC             0x80000000         // Console memory access
@@ -250,12 +265,18 @@
 #define WACC             (curMode << 4)     // Write memory access
 #define CRA              (CACC|RACC)        // Console write memory access
 #define CWA              (CACC|WACC)        // Console read memory access
-#define ACC_MASK(am)     (1u << (am))       // Access mode mask
+#define AM_MASK(am)      (1u << (am))       // Access mode mask
+
+#define REF_V            0
+#define REF_P            1
+#define REF_C            2
 
 #define PA_MASK30        0x3FFFFFFF         // 30-bit physical addressing
 
 // Interrupt Priority Level
-#define IPL_MAX			0x1F
+#define IPL_MAX			IPL_MASK
+#define IPL_HALTPIN		IPL_MAX
+#define IPL_POWER		0x1E
 // KA650 IPL levels
 #define IPL_MEMERR		0x1D
 #define IPL_CRDERR		0x1A
@@ -264,12 +285,12 @@
 #define IPL_HMIN		0x14
 #define IPL_SMAX		0x0F
 
-#define IRQ_TRAP        0x00E0 // Trap requests
+#define IRQ_TRAP        0x0700 // Trap requests
 #define IRQ_IPL         0x001F // IPL requests
 #define IRQ_M_IPL       0x1F
 #define IRQ_M_TRAP      0x07
 #define IRQ_P_IPL       0
-#define IRQ_P_TRAP      5
+#define IRQ_P_TRAP      8
 
 #define IRQ_GETIPL(irq)        (((irq) >> IRQ_P_IPL) & IRQ_M_IPL)
 #define IRQ_GETTRAP(irq)       (((irq) >> IRQ_P_TRAP) & IRQ_M_TRAP)
@@ -289,33 +310,6 @@
 #define RSVD_OPND_FAULT		3 // Reserved operand fault
 #define PRIV_INST_FAULT		4 // Privileged instruction fault
 
-// Store data macro routines for instructions
-//#define StoreB(op0, op1, d)   \
-//	if (op0 != OPR_MEM)       \
-//		gpReg[op0].b  = d;    \
-//	else                      \
-//		writev(op1, d, LN_BYTE, WACC);
-//
-//#define StoreW(op0, op1, d)   \
-//	if (op0 != OPR_MEM)       \
-//		gpReg[op0].w  = d;    \
-//	else                      \
-//		writev(op1, d, LN_WORD, WACC);
-//
-//#define StoreL(op0, op1, d)   \
-//	if (op0 != OPR_MEM)       \
-//		gpReg[op0].l  = d;    \
-//	else                      \
-//		writev(op1, d, LN_LONG, WACC);
-//
-//#define StoreQ(op0, op1, dl, dh)        \
-//	if (op0 != OPR_MEM) {               \
-//		gpReg[op0].l  = dl;             \
-//		gpReg[op0+1].l = dh;            \
-//	} else {                            \
-//		writev(op1+LN_LONG, dh, LN_LONG, WACC); \
-//		writev(op1, dl, LN_LONG, WACC);         \
-//	}
 
 #define UpdateCC_Z1ZP(cc) \
 	cc = CC_Z | ((cc) & CC_C);
@@ -556,6 +550,8 @@ protected:
 	void cmpc(int c5flg);
 	void locc(bool skpflg);
 	void scanc(bool spnflg);
+	void ldpctx();
+	void svpctx();
 
 	// Interrupt/exception services
 	int  evaluate();

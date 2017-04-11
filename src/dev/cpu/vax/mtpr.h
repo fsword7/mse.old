@@ -71,7 +71,7 @@
 #define IPR_nTBIS    58  // Translation Buffer Invalidate Single
 #define IPR_nTBDATA  59  // Translation Buffer Data
 #define IPR_nMBRK    60  // Microprogram Break
-#define IPR_nPMR     61  // Performance Monitor Enable
+#define IPR_nPME     61  // Performance Monitor Enable
 #define IPR_nSID     62  // System ID Register
 #define IPR_nTBCHK   63  // Translation Buffer Check
 

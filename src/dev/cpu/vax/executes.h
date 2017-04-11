@@ -14,6 +14,13 @@
 // Register validation check
 #define Validate(rn, max) if ((rn) >= (max)) throw RSVD_ADDR_FAULT;
 
+//#define Validate(rn, max) \
+//	if ((rn) >= (max)) {          \
+//		printf("%s: (BAD!!) reg=%d (max %d) idx=%d spec=%02X\n", devName.c_str(), \
+//			rn, max, idx, spec);  \
+//		throw RSVD_ADDR_FAULT;    \
+//	}
+
 static const char *stopNames[] =
 {
 	"HALT Instruction"
@@ -68,6 +75,13 @@ void CPU_CLASS::execute()
 
 			// Decode operands
 			opc = opCodes[opCode];
+			if (opc->flags & OPF_RSVD)
+				throw RSVD_INST_FAULT;
+//			if (psReg & PSL_FPD) {
+//				if ((opc->flags & OPF_FPD) == 0)
+//					throw RSVD_INST_FAULT;
+//				goto EXECUTE;
+//			}
 
 			rqCount = 0;
 			for (int idx = 0, opidx = 0; idx < opc->nOperands; idx++) {
@@ -90,11 +104,8 @@ void CPU_CLASS::execute()
 						opr  |= (spec & 0xF0);
 				}
 
-#ifdef DEBUG
-//		PrintLog3(LOG_TRACE, NULL,
-//			"%s: (OPR) %02X => R%d (%04X) %d\n",
-//				IO_DEVNAME(cpu), spec, rn, opr, opIdx);
-#endif /* DEBUG */
+//				printf("%s: OP %d %02X => R%d (%04X)\n", devName.c_str(),
+//					idx, spec, rn, opr);
 
 				switch(opr) {
 					// Short Literal Address Mode
@@ -936,6 +947,9 @@ void CPU_CLASS::execute()
 			switch (opCode) {
 
 			case OPC_nHALT:
+				// Must be in kernel mode
+				if (PSL_GETCUR(psReg) != AM_KERNEL)
+					throw PRIV_INST_FAULT;
 				throw STOP_HALT;
 
 			case OPC_nNOP:
@@ -947,13 +961,15 @@ void CPU_CLASS::execute()
 				break;
 
 			case OPC_nBPT:
-				faultAddr = REG_PC;
-				exception(SCB_BPT, 0, IE_EXC);
+				// Reset PC address
+				REG_PC = faultAddr;
+				exception(IE_EXC, SCB_BPT, 0);
 				break;
 
 			case OPC_nXFC:
-				faultAddr = REG_PC;
-				exception(SCB_XFC, 0, IE_EXC);
+				// Reset PC address
+				REG_PC = faultAddr;
+				exception(IE_EXC, SCB_XFC, 0);
 				break;
 
 			// INDEX - Index instruction
@@ -2513,10 +2529,20 @@ void CPU_CLASS::execute()
 				emulate(opCode);
 				break;
 
+			// context switch instructions
+			// LDPCTX - Load process
+			// SVPCTX - Save process
+			case OPC_nLDPCTX:
+				ldpctx();
+				break;
+			case OPC_nSVPCTX:
+				svpctx();
+				break;
+
 			// Illegal/unimplemented instruction
 			default:
-				if (opc->opCode != OPC_nUOPC)
-					throw STOP_UOPC;
+//				if (opc->opCode != OPC_nUOPC)
+//					throw STOP_UOPC;
 				throw RSVD_INST_FAULT;
 			}
 		}
