@@ -1551,6 +1551,8 @@ void CPU_CLASS::execute()
 				UpdateCC_IIZZ_B(ccReg, dst);
 				if (src < -128 || src > 127) {
 					ccReg |= CC_V;
+					if (psReg & PSW_IV)
+						irqFlags |= IRQ_SETTRAP(TRAP_INTOVF);
 				}
 				printf("%s: %04X => %02X: %s\n", devName.c_str(),
 						ZXTW(src), ZXTB(dst), stringCC(ccReg));
@@ -1570,6 +1572,8 @@ void CPU_CLASS::execute()
 				UpdateCC_IIZZ_B(ccReg, dst);
 				if (src < -128 || src > 127) {
 					ccReg |= CC_V;
+					if (psReg & PSW_IV)
+						irqFlags |= IRQ_SETTRAP(TRAP_INTOVF);
 				}
 				printf("%s: %08X => %02X: %s\n", devName.c_str(),
 						ZXTL(src), ZXTB(dst), stringCC(ccReg));
@@ -1581,6 +1585,8 @@ void CPU_CLASS::execute()
 				UpdateCC_IIZZ_W(ccReg, dst);
 				if (src < -128 || src > 127) {
 					ccReg |= CC_V;
+					if (psReg & PSW_IV)
+						irqFlags |= IRQ_SETTRAP(TRAP_INTOVF);
 				}
 				printf("%s: %08X => %04X: %s\n", devName.c_str(),
 						ZXTL(src), ZXTW(dst), stringCC(ccReg));
@@ -1790,8 +1796,11 @@ void CPU_CLASS::execute()
 				dst  = src2 * src1;
 				storeb(opReg[2], dst);
 				UpdateCC_IIZZ_B(ccReg, dst);
-				if (dst < SCHAR_MIN || dst > SCHAR_MAX)
+				if (dst < SCHAR_MIN || dst > SCHAR_MAX) {
 					ccReg |= CC_V;
+					if (psReg & PSW_IV)
+						irqFlags |= IRQ_SETTRAP(TRAP_INTOVF);
+				}
 				printf("%s: %02X * %02X => %02X: %s\n", devName.c_str(),
 					ZXTB(src2), ZXTB(src1), ZXTB(dst), stringCC(ccReg));
 				break;
@@ -1802,8 +1811,11 @@ void CPU_CLASS::execute()
 				dst  = src2 * src1;
 				storew(opReg[2], dst);
 				UpdateCC_IIZZ_W(ccReg, dst);
-				if (dst < SHRT_MIN || dst > SHRT_MAX)
+				if (dst < SHRT_MIN || dst > SHRT_MAX) {
 					ccReg |= CC_V;
+					if (psReg & PSW_IV)
+						irqFlags |= IRQ_SETTRAP(TRAP_INTOVF);
+				}
 				printf("%s: %02X * %02X => %02X: %s\n", devName.c_str(),
 					ZXTW(src2), ZXTW(src1), ZXTW(dst), stringCC(ccReg));
 				break;
@@ -1816,8 +1828,11 @@ void CPU_CLASS::execute()
 				UpdateCC_IIZZ_L(ccReg, dstq);
 //				if (SXTL(dstq >> 32) != (SXTL(dstq) & SGN_LONG) ? -1LL : 0LL)
 //					ccReg |= CC_V;
-				if (dstq < LONG_MIN || dstq > LONG_MAX)
+				if (dstq < LONG_MIN || dstq > LONG_MAX) {
 					ccReg |= CC_V;
+					if (psReg & PSW_IV)
+						irqFlags |= IRQ_SETTRAP(TRAP_INTOVF);
+				}
 				printf("%s: %08X * %08X => %08X: %s\n", devName.c_str(),
 					ZXTL(srcq2), ZXTL(srcq1), ZXTL(dstq), stringCC(ccReg));
 				break;
@@ -1827,12 +1842,13 @@ void CPU_CLASS::execute()
 			case OPC_nDIVB3:
 				src1 = SXTB(opReg[0]);
 				src2 = SXTB(opReg[1]);
-				if (src1 == 0) {
+				if ((src1 == 0) || ((src1 == -1) && (src2 == SCHAR_MIN))) {
 					dst   = src2;
 					ovflg = true;
-				} else if (src1 == -1 && src2 == SCHAR_MIN) {
-					dst   = src2;
-					ovflg = true;
+					if (src1 == 0)
+						irqFlags |= IRQ_SETTRAP(TRAP_INTDIV);
+					else if (psReg & PSW_IV)
+						irqFlags |= IRQ_SETTRAP(TRAP_INTOVF);
 				} else {
 					dst   = src2 / src1;
 					ovflg = false;
@@ -1848,12 +1864,13 @@ void CPU_CLASS::execute()
 			case OPC_nDIVW3:
 				src1 = SXTW(opReg[0]);
 				src2 = SXTW(opReg[1]);
-				if (src1 == 0) {
+				if ((src1 == 0) || ((src1 == -1) && (src2 == SHRT_MIN))) {
 					dst   = src2;
 					ovflg = true;
-				} else if (src1 == -1 && src2 == SHRT_MIN) {
-					dst   = src2;
-					ovflg = true;
+					if (src1 == 0)
+						irqFlags |= IRQ_SETTRAP(TRAP_INTDIV);
+					else if (psReg & PSW_IV)
+						irqFlags |= IRQ_SETTRAP(TRAP_INTOVF);
 				} else {
 					dst   = src2 / src1;
 					ovflg = false;
@@ -1869,12 +1886,13 @@ void CPU_CLASS::execute()
 			case OPC_nDIVL3:
 				src1 = SXTL(opReg[0]);
 				src2 = SXTL(opReg[1]);
-				if (src1 == 0) {
+				if ((src1 == 0) || ((src1 == -1) && (src2 == LONG_MIN))) {
 					dst   = src2;
 					ovflg = true;
-				} else if (src1 == -1 && src2 == LONG_MIN) {
-					dst   = src2;
-					ovflg = true;
+					if (src1 == 0)
+						irqFlags |= IRQ_SETTRAP(TRAP_INTDIV);
+					else if (psReg & PSW_IV)
+						irqFlags |= IRQ_SETTRAP(TRAP_INTOVF);
 				} else {
 					dst   = src2 / src1;
 					ovflg = false;
@@ -1904,7 +1922,7 @@ void CPU_CLASS::execute()
 				srcq1 = SXTL(opReg[0]);
 				srcq2 = (ZXTQ(opReg[2]) << 32) | ZXTQ(opReg[1]);
 				ovflg = false;
-				if ((srcq1 == 0) || (srcq1 == -1LL && srcq2 == LLONG_MIN)) {
+				if ((srcq1 == 0) || ((srcq1 == -1LL) && (srcq2 == LLONG_MIN))) {
 					ovflg = true;
 				} else {
 //					printf("%s: %08X >= %08X\n", devName.c_str(),
@@ -1922,6 +1940,10 @@ void CPU_CLASS::execute()
 				if (ovflg == true) {
 					dstq1 = srcq2;
 					dstq2 = 0;
+					if (srcq1 == 0)
+						irqFlags |= IRQ_SETTRAP(TRAP_INTDIV);
+					else if (psReg & PSW_IV)
+						irqFlags |= IRQ_SETTRAP(TRAP_INTOVF);
 				}
 
 				storel(opReg[3], dstq1);
@@ -2101,8 +2123,11 @@ void CPU_CLASS::execute()
 				}
 				storel(opReg[2], dst);
 				UpdateCC_IIZZ_L(ccReg, dst);
-				if (ovflg)
+				if (ovflg) {
 					ccReg |= CC_V;
+					if (psReg & PSW_IV)
+						irqFlags |= IRQ_SETTRAP(TRAP_INTOVF);
+				}
 				printf("%s: %08X %s %d => %08X: %s\n", devName.c_str(),
 					ZXTL(src), ((cnt < 0) ? ">>" : "<<"), abs(cnt),
 					ZXTL(dst), stringCC(ccReg));
@@ -2127,8 +2152,11 @@ void CPU_CLASS::execute()
 				}
 				storeq(opReg[3], SXTL(dstq), SXTL(dstq >> 32));
 				UpdateCC_IIZZ_64(ccReg, dstq);
-				if (ovflg)
+				if (ovflg) {
 					ccReg |= CC_V;
+					if (psReg & PSW_IV)
+						irqFlags |= IRQ_SETTRAP(TRAP_INTOVF);
+				}
 				printf("%s: %08X %08X %s %d => %08X %08X: %s\n", devName.c_str(),
 					ZXTL(srcq >> 32), ZXTL(srcq), ((cnt < 0) ? ">>" : "<<"), abs(cnt),
 					ZXTL(dstq >> 32), ZXTL(dstq), stringCC(ccReg));

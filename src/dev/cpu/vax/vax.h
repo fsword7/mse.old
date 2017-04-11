@@ -386,66 +386,6 @@
 #define UpdateCC_CMP_W(cc, s1, s2)   UpdateCC_CMP_I(cc, s1, s2)
 #define UpdateCC_CMP_L(cc, s1, s2)   UpdateCC_CMP_I(cc, s1, s2)
 
-#define UpdateV_ADD_B(cc, d, s1, s2) \
-	if (((~(s1) ^ (s2)) & ((s1) ^ (d))) & SIGN_B) \
-		cc |= CC_V;
-
-#define UpdateV_ADD_W(cc, d, s1, s2) \
-	if (((~(s1) ^ (s2)) & ((s1) ^ (d))) & SIGN_W) \
-		cc |= CC_V;
-
-#define UpdateV_ADD_L(cc, d, s1, s2) \
-	if (((~(s1) ^ (s2)) & ((s1) ^ (d))) & SIGN_L) \
-		cc |= CC_V;
-
-#define UpdateCC_ADD(cc, d, s1, s2) \
-	if (ZXTL(d) < ZXTL(s2)) cc |= CC_C;
-
-#define UpdateCC_ADD_B(cc, d, s1, s2) \
-	UpdateCC_IIZZ_B(cc, d);           \
-	UpdateV_ADD_B(cc, d, s1, s2);     \
-	UpdateCC_ADD(cc, d, s1, s2)
-
-#define UpdateCC_ADD_W(cc, d, s1, s2) \
-	UpdateCC_IIZZ_W(cc, d);           \
-	UpdateV_ADD_W(cc, d, s1, s2);     \
-	UpdateCC_ADD(cc, d, s1, s2)
-
-#define UpdateCC_ADD_L(cc, d, s1, s2) \
-	UpdateCC_IIZZ_L(cc, d);           \
-	UpdateV_ADD_L(cc, d, s1, s2);     \
-	UpdateCC_ADD(cc, d, s1, s2)
-
-
-#define UpdateV_SUB_B(cc, d, s1, s2) \
-	if ((((s1) ^ (s2)) & (~(s1) ^ (d))) & SIGN_B) \
-		cc |= CC_V;
-
-#define UpdateV_SUB_W(cc, d, s1, s2) \
-	if ((((s1) ^ (s2)) & (~(s1) ^ (d))) & SIGN_W) \
-		cc |= CC_V;
-
-#define UpdateV_SUB_L(cc, d, s1, s2) \
-	if ((((s1) ^ (s2)) & (~(s1) ^ (d))) & SIGN_L) \
-		cc |= CC_V;
-
-#define UpdateCC_SUB(cc, d, s1, s2) \
-	if (ZXTL(s2) < ZXTL(s1)) cc |= CC_C;
-
-#define UpdateCC_SUB_B(cc, d, s1, s2) \
-	UpdateCC_IIZZ_B(cc, d);           \
-	UpdateV_SUB_B(cc, d, s1, s2);     \
-	UpdateCC_SUB(cc, d, s1, s2)
-
-#define UpdateCC_SUB_W(cc, d, s1, s2) \
-	UpdateCC_IIZZ_W(cc, d);           \
-	UpdateV_SUB_W(cc, d, s1, s2);     \
-	UpdateCC_SUB(cc, d, s1, s2)
-
-#define UpdateCC_SUB_L(cc, d, s1, s2) \
-	UpdateCC_IIZZ_L(cc, d);           \
-	UpdateV_SUB_L(cc, d, s1, s2);     \
-	UpdateCC_SUB(cc, d, s1, s2)
 
 // Update Condition Codes (new)
 
