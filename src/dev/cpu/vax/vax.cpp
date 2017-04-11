@@ -524,10 +524,18 @@ int vax_cpuDevice::evaluate()
 
 void vax_cpuDevice::interrupt()
 {
-	uint32_t nipl;
+	uint32_t nipl, trap;
 	uint32_t vec;
 
-	if ((nipl = IRQ_GETIPL(irqFlags)) != 0) {
+	if ((trap = IRQ_GETTRAP(irqFlags)) != 0) {
+		printf("%s: (EXC) Arithmetic Trap at PC %08X\n",
+			devName.c_str(), faultAddr);
+		// Set parameters
+		paCount  = 1;
+		paReg[0] = trap;
+		// perform exception routine
+		exception(IE_EXC, SCB_ARITH, 0);
+	} else if ((nipl = IRQ_GETIPL(irqFlags)) != 0) {
 		if (nipl <= IPL_SMAX) {
 			// Software interrupts
 			IPR_SISR &= ~(1u << nipl);
@@ -549,11 +557,13 @@ int vax_cpuDevice::exception(int ie, uint32_t vec, uint32_t ipl)
 	uint32_t osp  = REG_SP;
 	uint32_t prv  = PSL_GETCUR(psReg);
 	uint32_t npc, npsl;
+	uint32_t tsp;
 
 	// Set INIE flag
 	flags |= CPU_INIE;
 
 	// Clear all traps
+	irqFlags &= ~IRQ_TRAP;
 
 	// Get SCBB vector from memory
 	npc = readpl(IPR_SCBB + vec);
@@ -590,11 +600,17 @@ int vax_cpuDevice::exception(int ie, uint32_t vec, uint32_t ipl)
 	}
 	ccReg = 0;
 
-	// Save old PC and PSL in kernel mode
+	// Save old PC, PSL and parameters in kernel mode
 	curMode = AM_MASK(AM_KERNEL);
-	writev(REG_SP - (LN_LONG*2), opc, LN_LONG, WACC);
-	writev(REG_SP - LN_LONG, opsl, LN_LONG, WACC);
-	REG_SP -= (LN_LONG*2);
+	tsp = REG_SP;
+	writev((tsp -= LN_LONG), opsl, LN_LONG, WACC);
+	writev((tsp -= LN_LONG), opc,  LN_LONG, WACC);
+	if (paCount > 0) {
+		for (int idx = paCount-1; idx >= 0; idx--)
+			writev((tsp -= LN_LONG), paReg[idx], LN_LONG, WACC);
+		paCount = 0;
+	}
+	REG_SP = tsp;
 
 	// Set new PC address and reset opcode stream
 	REG_PC = npc & SCB_ADDR;

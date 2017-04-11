@@ -235,7 +235,21 @@
 
 #define SCB_ADDR         ALIGN_LONG // SCB Address Mask
 #define SCB_VECTOR       ALIGN_LONG // SCB Vector Mask
-#define SCB_NOPRIV		 1
+#define SCB_NOPRIV       1
+
+// Arithmetic Exception Type Codes
+#define TRAP_INTOVF   1 // Integer Overflow Trap
+#define TRAP_INTDIV   2 // Integer Divide-by-Zero Trap
+#define TRAP_FLTOVF   3 // Floating Overflow Trap
+#define TRAP_FLTDIV   4 // Floating Divide-by-Zero Trap
+#define TRAP_FLDUND   5 // Floating Underflow Trap
+#define TRAP_DECOVF   6 // Decimal Overflow Trap
+#define TRAP_DECDIV   4 // Decimal Divide-by-Zero Trap
+#define TRAP_SUBRNG   7 // Subscript Range Trap
+
+#define FAULT_FLTOVF  8 // Floating Overflow Fault
+#define FAULT_FLTDIV  9 // Floating Divide Fault
+#define FAULT_FLTUND 10 // Floating Underflow Fault
 
 // SISR register definitions
 #define SISR_MASK        0xFFFE
@@ -294,6 +308,7 @@
 
 #define IRQ_GETIPL(irq)        (((irq) >> IRQ_P_IPL) & IRQ_M_IPL)
 #define IRQ_GETTRAP(irq)       (((irq) >> IRQ_P_TRAP) & IRQ_M_TRAP)
+#define IRQ_SETTRAP(trap)      ((trap & IRQ_M_TRAP) << IRQ_P_TRAP)
 
 #define UpdateIRQ() \
 	irqFlags = evaluate();
@@ -459,14 +474,18 @@
 	if ((res) < (src)) cc |= CC_C;
 
 // Set V flag
-//#define SetV(cc) \
-//	{ (cc) |= CC_V; if (VAX_PSW & PSW_IV) SET_TRAP(CPU_TIRQ, TRAP_INTOVF); }
+#define SetV(cc)                              \
+	(cc) |= CC_V;                             \
+	if (psReg & PSW_IV) {                     \
+		iraFlags &= ~IRQ_TRAP;                \
+		irqFlags |= IRQ_SETTRAP(TRAP_INTOVF); \
+	}
 
 // ADD/SUB Results for Overflow bit
 #define SetV_ADD(cc, res, src, add, sign) \
-	if (~(src ^ add) & (res ^ add) & sign) SetV(cc);
+	if (~(src ^ add) & (res ^ add) & sign) setv();
 #define SetV_SUB(cc, res, src, sub, sign) \
-	if ((src ^ sub) & (res ^ ~sub) & sign) SetV(cc);
+	if ((src ^ sub) & (res ^ ~sub) & sign) setv();
 
 // ADD/SUB Results for Carry bit
 #define SetC_ADD(cc, res, src)  \
@@ -478,33 +497,33 @@
 #define SetCC_ADD_B(cc, res, src, add)   \
 	SetNZ(cc, SXTB(res), 0, 0);          \
 	SetC_ADD(cc, ZXTB(res), ZXTB(src));  \
-	SetV_ADD(cc, res, src, add, B_SIGN);
+	SetV_ADD(cc, res, src, add, SGN_BYTE);
 
 #define SetCC_ADD_W(cc, res, src, add)   \
 	SetNZ(cc, SXTW(res), 0, 0);          \
 	SetC_ADD(cc, ZXTW(res), ZXTW(src));  \
-	SetV_ADD(cc, res, src, add, W_SIGN);
+	SetV_ADD(cc, res, src, add, SGN_WORD);
 
 #define SetCC_ADD_L(cc, res, src, add)   \
 	SetNZ(cc, SXTL(res), 0, 0);          \
 	SetC_ADD(cc, ZXTL(res), ZXTL(src));  \
-	SetV_ADD(cc, res, src, add, L_SIGN);
+	SetV_ADD(cc, res, src, add, SGN_LONG);
 
 // SUB Results for Condition Codes
 #define SetCC_SUB_B(cc, res, src, sub)   \
 	SetNZ(cc, SXTB(res), 0, 0);          \
 	SetC_SUB(cc, ZXTB(src), ZXTB(sub));  \
-	SetV_SUB(cc, res, src, sub, B_SIGN);
+	SetV_SUB(cc, res, src, sub, SGN_BYTE);
 
 #define SetCC_SUB_W(cc, res, src, sub)   \
 	SetNZ(cc, SXTW(res), 0, 0);          \
 	SetC_SUB(cc, ZXTW(src), ZXTW(sub));  \
-	SetV_SUB(cc, res, src, sub, W_SIGN);
+	SetV_SUB(cc, res, src, sub, SGN_WORD);
 
 #define SetCC_SUB_L(cc, res, src, sub)   \
 	SetNZ(cc, SXTL(res), 0, 0);          \
 	SetC_SUB(cc, ZXTL(src), ZXTL(sub));  \
-	SetV_SUB(cc, res, src, sub, L_SIGN);
+	SetV_SUB(cc, res, src, sub, SGN_LONG);
 
 struct vaxOpcode {
 	const char *opName;           // Name of the Instruction
@@ -619,6 +638,15 @@ protected:
 			writev(op+4,  wd[1], LN_LONG, WACC);
 			writev(op+8,  wd[2], LN_LONG, WACC);
 			writev(op+12, wd[3], LN_LONG, WACC);
+		}
+	}
+
+	inline void setv()
+	{
+		ccReg |= CC_V;
+		if (psReg & PSW_IV) {
+			irqFlags &= ~IRQ_TRAP;
+			irqFlags |= IRQ_SETTRAP(TRAP_INTOVF);
 		}
 	}
 

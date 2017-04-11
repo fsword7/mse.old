@@ -977,7 +977,10 @@ void CPU_CLASS::execute()
 				src  = SXTL(opReg[0]);
 				src1 = SXTL(opReg[3]);
 				src2 = SXTL(opReg[4]);
-//				if (src < opRegs[1] || src > opRegs[2]));
+				if ((src < SXTL(opReg[1])) || (src > SXTL(opReg[2]))) {
+					irqFlags &= ~IRQ_TRAP;
+					irqFlags |= IRQ_SETTRAP(TRAP_SUBRNG);
+				}
 
 				dst = (src + src2) * src1;
 				storel(opReg[5], dst);
@@ -1188,7 +1191,7 @@ void CPU_CLASS::execute()
 				dst   = src2 + src1;
 				storeb(opReg[3], dst);
 				UpdateCC_IIZP_B(ccReg, dst);
-				UpdateV_ADD_B(ccReg, dst, src1, src2);
+				SetV_ADD(ccReg, dst, src2, src1, SGN_BYTE);
 				if ((src1 < 0) ? (dst >= src) : (dst <= src)) {
 					REG_PC += opReg[4];
 					flushvi();
@@ -1206,7 +1209,7 @@ void CPU_CLASS::execute()
 				dst   = src2 + src1;
 				storew(opReg[3], dst);
 				UpdateCC_IIZP_W(ccReg, dst);
-				UpdateV_ADD_W(ccReg, dst, src1, src2);
+				SetV_ADD(ccReg, dst, src2, src1, SGN_WORD);
 				if ((src1 < 0) ? (dst >= src) : (dst <= src)) {
 					REG_PC += opReg[4];
 					flushvi();
@@ -1224,7 +1227,7 @@ void CPU_CLASS::execute()
 				dst   = src2 + src1;
 				storel(opReg[3], dst);
 				UpdateCC_IIZP_L(ccReg, dst);
-				UpdateV_ADD_L(ccReg, dst, src1, src2);
+				SetV_ADD(ccReg, dst, src2, src1, SGN_LONG);
 				if ((src1 < 0) ? (dst >= src) : (dst <= src)) {
 					REG_PC += opReg[4];
 					flushvi();
@@ -1296,7 +1299,7 @@ void CPU_CLASS::execute()
 				dst  = src2 + 1;
 				storel(opReg[2], dst);
 				UpdateCC_IIZP_L(ccReg, dst);
-				UpdateV_ADD_L(ccReg, dst, 1, src2);
+				SetV_ADD(ccReg, dst, src2, 1, SGN_LONG);
 				if (dst <= src1) {
 					REG_PC += opReg[3];;
 					flushvi();
@@ -1312,7 +1315,7 @@ void CPU_CLASS::execute()
 				dst  = src2 + 1;
 				storel(opReg[2], dst);
 				UpdateCC_IIZP_L(ccReg, dst);
-				UpdateV_ADD_L(ccReg, dst, 1, src2);
+				SetV_ADD(ccReg, dst, src2, 1, SGN_LONG);
 				if (dst < src1) {
 					REG_PC += opReg[3];
 					flushvi();
@@ -1329,7 +1332,7 @@ void CPU_CLASS::execute()
 				dst = src - 1;
 				storel(opReg[1], dst);
 				UpdateCC_IIZP_L(ccReg, dst);
-				UpdateV_SUB_L(ccReg, dst, 1, src);
+				SetV_SUB(ccReg, dst, src, 1, SGN_LONG);
 				if (dst >= 0) {
 					REG_PC += opReg[2];
 					flushvi();
@@ -1344,7 +1347,7 @@ void CPU_CLASS::execute()
 				dst = src - 1;
 				storel(opReg[1], dst);
 				UpdateCC_IIZP_L(ccReg, dst);
-				UpdateV_SUB_L(ccReg, dst, 1, src);
+				SetV_SUB(ccReg, dst, src, 1, SGN_LONG);
 				if (dst > 0) {
 					REG_PC += opReg[2];
 					flushvi();
@@ -1480,7 +1483,7 @@ void CPU_CLASS::execute()
 				src = SXTB(opReg[0]);
 				dst = -src;
 				storeb(opReg[1], dst);
-				UpdateCC_SUB_B(ccReg, dst, src, 0);
+				SetCC_SUB_B(ccReg, dst, 0, src);
 				printf("%s: Move -%02X => %02X: %s\n", devName.c_str(),
 					ZXTB(src), ZXTB(dst), stringCC(ccReg));
 				break;
@@ -1488,7 +1491,7 @@ void CPU_CLASS::execute()
 				src = SXTW(opReg[0]);
 				dst = -src;
 				storew(opReg[1], dst);
-				UpdateCC_SUB_W(ccReg, dst, src, 0);
+				SetCC_SUB_W(ccReg, dst, 0, src);
 				printf("%s: Move -%04X => %04X: %s\n", devName.c_str(),
 					ZXTW(src), ZXTW(dst), stringCC(ccReg));
 				break;
@@ -1496,7 +1499,7 @@ void CPU_CLASS::execute()
 				src = SXTL(opReg[0]);
 				dst = -src;
 				storel(opReg[1], dst);
-				UpdateCC_SUB_L(ccReg, dst, src, 0);
+				SetCC_SUB_L(ccReg, dst, 0, src);
 				printf("%s: Move -%08X => %08X: %s\n", devName.c_str(),
 					ZXTL(src), ZXTL(dst), stringCC(ccReg));
 				break;
@@ -1649,7 +1652,7 @@ void CPU_CLASS::execute()
 				src = SXTB(opReg[0]);
 				dst = src + 1;
 				storeb(opReg[1], dst);
-				UpdateCC_ADD_B(ccReg, dst, 1, src);
+				SetCC_ADD_B(ccReg, dst, src, 1);
 				printf("%s: %02X + 1 => %02X: %s\n",
 					devName.c_str(), ZXTB(src), ZXTB(dst), stringCC(ccReg));
 				break;
@@ -1657,7 +1660,7 @@ void CPU_CLASS::execute()
 				src = SXTW(opReg[0]);
 				dst = src + 1;
 				storew(opReg[1], dst);
-				UpdateCC_ADD_W(ccReg, dst, 1, src);
+				SetCC_ADD_W(ccReg, dst, src, 1);
 				printf("%s: %04X + 1 => %04X: %s\n",
 					devName.c_str(), ZXTW(src), ZXTW(dst), stringCC(ccReg));
 				break;
@@ -1665,7 +1668,7 @@ void CPU_CLASS::execute()
 				src = SXTL(opReg[0]);
 				dst = src + 1;
 				storel(opReg[1], dst);
-				UpdateCC_ADD_L(ccReg, dst, 1, src);
+				SetCC_ADD_L(ccReg, dst, src, 1);
 				printf("%s: %08X + 1 => %08X: %s\n",
 					devName.c_str(), ZXTL(src), ZXTL(dst), stringCC(ccReg));
 				break;
@@ -1675,7 +1678,7 @@ void CPU_CLASS::execute()
 				src = SXTB(opReg[0]);
 				dst = src - 1;
 				storeb(opReg[1], dst);
-				UpdateCC_SUB_B(ccReg, dst, 1, src);
+				SetCC_SUB_B(ccReg, dst, src, 1);
 				printf("%s: %08X - 1 => %08X: %s\n",
 					devName.c_str(), ZXTB(src), ZXTB(dst), stringCC(ccReg));
 				break;
@@ -1683,7 +1686,7 @@ void CPU_CLASS::execute()
 				src = SXTW(opReg[0]);
 				dst = src - 1;
 				storew(opReg[1], dst);
-				UpdateCC_SUB_W(ccReg, dst, 1, src);
+				SetCC_SUB_W(ccReg, dst, src, 1);
 				printf("%s: %04X - 1 => %04X: %s\n",
 					devName.c_str(), ZXTW(src), ZXTW(dst), stringCC(ccReg));
 				break;
@@ -1691,7 +1694,7 @@ void CPU_CLASS::execute()
 				src = SXTL(opReg[0]);
 				dst = src - 1;
 				storel(opReg[1], dst);
-				UpdateCC_SUB_L(ccReg, dst, 1, src);
+				SetCC_SUB_L(ccReg, dst, src, 1);
 				printf("%s: %08X - 1 => %08X: %s\n",
 					devName.c_str(), ZXTL(src), ZXTL(dst), stringCC(ccReg));
 				break;
@@ -1710,7 +1713,7 @@ void CPU_CLASS::execute()
 					dst = src + tmp;
 					writev(opReg[1], dst, LN_WORD, WACC);
 				}
-				UpdateCC_ADD_W(ccReg, dst, src, tmp);
+				SetCC_ADD_W(ccReg, dst, src, tmp);
 				printf("%s: %04X + %04X => %04X: %s\n", devName.c_str(),
 						ZXTW(src), ZXTW(tmp), ZXTW(dst), stringCC(ccReg));
 				break;
@@ -1722,7 +1725,7 @@ void CPU_CLASS::execute()
 				src2 = SXTB(opReg[1]);
 				dst  = src2 + src1;
 				storeb(opReg[2], dst);
-				UpdateCC_ADD_B(ccReg, dst, src1, src2);
+				SetCC_ADD_B(ccReg, dst, src2, src1);
 				printf("%s: %02X + %02X => %02X: %s\n", devName.c_str(),
 					ZXTB(src1), ZXTB(src2), ZXTB(dst), stringCC(ccReg));
 				break;
@@ -1732,7 +1735,7 @@ void CPU_CLASS::execute()
 				src2 = SXTW(opReg[1]);
 				dst  = src2 + src1;
 				storew(opReg[2], dst);
-				UpdateCC_ADD_W(ccReg, dst, src1, src2);
+				SetCC_ADD_W(ccReg, dst, src2, src1);
 				printf("%s: %04X + %04X => %04X: %s\n", devName.c_str(),
 					ZXTW(src1), ZXTW(src2), ZXTW(dst), stringCC(ccReg));
 				break;
@@ -1742,7 +1745,7 @@ void CPU_CLASS::execute()
 				src2 = SXTL(opReg[1]);
 				dst  = src2 + src1;
 				storel(opReg[2], dst);
-				UpdateCC_ADD_L(ccReg, dst, src1, src2);
+				SetCC_ADD_L(ccReg, dst, src2, src1);
 				printf("%s: %08X + %08X => %08X: %s\n", devName.c_str(),
 					ZXTL(src1), ZXTL(src2), ZXTL(dst), stringCC(ccReg));
 				break;
@@ -1754,7 +1757,7 @@ void CPU_CLASS::execute()
 				src2 = SXTB(opReg[1]);
 				dst  = src2 - src1;
 				storeb(opReg[2], dst);
-				UpdateCC_SUB_B(ccReg, dst, src1, src2);
+				SetCC_SUB_B(ccReg, dst, src2, src1);
 				printf("%s: %02X - %02X => %02X: %s\n", devName.c_str(),
 					ZXTB(src1), ZXTB(src2), ZXTB(dst), stringCC(ccReg));
 				break;
@@ -1764,7 +1767,7 @@ void CPU_CLASS::execute()
 				src2 = SXTW(opReg[1]);
 				dst  = src2 - src1;
 				storew(opReg[2], dst);
-				UpdateCC_SUB_W(ccReg, dst, src1, src2);
+				SetCC_SUB_W(ccReg, dst, src2, src1);
 				printf("%s: %04X - %04X => %04X: %s\n", devName.c_str(),
 					ZXTW(src1), ZXTW(src2), ZXTW(dst), stringCC(ccReg));
 				break;
@@ -1774,7 +1777,7 @@ void CPU_CLASS::execute()
 				src2 = SXTL(opReg[1]);
 				dst  = src2 - src1;
 				storel(opReg[2], dst);
-				UpdateCC_SUB_L(ccReg, dst, src1, src2);
+				SetCC_SUB_L(ccReg, dst, src2, src1);
 				printf("%s: %08X - %08X => %08X: %s\n", devName.c_str(),
 					ZXTL(src1), ZXTL(src2), ZXTL(dst), stringCC(ccReg));
 				break;
@@ -1937,7 +1940,7 @@ void CPU_CLASS::execute()
 				carry = ccReg & CC_C;
 				dst   = src2 + src1 + carry;
 				storel(opReg[2], dst);
-				UpdateCC_ADD_L(ccReg, dst, src1, src2);
+				SetCC_ADD_L(ccReg, dst, src2, src1);
 				if ((dst == src2) && src1 != 0)
 					ccReg |= CC_C;
 				printf("%s: %08X + %08X + %d => %08X: %s\n", devName.c_str(),
@@ -1949,7 +1952,7 @@ void CPU_CLASS::execute()
 				carry = ccReg & CC_C;
 				dst   = src2 - src1 - carry;
 				storel(opReg[2], dst);
-				UpdateCC_SUB_L(ccReg, dst, src1, src2);
+				SetCC_SUB_L(ccReg, dst, src2, src1);
 				if ((src1 == src2) && dst != 0)
 					ccReg |= CC_C;
 				printf("%s: %08X - %08X - %d => %08X: %s\n", devName.c_str(),
