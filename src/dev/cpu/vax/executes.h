@@ -2570,6 +2570,24 @@ void CPU_CLASS::execute()
 				svpctx();
 				break;
 
+			// Change access instructions
+			// CHMU - Change mode to user mode
+			// CHMS - Change mode to supervisor mode
+			// CHME - Change mode to executive mode
+			// CHMK - Change mode to kernel mode
+			case OPC_nCHMU:
+				change(AM_USER, SXTW(opReg[0]));
+				break;
+			case OPC_nCHMS:
+				change(AM_SUPERVISOR, SXTW(opReg[0]));
+				break;
+			case OPC_nCHME:
+				change(AM_EXECUTIVE, SXTW(opReg[0]));
+				break;
+			case OPC_nCHMK:
+				change(AM_KERNEL, SXTW(opReg[0]));
+				break;
+
 			// Illegal/unimplemented instruction
 			default:
 //				if (opc->opCode != OPC_nUOPC)

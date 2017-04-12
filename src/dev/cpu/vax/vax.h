@@ -518,6 +518,7 @@ protected:
 	int  exception(int ie, uint32_t vec, uint32_t ipl);
 	void emulate(uint32_t opc);
 	int  fault(uint32_t vec);
+	void change(int mode, int32_t code);
 	void resume();
 
 	inline void storeb(register uint32_t op, register uint8_t data)

@@ -202,7 +202,7 @@ uint32_t cvax_cpuDevice::readpr(uint32_t rn)
 	return data;
 }
 
-void cvax_cpuDevice::writepr(uint32_t rn, uint32_t data) //throw(uint32_t)
+void cvax_cpuDevice::writepr(uint32_t rn, uint32_t data)
 {
 	switch (rn) {
 		case IPR_nKSP: // Kernel Stack Pointer

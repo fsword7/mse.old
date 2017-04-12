@@ -283,18 +283,30 @@ void vax_cpuDevice::ldpctx()
 	writev(REG_SP, npc, LN_LONG, WACC);
 	writev(REG_SP+LN_LONG, npsl, LN_LONG, WACC);
 
+	printf("%s: (CTX) Loading User Process\n", devName.c_str());
+	printf("%s: (CTX) PCB Address: %08X, AST Level: %d, PME: %s\n", devName.c_str(),
+		IPR_PCBB, IPR_ASTLVL, (IPR_PME & 1) ? "On" : "Off");
+	printf("%s: (CTX) KSP: %08X  ESP: %08X  SSP: %08X  USP: %08X\n", devName.c_str(),
+		IPR_KSP, IPR_ESP, IPR_SSP, IPR_USP);
+	printf("%s: (CTX) P0 Address: %08X Length: %08X\n", devName.c_str(),
+		IPR_P0BR, IPR_P0LR);
+	printf("%s: (CTX) P1 Address: %08X Length: %08X\n", devName.c_str(),
+		IPR_P1BR, IPR_P1LR);
+	printf("%s: (CTX) SP %08X <= PC %08X PSL %08X\n", devName.c_str(),
+		REG_SP, npc, npsl);
 }
 
 void vax_cpuDevice::svpctx()
 {
 	uint32_t svpc, svpsl;
-	uint32_t pcb;
+	uint32_t pcb, osp;
 
 	// Must be in kernel mode
 	if (PSL_GETCUR(psReg) != AM_KERNEL)
 		throw PRIV_INST_FAULT;
 
 	// Get saved PC and PSL registers from stack
+	osp     = REG_SP;
 	svpc    = readv(REG_SP, LN_LONG, RACC);
 	svpsl   = readv(REG_SP+LN_LONG, LN_LONG, RACC);
 	REG_SP += (LN_LONG*2);
@@ -330,6 +342,18 @@ void vax_cpuDevice::svpctx()
 	writepl(pcb+68, REG_R13);
 	writepl(pcb+72, svpc);
 	writepl(pcb+76, svpsl);
+
+	printf("%s: (CTX) Saving User Process\n", devName.c_str());
+	printf("%s: (CTX) PCB Address: %08X, AST Level: %d, PME: %s\n", devName.c_str(),
+		IPR_PCBB, IPR_ASTLVL, (IPR_PME & 1) ? "On" : "Off");
+	printf("%s: (CTX) KSP: %08X  ESP: %08X  SSP: %08X  USP: %08X\n", devName.c_str(),
+		IPR_KSP, IPR_ESP, IPR_SSP, IPR_USP);
+	printf("%s: (CTX) P0 Address: %08X Length: %08X\n", devName.c_str(),
+		IPR_P0BR, IPR_P0LR);
+	printf("%s: (CTX) P1 Address: %08X Length: %08X\n", devName.c_str(),
+		IPR_P1BR, IPR_P1LR);
+	printf("%s: (CTX) SP %08X => PC %08X PSL %08X\n", devName.c_str(),
+		osp, svpc, svpsl);
 }
 
 int vax_cpuDevice::getBit()
@@ -716,6 +740,59 @@ void vax_cpuDevice::emulate(uint32_t opCode)
 	printf("%s: (EMU) Old PC=%08X PSL=%08X SP=%08X Access: %s,%s\n", devName.c_str(),
 		ZXTL(opc), ZXTL(opsl), ZXTL(osp), DSPL_CUR(opsl), DSPL_PRV(opsl));
 	printf("%s: (EMU) New PC=%08X PSL=%08X SP=%08X Access: %s,%s\n", devName.c_str(),
+		ZXTL(REG_PC), ZXTL(psReg|ccReg), ZXTL(REG_SP), DSPL_CUR(psReg), DSPL_PRV(psReg));
+}
+
+static const uint32_t scbMode[] = { SCB_CHMK, SCB_CHME, SCB_CHMS, SCB_CHMU };
+
+// Change access mode for CHMx instructions
+void vax_cpuDevice::change(int mode, int32_t code)
+{
+	uint32_t omode, nmode;
+	uint32_t opc, opsl, osp;
+	uint32_t npc, nsp;
+
+	// Save PC, PSL and SP registers
+	opsl = psReg|ccReg;
+	opc  = REG_PC;
+	osp  = REG_SP;
+
+	// Must not be in interrupt mode
+	if (psReg & PSL_IS) {
+	}
+
+	// Get vector address from SCB block
+	npc = readpl(IPR_SCBB + scbMode[mode]);
+
+	// Maximize access mode
+	omode = PSL_GETPRV(psReg);
+	nmode = (omode < mode) ? omode : mode;
+
+	// Switch SP register
+	CPU_IPR(omode) = osp;
+	nsp = CPU_IPR(nmode);
+
+	// Set new access mode
+	curMode = AM_MASK(nmode);
+
+	writev((nsp -= LN_LONG), opsl, LN_LONG, WACC);
+	writev((nsp -= LN_LONG), opc, LN_LONG, WACC);
+	writev((nsp -= LN_LONG), code, LN_LONG, WACC);
+	REG_SP = nsp;
+
+	// Load new PC and PSL in new access mode
+	psReg = (psReg & PSL_IPL) | PSL_SETCUR(nmode) | PSL_SETPRV(omode);
+	ccReg = 0;
+	REG_PC = npc;
+	flushvi();
+
+	// Evaluate hardware/software interrupts
+
+	printf("%s: (CHM) SCB vector %04X  New PC: %08X(%1X) Type: Change Mode\n", devName.c_str(),
+		ZXTW(scbMode[mode]), ZXTL(npc & ~03), ZXTL(npc & 03));
+	printf("%s: (CHM) Old PC=%08X PSL=%08X SP=%08X Access: %s,%s\n", devName.c_str(),
+		ZXTL(opc), ZXTL(opsl), ZXTL(osp), DSPL_CUR(opsl), DSPL_PRV(opsl));
+	printf("%s: (CHM) New PC=%08X PSL=%08X SP=%08X Access: %s,%s\n", devName.c_str(),
 		ZXTL(REG_PC), ZXTL(psReg|ccReg), ZXTL(REG_SP), DSPL_CUR(psReg), DSPL_PRV(psReg));
 }
 
