@@ -395,15 +395,15 @@ int32_t vax_cpuDevice::getField(bool sign)
 	// If size is zero, do nothing and return zero.
 	if (size == 0)
 		return 0;
-
-	// If size is more than 32, reserved operand fault.
 	if (size > 32)
 		throw RSVD_OPND_FAULT;
 
 	// Extract a field from one or two longwords.
 	if (OP_ISREG(reg)) {
-		if ((ZXTL(pos) > 31) && (~reg >= REG_nSP))
-			throw RSVD_ADDR_FAULT;
+		if (ZXTL(pos) > 31)
+			throw RSVD_OPND_FAULT;
+//		if (~reg >= REG_nSP)
+//			throw RSVD_ADDR_FAULT;
 		src1 = ZXTL(gpReg[~reg].l);
 		if ((pos + size) > 32)
 			src2 = ZXTL(gpReg[(~reg)+1].l);
@@ -454,10 +454,10 @@ void vax_cpuDevice::putField()
 	// Extract a field from one or two longwords.
 	if (OP_ISREG(reg)) {
 		if (ZXTL(pos) > 31)
-			throw RSVD_ADDR_FAULT;
+			throw RSVD_OPND_FAULT;
 		if (ZXTL(pos + size) > 32) {
-			if (~reg >= REG_nSP)
-				throw RSVD_OPND_FAULT;
+//			if (~reg >= REG_nSP)
+//				throw RSVD_ADDR_FAULT;
 			mask = mskList[pos + size - 32];
 			src2 = gpReg[(~reg)+1].l;
 			dst2 = ((src >> (32 - pos)) & mask) | (src2 & ~mask);
@@ -534,7 +534,8 @@ void vax_cpuDevice::interrupt()
 		paCount  = 1;
 		paReg[0] = trap;
 		// perform exception routine
-		exception(IE_EXC, SCB_ARITH, 0);
+//		exception(IE_EXC, SCB_ARITH, 0);
+		fault(SCB_ARITH);
 	} else if ((nipl = IRQ_GETIPL(irqFlags)) != 0) {
 		if (nipl <= IPL_SMAX) {
 			// Software interrupts
@@ -548,6 +549,42 @@ void vax_cpuDevice::interrupt()
 		exception(IE_INT, vec, nipl);
 	} else
 		irqFlags = 0;
+}
+
+int vax_cpuDevice::fault(uint32_t vec)
+{
+	int rc;
+
+	// Reset registers that already
+	// were incremented or decremented.
+	if ((psReg & PSL_FPD) == 0)
+		for (int idx = 0; idx < rqCount; idx++)
+			gpReg[rqReg[idx] & 0xF].l += rqReg[idx] >> 4;
+
+	// Clear TP in PSL register
+	psReg &= ~PSL_TP;
+
+	// Reset fault PC address
+	REG_PC = faultAddr;
+
+	switch (vec) {
+	case SCB_RESIN|SCB_NOPRIV:
+		vec &= ~SCB_NOPRIV;
+	case SCB_RESAD:
+	case SCB_RESOP:
+	case SCB_RESIN:
+//		if (flags & CPU_INIE);
+		if ((rc = exception(IE_EXC, vec, 0)) != 0)
+			return rc;
+		break;
+
+	case SCB_ARITH:
+//		if (flags & CPU_INIE);
+		exception(IE_EXC, vec, 0);
+		break;
+	}
+
+	return 0;
 }
 
 int vax_cpuDevice::exception(int ie, uint32_t vec, uint32_t ipl)
@@ -763,27 +800,6 @@ void vax_cpuDevice::resume()
 			nacc, IPR_ASTLVL);
 }
 
-int vax_cpuDevice::fault(uint32_t vec)
-{
-	int rc;
-
-	// Reset fault PC address
-	REG_PC = faultAddr;
-
-	switch (vec) {
-	case SCB_RESIN|SCB_NOPRIV:
-		vec &= ~SCB_NOPRIV;
-	case SCB_RESAD:
-	case SCB_RESOP:
-	case SCB_RESIN:
-		if ((rc = exception(IE_EXC, vec, 0)) != 0)
-			return rc;
-		break;
-
-	}
-
-	return 0;
-}
 
 //#define CPU_CLASS vax_cpuDevice
 //#include "dev/cpu/vax/executes.h"

@@ -631,7 +631,7 @@ protected:
 	scale32_t gpReg[CPU_nGREGS];  // General registers
 	uint32_t  ipReg[CPU_nPREGS];  // Processor registers
 	uint32_t  opReg[CPU_nOREGS];  // Operand registers
-	uint32_t  rqReg[CPU_nOREGS];  // Recovery registers
+	int32_t   rqReg[CPU_nOREGS];  // Recovery registers
 	uint32_t  paReg[CPU_nNREGS];  // Parameter registers
 
 	uint32_t  psReg;               // Processor status register
