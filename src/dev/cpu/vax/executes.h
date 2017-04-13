@@ -59,6 +59,15 @@ void CPU_CLASS::execute()
 				continue;
 			}
 
+			if (psReg & PSL_TP) {
+				psReg &= ~PSL_TP;
+				printf("%s: (EXC) Trace Trap at PC %08X\n", devName.c_str(), REG_PC);
+				exception(IE_EXC, SCB_TP, 0);
+				continue;
+			}
+			if (psReg & PSW_T)
+				psReg |= PSL_TP;
+
 //#ifdef ENABLE_DEBUG
 //			if (dbgFlags & DBG_TRACE)
 //				disasm(faultAddr);

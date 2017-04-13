@@ -251,7 +251,8 @@
 #define FAULT_FLTDIV  9 // Floating Divide Fault
 #define FAULT_FLTUND 10 // Floating Underflow Fault
 
-// SISR register definitions
+// SIRR/SISR register definitions
+#define SIRR_MASK		 0xF
 #define SISR_MASK        0xFFFE
 #define SISR_2           (1u << 2)
 
@@ -259,6 +260,7 @@
 #define AST_MASK         0x07
 #define AST_MAX          4
 
+// P0BR/P0LR/P1BR/P1LR register definitions
 #define BR_MASK          ALIGN_LONG
 #define LR_MASK          0x003FFFFF
 

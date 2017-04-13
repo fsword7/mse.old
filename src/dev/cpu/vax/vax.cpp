@@ -558,8 +558,7 @@ void vax_cpuDevice::interrupt()
 		paCount  = 1;
 		paReg[0] = trap;
 		// perform exception routine
-//		exception(IE_EXC, SCB_ARITH, 0);
-		fault(SCB_ARITH);
+		exception(IE_EXC, SCB_ARITH, 0);
 	} else if ((nipl = IRQ_GETIPL(irqFlags)) != 0) {
 		if (nipl <= IPL_SMAX) {
 			// Software interrupts

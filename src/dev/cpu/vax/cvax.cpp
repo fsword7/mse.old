@@ -204,6 +204,8 @@ uint32_t cvax_cpuDevice::readpr(uint32_t rn)
 
 void cvax_cpuDevice::writepr(uint32_t rn, uint32_t data)
 {
+	uint32_t irq;
+
 	switch (rn) {
 		case IPR_nKSP: // Kernel Stack Pointer
 			if (psReg & PSL_IS)
@@ -251,9 +253,10 @@ void cvax_cpuDevice::writepr(uint32_t rn, uint32_t data)
 			break;
 
 		case IPR_nSIRR:
-			if ((data > 0xF) || (data == 0))
-				throw RSVD_OPND_FAULT;
-			ipReg[rn] |= (1 << data);
+//			if ((data > 0xF) || (data == 0))
+//				throw RSVD_OPND_FAULT;
+			if (irq = (data & SIRR_MASK))
+				IPR_SISR |= (1u << irq);
 			break;
 
 		case IPR_nSISR:
@@ -328,6 +331,9 @@ void cvax_cpuDevice::writepr(uint32_t rn, uint32_t data)
 //				CC |= CC_V;
 			break;
 	}
+
+	// Evaluate hardware/software interrupts
+	UpdateIRQ();
 
 //#ifdef DEBUG
 //	if (dbg_Check(DBG_TRACE|DBG_DATA)) {
