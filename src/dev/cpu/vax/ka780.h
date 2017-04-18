@@ -39,4 +39,7 @@ public:
 	void reset();
 	void execute();
 
+protected:
+	void mfpr();
+	void mtpr();
 };

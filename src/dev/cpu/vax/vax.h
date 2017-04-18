@@ -275,6 +275,8 @@
 #define LP_P0LR_TEST(lp) ((lp) & 0xF8C00000)
 #define LP_P1LR_TEST(lp) ((lp) & 0x7FC00000)
 
+#include "dev/cpu/vax/mmu.h"
+
 // Read/write memory access
 #define CACC             0x80000000         // Console memory access
 #define RACC             curMode            // Read memory access
@@ -320,13 +322,26 @@
 #define STOP_UOPC			-2		// Unimplemented opcode
 #define STOP_ILLVEC			-3		// Illegal vector
 #define STOP_UIPL			-4      // Undefined IPL level
+#define STOP_INIE			-5		// Exception during exception
+
+enum stopCode {
+	STOP_eHALT = 0,
+	STOP_eUOPC,
+	STOP_eILLVEC,
+	STOP_eUIPL,
+	STOP_eINIE
+};
 
 // Exception Codes - Fault
-#define RSVD_INST_FAULT		1 // Reserved instruction fault
-#define RSVD_ADDR_FAULT		2 // Reserved address fault
-#define RSVD_OPND_FAULT		3 // Reserved operand fault
-#define PRIV_INST_FAULT		4 // Privileged instruction fault
+#define RSVD_INST_FAULT		SCB_RESIN            // Reserved instruction fault
+#define RSVD_ADDR_FAULT		SCB_RESAD            // Reserved address fault
+#define RSVD_OPND_FAULT		SCB_RESOP            // Reserved operand fault
+#define PRIV_INST_FAULT		SCB_RESIN|SCB_NOPRIV // Privileged instruction fault
 
+// Exception Codes - Page fault
+#define PAGE_TNV            SCB_TNV  // Table Not Valid
+#define PAGE_ACV            SCB_ACV  // Access Violation
+#define PAGE_KSNV           SCB_KSNV // Kernel Stack Not Valid
 
 #define UpdateCC_Z1ZP(cc) \
 	cc = CC_Z | ((cc) & CC_C);
@@ -478,6 +493,11 @@ struct vaxOpcode {
 	void        (*execute)();     // Execute Routine
 };
 
+struct tlb_t {
+	uint32_t tag; // Tag ID number (VPN)
+	uint32_t pte; // Process table entry
+};
+
 class vax_cpuDevice : public cpuDevice
 {
 public:
@@ -513,6 +533,9 @@ protected:
 	void scanc(bool spnflg);
 	void ldpctx();
 	void svpctx();
+	uint32_t probe(bool rwflg);
+	virtual void mfpr() = 0;
+	virtual void mtpr() = 0;
 
 	// Interrupt/exception services
 	int  evaluate();
@@ -600,14 +623,15 @@ public:
 	void     writep(uint32_t addr, uint32_t data, int size);   // Write access (aligned)
 	void     writepl(uint32_t pAddr, uint32_t data);           // Longword write access (aligned)
 
-	uint8_t  readvb(uint32_t vAddr, uint32_t acc);
-	uint16_t readvw(uint32_t vAddr, uint32_t acc);
-	uint32_t readvl(uint32_t vAddr, uint32_t acc);
-	uint32_t readv(uint32_t vAddr, uint32_t size, uint32_t acc);
+	void     cleartlb(bool sysFlag);
+	void     cleartlb(uint32_t vAddr);
+	bool     checktlb(uint32_t vAddr);
 
-	void     writevb(uint32_t vAddr, uint8_t data, uint32_t acc);
-	void     writevw(uint32_t vAddr, uint16_t data, uint32_t acc);
-	void     writevl(uint32_t vAddr, uint32_t data, uint32_t acc);
+	tlb_t    pagefault(uint32_t errCode, uint32_t vAddr, uint32_t acc, uint32_t *sts);
+	tlb_t    translate(uint32_t vAddr, int size, uint32_t acc, uint32_t *sts = nullptr);
+	uint32_t probev(uint32_t vAddr, uint32_t acc, uint32_t *sts);
+
+	uint32_t readv(uint32_t vAddr, uint32_t size, uint32_t acc);
 	void     writev(uint32_t vAddr, uint32_t data, uint32_t size, uint32_t acc);
 
 	void     flushvi();
@@ -617,18 +641,11 @@ public:
 	virtual uint32_t readpr(uint32_t pReg);
 	virtual void     writepr(uint32_t pReg, uint32_t data);
 
-//	inline void storeb(uint32_t op0, uint32_t op1, uint8_t data)
-//	{
-//		if (op0 >= 0)
-//			gRegs[op0].b = data;
-//		else
-//			writevb(op1, data, WA);
-//	}
-
-	// Console memory access routines (unaligned)
-	void     flushci();
-	uint32_t readci(uint32_t addr, int size); // Instruction read access
-	int      readc(uint32_t addr, uint32_t *data, int size);  // Data read access
+	// Console memory access routines
+	uint32_t readpc(uint32_t pAddr, int size);
+	void     writepc(uint32_t pAddr, uint32_t data, int size);
+	uint32_t readc(uint32_t vAddr, int size, uint32_t *sts);
+	void     writec(uint32_t vAddr, uint32_t data, int size, uint32_t *sts);
 
 protected:
 	scale32_t gpReg[CPU_nGREGS];  // General registers
@@ -648,6 +665,10 @@ protected:
 
 	uint32_t  flags;               // Processor flags
 
+	// Machine check
+	uint32_t  mchkAddr;
+	uint32_t  mchkRef;
+
 	// Opcode table for operand decoding and disassembler
 	const vaxOpcode *opCodes[CPU_nOPCTBL];
 
@@ -663,12 +684,6 @@ protected:
 	uint32_t  ibpAddr;   // IB physical Address
 	uint32_t  ibCount;   // IB Count
 
-	// Console instruction buffer (look-ahead buffer)
-	uint32_t  cibData[2]; // IB Aligned data buffer
-	uint32_t  cibAddr;    // IB Address
-	uint32_t  cibCount;   // IB Count
-	uint32_t  cvAddr;     // virtual address
-
 	// Memory management unit
 	uint32_t  curMode;    // Current access mode
 	uint32_t  prvMode;    // Previous access mode
@@ -678,6 +693,9 @@ protected:
 	// Interrupt/exception services
 	uint32_t  faultAddr;   // Faulting PC address
 	uint32_t  irqFlags;
+
+	tlb_t     tlbSystem[TLB_SIZE];
+	tlb_t     tlbProcess[TLB_SIZE];
 
 private:
 #ifdef ENABLE_DEBUG

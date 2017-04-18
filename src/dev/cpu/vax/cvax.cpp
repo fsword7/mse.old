@@ -104,6 +104,9 @@ cvax_cpuDevice *cvax_cpuDevice::create(std::string devName)
 //	cpu->devDesc = model->desc;
 //	cpu->driver  = model->driver;
 
+	// Initialize CPU processor
+	cpu->reset();
+
 	return cpu;
 }
 
@@ -134,6 +137,9 @@ void cvax_cpuDevice::reset()
 	// Reset current access mode
 	curMode  = AM_MASK(PSL_GETCUR(psReg));
 	irqFlags = 0;
+
+	// Clear all process/system TLB entries
+	cleartlb(true);
 }
 
 int cvax_cpuDevice::boot()
@@ -144,6 +150,191 @@ int cvax_cpuDevice::boot()
 #define CPU_CVAX
 #define CPU_CLASS cvax_cpuDevice
 #include "dev/cpu/vax/executes.h"
+
+void cvax_cpuDevice::mfpr()
+{
+	uint32_t ipr = opReg[0];
+	uint32_t dst;
+
+	// Must be in kernel mode.
+	if (PSL_GETCUR(psReg) != AM_KERNEL)
+		throw PRIV_INST_FAULT;
+
+	// Standard IPR Registers
+	switch (ipr) {
+		case IPR_nKSP: // Kernel Stack Register
+			dst = ((psReg & PSL_IS) ? ipReg[ipr] : REG_SP);
+			break;
+
+		case IPR_nESP: // Executive Stack Register
+		case IPR_nSSP: // Supervisor Stack Register
+		case IPR_nUSP: // User Stack Register
+			dst = ipReg[ipr];
+			break;
+
+		case IPR_nISP: // Interrupt Stack Register
+			dst = ((psReg & PSL_IS) ? REG_SP : ipReg[ipr]);
+			break;
+
+		case IPR_nIPL: // Interrupt Priority Level
+			dst = PSL_GETIPL(psReg);
+			break;
+
+		case IPR_nPME:
+			dst = ipReg[ipr];
+			break;
+
+		default:
+			dst = (ipr < iprSize) ? ipReg[ipr] : 0;
+			// Model-Specific IPR Registers
+			// Otherwise, reserved operand fault trap.
+//			if (cpu->ReadIPR)
+//				dst = cpu->ReadIPR(cpu, ipr);
+			break;
+	}
+
+	// Write results back.
+	storel(opReg[1], dst);
+
+	// Update Condition Codes
+	SetNZ(ccReg, SXTL(dst), 0, (ccReg & CC_C));
+
+	// Evaluate hardware/software interrupts.
+	UpdateIRQ();
+
+#ifdef DEBUG
+//	if (DBG_CHECKALL(cpu, LOG_TRACE|LOG_DATA) || DBG_CHECKANY(cpu, LOG_IOREGS))
+//	if (DBG_CHECKALL(cpu, LOG_TRACE|LOG_DATA))
+//		PrintLog3(LOG_TRACE|LOG_IOREGS, NULL,
+//			"%s: (MFPR) IPR %04X (%s) => %08X: %s\n",
+//				IO_DEVNAME(cpu), ipr, IPR_NAME(ipr), dst, ShowCC(VAX_CC));
+#endif /* DEBUG */
+
+	const char *name = "Undefined Register";
+	if ((ipr < iprSize) && iprName[ipr])
+		name = iprName[ipr];
+	printf("%s: (R) %s (%02X) => %08X: %s\n", devName.c_str(),
+		name, ipr, dst, stringCC(ccReg));
+}
+
+void cvax_cpuDevice::mtpr()
+{
+	uint32_t src = opReg[0];
+	uint32_t ipr = opReg[1];
+	uint32_t irq;
+
+	// Must be in kernel mode.
+	if (PSL_GETCUR(psReg) != AM_KERNEL)
+		throw PRIV_INST_FAULT;
+
+	// Update Condition Codes
+	SetNZ(ccReg, SXTL(src), 0, (ccReg & CC_C));
+
+	// Update Standard IPR Registers
+	switch (ipr) {
+		case IPR_nKSP: // Kernel Stack Register
+			if (psReg & PSL_IS)
+				ipReg[ipr] = src;
+			else
+				gpReg[REG_nSP].l = src;
+			break;
+		case IPR_nESP: // Executive Stack Register
+		case IPR_nSSP: // Supervisor Stack Register
+		case IPR_nUSP: // User Stack Register
+			ipReg[ipr] = src;
+			break;
+		case IPR_nISP: // Interrupt Stack Register
+			if (psReg & PSL_IS)
+				gpReg[REG_nSP].l = src;
+			else
+				ipReg[ipr] = src;
+			break;
+
+		case IPR_nP0BR:
+		case IPR_nP1BR:
+		case IPR_nSBR:
+			ipReg[ipr] = src & BR_MASK;
+			cleartlb(ipr == IPR_nSBR);
+			break;
+
+		case IPR_nP0LR:
+		case IPR_nP1LR:
+		case IPR_nSLR:
+			ipReg[ipr] = src & LR_MASK;
+			cleartlb(ipr == IPR_nSLR);
+			break;
+
+		case IPR_nPCBB:
+		case IPR_nSCBB:
+			ipReg[ipr] = src & ALIGN_LONG;
+			break;
+
+		case IPR_nIPL:
+			ipReg[ipr] = src & IPL_MASK;
+			psReg = PSL_SETIPL(src) | (psReg & ~PSL_IPL);
+			break;
+
+		case IPR_nSIRR:
+//			if ((src > IPL_SMAX) || (src == 0))
+//				RSVD_OPND_FAULT;
+			if (irq = (src & SIRR_MASK))
+				IPR_SISR |= (1u << irq);
+			break;
+
+		case IPR_nSISR:
+			ipReg[ipr] = src & SISR_MASK;
+			break;
+
+		case IPR_nASTLVL:
+			if (src > AST_MAX)
+				throw RSVD_OPND_FAULT;
+			ipReg[ipr] = src;
+			break;
+
+		case IPR_nMAPEN:
+			ipReg[ipr] = src & 1;
+		case IPR_nTBIA:
+			cleartlb(true);
+			break;
+
+		case IPR_nTBIS:
+			cleartlb(src);
+			break;
+
+		case IPR_nTBCHK:
+			if (checktlb(src))
+				ccReg |= CC_V;
+			break;
+
+		case IPR_nPME:
+			ipReg[ipr] = src & 1;
+			break;
+
+		default:
+			// Update Model-Specific IPR Registers
+			// Otherwise, reserved operand fault trap.
+//			cpu->WriteIPR(cpu, ipr, src);
+			break;
+	}
+
+	// Evaluate hardware/software interrupts.
+	UpdateIRQ();
+
+#ifdef DEBUG
+//	if (DBG_CHECKALL(cpu, LOG_TRACE|LOG_DATA) || DBG_CHECKANY(cpu, LOG_IOREGS))
+//	if (DBG_CHECKALL(cpu, LOG_TRACE|LOG_DATA))
+//		PrintLog3(LOG_TRACE|LOG_IOREGS, NULL,
+//			"%s: (MTPR) IPR %04X (%s) <= %08X (Now: %08X): %s\n",
+//				IO_DEVNAME(cpu), ipr, IPR_NAME(ipr), src, DPY_IPR(ipr),
+//				ShowCC(VAX_CC));
+#endif /* DEBUG */
+
+	const char *name = "Undefined Register";
+	if ((ipr < iprSize) && iprName[ipr])
+		name = iprName[ipr];
+	printf("%s: (W) %s (%02X) <= %08X: %s\n", devName.c_str(),
+		name, ipr, src, stringCC(ccReg));
+}
 
 // Read Privileged Register
 uint32_t cvax_cpuDevice::readpr(uint32_t rn)
@@ -231,14 +422,14 @@ void cvax_cpuDevice::writepr(uint32_t rn, uint32_t data)
 		case IPR_nP1BR:
 		case IPR_nSBR:
 			ipReg[rn] = data & BR_MASK;
-//			vax_ClearTBTable(vax, pReg == PR_SBR);
+			cleartlb(rn == IPR_nSBR);
 			break;
 
 		case IPR_nP0LR:
 		case IPR_nP1LR:
 		case IPR_nSLR:
 			ipReg[rn] = data & LR_MASK;
-//			vax_ClearTBTable(vax, pReg == PR_SLR);
+			cleartlb(rn == IPR_nSLR);
 			break;
 
 		case IPR_nPCBB:
@@ -317,18 +508,18 @@ void cvax_cpuDevice::writepr(uint32_t rn, uint32_t data)
 			break;
 
 		case IPR_nMAPEN:
-//			pRegs[rn] = data & 1;
+			ipReg[rn] = data & 1;
 		case IPR_nTBIA:
-//			vax_ClearTBTable(vax, 1);
+			cleartlb(true);
 			break;
 
 		case IPR_nTBIS:
-//			vax_ClearTBEntry(vax, data);
+			cleartlb(data);
 			break;
 
 		case IPR_nTBCHK:
-//			if (vax_CheckTBEntry(vax, data))
-//				CC |= CC_V;
+			if (checktlb(data))
+				ccReg |= CC_V;
 			break;
 	}
 

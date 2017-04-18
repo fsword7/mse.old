@@ -25,8 +25,9 @@ int vax_cpuDevice::disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **p
 	int      opMode, opScale;
 	uint32_t opType;
 	uint32_t data;
+	uint32_t sts;
 	int      rn, irn;
-	char     fmt[64];
+
 
 	for (int opn = 0; opn < opc->nOperands; opn++) {
 		if (opn > 0)
@@ -37,7 +38,7 @@ int vax_cpuDevice::disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **p
 
 		switch (opMode) {
 		case BB: case BW:
-			data = readci(vAddr, opScale);
+			data = readc(vAddr, opScale, &sts);
 			vAddr += opScale;
 			// Extend signed bit
 			data = (opScale == LN_BYTE) ? SXTB(data) : SXTW(data);
@@ -45,22 +46,22 @@ int vax_cpuDevice::disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **p
 			continue;
 
 		case IW:
-			data = readci(vAddr, opScale);
+			data = readc(vAddr, opScale, &sts);
 			vAddr += opScale;
 			*ptr += sprintf(*ptr, "%04X", data);
 			continue;
 
 		case IL:
-			data = readci(vAddr, opScale);
+			data = readc(vAddr, opScale, &sts);
 			vAddr += opScale;
 			*ptr += sprintf(*ptr, "%08X", data);
 			continue;
 
 		default:
-			opType = readci(vAddr++, LN_BYTE);
+			opType = readc(vAddr++, LN_BYTE, &sts);
 			if ((opType & OPR_MMASK) == IDX) {
 				irn = opType & OPR_RMASK;
-				opType = readci(vAddr++, LN_BYTE);
+				opType = readc(vAddr++, LN_BYTE, &sts);
 			} else
 				irn = -1;
 			rn = opType & OPR_RMASK;
@@ -89,7 +90,7 @@ int vax_cpuDevice::disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **p
 			if (rn < REG_nPC)
 				*ptr += sprintf(*ptr, "(%s)+", regNames[rn]);
 			else {
-				data = readci(vAddr, opScale);
+				data = readc(vAddr, opScale, &sts);
 				switch (opScale) {
 				case LN_BYTE:
 					*ptr += sprintf(*ptr, "#%02X", data);
@@ -102,16 +103,16 @@ int vax_cpuDevice::disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **p
 					break;
 				case LN_QUAD:
 					*ptr  += sprintf(*ptr, "#%08X", data);
-					data  = readci(vAddr+LN_LONG, LN_LONG);
+					data  = readc(vAddr+LN_LONG, LN_LONG, &sts);
 					*ptr  += sprintf(*ptr, "%08X", data);
 					break;
 				case LN_OCTA:
 					*ptr  += sprintf(*ptr, "#%08X", data);
-					data  = readci(vAddr+LN_LONG, LN_LONG);
+					data  = readc(vAddr+LN_LONG, LN_LONG, &sts);
 					*ptr  += sprintf(*ptr, "%08X", data);
-					data  = readci(vAddr+(LN_LONG*2), LN_LONG);
+					data  = readc(vAddr+(LN_LONG*2), LN_LONG, &sts);
 					*ptr  += sprintf(*ptr, "%08X", data);
-					data  = readci(vAddr+(LN_LONG*3), LN_LONG);
+					data  = readc(vAddr+(LN_LONG*3), LN_LONG, &sts);
 					*ptr  += sprintf(*ptr, "%08X", data);
 					break;
 				}
@@ -123,7 +124,7 @@ int vax_cpuDevice::disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **p
 			if (rn < REG_nPC)
 				*ptr += sprintf(*ptr, "@(%s)+", regNames[rn]);
 			else {
-				data = readci(vAddr, LN_LONG);
+				data = readc(vAddr, LN_LONG, &sts);
 				*ptr += sprintf(*ptr, "@#%08X", data);
 				vAddr += LN_LONG;
 			}
@@ -132,7 +133,7 @@ int vax_cpuDevice::disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **p
 		case BDPD:
 			*(*ptr)++ = '@';
 		case BDP: // Byte displacement/relative
-			data = readci(vAddr++, LN_BYTE);
+			data = readc(vAddr++, LN_BYTE, &sts);
 			*ptr += sprintf(*ptr, "B^%02X", data);
 			if (rn < REG_nPC)
 				*ptr += sprintf(*ptr, "(%s)", regNames[rn]);
@@ -141,7 +142,7 @@ int vax_cpuDevice::disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **p
 		case WDPD:
 			*(*ptr)++ = '@';
 		case WDP: // Word displacement/relative
-			data = readci(vAddr, LN_WORD);
+			data = readc(vAddr, LN_WORD, &sts);
 			vAddr += LN_WORD;
 			*ptr += sprintf(*ptr, "W^%04X", data);
 			if (rn < REG_nPC)
@@ -151,7 +152,7 @@ int vax_cpuDevice::disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **p
 		case LDPD:
 			*(*ptr)++ = '@';
 		case LDP: // Longword displacement/relative
-			data = readci(vAddr, LN_LONG);
+			data = readc(vAddr, LN_LONG, &sts);
 			vAddr += LN_LONG;
 			*ptr += sprintf(*ptr, "L^%08X", data);
 			if (rn < REG_nPC)
@@ -171,14 +172,15 @@ int vax_cpuDevice::disasm(uint32_t vAddr)
 	uint32_t   opCode, opExtend;
 	uint32_t   pcAddr = vAddr;
 	const vaxOpcode *opc;
+	uint32_t   sts;
 
 	ptr += sprintf(ptr, "%08X ", pcAddr);
 
 	// Fetch 1 or 2 bytes opcode
-	opCode = readci(pcAddr++, LN_BYTE);
+	opCode = readc(pcAddr++, LN_BYTE, &sts);
 	if (opCode > OPC_nEXTEND) {
 		opExtend = (opCode - OPC_nEXTEND) << 8;
-		opCode = readci(pcAddr++, LN_BYTE);
+		opCode = readc(pcAddr++, LN_BYTE, &sts);
 		opCode |= opExtend;
 	}
 	opc = opCodes[opCode];

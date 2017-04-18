@@ -270,6 +270,7 @@ void vax_cpuDevice::ldpctx()
 	IPR_PME = (data >> 31) & 1;
 
 	// Flush all process table entries
+	cleartlb(false);
 
 	// Switch to kernel mode
 	if ((psReg & PSL_IS) != 0) {
@@ -354,6 +355,54 @@ void vax_cpuDevice::svpctx()
 		IPR_P1BR, IPR_P1LR);
 	printf("%s: (CTX) SP %08X => PC %08X PSL %08X\n", devName.c_str(),
 		osp, svpc, svpsl);
+}
+
+uint32_t vax_cpuDevice::probe(bool rwflg)
+{
+	uint32_t mode  = opReg[0] & ACC_MASK;
+	uint32_t len   = opReg[1];
+	uint32_t base  = opReg[2];
+	uint32_t pmode = PSL_GETPRV(ccReg);
+	uint32_t acc, sts;
+
+	if (pmode > mode)
+		mode = pmode;
+	acc = AM_MASK(mode) << (rwflg ? TLB_P_WRACC : TLB_P_RDACC);
+
+	// Check virtual access at start of address
+	probev(base, acc, &sts);
+
+	switch (sts) {
+	case MM_TNV:
+	case MM_OK:
+		break;
+	case MM_PTNV:
+		paCount  = 2;
+		paReg[0] = (rwflg ? MM_WRITE : 0) | (sts & MM_EMASK);
+		paReg[1] = base;
+		throw PAGE_TNV;
+	default:
+		return CC_Z;
+	}
+
+	// Check virtual access at end of address
+	probev(base + len - 1, acc, &sts);
+
+	switch (sts) {
+	case MM_TNV:
+	case MM_OK:
+		break;
+	case MM_PTNV:
+		paCount  = 2;
+		paReg[0] = (rwflg ? MM_WRITE : 0) | (sts & MM_EMASK);
+		paReg[1] = base + len - 1;
+		throw PAGE_TNV;
+	default:
+		return CC_Z;
+	}
+
+	// All probe attempts are successful.
+	return 0;
 }
 
 int vax_cpuDevice::getBit()
@@ -596,15 +645,46 @@ int vax_cpuDevice::fault(uint32_t vec)
 	case SCB_RESAD:
 	case SCB_RESOP:
 	case SCB_RESIN:
-//		if (flags & CPU_INIE);
+		if (flags & CPU_INIE) {
+			printf("%s: (DIE) Exception during exception at PC %08X\n",
+				devName.c_str(), faultAddr);
+			throw STOP_eINIE;
+		}
 		if ((rc = exception(IE_EXC, vec, 0)) != 0)
 			return rc;
 		break;
 
 	case SCB_ARITH:
-//		if (flags & CPU_INIE);
+		if (flags & CPU_INIE) {
+			printf("%s: (DIE) Exception during exception at PC %08X\n",
+				devName.c_str(), faultAddr);
+			throw STOP_eINIE;
+		}
 		exception(IE_EXC, vec, 0);
 		break;
+
+	case SCB_TNV: // Translation Invalid
+	case SCB_ACV: // Access Control Violation
+		if (flags & CPU_INIE) {
+			if (psReg & PSL_IS) {
+				printf("%s: (DIE) Page fault during interrupt mode at PC %08X\n",
+						devName.c_str(), faultAddr);
+				throw STOP_eINIE;
+			}
+			// Kernel Stack Not Valid
+			exception(IE_SVE, SCB_KSNV, 0);
+		} else
+			exception(IE_EXC, vec, 0);
+		break;
+
+//	case SCB_KSNV: // Kernel Stack Not Valid
+//		if (flags & CPU_INIE) {
+//			printf("%s: (DIE) Exception during exception at PC %08X\n",
+//				devName.c_str(), faultAddr);
+//			throw STOP_eINIE;
+//		}
+//		exception(IE_SVE, vec, 0);
+//		break;
 	}
 
 	return 0;
@@ -634,7 +714,8 @@ int vax_cpuDevice::exception(int ie, uint32_t vec, uint32_t ipl)
 		ieTypes[ie], ZXTW(vec), ZXTL(npc & ~03), ZXTL(npc & 03), ieNames[ie]);
 
 	if (npc & 2) {
-		return STOP_ILLVEC;
+//		return STOP_ILLVEC;
+		throw STOP_eILLVEC;
 	}
 
 	// Switch SP registers

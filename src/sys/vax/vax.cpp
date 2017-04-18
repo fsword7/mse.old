@@ -137,7 +137,7 @@ static int cmdDisasm(Console *con, Device *sdev, args_t &args)
 	cpu = (vax_cpuDevice *)((sysDevice *)sdev)->getCPUDevice(0);
 
 	// Display disassembly listing.
-	cpu->flushci();
+//	cpu->flushci();
 	if (count > 0) {
 		while (count--)
 			sAddr += cpu->disasm(sAddr);

@@ -33,6 +33,14 @@ void ka780_cpuDevice::reset()
 	ipReg[IPR_nSID] |= SID_SN;
 }
 
+void ka780_cpuDevice::mfpr()
+{
+}
+
+void ka780_cpuDevice::mtpr()
+{
+}
+
 #define CPU_KA780
 #define CPU_CLASS ka780_cpuDevice
 #include "dev/cpu/vax/executes.h"

@@ -26,7 +26,7 @@ static const char *stopNames[] =
 	"HALT Instruction"
 };
 
-void CPU_CLASS::execute()
+void CPU_CLASS::execute() noexcept(false)
 {
 	uint32_t opCode;
 	int32_t  brDisp;
@@ -46,7 +46,7 @@ void CPU_CLASS::execute()
 
 	// Reset instruction steam
 	flushvi();
-	flushci();
+//	flushci();
 
 	while (1) {
 		try {
@@ -1026,19 +1026,21 @@ void CPU_CLASS::execute()
 			// MTPR/MFPR instructions
 			case OPC_nMTPR:
 				// Must be kernel mode
-				if (PSL_GETCUR(psReg) != AM_KERNEL)
-					throw PRIV_INST_FAULT;
-				src = opReg[0];
-				writepr(opReg[1], src);
-				UpdateCC_IIZP_L(ccReg, src);
+//				if (PSL_GETCUR(psReg) != AM_KERNEL)
+//					throw PRIV_INST_FAULT;
+//				src = opReg[0];
+//				writepr(opReg[1], src);
+//				UpdateCC_IIZP_L(ccReg, src);
+				mtpr();
 				break;
 			case OPC_nMFPR:
 				// Must be kernel mode
-				if (PSL_GETCUR(psReg) != AM_KERNEL)
-					throw PRIV_INST_FAULT;
-				src = readpr(opReg[0]);
-				storel(opReg[1], src);
-				UpdateCC_IIZP_L(ccReg, src);
+//				if (PSL_GETCUR(psReg) != AM_KERNEL)
+//					throw PRIV_INST_FAULT;
+//				src = readpr(opReg[0]);
+//				storel(opReg[1], src);
+//				UpdateCC_IIZP_L(ccReg, src);
+				mfpr();
 				break;
 
 			// Bcc instructions - Branch On (condition)
@@ -2597,6 +2599,16 @@ void CPU_CLASS::execute()
 				change(AM_KERNEL, SXTW(opReg[0]));
 				break;
 
+			// Probe instructions
+			// PROBER - Probe read access
+			// PROBEW - Probe write access
+			case OPC_nPROBER:
+				ccReg = probe(false) | (ccReg & CC_C);
+				break;
+			case OPC_nPROBEW:
+				ccReg = probe(true) | (ccReg & CC_C);
+				break;
+
 			// Illegal/unimplemented instruction
 			default:
 //				if (opc->opCode != OPC_nUOPC)
@@ -2606,33 +2618,55 @@ void CPU_CLASS::execute()
 		}
 
 		catch (int32_t exCode) {
-			switch (exCode) {
-			case STOP_HALT:
-				printf("%s: %s at PC %08X\n", devName.c_str(), stopNames[~exCode], faultAddr);
+			// Exception fault codes
+			if (exCode >= 0)
+				exCode = fault(exCode);
+
+			// Stop codes
+			if (exCode < 0) {
+				switch (exCode) {
+				case STOP_HALT:
+					printf("%s: %s at PC %08X\n", devName.c_str(), stopNames[~exCode], faultAddr);
+					return;
+
+				case STOP_UOPC:
+					printf("%s: Opcode %s - Unimplemented opcode at PC %08X\n",
+							devName.c_str(), opc->opName, faultAddr);
+					return;
+
+				case STOP_INIE:
+					printf("%s: Exception during exception at PC %08X\n",
+							devName.c_str(), faultAddr);
+					return;
+
+				case STOP_ILLVEC:
+					printf("%s: Illegal vector at PC %08X\n",
+							devName.c_str(), faultAddr);
+					return;
+				}
+			}
+		}
+
+		catch (stopCode stCode) {
+			switch (stCode) {
+			case STOP_eHALT:
+				printf("%s: %s at PC %08X\n", devName.c_str(), stopNames[stCode], faultAddr);
 				return;
 
-			case STOP_UOPC:
+			case STOP_eUOPC:
 				printf("%s: Opcode %s - Unimplemented opcode at PC %08X\n",
 						devName.c_str(), opc->opName, faultAddr);
 				return;
 
-			// Exception fault codes
-			case RSVD_INST_FAULT:
-				if (fault(SCB_RESIN))
-					return;
-				break;
-			case RSVD_ADDR_FAULT:
-				if (fault(SCB_RESAD))
-					return;
-				break;
-			case RSVD_OPND_FAULT:
-				if (fault(SCB_RESOP))
-					return;
-				break;
-			case PRIV_INST_FAULT:
-				if (fault(SCB_RESIN|SCB_NOPRIV))
-					return;
-				break;
+			case STOP_eINIE:
+				printf("%s: Exception during exception at PC %08X\n",
+						devName.c_str(), faultAddr);
+				return;
+
+			case STOP_eILLVEC:
+				printf("%s: Illegal vector at PC %08X\n",
+						devName.c_str(), faultAddr);
+				return;
 			}
 		}
 	}

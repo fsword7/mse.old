@@ -30,6 +30,14 @@ void v11_cpuDevice::reset()
 	ipReg[IPR_nSID] = (SID_ID|SID_CPUREV|SID_PATREV|SID_MBO|SID_UCODE);
 }
 
+void v11_cpuDevice::mfpr()
+{
+}
+
+void v11_cpuDevice::mtpr()
+{
+}
+
 #define CPU_V11
 #define CPU_CLASS v11_cpuDevice
 #include "dev/cpu/vax/executes.h"
