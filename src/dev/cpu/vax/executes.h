@@ -31,6 +31,7 @@ void CPU_CLASS::execute() noexcept(false)
 	uint32_t opCode;
 	int32_t  brDisp;
 	bool     ovflg;
+	uint32_t sts;
 	const vaxOpcode *opc;
 	register int32_t  src1, src2, carry;
 	register int32_t  dst1, dst2;
@@ -41,12 +42,12 @@ void CPU_CLASS::execute() noexcept(false)
 	register uint32_t udst, utmp;
 	register uint32_t mask;
 	register int32_t  cnt;
-	register int32_t  entry, pred, succ, hdr;
-	register int32_t  a, b, c, ar;
+	register int32_t  entry, pred, succ;
+	register int32_t  prev, next;
+	register int32_t  queue, head, tail;
 
 	// Reset instruction steam
 	flushvi();
-//	flushci();
 
 	while (1) {
 		try {
@@ -2352,183 +2353,297 @@ void CPU_CLASS::execute() noexcept(false)
 			case OPC_nCVTLG:
 				throw RSVD_INST_FAULT;
 
+#define QUE_NEXT(entry) ((entry)+(LN_LONG*0))
+#define QUE_PREV(entry) ((entry)+(LN_LONG*1))
+#define QUE_HEAD(entry) ((entry)+(LN_LONG*0))
+#define QUE_TAIL(entry) ((entry)+(LN_LONG*1))
+
 			// Queue instructions
 			case OPC_nINSQUE:
 				entry = SXTL(opReg[0]);
 				pred  = SXTL(opReg[1]);
-				// Check write access first for page faults
-				succ = readv(pred, LN_LONG, WACC);
-				readv(succ+LN_LONG, LN_LONG, WACC);
-				readv(entry+LN_LONG, LN_LONG, WACC);
-				// Insert entry into queue
-				writev(entry, succ, LN_LONG, WACC);
-				writev(entry+LN_LONG, pred, LN_LONG, WACC);
-				writev(succ+LN_LONG, entry, LN_LONG, WACC);
-				writev(pred, entry, LN_LONG, WACC);
-				// Update condition codes
-				UpdateCC_CMP_L(ccReg, succ, pred);
+
+				// Check Memory Accesses
+				succ = readv(QUE_NEXT(pred), LN_LONG, WACC);
+				readv(QUE_PREV(succ), LN_LONG, WACC);
+				readv(QUE_PREV(entry), LN_LONG, WACC);
+
+				// Insert an entry into queue.
+				// Link entry to current prev and next nodes.
+				writev(QUE_NEXT(entry), succ, LN_LONG, WACC);
+				writev(QUE_PREV(entry), pred, LN_LONG, WACC);
+
+				// Link prev and next nodes to that entry.
+				writev(QUE_PREV(succ), entry, LN_LONG, WACC);
+				writev(QUE_NEXT(pred), entry, LN_LONG, WACC);
+
+				// Update Condition Codes
+				SetNZ(ccReg, SXTL(succ), SXTL(pred), 0);
+				SetC(ccReg, ZXTL(succ), ZXTL(pred));
+
 				printf("%s: Insert %08X to %08X with next %08X: %s\n",
 					devName.c_str(), ZXTL(entry), ZXTL(pred), ZXTL(succ),
 					stringCC(ccReg));
 				break;
+
 			case OPC_nINSQHI:
 				entry = SXTL(opReg[0]);
-				hdr   = SXTL(opReg[1]);
-				if ((entry == hdr) || ((entry|hdr) & 07))
+				queue = SXTL(opReg[1]);
+				if ((entry == queue) || ((entry|queue) & ~ALIGN_QUAD))
 					throw RSVD_OPND_FAULT;
 				// Check write access for page faults
 				readv(entry, LN_LONG, WACC);
-				a = readv(hdr, LN_LONG, WACC);
+				head = readv(QUE_HEAD(queue), LN_LONG, WACC);
+
 			OPC_INSQHI:
-				if (a & 06)
+				if (head & 06)
 					throw RSVD_OPND_FAULT;
-				if (a & 01)
+				if (head & 01) {
 					ccReg = CC_C;
-				else {
-					writev(hdr, a | 1, LN_LONG, WACC);
-					a += hdr;
-					writev(hdr, a - hdr, LN_LONG, WACC);
-					writev(a+LN_LONG, entry - a, LN_LONG, WACC);
-					writev(entry, a - entry, LN_LONG, WACC);
-					writev(entry+LN_LONG, hdr-entry, LN_LONG, WACC);
-					writev(hdr, entry-hdr, LN_LONG, WACC);
-					ccReg = (a == hdr) ? CC_Z : 0;
+					printf("%s: Queue %08X is busy (interlocked): %s\n",
+						devName.c_str(), queue, stringCC(ccReg));
+				} else {
+					// Lock interlock on that queue
+					writev(QUE_HEAD(queue), head | 1, LN_LONG, WACC);
+
+					// Get absolute address of node
+					head += queue;
+					if (probev(head, WACC, &sts) == MM_FAIL)
+						writev(QUE_HEAD(queue), head - queue, LN_LONG, WACC);
+
+					// Link entry to the head of queue.
+					// Note: implies interlock release.
+					writev(QUE_PREV(head),  entry - head,  LN_LONG, WACC);
+					writev(QUE_NEXT(entry), head  - entry, LN_LONG, WACC);
+					writev(QUE_PREV(entry), queue - entry, LN_LONG, WACC);
+					writev(QUE_HEAD(queue), entry - queue, LN_LONG, WACC);
+
+					// Update condition codes
+					ccReg = (head == queue) ? CC_Z : 0;
+
+					printf("%s: Enqueue %08X to queue %08X with first %08X: %s\n", devName.c_str(),
+						entry, queue, head, stringCC(ccReg));
 				}
 				break;
+
 			case OPC_nINSQTI:
 				entry = SXTL(opReg[0]);
-				hdr   = SXTL(opReg[1]);
-				if ((entry == hdr) || ((entry|hdr) & 07))
+				queue = SXTL(opReg[1]);
+				if ((entry == queue) || ((entry|queue) & ~ALIGN_QUAD))
 					throw RSVD_OPND_FAULT;
 				// Check write access for page faults
 				readv(entry, LN_LONG, WACC);
-				a = readv(hdr, LN_LONG, WACC);
-				if (a == 0)
+				head = readv(QUE_HEAD(queue), LN_LONG, WACC);
+
+				if (head == 0)
 					goto OPC_INSQHI;
-				if (a & 06)
+				if (head & 06)
 					throw RSVD_OPND_FAULT;
-				if (a & 01) {
-					// Busy signal...
+				if (head & 01) {
 					ccReg = CC_C;
+					printf("%s: Queue %08X is busy (interlocked): %s\n",
+						devName.c_str(), queue, stringCC(ccReg));
 				} else {
-					writev(hdr, a | 1, LN_LONG, WACC);
-					c = readv(hdr+LN_LONG, LN_LONG, RACC) + hdr;
-					if (c & 07) {
-						writev(hdr, a, LN_LONG, WACC);
+					// Lock interlock om that queue.
+					writev(QUE_HEAD(queue), head | 1, LN_LONG, WACC);
+
+					// Get tail node from queue and check
+					// address for quadword alignment.
+					tail = readv(QUE_TAIL(queue), LN_LONG, RACC) + queue;
+					if (tail & ~ALIGN_QUAD) {
+						writev(QUE_HEAD(queue), head, LN_LONG, WACC);
 						throw RSVD_OPND_FAULT;
 					}
-					writev(hdr, a, LN_LONG, WACC);
-					writev(c, entry-c, LN_LONG, WACC);
-					writev(entry, hdr-entry, LN_LONG, WACC);
-					writev(entry+LN_LONG, c-entry, LN_LONG, WACC);
-					writev(hdr+LN_LONG, entry-hdr, LN_LONG, WACC);
-					writev(hdr, a, LN_LONG, WACC);
-					// Clear all condition codes
+
+					// Check Memory Access
+					if (probev(tail, WACC, &sts) == MM_FAIL)
+						writev(QUE_HEAD(queue), head, LN_LONG, WACC);
+
+					// Link entry to the tail of queue.
+					// Note: implies interlock release.
+					writev(QUE_NEXT(tail),  entry - tail,  LN_LONG, WACC);
+					writev(QUE_NEXT(entry), queue - entry, LN_LONG, WACC);
+					writev(QUE_PREV(entry), tail  - entry, LN_LONG, WACC);
+					writev(QUE_TAIL(queue), entry - queue, LN_LONG, WACC);
+
+					// Release interlock on that queue.
+					writev(QUE_HEAD(queue), head, LN_LONG, WACC);
+
+					// Update Condition Codes
 					ccReg = 0;
+
+					printf("%s: Enqueue %08X to queue %08X with last %08X: %s\n", devName.c_str(),
+						entry, queue, tail, stringCC(ccReg));
 				}
 				break;
+
 			case OPC_nREMQUE:
 				entry = SXTL(opReg[0]);
-				succ = readv(entry, LN_LONG, RACC);
-				pred = readv(entry+LN_LONG, LN_LONG, RACC);
-				// Update condition codes first
-				UpdateCC_CMP_L(ccReg, succ, pred);
-				if (entry != pred) {
-					// Check write access for page faults
-					readv(succ+LN_LONG, LN_LONG, WACC);
-					if (SXTL(opReg[1]) != OPR_MEM)
-						readv(opReg[2], LN_LONG, WACC);
-					// Remove entry from queue
-					writev(pred, succ, LN_LONG, WACC);
-					writev(succ+LN_LONG, pred, LN_LONG, WACC);
+
+				// Get prev and next nodes from old entry.
+				next = readv(QUE_NEXT(entry), LN_LONG, RACC);
+				prev = readv(QUE_PREV(entry), LN_LONG, RACC);
+
+				// Update Condition Codes
+				SetNZ(ccReg, SXTL(next), SXTL(prev), 0);
+				SetC(ccReg, ZXTL(next), ZXTL(prev));
+
+				if (entry != prev) {
+					// Check Memory Access
+					readv(QUE_PREV(next), LN_LONG, WACC);
+					if (!OP_ISREG(opReg[1]))
+						readv(opReg[1], LN_LONG, WACC);
+
+					// Remove entry from queue.
+					writev(QUE_NEXT(prev), next, LN_LONG, WACC);
+					writev(QUE_PREV(next), prev, LN_LONG, WACC);
 				} else
 					ccReg |= CC_V;
+
+				// Put entry into register/memory.
 				storel(opReg[1], entry);
+
 				printf("%s: Remove %08X from %08X with next %08X: %s\n",
 					devName.c_str(), ZXTL(entry), ZXTL(pred), ZXTL(succ),
 					stringCC(ccReg));
 				break;
+
 			case OPC_nREMQHI:
-				hdr = SXTL(opReg[0]);
-				if (hdr & 07)
+				queue = SXTL(opReg[0]);
+				if (queue & ~ALIGN_QUAD)
 					throw RSVD_OPND_FAULT;
 				if (!OP_ISREG(opReg[1])) {
-					if (opReg[1] == hdr)
+					if (opReg[1] == queue)
 						throw RSVD_OPND_FAULT;
 					readv(opReg[1], LN_LONG, WACC);
 				}
-				ar = readv(hdr, LN_LONG, WACC);
+				head = readv(QUE_HEAD(queue), LN_LONG, WACC);
+
 			OPC_REMQHI:
-				if (ar & 06)
+				if (head & 06)
 					throw RSVD_OPND_FAULT;
-				if (ar & 01)
+				if (head & 01) {
 					ccReg = CC_V|CC_C;
-				else {
-					a = ar + hdr;
-					if (ar != 0) {
-						writev(hdr, ar|1, LN_LONG, WACC);
-//						writev(hdr, ar, LN_LONG, WACC);
-						b = readv(a, LN_LONG, RACC) + a;
-						if (b & 07) {
-							writev(hdr, ar, LN_LONG, WACC);
-							throw RSVD_OPND_FAULT;
-						}
-//						writev(hdr, ar, LN_LONG, WACC);
-						writev(b+LN_LONG, hdr-b, LN_LONG, WACC);
-						writev(hdr, b-hdr, LN_LONG, WACC);
+					printf("%s: Queue %08X is busy (interlocked): %s\n",
+						devName.c_str(), queue, stringCC(ccReg));
+				} else if (head != 0) {
+					// Lock interlock on that queue.
+					writev(QUE_HEAD(queue), head | 1, LN_LONG, WACC);
+					entry = head + queue;
+					if (probev(entry, WACC, &sts) == MM_FAIL)
+						writev(QUE_HEAD(queue), head, LN_LONG, WACC);
+
+					// Get next node from head node.
+					next = readv(QUE_NEXT(entry), LN_LONG, RACC) + entry;
+					if (next & ~ALIGN_QUAD) {
+						writev(QUE_HEAD(queue), head, LN_LONG, WACC);
+						throw RSVD_OPND_FAULT;
 					}
-					storel(opReg[1], a);
-					// Update condition codes
-					if (ar == 0)
-						ccReg = CC_Z|CC_V;
-					else if (b == hdr)
-						ccReg = CC_Z;
-					else
-						ccReg = 0;
+					if (probev(next, WACC, &sts) == MM_FAIL)
+						writev(QUE_HEAD(queue), head, LN_LONG, WACC);
+
+					// Remove first entry from head of queue.
+					// Note: Implies interlock release.
+					writev(QUE_PREV(next),  queue - next,  LN_LONG, WACC);
+					writev(QUE_HEAD(queue), next  - queue, LN_LONG, WACC);
+
+					// Put dequeued entry into operand #1.
+					storel(opReg[1], entry);
+
+					// Update Condition Codes
+					ccReg = (next == queue) ? CC_Z : 0;
+
+					printf("%s: Dequeue %08X from queue %08X with first %08X: %s\n",
+							devName.c_str(), entry, queue, head, stringCC(ccReg));
+				} else {
+					// Put empty first entry.
+					storel(opReg[1], (head + queue));
+
+					// Update Condition Codes.
+					ccReg = CC_Z|CC_V;
+
+					printf("%s: Queue %08X is already empty: %s\n",
+							devName.c_str(), queue, stringCC(ccReg));
 				}
 				break;
+
 			case OPC_nREMQTI:
-				hdr = SXTL(opReg[0]);
-				if (hdr & 07)
+				queue = SXTL(opReg[0]);
+				if (queue & ~ALIGN_QUAD)
 					throw RSVD_OPND_FAULT;
 				if (!OP_ISREG(opReg[1])) {
-					if (opReg[1] == hdr)
+					if (opReg[1] == queue)
 						throw RSVD_OPND_FAULT;
 					readv(opReg[1], LN_LONG, WACC);
 				}
-				ar = readv(hdr, LN_LONG, WACC);
-				if (ar & 06)
+				head = readv(queue, LN_LONG, WACC);
+				printf("%s: Head of queue %08X => %08X\n",
+						devName.c_str(), queue, head);
+
+				if (head & 06)
 					throw RSVD_OPND_FAULT;
-				if (ar & 01)
+				if (head & 01) {
 					ccReg = CC_V|CC_C;
-				else {
-					if (ar != 0) {
-						writev(hdr, ar|1, LN_LONG, WACC);
-						c = readv(hdr+LN_LONG, LN_LONG, RACC);
-						if (ar == c) {
-							writev(hdr, ar, LN_LONG, WACC);
-							goto OPC_REMQHI;
-						}
-						if (c & 07) {
-							writev(hdr, ar, LN_LONG, WACC);
-							throw RSVD_OPND_FAULT;
-						}
-						c += hdr;
-//						writev(hdr, ar, LN_LONG, WACC);
-						b = readv(c+LN_LONG, LN_LONG, RACC) + c;
-						if (b & 07) {
-							writev(hdr, ar, LN_LONG, WACC);
-							throw RSVD_OPND_FAULT;
-						}
-//						writev(hdr, ar, LN_LONG, WACC);
-						writev(b, hdr-b, LN_LONG, WACC);
-						writev(hdr+LN_LONG, b-hdr, LN_LONG, WACC);
-						writev(hdr, ar, LN_LONG, WACC);
-					} else
-						c = hdr;
-					storel(opReg[1], c);
-					// Update condition codes
-					ccReg = (ar == 0) ? (CC_Z|CC_V) : 0;
+					printf("%s: Queue %08X is busy (interlocked): %s\n",
+						devName.c_str(), queue, stringCC(ccReg));
+				} else if (head != 0) {
+					// Lock interlock om that queue.
+					writev(QUE_HEAD(queue), head | 1, LN_LONG, WACC);
+
+					// Get last entry from tail of queue.
+					entry = readv(QUE_TAIL(queue), LN_LONG, RACC);
+					printf("%s: Tail of queue %08X => %08X (%08X)\n",
+						devName.c_str(), queue, entry, queue + entry);
+
+					if (entry == head) {
+						writev(QUE_HEAD(queue), head, LN_LONG, WACC);
+						goto OPC_REMQHI;
+					}
+					if (entry & ~ALIGN_QUAD) {
+						writev(QUE_HEAD(queue), head, LN_LONG, WACC);
+						throw RSVD_OPND_FAULT;
+					}
+					entry += queue;
+					if (probev(QUE_PREV(entry), RACC, &sts) == MM_FAIL)
+						writev(QUE_HEAD(queue), head, LN_LONG, WACC);
+
+					// Get previous node from head node.
+					prev = readv(QUE_PREV(entry), LN_LONG, RACC) + entry;
+					printf("%s: Previous of node %08X => %08X (%08X)\n",
+								devName.c_str(), entry, prev - entry, prev);
+
+					if (prev & ~ALIGN_QUAD) {
+						writev(QUE_HEAD(queue), head, LN_LONG, WACC);
+						throw RSVD_OPND_FAULT;
+					}
+					if (probev(prev, WACC, &sts) == MM_FAIL)
+						writev(QUE_HEAD(queue), head, LN_LONG, WACC);
+
+					// Remove last entry from head of queue.
+					writev(QUE_NEXT(prev),  queue - prev,  LN_LONG, WACC);
+					writev(QUE_TAIL(queue), prev  - queue, LN_LONG, WACC);
+
+					// Release interlock on that queue.
+					writev(QUE_HEAD(queue), head, LN_LONG, WACC);
+
+					// Put dequeued entry into operand #1.
+					storel(opReg[1], entry);
+
+					// Update Condition Codes
+					ccReg = 0;
+
+					printf("%s: Dequeue %08X from queue %08X with last %08X: %s\n",
+								devName.c_str(), entry, queue, head, stringCC(ccReg));
+				} else {
+					// Queue already is empty, so that can put
+					// default queue into operand #1.
+					storel(opReg[1], queue);
+
+					// Update Condition Codes.
+					ccReg = CC_Z|CC_V;
+
+					printf("%s: Queue %08X is already empty: %s\n",
+							devName.c_str(), queue, stringCC(ccReg));
 				}
 				break;
 
