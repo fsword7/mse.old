@@ -692,6 +692,7 @@ protected:
 
 	// Interrupt/exception services
 	uint32_t  faultAddr;   // Faulting PC address
+	uint32_t  scbCode;     // SCB code pending
 	uint32_t  irqFlags;
 
 	tlb_t     tlbSystem[TLB_SIZE];

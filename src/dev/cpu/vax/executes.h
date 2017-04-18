@@ -50,6 +50,11 @@ void CPU_CLASS::execute() noexcept(false)
 
 	while (1) {
 		try {
+			// Check any pending SCB code
+			if (scbCode != -1) {
+				fault(scbCode);
+				scbCode = -1;
+			}
 			faultAddr = REG_PC;
 
 			// Check trap and interrupt requests first
@@ -2285,21 +2290,35 @@ void CPU_CLASS::execute() noexcept(false)
 			// PUSHR/POPR - Push/pop register instructions
 			case OPC_nPUSHR:
 				mask = SXTL(opReg[0]) & STK_MASK;
+				cnt  = 0;
+
 				// Check access for page faults
+				for (int idx = REG_nSP; idx >= REG_nR0; idx--)
+					if ((mask >> idx) & 1)
+						cnt += LN_LONG;
+				printf("%s: Probe %08X (%d bytes down)\n", devName.c_str(), REG_SP - cnt, cnt);
+				readv(REG_SP - cnt, LN_BYTE, WACC);
 
 				// Push registers into stack
 				for (int idx = REG_nSP; idx >= REG_nR0; idx--) {
 					if ((mask >> idx) & 1) {
 						writev(REG_SP - LN_LONG, gpReg[idx].l, LN_LONG, WACC);
+						REG_SP -= LN_LONG;
 						printf("%s: R%d %08X => (SP) %08X\n", devName.c_str(),
 							idx, ZXTL(gpReg[idx].l), ZXTL(REG_SP));
-						REG_SP -= LN_LONG;
 					}
 				}
 				break;
 			case OPC_nPOPR:
 				mask = SXTL(opReg[0]) & STK_MASK;
+				cnt  = 0;
+
 				// Check access for page faults
+				for (int idx = REG_nR0; idx <= REG_nSP; idx++)
+					if ((mask >> idx) & 1)
+						cnt += LN_LONG;
+				printf("%s: Probe %08X\n", devName.c_str(), REG_SP + cnt - 1);
+				readv(REG_SP + cnt - 1, LN_BYTE, RACC);
 
 				// Push registers into stack
 				for (int idx = REG_nR0; idx <= REG_nSP; idx++) {
@@ -2619,8 +2638,10 @@ void CPU_CLASS::execute() noexcept(false)
 
 		catch (int32_t exCode) {
 			// Exception fault codes
+//			if (exCode >= 0)
+//				exCode = fault(exCode);
 			if (exCode >= 0)
-				exCode = fault(exCode);
+				scbCode = exCode;
 
 			// Stop codes
 			if (exCode < 0) {
@@ -2647,27 +2668,27 @@ void CPU_CLASS::execute() noexcept(false)
 			}
 		}
 
-		catch (stopCode stCode) {
-			switch (stCode) {
-			case STOP_eHALT:
-				printf("%s: %s at PC %08X\n", devName.c_str(), stopNames[stCode], faultAddr);
-				return;
-
-			case STOP_eUOPC:
-				printf("%s: Opcode %s - Unimplemented opcode at PC %08X\n",
-						devName.c_str(), opc->opName, faultAddr);
-				return;
-
-			case STOP_eINIE:
-				printf("%s: Exception during exception at PC %08X\n",
-						devName.c_str(), faultAddr);
-				return;
-
-			case STOP_eILLVEC:
-				printf("%s: Illegal vector at PC %08X\n",
-						devName.c_str(), faultAddr);
-				return;
-			}
-		}
+//		catch (stopCode stCode) {
+//			switch (stCode) {
+//			case STOP_eHALT:
+//				printf("%s: %s at PC %08X\n", devName.c_str(), stopNames[stCode], faultAddr);
+//				return;
+//
+//			case STOP_eUOPC:
+//				printf("%s: Opcode %s - Unimplemented opcode at PC %08X\n",
+//						devName.c_str(), opc->opName, faultAddr);
+//				return;
+//
+//			case STOP_eINIE:
+//				printf("%s: Exception during exception at PC %08X\n",
+//						devName.c_str(), faultAddr);
+//				return;
+//
+//			case STOP_eILLVEC:
+//				printf("%s: Illegal vector at PC %08X\n",
+//						devName.c_str(), faultAddr);
+//				return;
+//			}
+//		}
 	}
 }

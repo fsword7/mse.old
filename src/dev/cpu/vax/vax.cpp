@@ -111,6 +111,7 @@ void vax_cpuDevice::call(bool stkFlag)
 	for (int idx = REG_nR0; idx <= REG_nR11; idx++)
 		if ((mask >> idx) & 1)
 			stkSize += LN_WORD;
+	readv(REG_SP - stkSize, LN_BYTE, WACC);
 
 	// Save registers into stack
 	if (stkFlag) {
@@ -167,6 +168,7 @@ void vax_cpuDevice::ret()
 	for (int idx = REG_nR0; idx <= REG_nR11; idx++)
 		if ((mask >> idx) & 1)
 			stkSize += LN_LONG;
+	readv(REG_SP + stkSize - 1, LN_BYTE, RACC);
 
 	// Restore PC, FP, AP, and SP registers
 	REG_AP = readv(tsp + (LN_LONG*2), LN_LONG, RACC);
@@ -648,7 +650,7 @@ int vax_cpuDevice::fault(uint32_t vec)
 		if (flags & CPU_INIE) {
 			printf("%s: (DIE) Exception during exception at PC %08X\n",
 				devName.c_str(), faultAddr);
-			throw STOP_eINIE;
+			throw STOP_INIE;
 		}
 		if ((rc = exception(IE_EXC, vec, 0)) != 0)
 			return rc;
@@ -658,7 +660,7 @@ int vax_cpuDevice::fault(uint32_t vec)
 		if (flags & CPU_INIE) {
 			printf("%s: (DIE) Exception during exception at PC %08X\n",
 				devName.c_str(), faultAddr);
-			throw STOP_eINIE;
+			throw STOP_INIE;
 		}
 		exception(IE_EXC, vec, 0);
 		break;
@@ -669,9 +671,10 @@ int vax_cpuDevice::fault(uint32_t vec)
 			if (psReg & PSL_IS) {
 				printf("%s: (DIE) Page fault during interrupt mode at PC %08X\n",
 						devName.c_str(), faultAddr);
-				throw STOP_eINIE;
+				throw STOP_INIE;
 			}
 			// Kernel Stack Not Valid
+			paCount = 0;
 			exception(IE_SVE, SCB_KSNV, 0);
 		} else
 			exception(IE_EXC, vec, 0);
@@ -693,7 +696,7 @@ int vax_cpuDevice::fault(uint32_t vec)
 int vax_cpuDevice::exception(int ie, uint32_t vec, uint32_t ipl)
 {
 	uint32_t opsl = psReg|ccReg;
-	uint32_t opc  = REG_PC;
+	uint32_t opc  = faultAddr;
 	uint32_t osp  = REG_SP;
 	uint32_t prv  = PSL_GETCUR(psReg);
 	uint32_t npc, npsl;
@@ -713,10 +716,8 @@ int vax_cpuDevice::exception(int ie, uint32_t vec, uint32_t ipl)
 	printf("%s: (%s) SCB vector %04X  New PC: %08X(%1X) Type: %s\n", devName.c_str(),
 		ieTypes[ie], ZXTW(vec), ZXTL(npc & ~03), ZXTL(npc & 03), ieNames[ie]);
 
-	if (npc & 2) {
-//		return STOP_ILLVEC;
-		throw STOP_eILLVEC;
-	}
+	if (npc & 2)
+		throw STOP_ILLVEC;
 
 	// Switch SP registers
 	if (opsl & PSL_IS)

@@ -137,6 +137,7 @@ void cvax_cpuDevice::reset()
 	// Reset current access mode
 	curMode  = AM_MASK(PSL_GETCUR(psReg));
 	irqFlags = 0;
+	scbCode  = -1;
 
 	// Clear all process/system TLB entries
 	cleartlb(true);
