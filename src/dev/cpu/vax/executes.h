@@ -98,863 +98,867 @@ void CPU_CLASS::execute() noexcept(false)
 //				goto EXECUTE;
 //			}
 
-			rqCount = 0;
-			for (int idx = 0, opidx = 0; idx < opc->nOperands; idx++) {
-				int opr = opc->oprMode[idx];
-				int rn, ireg, spec;
-				uint32_t mAddr, off;
+			if (psReg & PSL_FPD) {
 
-				switch (opr) {
-					case BB: // Byte Branch Mode
-						opReg[opidx++] = SXTB(readvi(LN_BYTE));
-						continue;
+			} else {
+				rqCount = 0;
+				for (int idx = 0, opidx = 0; idx < opc->nOperands; idx++) {
+					int opr = opc->oprMode[idx];
+					int rn, ireg, spec;
+					uint32_t mAddr, off;
 
-					case BW: // Word Branch Mode
-						opReg[opidx++] = SXTW(readvi(LN_WORD));
-						continue;
+					switch (opr) {
+						case BB: // Byte Branch Mode
+							opReg[opidx++] = SXTB(readvi(LN_BYTE));
+							continue;
 
-					default:
-						spec  = readvi(LN_BYTE);
-						rn    = spec & 0xF;
-						opr  |= (spec & 0xF0);
-				}
+						case BW: // Word Branch Mode
+							opReg[opidx++] = SXTW(readvi(LN_WORD));
+							continue;
 
-//				printf("%s: OP %d %02X => R%d (%04X)\n", devName.c_str(),
-//					idx, spec, rn, opr);
+						default:
+							spec  = readvi(LN_BYTE);
+							rn    = spec & 0xF;
+							opr  |= (spec & 0xF0);
+					}
 
-				switch(opr) {
-					// Short Literal Address Mode
-					//   Only read access is allowed.
-					case LIT0|RB: case LIT0|RW: case LIT0|RL:
-					case LIT1|RB: case LIT1|RW: case LIT1|RL:
-					case LIT2|RB: case LIT2|RW: case LIT2|RL:
-					case LIT3|RB: case LIT3|RW: case LIT3|RL:
-						opReg[opidx++] = spec;
-						continue;
-					case LIT0|RQ: case LIT1|RQ: case LIT2|RQ: case LIT3|RQ:
-						opReg[opidx++] = spec;
-						opReg[opidx++] = 0;
-						continue;
-					case LIT0|RO: case LIT1|RO: case LIT2|RO: case LIT3|RO:
-						opReg[opidx++] = spec;
-						opReg[opidx++] = 0;
-						opReg[opidx++] = 0;
-						opReg[opidx++] = 0;
-						continue;
+	//				printf("%s: OP %d %02X => R%d (%04X)\n", devName.c_str(),
+	//					idx, spec, rn, opr);
 
-					case LIT0|RF: case LIT1|RF: case LIT2|RF: case LIT3|RF:
-						opReg[opidx++] = (spec << 4) | 0x4000;
-						continue;
-					case LIT0|RD: case LIT1|RD: case LIT2|RD: case LIT3|RD:
-						opReg[opidx++] = (spec << 4) | 0x4000;
-						opReg[opidx++] = 0;
-						continue;
-					case LIT0|RG: case LIT1|RG: case LIT2|RG: case LIT3|RG:
-						opReg[opidx++] = (spec << 1) | 0x4000;
-						opReg[opidx++] = 0;
-						continue;
-					case LIT0|RH: case LIT1|RH: case LIT2|RH: case LIT3|RH:
-						opReg[opidx++] =
-							((spec & 7) << 29) | (0x4000 | ((spec >> 3) & 7));
-						opReg[opidx++] = 0;
-						opReg[opidx++] = 0;
-						opReg[opidx++] = 0;
-						continue;
+					switch(opr) {
+						// Short Literal Address Mode
+						//   Only read access is allowed.
+						case LIT0|RB: case LIT0|RW: case LIT0|RL:
+						case LIT1|RB: case LIT1|RW: case LIT1|RL:
+						case LIT2|RB: case LIT2|RW: case LIT2|RL:
+						case LIT3|RB: case LIT3|RW: case LIT3|RL:
+							opReg[opidx++] = spec;
+							continue;
+						case LIT0|RQ: case LIT1|RQ: case LIT2|RQ: case LIT3|RQ:
+							opReg[opidx++] = spec;
+							opReg[opidx++] = 0;
+							continue;
+						case LIT0|RO: case LIT1|RO: case LIT2|RO: case LIT3|RO:
+							opReg[opidx++] = spec;
+							opReg[opidx++] = 0;
+							opReg[opidx++] = 0;
+							opReg[opidx++] = 0;
+							continue;
 
-
-					// Register Address Mode
-					// Read Access for General Registers
-					case REG|RB:
-						Validate(rn, REG_nPC);
-						opReg[opidx++] = CPU_REGUB(rn);
-						continue;
-					case REG|RW:
-						Validate(rn, REG_nPC);
-						opReg[opidx++] = CPU_REGUW(rn);
-						continue;
-					case REG|RL: case REG|RF:
-						Validate(rn, REG_nPC);
-						opReg[opidx++] = CPU_REGUL(rn);
-						continue;
-					case REG|RQ: case REG|RD: case REG|RG:
-						Validate(rn, REG_nSP);
-						opReg[opidx++] = CPU_REGUL(rn);
-						opReg[opidx++] = CPU_REGUL(rn+1);
-						continue;
-					case REG|RO: case REG|RH:
-						Validate(rn, REG_nAP);
-						opReg[opidx++] = CPU_REGUL(rn);
-						opReg[opidx++] = CPU_REGUL(rn+1);
-						opReg[opidx++] = CPU_REGUL(rn+2);
-						opReg[opidx++] = CPU_REGUL(rn+3);
-						continue;
-
-					// Modify Access for General Registers
-					case REG|MB:
-						Validate(rn, REG_nPC);
-						opReg[opidx++] = CPU_REGUB(rn);
-						opReg[opidx++] = ~rn;
-						continue;
-					case REG|MW:
-						Validate(rn, REG_nPC);
-						opReg[opidx++] = CPU_REGUW(rn);
-						opReg[opidx++] = ~rn;
-						continue;
-					case REG|ML:
-						Validate(rn, REG_nPC);
-						opReg[opidx++] = CPU_REGUL(rn);
-						opReg[opidx++] = ~rn;
-						continue;
-					case REG|MQ:
-						Validate(rn, REG_nSP);
-						opReg[opidx++] = CPU_REGUL(rn);
-						opReg[opidx++] = CPU_REGUL(rn+1);
-						opReg[opidx++] = ~rn;
-						continue;
-					case REG|MO:
-						Validate(rn, REG_nAP);
-						opReg[opidx++] = CPU_REGUL(rn);
-						opReg[opidx++] = CPU_REGUL(rn+1);
-						opReg[opidx++] = CPU_REGUL(rn+2);
-						opReg[opidx++] = CPU_REGUL(rn+3);
-						opReg[opidx++] = ~rn;
-						continue;
-
-					// Write Access for General Registers
-					case REG|WB: case REG|WW: case REG|WL: case REG|WQ:
-					case REG|WO: case REG|VB:
-						Validate(rn, REG_nPC);
-						opReg[opidx++] = ~rn;
-						continue;
+						case LIT0|RF: case LIT1|RF: case LIT2|RF: case LIT3|RF:
+							opReg[opidx++] = (spec << 4) | 0x4000;
+							continue;
+						case LIT0|RD: case LIT1|RD: case LIT2|RD: case LIT3|RD:
+							opReg[opidx++] = (spec << 4) | 0x4000;
+							opReg[opidx++] = 0;
+							continue;
+						case LIT0|RG: case LIT1|RG: case LIT2|RG: case LIT3|RG:
+							opReg[opidx++] = (spec << 1) | 0x4000;
+							opReg[opidx++] = 0;
+							continue;
+						case LIT0|RH: case LIT1|RH: case LIT2|RH: case LIT3|RH:
+							opReg[opidx++] =
+								((spec & 7) << 29) | (0x4000 | ((spec >> 3) & 7));
+							opReg[opidx++] = 0;
+							opReg[opidx++] = 0;
+							opReg[opidx++] = 0;
+							continue;
 
 
-					// Register Deferred Address Mode (Rn)
-					case REGD|RB: case REGD|RW: case REGD|RL: case REGD|RF:
-						Validate(rn, REG_nPC);
-						opReg[opidx++] = readv(CPU_REGUL(rn), OPM_SIZE(opr), RACC);
-						continue;
-					case REGD|RQ: case REGD|RD: case REGD|RG:
-						Validate(rn, REG_nPC);
-						opReg[opidx++] = readv(CPU_REGUL(rn),   LN_LONG, RACC);
-						opReg[opidx++] = readv(CPU_REGUL(rn)+4, LN_LONG, RACC);
-						continue;
-					case REGD|RO: case REGD|RH:
-						Validate(rn, REG_nPC);
-						opReg[opidx++] = readv(CPU_REGUL(rn),    LN_LONG, RACC);
-						opReg[opidx++] = readv(CPU_REGUL(rn)+4,  LN_LONG, RACC);
-						opReg[opidx++] = readv(CPU_REGUL(rn)+8,  LN_LONG, RACC);
-						opReg[opidx++] = readv(CPU_REGUL(rn)+12, LN_LONG, RACC);
-						continue;
+						// Register Address Mode
+						// Read Access for General Registers
+						case REG|RB:
+							Validate(rn, REG_nPC);
+							opReg[opidx++] = CPU_REGUB(rn);
+							continue;
+						case REG|RW:
+							Validate(rn, REG_nPC);
+							opReg[opidx++] = CPU_REGUW(rn);
+							continue;
+						case REG|RL: case REG|RF:
+							Validate(rn, REG_nPC);
+							opReg[opidx++] = CPU_REGUL(rn);
+							continue;
+						case REG|RQ: case REG|RD: case REG|RG:
+							Validate(rn, REG_nSP);
+							opReg[opidx++] = CPU_REGUL(rn);
+							opReg[opidx++] = CPU_REGUL(rn+1);
+							continue;
+						case REG|RO: case REG|RH:
+							Validate(rn, REG_nAP);
+							opReg[opidx++] = CPU_REGUL(rn);
+							opReg[opidx++] = CPU_REGUL(rn+1);
+							opReg[opidx++] = CPU_REGUL(rn+2);
+							opReg[opidx++] = CPU_REGUL(rn+3);
+							continue;
 
-					case REGD|MB: case REGD|MW: case REGD|ML:
-						Validate(rn, REG_nPC);
-						opReg[opidx++] = readv(CPU_REGUL(rn), OPM_SIZE(opr), WACC);
-						opReg[opidx++] = CPU_REGUL(rn);
-						continue;
-					case REGD|MQ:
-						Validate(rn, REG_nPC);
-						opReg[opidx++] = readv(CPU_REGUL(rn),   LN_LONG, WACC);
-						opReg[opidx++] = readv(CPU_REGUL(rn)+4, LN_LONG, WACC);
-						opReg[opidx++] = CPU_REGUL(rn);
-						continue;
-					case REGD|MO:
-						Validate(rn, REG_nPC);
-						opReg[opidx++] = readv(CPU_REGUL(rn),    LN_LONG, WACC);
-						opReg[opidx++] = readv(CPU_REGUL(rn)+4,  LN_LONG, WACC);
-						opReg[opidx++] = readv(CPU_REGUL(rn)+8,  LN_LONG, WACC);
-						opReg[opidx++] = readv(CPU_REGUL(rn)+12, LN_LONG, WACC);
-						opReg[opidx++] = CPU_REGUL(rn);
-						continue;
+						// Modify Access for General Registers
+						case REG|MB:
+							Validate(rn, REG_nPC);
+							opReg[opidx++] = CPU_REGUB(rn);
+							opReg[opidx++] = ~rn;
+							continue;
+						case REG|MW:
+							Validate(rn, REG_nPC);
+							opReg[opidx++] = CPU_REGUW(rn);
+							opReg[opidx++] = ~rn;
+							continue;
+						case REG|ML:
+							Validate(rn, REG_nPC);
+							opReg[opidx++] = CPU_REGUL(rn);
+							opReg[opidx++] = ~rn;
+							continue;
+						case REG|MQ:
+							Validate(rn, REG_nSP);
+							opReg[opidx++] = CPU_REGUL(rn);
+							opReg[opidx++] = CPU_REGUL(rn+1);
+							opReg[opidx++] = ~rn;
+							continue;
+						case REG|MO:
+							Validate(rn, REG_nAP);
+							opReg[opidx++] = CPU_REGUL(rn);
+							opReg[opidx++] = CPU_REGUL(rn+1);
+							opReg[opidx++] = CPU_REGUL(rn+2);
+							opReg[opidx++] = CPU_REGUL(rn+3);
+							opReg[opidx++] = ~rn;
+							continue;
 
-					case REGD|WB: case REGD|WW: case REGD|WL: case REGD|WQ:
-					case REGD|AB: case REGD|AW: case REGD|AL: case REGD|AQ:
-					case REGD|WO: case REGD|AO: case REGD|VB:
-						Validate(rn, REG_nPC);
-						opReg[opidx++] = CPU_REGUL(rn);
-						continue;
+						// Write Access for General Registers
+						case REG|WB: case REG|WW: case REG|WL: case REG|WQ:
+						case REG|WO: case REG|VB:
+							Validate(rn, REG_nPC);
+							opReg[opidx++] = ~rn;
+							continue;
 
 
-					// Autodecrement Address Mode -(Rn)
-					case ADEC|RB: case ADEC|RW: case ADEC|RL: case ADEC|RF:
-						Validate(rn, REG_nPC);
-						gpReg[rn].l     -= OPM_SIZE(opr);
-						rqReg[rqCount++] = (OPM_SIZE(opr) << 4) | rn;
-						opReg[opidx++]   = readv(CPU_REGUL(rn), OPM_SIZE(opr), RACC);
-						continue;
-					case ADEC|RQ: case ADEC|RD: case ADEC|RG:
-						Validate(rn, REG_nPC);
-						gpReg[rn].l     -= LN_QUAD;
-						rqReg[rqCount++] = (LN_QUAD << 4) | rn;
-						opReg[opidx++]   = readv(CPU_REGUL(rn),   LN_LONG, RACC);
-						opReg[opidx++]   = readv(CPU_REGUL(rn)+4, LN_LONG, RACC);
-						continue;
-					case ADEC|RO: case ADEC|RH:
-						Validate(rn, REG_nPC);
-						gpReg[rn].l     -= LN_OCTA;
-						rqReg[rqCount++] = (LN_OCTA << 4) | rn;
-						opReg[opidx++]   = readv(CPU_REGUL(rn),    LN_LONG, RACC);
-						opReg[opidx++]   = readv(CPU_REGUL(rn)+4,  LN_LONG, RACC);
-						opReg[opidx++]   = readv(CPU_REGUL(rn)+8,  LN_LONG, RACC);
-						opReg[opidx++]   = readv(CPU_REGUL(rn)+12, LN_LONG, RACC);
-						continue;
+						// Register Deferred Address Mode (Rn)
+						case REGD|RB: case REGD|RW: case REGD|RL: case REGD|RF:
+							Validate(rn, REG_nPC);
+							opReg[opidx++] = readv(CPU_REGUL(rn), OPM_SIZE(opr), RACC);
+							continue;
+						case REGD|RQ: case REGD|RD: case REGD|RG:
+							Validate(rn, REG_nPC);
+							opReg[opidx++] = readv(CPU_REGUL(rn),   LN_LONG, RACC);
+							opReg[opidx++] = readv(CPU_REGUL(rn)+4, LN_LONG, RACC);
+							continue;
+						case REGD|RO: case REGD|RH:
+							Validate(rn, REG_nPC);
+							opReg[opidx++] = readv(CPU_REGUL(rn),    LN_LONG, RACC);
+							opReg[opidx++] = readv(CPU_REGUL(rn)+4,  LN_LONG, RACC);
+							opReg[opidx++] = readv(CPU_REGUL(rn)+8,  LN_LONG, RACC);
+							opReg[opidx++] = readv(CPU_REGUL(rn)+12, LN_LONG, RACC);
+							continue;
 
-					case ADEC|MB: case ADEC|MW: case ADEC|ML:
-						Validate(rn, REG_nPC);
-						gpReg[rn].l     -= OPM_SIZE(opr);
-						rqReg[rqCount++] = (OPM_SIZE(opr) << 4) | rn;
-						opReg[opidx++]   = readv(CPU_REGUL(rn), OPM_SIZE(opr), WACC);
-						opReg[opidx++]   = CPU_REGUL(rn);
-						continue;
-					case ADEC|MQ:
-						Validate(rn, REG_nPC);
-						gpReg[rn].l     -= LN_QUAD;
-						rqReg[rqCount++] = (LN_QUAD << 4) | rn;
-						opReg[opidx++]   = readv(CPU_REGUL(rn),   LN_LONG, WACC);
-						opReg[opidx++]   = readv(CPU_REGUL(rn)+4, LN_LONG, WACC);
-						opReg[opidx++]   = CPU_REGUL(rn);
-						continue;
-					case ADEC|MO:
-						Validate(rn, REG_nPC);
-						gpReg[rn].l     -= LN_OCTA;
-						rqReg[rqCount++] = (LN_OCTA << 4) | rn;
-						opReg[opidx++]   = readv(CPU_REGUL(rn),    LN_LONG, WACC);
-						opReg[opidx++]   = readv(CPU_REGUL(rn)+4,  LN_LONG, WACC);
-						opReg[opidx++]   = readv(CPU_REGUL(rn)+8,  LN_LONG, WACC);
-						opReg[opidx++]   = readv(CPU_REGUL(rn)+12, LN_LONG, WACC);
-						opReg[opidx++]   = CPU_REGUL(rn);
-						continue;
+						case REGD|MB: case REGD|MW: case REGD|ML:
+							Validate(rn, REG_nPC);
+							opReg[opidx++] = readv(CPU_REGUL(rn), OPM_SIZE(opr), WACC);
+							opReg[opidx++] = CPU_REGUL(rn);
+							continue;
+						case REGD|MQ:
+							Validate(rn, REG_nPC);
+							opReg[opidx++] = readv(CPU_REGUL(rn),   LN_LONG, WACC);
+							opReg[opidx++] = readv(CPU_REGUL(rn)+4, LN_LONG, WACC);
+							opReg[opidx++] = CPU_REGUL(rn);
+							continue;
+						case REGD|MO:
+							Validate(rn, REG_nPC);
+							opReg[opidx++] = readv(CPU_REGUL(rn),    LN_LONG, WACC);
+							opReg[opidx++] = readv(CPU_REGUL(rn)+4,  LN_LONG, WACC);
+							opReg[opidx++] = readv(CPU_REGUL(rn)+8,  LN_LONG, WACC);
+							opReg[opidx++] = readv(CPU_REGUL(rn)+12, LN_LONG, WACC);
+							opReg[opidx++] = CPU_REGUL(rn);
+							continue;
 
-					case ADEC|WB: case ADEC|WW: case ADEC|WL: case ADEC|WQ:
-					case ADEC|AB: case ADEC|AW: case ADEC|AL: case ADEC|AQ:
-					case ADEC|WO: case ADEC|AO: case ADEC|VB:
-						Validate(rn, REG_nPC);
-						gpReg[rn].l     -= OPM_SIZE(opr);
-						rqReg[rqCount++] = (OPM_SIZE(opr) << 4) | rn;
-						opReg[opidx++]   = CPU_REGUL(rn);
-						continue;
+						case REGD|WB: case REGD|WW: case REGD|WL: case REGD|WQ:
+						case REGD|AB: case REGD|AW: case REGD|AL: case REGD|AQ:
+						case REGD|WO: case REGD|AO: case REGD|VB:
+							Validate(rn, REG_nPC);
+							opReg[opidx++] = CPU_REGUL(rn);
+							continue;
 
-					// Autoincrement/Immediate Address Mode
-					case AINC|RB: case AINC|RW: case AINC|RL: case AINC|RF:
-						if (rn < REG_nPC) {
+
+						// Autodecrement Address Mode -(Rn)
+						case ADEC|RB: case ADEC|RW: case ADEC|RL: case ADEC|RF:
+							Validate(rn, REG_nPC);
+							gpReg[rn].l     -= OPM_SIZE(opr);
+							rqReg[rqCount++] = (OPM_SIZE(opr) << 4) | rn;
 							opReg[opidx++]   = readv(CPU_REGUL(rn), OPM_SIZE(opr), RACC);
-							rqReg[rqCount++] = (-OPM_SIZE(opr) << 4) | rn;
-							gpReg[rn].l     += OPM_SIZE(opr);
-						} else
-							opReg[opidx++] = readvi(OPM_SIZE(opr));
-						continue;
-
-					case AINC|RQ: case AINC|RD: case AINC|RG:
-						if (rn < REG_nPC) {
+							continue;
+						case ADEC|RQ: case ADEC|RD: case ADEC|RG:
+							Validate(rn, REG_nPC);
+							gpReg[rn].l     -= LN_QUAD;
+							rqReg[rqCount++] = (LN_QUAD << 4) | rn;
 							opReg[opidx++]   = readv(CPU_REGUL(rn),   LN_LONG, RACC);
 							opReg[opidx++]   = readv(CPU_REGUL(rn)+4, LN_LONG, RACC);
-							rqReg[rqCount++] = (-LN_QUAD << 4) | rn;
-							gpReg[rn].l     += LN_QUAD;
-						} else {
-							opReg[opidx++] = readvi(LN_LONG);
-							opReg[opidx++] = readvi(LN_LONG);
-						}
-						continue;
-
-					case AINC|RO: case AINC|RH:
-						if (rn < REG_nPC) {
+							continue;
+						case ADEC|RO: case ADEC|RH:
+							Validate(rn, REG_nPC);
+							gpReg[rn].l     -= LN_OCTA;
+							rqReg[rqCount++] = (LN_OCTA << 4) | rn;
 							opReg[opidx++]   = readv(CPU_REGUL(rn),    LN_LONG, RACC);
 							opReg[opidx++]   = readv(CPU_REGUL(rn)+4,  LN_LONG, RACC);
 							opReg[opidx++]   = readv(CPU_REGUL(rn)+8,  LN_LONG, RACC);
 							opReg[opidx++]   = readv(CPU_REGUL(rn)+12, LN_LONG, RACC);
+							continue;
+
+						case ADEC|MB: case ADEC|MW: case ADEC|ML:
+							Validate(rn, REG_nPC);
+							gpReg[rn].l     -= OPM_SIZE(opr);
+							rqReg[rqCount++] = (OPM_SIZE(opr) << 4) | rn;
+							opReg[opidx++]   = readv(CPU_REGUL(rn), OPM_SIZE(opr), WACC);
+							opReg[opidx++]   = CPU_REGUL(rn);
+							continue;
+						case ADEC|MQ:
+							Validate(rn, REG_nPC);
+							gpReg[rn].l     -= LN_QUAD;
+							rqReg[rqCount++] = (LN_QUAD << 4) | rn;
+							opReg[opidx++]   = readv(CPU_REGUL(rn),   LN_LONG, WACC);
+							opReg[opidx++]   = readv(CPU_REGUL(rn)+4, LN_LONG, WACC);
+							opReg[opidx++]   = CPU_REGUL(rn);
+							continue;
+						case ADEC|MO:
+							Validate(rn, REG_nPC);
+							gpReg[rn].l     -= LN_OCTA;
+							rqReg[rqCount++] = (LN_OCTA << 4) | rn;
+							opReg[opidx++]   = readv(CPU_REGUL(rn),    LN_LONG, WACC);
+							opReg[opidx++]   = readv(CPU_REGUL(rn)+4,  LN_LONG, WACC);
+							opReg[opidx++]   = readv(CPU_REGUL(rn)+8,  LN_LONG, WACC);
+							opReg[opidx++]   = readv(CPU_REGUL(rn)+12, LN_LONG, WACC);
+							opReg[opidx++]   = CPU_REGUL(rn);
+							continue;
+
+						case ADEC|WB: case ADEC|WW: case ADEC|WL: case ADEC|WQ:
+						case ADEC|AB: case ADEC|AW: case ADEC|AL: case ADEC|AQ:
+						case ADEC|WO: case ADEC|AO: case ADEC|VB:
+							Validate(rn, REG_nPC);
+							gpReg[rn].l     -= OPM_SIZE(opr);
+							rqReg[rqCount++] = (OPM_SIZE(opr) << 4) | rn;
+							opReg[opidx++]   = CPU_REGUL(rn);
+							continue;
+
+						// Autoincrement/Immediate Address Mode
+						case AINC|RB: case AINC|RW: case AINC|RL: case AINC|RF:
+							if (rn < REG_nPC) {
+								opReg[opidx++]   = readv(CPU_REGUL(rn), OPM_SIZE(opr), RACC);
+								rqReg[rqCount++] = (-OPM_SIZE(opr) << 4) | rn;
+								gpReg[rn].l     += OPM_SIZE(opr);
+							} else
+								opReg[opidx++] = readvi(OPM_SIZE(opr));
+							continue;
+
+						case AINC|RQ: case AINC|RD: case AINC|RG:
+							if (rn < REG_nPC) {
+								opReg[opidx++]   = readv(CPU_REGUL(rn),   LN_LONG, RACC);
+								opReg[opidx++]   = readv(CPU_REGUL(rn)+4, LN_LONG, RACC);
+								rqReg[rqCount++] = (-LN_QUAD << 4) | rn;
+								gpReg[rn].l     += LN_QUAD;
+							} else {
+								opReg[opidx++] = readvi(LN_LONG);
+								opReg[opidx++] = readvi(LN_LONG);
+							}
+							continue;
+
+						case AINC|RO: case AINC|RH:
+							if (rn < REG_nPC) {
+								opReg[opidx++]   = readv(CPU_REGUL(rn),    LN_LONG, RACC);
+								opReg[opidx++]   = readv(CPU_REGUL(rn)+4,  LN_LONG, RACC);
+								opReg[opidx++]   = readv(CPU_REGUL(rn)+8,  LN_LONG, RACC);
+								opReg[opidx++]   = readv(CPU_REGUL(rn)+12, LN_LONG, RACC);
+								rqReg[rqCount++] = (-LN_OCTA << 4) | rn;
+								gpReg[rn].l     += LN_OCTA;
+							} else {
+								opReg[opidx++] = readvi(LN_LONG);
+								opReg[opidx++] = readvi(LN_LONG);
+								opReg[opidx++] = readvi(LN_LONG);
+								opReg[opidx++] = readvi(LN_LONG);
+							}
+							continue;
+
+						case AINC|MB: case AINC|MW: case AINC|ML:
+							Validate(rn, REG_nPC);
+							opReg[opidx++]   = readv(CPU_REGUL(rn), OPM_SIZE(opr), WACC);
+							opReg[opidx++]   = CPU_REGUL(rn);
+							rqReg[rqCount++] = (-OPM_SIZE(opr) << 4) | rn;
+							gpReg[rn].l     += OPM_SIZE(opr);
+							continue;
+
+						case AINC|MQ:
+							Validate(rn, REG_nPC);
+							opReg[opidx++]   = readv(CPU_REGUL(rn),   LN_LONG, WACC);
+							opReg[opidx++]   = readv(CPU_REGUL(rn)+4, LN_LONG, WACC);
+							opReg[opidx++]   = CPU_REGUL(rn);
+							rqReg[rqCount++] = (-LN_QUAD << 4) | rn;
+							gpReg[rn].l     += LN_QUAD;
+							continue;
+
+						case AINC|MO:
+							Validate(rn, REG_nPC);
+							opReg[opidx++]   = readv(CPU_REGUL(rn),    LN_LONG, WACC);
+							opReg[opidx++]   = readv(CPU_REGUL(rn)+4,  LN_LONG, WACC);
+							opReg[opidx++]   = readv(CPU_REGUL(rn)+8,  LN_LONG, WACC);
+							opReg[opidx++]   = readv(CPU_REGUL(rn)+12, LN_LONG, WACC);
+							opReg[opidx++]   = CPU_REGUL(rn);
 							rqReg[rqCount++] = (-LN_OCTA << 4) | rn;
 							gpReg[rn].l     += LN_OCTA;
-						} else {
-							opReg[opidx++] = readvi(LN_LONG);
-							opReg[opidx++] = readvi(LN_LONG);
-							opReg[opidx++] = readvi(LN_LONG);
-							opReg[opidx++] = readvi(LN_LONG);
-						}
-						continue;
+							continue;
 
-					case AINC|MB: case AINC|MW: case AINC|ML:
-						Validate(rn, REG_nPC);
-						opReg[opidx++]   = readv(CPU_REGUL(rn), OPM_SIZE(opr), WACC);
-						opReg[opidx++]   = CPU_REGUL(rn);
-						rqReg[rqCount++] = (-OPM_SIZE(opr) << 4) | rn;
-						gpReg[rn].l     += OPM_SIZE(opr);
-						continue;
+						case AINC|WB: case AINC|WW: case AINC|WL:
+						case AINC|AB: case AINC|AW: case AINC|AL:
+						case AINC|VB:
+							opReg[opidx++] = CPU_REGUL(rn);
+							if (rn < REG_nPC) {
+								rqReg[rqCount++] = (-OPM_SIZE(opr) << 4) | rn;
+								gpReg[rn].l     += OPM_SIZE(opr);
+							} else
+								readvi(OPM_SIZE(opr));
+							continue;
 
-					case AINC|MQ:
-						Validate(rn, REG_nPC);
-						opReg[opidx++]   = readv(CPU_REGUL(rn),   LN_LONG, WACC);
-						opReg[opidx++]   = readv(CPU_REGUL(rn)+4, LN_LONG, WACC);
-						opReg[opidx++]   = CPU_REGUL(rn);
-						rqReg[rqCount++] = (-LN_QUAD << 4) | rn;
-						gpReg[rn].l     += LN_QUAD;
-						continue;
+						case AINC|WQ: case AINC|AQ:
+							opReg[opidx++] = CPU_REGUL(rn);
+							if (rn < REG_nPC) {
+								rqReg[rqCount++] = (-OPM_SIZE(opr) << 4) | rn;
+								gpReg[rn].l     += OPM_SIZE(opr);
+							} else {
+								readvi(LN_LONG);
+								readvi(LN_LONG);
+							}
+							continue;
 
-					case AINC|MO:
-						Validate(rn, REG_nPC);
-						opReg[opidx++]   = readv(CPU_REGUL(rn),    LN_LONG, WACC);
-						opReg[opidx++]   = readv(CPU_REGUL(rn)+4,  LN_LONG, WACC);
-						opReg[opidx++]   = readv(CPU_REGUL(rn)+8,  LN_LONG, WACC);
-						opReg[opidx++]   = readv(CPU_REGUL(rn)+12, LN_LONG, WACC);
-						opReg[opidx++]   = CPU_REGUL(rn);
-						rqReg[rqCount++] = (-LN_OCTA << 4) | rn;
-						gpReg[rn].l     += LN_OCTA;
-						continue;
+						case AINC|WO: case AINC|AO:
+							opReg[opidx++] = CPU_REGUL(rn);
+							if (rn < REG_nPC) {
+								rqReg[rqCount++] = (-OPM_SIZE(opr) << 4) | rn;
+								gpReg[rn].l     += OPM_SIZE(opr);
+							} else {
+								readvi(LN_LONG);
+								readvi(LN_LONG);
+								readvi(LN_LONG);
+								readvi(LN_LONG);
+							}
+							continue;
 
-					case AINC|WB: case AINC|WW: case AINC|WL:
-					case AINC|AB: case AINC|AW: case AINC|AL:
-					case AINC|VB:
-						opReg[opidx++] = CPU_REGUL(rn);
-						if (rn < REG_nPC) {
-							rqReg[rqCount++] = (-OPM_SIZE(opr) << 4) | rn;
-							gpReg[rn].l     += OPM_SIZE(opr);
-						} else
-							readvi(OPM_SIZE(opr));
-						continue;
+						// Autoincrement Deferred Address Mode
+						case AINCD|RB: case AINCD|RW: case AINCD|RL: case AINCD|RF:
+							if (rn < REG_nPC) {
+								mAddr            = readv(CPU_REGUL(rn), LN_LONG, RACC);
+								rqReg[rqCount++] = (-LN_LONG << 4) | rn;
+								gpReg[rn].l     += LN_LONG;
+							} else
+								mAddr = readvi(LN_LONG);
+							opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), RACC);
+							continue;
 
-					case AINC|WQ: case AINC|AQ:
-						opReg[opidx++] = CPU_REGUL(rn);
-						if (rn < REG_nPC) {
-							rqReg[rqCount++] = (-OPM_SIZE(opr) << 4) | rn;
-							gpReg[rn].l     += OPM_SIZE(opr);
-						} else {
-							readvi(LN_LONG);
-							readvi(LN_LONG);
-						}
-						continue;
+						case AINCD|RQ: case AINCD|RD: case AINCD|RG:
+							if (rn < REG_nPC) {
+								mAddr            = readv(CPU_REGUL(rn), LN_LONG, RACC);
+								rqReg[rqCount++] = (-LN_LONG << 4) | rn;
+								gpReg[rn].l     += LN_LONG;
+							} else
+								mAddr = readvi(LN_LONG);
+							opReg[opidx++] = readv(mAddr,   LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr+4, LN_LONG, RACC);
+							continue;
 
-					case AINC|WO: case AINC|AO:
-						opReg[opidx++] = CPU_REGUL(rn);
-						if (rn < REG_nPC) {
-							rqReg[rqCount++] = (-OPM_SIZE(opr) << 4) | rn;
-							gpReg[rn].l     += OPM_SIZE(opr);
-						} else {
-							readvi(LN_LONG);
-							readvi(LN_LONG);
-							readvi(LN_LONG);
-							readvi(LN_LONG);
-						}
-						continue;
+						case AINCD|RO: case AINCD|RH:
+							if (rn < REG_nPC) {
+								mAddr            = readv(CPU_REGUL(rn), LN_LONG, RACC);
+								rqReg[rqCount++] = (-LN_LONG << 4) | rn;
+								gpReg[rn].l     += LN_LONG;
+							} else
+								mAddr = readvi(LN_LONG);
+							opReg[opidx++] = readv(mAddr,    LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr+4,  LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr+8,  LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr+12, LN_LONG, RACC);
+							continue;
 
-					// Autoincrement Deferred Address Mode
-					case AINCD|RB: case AINCD|RW: case AINCD|RL: case AINCD|RF:
-						if (rn < REG_nPC) {
-							mAddr            = readv(CPU_REGUL(rn), LN_LONG, RACC);
-							rqReg[rqCount++] = (-LN_LONG << 4) | rn;
-							gpReg[rn].l     += LN_LONG;
-						} else
-							mAddr = readvi(LN_LONG);
-						opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), RACC);
-						continue;
+						case AINCD|MB: case AINCD|MW: case AINCD|ML:
+							if (rn < REG_nPC) {
+								mAddr            = readv(CPU_REGUL(rn), LN_LONG, RACC);
+								rqReg[rqCount++] = (-LN_LONG << 4) | rn;
+								gpReg[rn].l     += LN_LONG;
+							} else
+								mAddr = readvi(LN_LONG);
+							opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), WACC);
+							opReg[opidx++] = mAddr;
+							continue;
 
-					case AINCD|RQ: case AINCD|RD: case AINCD|RG:
-						if (rn < REG_nPC) {
-							mAddr            = readv(CPU_REGUL(rn), LN_LONG, RACC);
-							rqReg[rqCount++] = (-LN_LONG << 4) | rn;
-							gpReg[rn].l     += LN_LONG;
-						} else
-							mAddr = readvi(LN_LONG);
-						opReg[opidx++] = readv(mAddr,   LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr+4, LN_LONG, RACC);
-						continue;
+						case AINCD|MQ:
+							if (rn < REG_nPC) {
+								mAddr            = readv(CPU_REGUL(rn), LN_LONG, RACC);
+								rqReg[rqCount++] = (-LN_LONG << 4) | rn;
+								gpReg[rn].l     += LN_LONG;
+							} else
+								mAddr = readvi(LN_LONG);
+							opReg[opidx++] = readv(mAddr,   LN_LONG, WACC);
+							opReg[opidx++] = readv(mAddr+4, LN_LONG, WACC);
+							opReg[opidx++] = mAddr;
+							continue;
 
-					case AINCD|RO: case AINCD|RH:
-						if (rn < REG_nPC) {
-							mAddr            = readv(CPU_REGUL(rn), LN_LONG, RACC);
-							rqReg[rqCount++] = (-LN_LONG << 4) | rn;
-							gpReg[rn].l     += LN_LONG;
-						} else
-							mAddr = readvi(LN_LONG);
-						opReg[opidx++] = readv(mAddr,    LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr+4,  LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr+8,  LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr+12, LN_LONG, RACC);
-						continue;
+						case AINCD|MO:
+							if (rn < REG_nPC) {
+								mAddr            = readv(CPU_REGUL(rn), LN_LONG, RACC);
+								rqReg[rqCount++] = (-LN_LONG << 4) | rn;
+								gpReg[rn].l     += LN_LONG;
+							} else
+								mAddr = readvi(LN_LONG);
+							opReg[opidx++] = readv(mAddr,    LN_LONG, WACC);
+							opReg[opidx++] = readv(mAddr+4,  LN_LONG, WACC);
+							opReg[opidx++] = readv(mAddr+8,  LN_LONG, WACC);
+							opReg[opidx++] = readv(mAddr+12, LN_LONG, WACC);
+							opReg[opidx++] = mAddr;
+							continue;
 
-					case AINCD|MB: case AINCD|MW: case AINCD|ML:
-						if (rn < REG_nPC) {
-							mAddr            = readv(CPU_REGUL(rn), LN_LONG, RACC);
-							rqReg[rqCount++] = (-LN_LONG << 4) | rn;
-							gpReg[rn].l     += LN_LONG;
-						} else
-							mAddr = readvi(LN_LONG);
-						opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), WACC);
-						opReg[opidx++] = mAddr;
-						continue;
-
-					case AINCD|MQ:
-						if (rn < REG_nPC) {
-							mAddr            = readv(CPU_REGUL(rn), LN_LONG, RACC);
-							rqReg[rqCount++] = (-LN_LONG << 4) | rn;
-							gpReg[rn].l     += LN_LONG;
-						} else
-							mAddr = readvi(LN_LONG);
-						opReg[opidx++] = readv(mAddr,   LN_LONG, WACC);
-						opReg[opidx++] = readv(mAddr+4, LN_LONG, WACC);
-						opReg[opidx++] = mAddr;
-						continue;
-
-					case AINCD|MO:
-						if (rn < REG_nPC) {
-							mAddr            = readv(CPU_REGUL(rn), LN_LONG, RACC);
-							rqReg[rqCount++] = (-LN_LONG << 4) | rn;
-							gpReg[rn].l     += LN_LONG;
-						} else
-							mAddr = readvi(LN_LONG);
-						opReg[opidx++] = readv(mAddr,    LN_LONG, WACC);
-						opReg[opidx++] = readv(mAddr+4,  LN_LONG, WACC);
-						opReg[opidx++] = readv(mAddr+8,  LN_LONG, WACC);
-						opReg[opidx++] = readv(mAddr+12, LN_LONG, WACC);
-						opReg[opidx++] = mAddr;
-						continue;
-
-					case AINCD|WB: case AINCD|WW: case AINCD|WL: case AINCD|WQ:
-					case AINCD|AB: case AINCD|AW: case AINCD|AL: case AINCD|AQ:
-					case AINCD|WO: case AINCD|AO: case AINCD|VB:
-						if (rn < REG_nPC) {
-							opReg[opidx++]   = readv(CPU_REGUL(rn), LN_LONG, RACC);
-							rqReg[rqCount++] = (-LN_LONG << 4) | rn;
-							gpReg[rn].l     += LN_LONG;
-						} else
-							opReg[opidx++] = readvi(LN_LONG);
-						continue;
+						case AINCD|WB: case AINCD|WW: case AINCD|WL: case AINCD|WQ:
+						case AINCD|AB: case AINCD|AW: case AINCD|AL: case AINCD|AQ:
+						case AINCD|WO: case AINCD|AO: case AINCD|VB:
+							if (rn < REG_nPC) {
+								opReg[opidx++]   = readv(CPU_REGUL(rn), LN_LONG, RACC);
+								rqReg[rqCount++] = (-LN_LONG << 4) | rn;
+								gpReg[rn].l     += LN_LONG;
+							} else
+								opReg[opidx++] = readvi(LN_LONG);
+							continue;
 
 
-					// Byte-Displacement Address Mode
-					case BDP|RB: case BDP|RW: case BDP|RL: case BDP|RF:
-						off   = SXTB(readvi(LN_BYTE));
-						mAddr = CPU_REGUL(rn) + off;
-						opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), RACC);
-						continue;
-					case BDP|RQ: case BDP|RG: case BDP|RD:
-						off   = SXTB(readvi(LN_BYTE));
-						mAddr = CPU_REGUL(rn) + off;
-						opReg[opidx++] = readv(mAddr,   LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr+4, LN_LONG, RACC);
-						continue;
-					case BDP|RO: case BDP|RH:
-						off   = SXTB(readvi(LN_BYTE));
-						mAddr = CPU_REGUL(rn) + off;
-						opReg[opidx++] = readv(mAddr,    LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr+4,  LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr+8,  LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr+12, LN_LONG, RACC);
-						continue;
+						// Byte-Displacement Address Mode
+						case BDP|RB: case BDP|RW: case BDP|RL: case BDP|RF:
+							off   = SXTB(readvi(LN_BYTE));
+							mAddr = CPU_REGUL(rn) + off;
+							opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), RACC);
+							continue;
+						case BDP|RQ: case BDP|RG: case BDP|RD:
+							off   = SXTB(readvi(LN_BYTE));
+							mAddr = CPU_REGUL(rn) + off;
+							opReg[opidx++] = readv(mAddr,   LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr+4, LN_LONG, RACC);
+							continue;
+						case BDP|RO: case BDP|RH:
+							off   = SXTB(readvi(LN_BYTE));
+							mAddr = CPU_REGUL(rn) + off;
+							opReg[opidx++] = readv(mAddr,    LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr+4,  LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr+8,  LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr+12, LN_LONG, RACC);
+							continue;
 
-					case BDP|MB: case BDP|MW: case BDP|ML:
-						off   = SXTB(readvi(LN_BYTE));
-						mAddr = CPU_REGUL(rn) + off;
-						opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), WACC);
-						opReg[opidx++] = mAddr;
-						continue;
-					case BDP|MQ:
-						off   = SXTB(readvi(LN_BYTE));
-						mAddr = CPU_REGUL(rn) + off;
-						opReg[opidx++] = readv(mAddr,   LN_LONG, WACC);
-						opReg[opidx++] = readv(mAddr+4, LN_LONG, WACC);
-						opReg[opidx++] = mAddr;
-						continue;
-					case BDP|MO:
-						off   = SXTB(readvi(LN_BYTE));
-						mAddr = CPU_REGUL(rn) + off;
-						opReg[opidx++] = readv(mAddr,    LN_LONG, WACC);
-						opReg[opidx++] = readv(mAddr+4,  LN_LONG, WACC);
-						opReg[opidx++] = readv(mAddr+8,  LN_LONG, WACC);
-						opReg[opidx++] = readv(mAddr+12, LN_LONG, WACC);
-						opReg[opidx++] = mAddr;
-						continue;
+						case BDP|MB: case BDP|MW: case BDP|ML:
+							off   = SXTB(readvi(LN_BYTE));
+							mAddr = CPU_REGUL(rn) + off;
+							opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), WACC);
+							opReg[opidx++] = mAddr;
+							continue;
+						case BDP|MQ:
+							off   = SXTB(readvi(LN_BYTE));
+							mAddr = CPU_REGUL(rn) + off;
+							opReg[opidx++] = readv(mAddr,   LN_LONG, WACC);
+							opReg[opidx++] = readv(mAddr+4, LN_LONG, WACC);
+							opReg[opidx++] = mAddr;
+							continue;
+						case BDP|MO:
+							off   = SXTB(readvi(LN_BYTE));
+							mAddr = CPU_REGUL(rn) + off;
+							opReg[opidx++] = readv(mAddr,    LN_LONG, WACC);
+							opReg[opidx++] = readv(mAddr+4,  LN_LONG, WACC);
+							opReg[opidx++] = readv(mAddr+8,  LN_LONG, WACC);
+							opReg[opidx++] = readv(mAddr+12, LN_LONG, WACC);
+							opReg[opidx++] = mAddr;
+							continue;
 
-					case BDP|WB: case BDP|WW: case BDP|WL: case BDP|WQ:
-					case BDP|AB: case BDP|AW: case BDP|AL: case BDP|AQ:
-					case BDP|WO: case BDP|AO: case BDP|VB:
-						off   = SXTB(readvi(LN_BYTE));
-						mAddr = CPU_REGUL(rn) + off;
-						opReg[opidx++] = mAddr;
-		//				PrintLog3(LOG_TRACE, NULL,
-		//					"%s: (BDP) R%d => %08X + %08X => %08X\n",
-		//						IO_DEVNAME(cpu), rn, CPU_REGUL(rn), off, mAddr);
-						continue;
+						case BDP|WB: case BDP|WW: case BDP|WL: case BDP|WQ:
+						case BDP|AB: case BDP|AW: case BDP|AL: case BDP|AQ:
+						case BDP|WO: case BDP|AO: case BDP|VB:
+							off   = SXTB(readvi(LN_BYTE));
+							mAddr = CPU_REGUL(rn) + off;
+							opReg[opidx++] = mAddr;
+			//				PrintLog3(LOG_TRACE, NULL,
+			//					"%s: (BDP) R%d => %08X + %08X => %08X\n",
+			//						IO_DEVNAME(cpu), rn, CPU_REGUL(rn), off, mAddr);
+							continue;
 
-					// Byte-Displacement Deferred Address Mode
-					case BDPD|RB: case BDPD|RW: case BDPD|RL: case BDPD|RF:
-						off   = SXTB(readvi(LN_BYTE));
-						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), RACC);
-						continue;
-					case BDPD|RQ: case BDPD|RG: case BDPD|RD:
-						off   = SXTB(readvi(LN_BYTE));
-						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr,   LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr+4, LN_LONG, RACC);
-						continue;
-					case BDPD|RO: case BDPD|RH:
-						off   = SXTB(readvi(LN_BYTE));
-						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr,    LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr+4,  LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr+8,  LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr+12, LN_LONG, RACC);
-						continue;
+						// Byte-Displacement Deferred Address Mode
+						case BDPD|RB: case BDPD|RW: case BDPD|RL: case BDPD|RF:
+							off   = SXTB(readvi(LN_BYTE));
+							mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), RACC);
+							continue;
+						case BDPD|RQ: case BDPD|RG: case BDPD|RD:
+							off   = SXTB(readvi(LN_BYTE));
+							mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr,   LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr+4, LN_LONG, RACC);
+							continue;
+						case BDPD|RO: case BDPD|RH:
+							off   = SXTB(readvi(LN_BYTE));
+							mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr,    LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr+4,  LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr+8,  LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr+12, LN_LONG, RACC);
+							continue;
 
-					case BDPD|MB: case BDPD|MW: case BDPD|ML:
-						off   = SXTB(readvi(LN_BYTE));
-						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), WACC);
-						opReg[opidx++] = mAddr;
-						continue;
-					case BDPD|MQ:
-						off   = SXTB(readvi(LN_BYTE));
-						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr,   LN_LONG, WACC);
-						opReg[opidx++] = readv(mAddr+4, LN_LONG, WACC);
-						opReg[opidx++] = mAddr;
-						continue;
-					case BDPD|MO:
-						off   = SXTB(readvi(LN_BYTE));
-						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr,    LN_LONG, WACC);
-						opReg[opidx++] = readv(mAddr+4,  LN_LONG, WACC);
-						opReg[opidx++] = readv(mAddr+8,  LN_LONG, WACC);
-						opReg[opidx++] = readv(mAddr+12, LN_LONG, WACC);
-						opReg[opidx++] = mAddr;
-						continue;
+						case BDPD|MB: case BDPD|MW: case BDPD|ML:
+							off   = SXTB(readvi(LN_BYTE));
+							mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), WACC);
+							opReg[opidx++] = mAddr;
+							continue;
+						case BDPD|MQ:
+							off   = SXTB(readvi(LN_BYTE));
+							mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr,   LN_LONG, WACC);
+							opReg[opidx++] = readv(mAddr+4, LN_LONG, WACC);
+							opReg[opidx++] = mAddr;
+							continue;
+						case BDPD|MO:
+							off   = SXTB(readvi(LN_BYTE));
+							mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr,    LN_LONG, WACC);
+							opReg[opidx++] = readv(mAddr+4,  LN_LONG, WACC);
+							opReg[opidx++] = readv(mAddr+8,  LN_LONG, WACC);
+							opReg[opidx++] = readv(mAddr+12, LN_LONG, WACC);
+							opReg[opidx++] = mAddr;
+							continue;
 
-					case BDPD|WB: case BDPD|WW: case BDPD|WL: case BDPD|WQ:
-					case BDPD|AB: case BDPD|AW: case BDPD|AL: case BDPD|AQ:
-					case BDPD|WO: case BDPD|AO: case BDPD|VB:
-						off   = SXTB(readvi(LN_BYTE));
-						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
-						opReg[opidx++] = mAddr;
-						continue;
+						case BDPD|WB: case BDPD|WW: case BDPD|WL: case BDPD|WQ:
+						case BDPD|AB: case BDPD|AW: case BDPD|AL: case BDPD|AQ:
+						case BDPD|WO: case BDPD|AO: case BDPD|VB:
+							off   = SXTB(readvi(LN_BYTE));
+							mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+							opReg[opidx++] = mAddr;
+							continue;
 
-					// Word-Displacement Address Mode
-					case WDP|RB: case WDP|RW: case WDP|RL: case WDP|RF:
-						off   = SXTW(readvi(LN_WORD));
-						mAddr = CPU_REGUL(rn) + off;
-						opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), RACC);
-						continue;
-					case WDP|RQ: case WDP|RG: case WDP|RD:
-						off   = SXTW(readvi(LN_WORD));
-						mAddr = CPU_REGUL(rn) + off;
-						opReg[opidx++] = readv(mAddr,   LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr+4, LN_LONG, RACC);
-						continue;
-					case WDP|RO: case WDP|RH:
-						off   = SXTW(readvi(LN_WORD));
-						mAddr = CPU_REGUL(rn) + off;
-						opReg[opidx++] = readv(mAddr,    LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr+4,  LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr+8,  LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr+12, LN_LONG, RACC);
-						continue;
+						// Word-Displacement Address Mode
+						case WDP|RB: case WDP|RW: case WDP|RL: case WDP|RF:
+							off   = SXTW(readvi(LN_WORD));
+							mAddr = CPU_REGUL(rn) + off;
+							opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), RACC);
+							continue;
+						case WDP|RQ: case WDP|RG: case WDP|RD:
+							off   = SXTW(readvi(LN_WORD));
+							mAddr = CPU_REGUL(rn) + off;
+							opReg[opidx++] = readv(mAddr,   LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr+4, LN_LONG, RACC);
+							continue;
+						case WDP|RO: case WDP|RH:
+							off   = SXTW(readvi(LN_WORD));
+							mAddr = CPU_REGUL(rn) + off;
+							opReg[opidx++] = readv(mAddr,    LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr+4,  LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr+8,  LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr+12, LN_LONG, RACC);
+							continue;
 
-					case WDP|MB: case WDP|MW: case WDP|ML:
-						off   = SXTW(readvi(LN_WORD));
-						mAddr = CPU_REGUL(rn) + off;
-						opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), WACC);
-						opReg[opidx++] = mAddr;
-						continue;
-					case WDP|MQ:
-						off   = SXTW(readvi(LN_WORD));
-						mAddr = CPU_REGUL(rn) + off;
-						opReg[opidx++] = readv(mAddr,   LN_LONG, WACC);
-						opReg[opidx++] = readv(mAddr+4, LN_LONG, WACC);
-						opReg[opidx++] = mAddr;
-						continue;
-					case WDP|MO:
-						off   = SXTW(readvi(LN_WORD));
-						mAddr = CPU_REGUL(rn) + off;
-						opReg[opidx++] = readv(mAddr,    LN_LONG, WACC);
-						opReg[opidx++] = readv(mAddr+4,  LN_LONG, WACC);
-						opReg[opidx++] = readv(mAddr+8,  LN_LONG, WACC);
-						opReg[opidx++] = readv(mAddr+12, LN_LONG, WACC);
-						opReg[opidx++] = mAddr;
-						continue;
+						case WDP|MB: case WDP|MW: case WDP|ML:
+							off   = SXTW(readvi(LN_WORD));
+							mAddr = CPU_REGUL(rn) + off;
+							opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), WACC);
+							opReg[opidx++] = mAddr;
+							continue;
+						case WDP|MQ:
+							off   = SXTW(readvi(LN_WORD));
+							mAddr = CPU_REGUL(rn) + off;
+							opReg[opidx++] = readv(mAddr,   LN_LONG, WACC);
+							opReg[opidx++] = readv(mAddr+4, LN_LONG, WACC);
+							opReg[opidx++] = mAddr;
+							continue;
+						case WDP|MO:
+							off   = SXTW(readvi(LN_WORD));
+							mAddr = CPU_REGUL(rn) + off;
+							opReg[opidx++] = readv(mAddr,    LN_LONG, WACC);
+							opReg[opidx++] = readv(mAddr+4,  LN_LONG, WACC);
+							opReg[opidx++] = readv(mAddr+8,  LN_LONG, WACC);
+							opReg[opidx++] = readv(mAddr+12, LN_LONG, WACC);
+							opReg[opidx++] = mAddr;
+							continue;
 
-					case WDP|WB: case WDP|WW: case WDP|WL: case WDP|WQ:
-					case WDP|AB: case WDP|AW: case WDP|AL: case WDP|AQ:
-					case WDP|WO: case WDP|AO: case WDP|VB:
-						off   = SXTW(readvi(LN_WORD));
-						mAddr = CPU_REGUL(rn) + off;
-						opReg[opidx++] = mAddr;
-						continue;
+						case WDP|WB: case WDP|WW: case WDP|WL: case WDP|WQ:
+						case WDP|AB: case WDP|AW: case WDP|AL: case WDP|AQ:
+						case WDP|WO: case WDP|AO: case WDP|VB:
+							off   = SXTW(readvi(LN_WORD));
+							mAddr = CPU_REGUL(rn) + off;
+							opReg[opidx++] = mAddr;
+							continue;
 
-					// Word-Displacement Deferred Address Mode
-					case WDPD|RB: case WDPD|RW: case WDPD|RL: case WDPD|RF:
-						off   = SXTW(readvi(LN_WORD));
-						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), RACC);
-						continue;
-					case WDPD|RQ: case WDPD|RG: case WDPD|RD:
-						off   = SXTW(readvi(LN_WORD));
-						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr,   LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr+4, LN_LONG, RACC);
-						continue;
-					case WDPD|RO: case WDPD|RH:
-						off   = SXTW(readvi(LN_WORD));
-						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr,    LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr+4,  LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr+8,  LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr+12, LN_LONG, RACC);
-						continue;
+						// Word-Displacement Deferred Address Mode
+						case WDPD|RB: case WDPD|RW: case WDPD|RL: case WDPD|RF:
+							off   = SXTW(readvi(LN_WORD));
+							mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), RACC);
+							continue;
+						case WDPD|RQ: case WDPD|RG: case WDPD|RD:
+							off   = SXTW(readvi(LN_WORD));
+							mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr,   LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr+4, LN_LONG, RACC);
+							continue;
+						case WDPD|RO: case WDPD|RH:
+							off   = SXTW(readvi(LN_WORD));
+							mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr,    LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr+4,  LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr+8,  LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr+12, LN_LONG, RACC);
+							continue;
 
-					case WDPD|MB: case WDPD|MW: case WDPD|ML:
-						off   = SXTW(readvi(LN_WORD));
-						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), WACC);
-						opReg[opidx++] = mAddr;
-						continue;
-					case WDPD|MQ:
-						off   = SXTW(readvi(LN_WORD));
-						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr,   LN_LONG, WACC);
-						opReg[opidx++] = readv(mAddr+4, LN_LONG, WACC);
-						opReg[opidx++] = mAddr;
-						continue;
-					case WDPD|MO:
-						off   = SXTW(readvi(LN_WORD));
-						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr,    LN_LONG, WACC);
-						opReg[opidx++] = readv(mAddr+4,  LN_LONG, WACC);
-						opReg[opidx++] = readv(mAddr+8,  LN_LONG, WACC);
-						opReg[opidx++] = readv(mAddr+12, LN_LONG, WACC);
-						opReg[opidx++] = mAddr;
-						continue;
+						case WDPD|MB: case WDPD|MW: case WDPD|ML:
+							off   = SXTW(readvi(LN_WORD));
+							mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), WACC);
+							opReg[opidx++] = mAddr;
+							continue;
+						case WDPD|MQ:
+							off   = SXTW(readvi(LN_WORD));
+							mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr,   LN_LONG, WACC);
+							opReg[opidx++] = readv(mAddr+4, LN_LONG, WACC);
+							opReg[opidx++] = mAddr;
+							continue;
+						case WDPD|MO:
+							off   = SXTW(readvi(LN_WORD));
+							mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr,    LN_LONG, WACC);
+							opReg[opidx++] = readv(mAddr+4,  LN_LONG, WACC);
+							opReg[opidx++] = readv(mAddr+8,  LN_LONG, WACC);
+							opReg[opidx++] = readv(mAddr+12, LN_LONG, WACC);
+							opReg[opidx++] = mAddr;
+							continue;
 
-					case WDPD|WB: case WDPD|WW: case WDPD|WL: case WDPD|WQ:
-					case WDPD|AB: case WDPD|AW: case WDPD|AL: case WDPD|AQ:
-					case WDPD|WO: case WDPD|AO: case WDPD|VB:
-						off   = SXTW(readvi(LN_WORD));
-						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
-						opReg[opidx++] = mAddr;
-						continue;
+						case WDPD|WB: case WDPD|WW: case WDPD|WL: case WDPD|WQ:
+						case WDPD|AB: case WDPD|AW: case WDPD|AL: case WDPD|AQ:
+						case WDPD|WO: case WDPD|AO: case WDPD|VB:
+							off   = SXTW(readvi(LN_WORD));
+							mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+							opReg[opidx++] = mAddr;
+							continue;
 
-					// Longword-Displacement Address Mode
-					case LDP|RB: case LDP|RW: case LDP|RL: case LDP|RF:
-						off   = SXTL(readvi(LN_LONG));
-						mAddr = CPU_REGUL(rn) + off;
-						opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), RACC);
-						continue;
-					case LDP|RQ: case LDP|RG: case LDP|RD:
-						off   = SXTL(readvi(LN_LONG));
-						mAddr = CPU_REGUL(rn) + off;
-						opReg[opidx++] = readv(mAddr,   LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr+4, LN_LONG, RACC);
-						continue;
-					case LDP|RO: case LDP|RH:
-						off   = SXTL(readvi(LN_LONG));
-						mAddr = CPU_REGUL(rn) + off;
-						opReg[opidx++] = readv(mAddr,    LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr+4,  LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr+8,  LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr+12, LN_LONG, RACC);
-						continue;
+						// Longword-Displacement Address Mode
+						case LDP|RB: case LDP|RW: case LDP|RL: case LDP|RF:
+							off   = SXTL(readvi(LN_LONG));
+							mAddr = CPU_REGUL(rn) + off;
+							opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), RACC);
+							continue;
+						case LDP|RQ: case LDP|RG: case LDP|RD:
+							off   = SXTL(readvi(LN_LONG));
+							mAddr = CPU_REGUL(rn) + off;
+							opReg[opidx++] = readv(mAddr,   LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr+4, LN_LONG, RACC);
+							continue;
+						case LDP|RO: case LDP|RH:
+							off   = SXTL(readvi(LN_LONG));
+							mAddr = CPU_REGUL(rn) + off;
+							opReg[opidx++] = readv(mAddr,    LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr+4,  LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr+8,  LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr+12, LN_LONG, RACC);
+							continue;
 
-					case LDP|MB: case LDP|MW: case LDP|ML:
-						off   = SXTL(readvi(LN_LONG));
-						mAddr = CPU_REGUL(rn) + off;
-						opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), WACC);
-						opReg[opidx++] = mAddr;
-						continue;
-					case LDP|MQ:
-						off   = SXTL(readvi(LN_LONG));
-						mAddr = CPU_REGUL(rn) + off;
-						opReg[opidx++] = readv(mAddr,   LN_LONG, WACC);
-						opReg[opidx++] = readv(mAddr+4, LN_LONG, WACC);
-						opReg[opidx++] = mAddr;
-						continue;
-					case LDP|MO:
-						off   = SXTL(readvi(LN_LONG));
-						mAddr = CPU_REGUL(rn) + off;
-						opReg[opidx++] = readv(mAddr,    LN_LONG, WACC);
-						opReg[opidx++] = readv(mAddr+4,  LN_LONG, WACC);
-						opReg[opidx++] = readv(mAddr+8,  LN_LONG, WACC);
-						opReg[opidx++] = readv(mAddr+12, LN_LONG, WACC);
-						opReg[opidx++] = mAddr;
-						continue;
+						case LDP|MB: case LDP|MW: case LDP|ML:
+							off   = SXTL(readvi(LN_LONG));
+							mAddr = CPU_REGUL(rn) + off;
+							opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), WACC);
+							opReg[opidx++] = mAddr;
+							continue;
+						case LDP|MQ:
+							off   = SXTL(readvi(LN_LONG));
+							mAddr = CPU_REGUL(rn) + off;
+							opReg[opidx++] = readv(mAddr,   LN_LONG, WACC);
+							opReg[opidx++] = readv(mAddr+4, LN_LONG, WACC);
+							opReg[opidx++] = mAddr;
+							continue;
+						case LDP|MO:
+							off   = SXTL(readvi(LN_LONG));
+							mAddr = CPU_REGUL(rn) + off;
+							opReg[opidx++] = readv(mAddr,    LN_LONG, WACC);
+							opReg[opidx++] = readv(mAddr+4,  LN_LONG, WACC);
+							opReg[opidx++] = readv(mAddr+8,  LN_LONG, WACC);
+							opReg[opidx++] = readv(mAddr+12, LN_LONG, WACC);
+							opReg[opidx++] = mAddr;
+							continue;
 
-					case LDP|WB: case LDP|WW: case LDP|WL: case LDP|WQ:
-					case LDP|AB: case LDP|AW: case LDP|AL: case LDP|AQ:
-					case LDP|WO: case LDP|AO: case LDP|VB:
-						off   = SXTL(readvi(LN_LONG));
-						mAddr = CPU_REGUL(rn) + off;
-						opReg[opidx++] = mAddr;
-						continue;
+						case LDP|WB: case LDP|WW: case LDP|WL: case LDP|WQ:
+						case LDP|AB: case LDP|AW: case LDP|AL: case LDP|AQ:
+						case LDP|WO: case LDP|AO: case LDP|VB:
+							off   = SXTL(readvi(LN_LONG));
+							mAddr = CPU_REGUL(rn) + off;
+							opReg[opidx++] = mAddr;
+							continue;
 
-					// Longword-Displacement Deferred Address Mode
-					case LDPD|RB: case LDPD|RW: case LDPD|RL: case LDPD|RF:
-						off   = SXTL(readvi(LN_LONG));
-						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), RACC);
-						continue;
-					case LDPD|RQ: case LDPD|RG: case LDPD|RD:
-						off   = SXTL(readvi(LN_LONG));
-						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr,   LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr+4, LN_LONG, RACC);
-						continue;
-					case LDPD|RO: case LDPD|RH:
-						off   = SXTL(readvi(LN_LONG));
-						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr,    LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr+4,  LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr+8,  LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr+12, LN_LONG, RACC);
-						continue;
+						// Longword-Displacement Deferred Address Mode
+						case LDPD|RB: case LDPD|RW: case LDPD|RL: case LDPD|RF:
+							off   = SXTL(readvi(LN_LONG));
+							mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), RACC);
+							continue;
+						case LDPD|RQ: case LDPD|RG: case LDPD|RD:
+							off   = SXTL(readvi(LN_LONG));
+							mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr,   LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr+4, LN_LONG, RACC);
+							continue;
+						case LDPD|RO: case LDPD|RH:
+							off   = SXTL(readvi(LN_LONG));
+							mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr,    LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr+4,  LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr+8,  LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr+12, LN_LONG, RACC);
+							continue;
 
-					case LDPD|MB: case LDPD|MW: case LDPD|ML:
-						off   = SXTL(readvi(LN_LONG));
-						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), WACC);
-						opReg[opidx++] = mAddr;
-						continue;
-					case LDPD|MQ:
-						off   = SXTL(readvi(LN_LONG));
-						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr,   LN_LONG, WACC);
-						opReg[opidx++] = readv(mAddr+4, LN_LONG, WACC);
-						opReg[opidx++] = mAddr;
-						continue;
-					case LDPD|MO:
-						off   = SXTL(readvi(LN_LONG));
-						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
-						opReg[opidx++] = readv(mAddr,    LN_LONG, WACC);
-						opReg[opidx++] = readv(mAddr+4,  LN_LONG, WACC);
-						opReg[opidx++] = readv(mAddr+8,  LN_LONG, WACC);
-						opReg[opidx++] = readv(mAddr+12, LN_LONG, WACC);
-						opReg[opidx++] = mAddr;
-						continue;
+						case LDPD|MB: case LDPD|MW: case LDPD|ML:
+							off   = SXTL(readvi(LN_LONG));
+							mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr, OPM_SIZE(opr), WACC);
+							opReg[opidx++] = mAddr;
+							continue;
+						case LDPD|MQ:
+							off   = SXTL(readvi(LN_LONG));
+							mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr,   LN_LONG, WACC);
+							opReg[opidx++] = readv(mAddr+4, LN_LONG, WACC);
+							opReg[opidx++] = mAddr;
+							continue;
+						case LDPD|MO:
+							off   = SXTL(readvi(LN_LONG));
+							mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+							opReg[opidx++] = readv(mAddr,    LN_LONG, WACC);
+							opReg[opidx++] = readv(mAddr+4,  LN_LONG, WACC);
+							opReg[opidx++] = readv(mAddr+8,  LN_LONG, WACC);
+							opReg[opidx++] = readv(mAddr+12, LN_LONG, WACC);
+							opReg[opidx++] = mAddr;
+							continue;
 
-					case LDPD|WB: case LDPD|WW: case LDPD|WL: case LDPD|WQ:
-					case LDPD|AB: case LDPD|AW: case LDPD|AL: case LDPD|AQ:
-					case LDPD|WO: case LDPD|AO: case LDPD|VB:
-						off   = SXTL(readvi(LN_LONG));
-						mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
-						opReg[opidx++] = mAddr;
-						continue;
+						case LDPD|WB: case LDPD|WW: case LDPD|WL: case LDPD|WQ:
+						case LDPD|AB: case LDPD|AW: case LDPD|AL: case LDPD|AQ:
+						case LDPD|WO: case LDPD|AO: case LDPD|VB:
+							off   = SXTL(readvi(LN_LONG));
+							mAddr = readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+							opReg[opidx++] = mAddr;
+							continue;
+
+						// Indexed Register
+						case IDX|RB: case IDX|RW: case IDX|RL: case IDX|RQ: case IDX|RO:
+						case IDX|MB: case IDX|MW: case IDX|ML: case IDX|MQ: case IDX|MO:
+						case IDX|WB: case IDX|WW: case IDX|WL: case IDX|WQ: case IDX|WO:
+						case IDX|AB: case IDX|AW: case IDX|AL: case IDX|AQ: case IDX|AO:
+						case IDX|RF: case IDX|RD: case IDX|RG: case IDX|RH: case IDX|VB:
+							Validate(rn, REG_nPC);
+							ireg = CPU_REGUL(rn) << OPM_SCALE(opr);
+							spec = readvi(LN_BYTE);
+							rn   = spec & 0xF;
+							break;
+
+						default:
+							throw RSVD_ADDR_FAULT;
+					}
+
+			#ifdef DEBUG
+			//		PrintLog3(LOG_TRACE, NULL,
+			//			"%s: (OPR) Index %08X (Operand %02X)\n",
+			//				IO_DEVNAME(cpu), idxReg, spec);
+			#endif /* DEBUG */
 
 					// Indexed Register
-					case IDX|RB: case IDX|RW: case IDX|RL: case IDX|RQ: case IDX|RO:
-					case IDX|MB: case IDX|MW: case IDX|ML: case IDX|MQ: case IDX|MO:
-					case IDX|WB: case IDX|WW: case IDX|WL: case IDX|WQ: case IDX|WO:
-					case IDX|AB: case IDX|AW: case IDX|AL: case IDX|AQ: case IDX|AO:
-					case IDX|RF: case IDX|RD: case IDX|RG: case IDX|RH: case IDX|VB:
-						Validate(rn, REG_nPC);
-						ireg = CPU_REGUL(rn) << OPM_SCALE(opr);
-						spec = readvi(LN_BYTE);
-						rn   = spec & 0xF;
-						break;
+					switch(spec & 0xF0) {
+						case REGD:
+							Validate(rn, REG_nPC);
+							ireg += CPU_REGUL(rn);
+							break;
 
-					default:
-						throw RSVD_ADDR_FAULT;
-				}
+						case ADEC:
+							Validate(rn, REG_nPC);
+							rqReg[rqCount++] = (OPM_SIZE(opr) << 4) | rn;
+							gpReg[rn].l     -= OPM_SIZE(opr);
+							ireg            += CPU_REGUL(rn);
+							break;
 
-		#ifdef DEBUG
-		//		PrintLog3(LOG_TRACE, NULL,
-		//			"%s: (OPR) Index %08X (Operand %02X)\n",
-		//				IO_DEVNAME(cpu), idxReg, spec);
-		#endif /* DEBUG */
+						case AINC:
+							Validate(rn, REG_nPC);
+							ireg            += CPU_REGUL(rn);
+							rqReg[rqCount++] = (-OPM_SIZE(opr) << 4) | rn;
+							gpReg[rn].l     += OPM_SIZE(opr);
+							break;
 
-				// Indexed Register
-				switch(spec & 0xF0) {
-					case REGD:
-						Validate(rn, REG_nPC);
-						ireg += CPU_REGUL(rn);
-						break;
+						case AINCD:
+							if (rn < REG_nPC) {
+								ireg            += readv(CPU_REGUL(rn), LN_LONG, RACC);
+								rqReg[rqCount++] = (-LN_LONG << 4) | rn;
+								gpReg[rn].l     += LN_LONG;
+							} else
+								ireg += readvi(LN_LONG);
+							break;
 
-					case ADEC:
-						Validate(rn, REG_nPC);
-						rqReg[rqCount++] = (OPM_SIZE(opr) << 4) | rn;
-						gpReg[rn].l     -= OPM_SIZE(opr);
-						ireg            += CPU_REGUL(rn);
-						break;
+						case BDP:
+							off     = SXTB(readvi(LN_BYTE));
+							ireg += CPU_REGUL(rn) + off;
+							break;
 
-					case AINC:
-						Validate(rn, REG_nPC);
-						ireg            += CPU_REGUL(rn);
-						rqReg[rqCount++] = (-OPM_SIZE(opr) << 4) | rn;
-						gpReg[rn].l     += OPM_SIZE(opr);
-						break;
+						case BDPD:
+							off     = SXTB(readvi(LN_BYTE));
+							ireg += readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+							break;
 
-					case AINCD:
-						if (rn < REG_nPC) {
-							ireg            += readv(CPU_REGUL(rn), LN_LONG, RACC);
-							rqReg[rqCount++] = (-LN_LONG << 4) | rn;
-							gpReg[rn].l     += LN_LONG;
-						} else
-							ireg += readvi(LN_LONG);
-						break;
+						case WDP:
+							off     = SXTW(readvi(LN_WORD));
+							ireg += CPU_REGUL(rn) + off;
+							break;
 
-					case BDP:
-						off     = SXTB(readvi(LN_BYTE));
-						ireg += CPU_REGUL(rn) + off;
-						break;
+						case WDPD:
+							off     = SXTW(readvi(LN_WORD));
+							ireg += readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+							break;
 
-					case BDPD:
-						off     = SXTB(readvi(LN_BYTE));
-						ireg += readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
-						break;
+						case LDP:
+							off     = SXTL(readvi(LN_LONG));
+							ireg += CPU_REGUL(rn) + off;
+							break;
 
-					case WDP:
-						off     = SXTW(readvi(LN_WORD));
-						ireg += CPU_REGUL(rn) + off;
-						break;
+						case LDPD:
+							off     = SXTL(readvi(LN_LONG));
+							ireg += readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
+							break;
 
-					case WDPD:
-						off     = SXTW(readvi(LN_WORD));
-						ireg += readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
-						break;
+						default:
+							throw RSVD_ADDR_FAULT;
+					}
 
-					case LDP:
-						off     = SXTL(readvi(LN_LONG));
-						ireg += CPU_REGUL(rn) + off;
-						break;
+					switch(opr & (OPM_ACC|OPM_LEN)) {
+						case RB: case RW: case RL:
+							opReg[opidx++] = readv(ireg, OPM_SIZE(opr), RACC);
+							break;
+						case RQ:
+							opReg[opidx++] = readv(ireg,   LN_LONG, RACC);
+							opReg[opidx++] = readv(ireg+4, LN_LONG, RACC);
+							break;
+						case RO:
+							opReg[opidx++] = readv(ireg,    LN_LONG, RACC);
+							opReg[opidx++] = readv(ireg+4,  LN_LONG, RACC);
+							opReg[opidx++] = readv(ireg+8,  LN_LONG, RACC);
+							opReg[opidx++] = readv(ireg+12, LN_LONG, RACC);
+							break;
 
-					case LDPD:
-						off     = SXTL(readvi(LN_LONG));
-						ireg += readv(CPU_REGUL(rn) + off, LN_LONG, RACC);
-						break;
+						case MB: case MW: case ML:
+							opReg[opidx++] = readv(ireg, OPM_SIZE(opr), WACC);
+							opReg[opidx++] = ireg;
+							break;
+						case MQ:
+							opReg[opidx++] = readv(ireg,   LN_LONG, WACC);
+							opReg[opidx++] = readv(ireg+4, LN_LONG, WACC);
+							opReg[opidx++] = ireg;
+							break;
+						case MO:
+							opReg[opidx++] = readv(ireg,    LN_LONG, WACC);
+							opReg[opidx++] = readv(ireg+4,  LN_LONG, WACC);
+							opReg[opidx++] = readv(ireg+8,  LN_LONG, WACC);
+							opReg[opidx++] = readv(ireg+12, LN_LONG, WACC);
+							opReg[opidx++] = ireg;
+							break;
 
-					default:
-						throw RSVD_ADDR_FAULT;
-				}
-
-				switch(opr & (OPM_ACC|OPM_LEN)) {
-					case RB: case RW: case RL:
-						opReg[opidx++] = readv(ireg, OPM_SIZE(opr), RACC);
-						break;
-					case RQ:
-						opReg[opidx++] = readv(ireg,   LN_LONG, RACC);
-						opReg[opidx++] = readv(ireg+4, LN_LONG, RACC);
-						break;
-					case RO:
-						opReg[opidx++] = readv(ireg,    LN_LONG, RACC);
-						opReg[opidx++] = readv(ireg+4,  LN_LONG, RACC);
-						opReg[opidx++] = readv(ireg+8,  LN_LONG, RACC);
-						opReg[opidx++] = readv(ireg+12, LN_LONG, RACC);
-						break;
-
-					case MB: case MW: case ML:
-						opReg[opidx++] = readv(ireg, OPM_SIZE(opr), WACC);
-						opReg[opidx++] = ireg;
-						break;
-					case MQ:
-						opReg[opidx++] = readv(ireg,   LN_LONG, WACC);
-						opReg[opidx++] = readv(ireg+4, LN_LONG, WACC);
-						opReg[opidx++] = ireg;
-						break;
-					case MO:
-						opReg[opidx++] = readv(ireg,    LN_LONG, WACC);
-						opReg[opidx++] = readv(ireg+4,  LN_LONG, WACC);
-						opReg[opidx++] = readv(ireg+8,  LN_LONG, WACC);
-						opReg[opidx++] = readv(ireg+12, LN_LONG, WACC);
-						opReg[opidx++] = ireg;
-						break;
-
-					case WB: case WW: case WL: case WQ: case WO:
-					case AB: case AW: case AL: case AQ: case AO:
-						opReg[opidx++] = ireg;
-						break;
+						case WB: case WW: case WL: case WQ: case WO:
+						case AB: case AW: case AL: case AQ: case AO:
+							opReg[opidx++] = ireg;
+							break;
+					}
 				}
 			}
 

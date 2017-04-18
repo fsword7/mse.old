@@ -83,11 +83,11 @@ void vax_cpuDevice::movc(int c5flg)
 		if (REG_R4 > 0)
 			REG_R4 &= STR_M_LEN;
 
-		printf("%s: Compare %08X (%04X bytes) with %08X (%04X bytes) with fill %02X\n",
+		printf("%s: (FPD) SRC %08X (%04X bytes) to DST %08X (%04X bytes) with fill %02X\n",
 			devName.c_str(), ZXTL(REG_R1), ZXTW(REG_R2), ZXTL(REG_R3), ZXTW(REG_R4), fill);
 
 		// Reset PC address and clear instruction look-ahead
-		REG_PC += STR_GETDPC(REG_R0);
+		REG_PC = faultAddr + STR_GETDPC(REG_R0);
 		flushvi();
 	}
 
@@ -222,7 +222,7 @@ void vax_cpuDevice::cmpc(int c5flg)
 			devName.c_str(), ZXTL(REG_R1), ZXTW(REG_R0), ZXTL(REG_R3), ZXTW(REG_R2), fill);
 
 		// Reset PC address and clear instruction look-ahead
-		REG_PC += STR_GETDPC(REG_R0);
+		REG_PC = faultAddr + STR_GETDPC(REG_R0);
 		flushvi();
 	}
 
@@ -269,7 +269,7 @@ void vax_cpuDevice::locc(bool skpflg)
 		match = STR_GETCHR(REG_R0);
 
 		// Reset PC address
-		REG_PC += STR_GETDPC(REG_R0);
+		REG_PC = faultAddr + STR_GETDPC(REG_R0);
 		flushvi();
 	}
 
@@ -309,7 +309,7 @@ void vax_cpuDevice::scanc(bool spnflg)
 	} else {
 		mask = STR_GETCHR(REG_R0);
 		// Reset PC address
-		REG_PC += STR_GETDPC(REG_R0);
+		REG_PC = faultAddr + STR_GETDPC(REG_R0);
 		flushvi();
 	}
 
