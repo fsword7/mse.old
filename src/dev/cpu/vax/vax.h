@@ -343,68 +343,7 @@ enum stopCode {
 #define PAGE_ACV            SCB_ACV  // Access Violation
 #define PAGE_KSNV           SCB_KSNV // Kernel Stack Not Valid
 
-#define UpdateCC_Z1ZP(cc) \
-	cc = CC_Z | ((cc) & CC_C);
-
-
-#define UpdateCC_IIZZ_B(cc, d)            \
-	if (SXTB(d) < 0)           cc = CC_N; \
-	else if (SXTB(d) == 0)     cc = CC_Z; \
-	else                       cc = 0;
-
-#define UpdateCC_IIZZ_W(cc, d)            \
-	if (SXTW(d) < 0)           cc = CC_N; \
-	else if (SXTW(d) == 0)     cc = CC_Z; \
-	else                       cc = 0;
-
-#define UpdateCC_IIZZ_L(cc, d)            \
-	if (SXTL(d) < 0)           cc = CC_N; \
-	else if (SXTL(d) == 0)     cc = CC_Z; \
-	else                       cc = 0;
-
-#define UpdateCC_IIZZ_Q(cc, dl, dh)       \
-	if (SXTL(dh) < 0)          cc = CC_N; \
-	else if (((dl)|(dh)) == 0) cc = CC_Z; \
-	else                       cc = 0;
-
-#define UpdateCC_IIZZ_64(cc, d)           \
-	if (SXTQ(d) < 0LL)         cc = CC_N; \
-	else if ((d) == 0LL)       cc = CC_Z; \
-	else                       cc = 0;
-
-
-#define UpdateCC_IIZP_B(cc, d)                          \
-	if (int8_t(d) < 0)         cc = CC_N | (cc & CC_C); \
-	else if (int8_t(d) == 0)   cc = CC_Z | (cc & CC_C); \
-	else                       cc = cc & CC_C;
-
-#define UpdateCC_IIZP_W(cc, d)                          \
-	if (int16_t(d) < 0)        cc = CC_N | (cc & CC_C); \
-	else if (int16_t(d) == 0)  cc = CC_Z | (cc & CC_C); \
-	else                       cc = cc & CC_C;
-
-#define UpdateCC_IIZP_L(cc, d)                          \
-	if (int32_t(d) < 0)        cc = CC_N | (cc & CC_C); \
-	else if (int32_t(d) == 0)  cc = CC_Z | (cc & CC_C); \
-	else                       cc = cc & CC_C;
-
-#define UpdateCC_IIZP_Q(cc, dl, dh)                     \
-	if (int32_t(dh) < 0)       cc = CC_N | (cc & CC_C); \
-	else if (((dl)|(dh)) == 0) cc = CC_Z | (cc & CC_C); \
-	else                       cc = cc & CC_C;
-
-#define UpdateCC_CMP_I(cc, s1, s2)         \
-	if ((s1) < (s2))          cc = CC_N;   \
-	else if ((s1) == (s2))    cc = CC_Z;   \
-	else                      cc = 0;      \
-	if (ZXTL(s1) < ZXTL(s2))  cc |= CC_C;
-
-#define UpdateCC_CMP_B(cc, s1, s2)   UpdateCC_CMP_I(cc, s1, s2)
-#define UpdateCC_CMP_W(cc, s1, s2)   UpdateCC_CMP_I(cc, s1, s2)
-#define UpdateCC_CMP_L(cc, s1, s2)   UpdateCC_CMP_I(cc, s1, s2)
-
-
-// Update Condition Codes (new)
+// Update Condition Codes
 
 // Set Z flag for CLR Instructions
 #define SetZ(cc)  cc = (((cc) & CC_C) | CC_Z)

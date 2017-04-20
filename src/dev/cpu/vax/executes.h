@@ -1003,7 +1003,8 @@ void CPU_CLASS::execute() noexcept(false)
 
 				dst = (src + src2) * src1;
 				storel(opReg[5], dst);
-				UpdateCC_IIZZ_L(ccReg, dst);
+				// Update condition codes
+				SetNZ(ccReg, SXTL(dst), 0, 0);
 				printf("%s: %08X (%08X to %08X) + %08X * %08X => %08X: %s\n", devName.c_str(),
 					ZXTL(src), ZXTL(opReg[1]), ZXTL(opReg[2]), ZXTL(src2), ZXTL(src1),
 					ZXTL(dst), stringCC(ccReg));
@@ -1035,21 +1036,9 @@ void CPU_CLASS::execute() noexcept(false)
 
 			// MTPR/MFPR instructions
 			case OPC_nMTPR:
-				// Must be kernel mode
-//				if (PSL_GETCUR(psReg) != AM_KERNEL)
-//					throw PRIV_INST_FAULT;
-//				src = opReg[0];
-//				writepr(opReg[1], src);
-//				UpdateCC_IIZP_L(ccReg, src);
 				mtpr();
 				break;
 			case OPC_nMFPR:
-				// Must be kernel mode
-//				if (PSL_GETCUR(psReg) != AM_KERNEL)
-//					throw PRIV_INST_FAULT;
-//				src = readpr(opReg[0]);
-//				storel(opReg[1], src);
-//				UpdateCC_IIZP_L(ccReg, src);
 				mfpr();
 				break;
 
@@ -1211,8 +1200,11 @@ void CPU_CLASS::execute() noexcept(false)
 				src2  = SXTB(opReg[2]);
 				dst   = src2 + src1;
 				storeb(opReg[3], dst);
-				UpdateCC_IIZP_B(ccReg, dst);
-				SetV_ADD(ccReg, dst, src2, src1, SGN_BYTE);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTB(dst), 0, (ccReg & CC_C));
+				SetV_ADD(ccReg, SXTB(dst), SXTB(src2), SXTB(src1), SGN_BYTE);
+
 				if ((src1 < 0) ? (dst >= src) : (dst <= src)) {
 					REG_PC += opReg[4];
 					flushvi();
@@ -1229,8 +1221,11 @@ void CPU_CLASS::execute() noexcept(false)
 				src2  = SXTW(opReg[2]);
 				dst   = src2 + src1;
 				storew(opReg[3], dst);
-				UpdateCC_IIZP_W(ccReg, dst);
-				SetV_ADD(ccReg, dst, src2, src1, SGN_WORD);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTW(dst), 0, (ccReg & CC_C));
+				SetV_ADD(ccReg, SXTW(dst), SXTW(src2), SXTW(src1), SGN_WORD);
+
 				if ((src1 < 0) ? (dst >= src) : (dst <= src)) {
 					REG_PC += opReg[4];
 					flushvi();
@@ -1247,8 +1242,11 @@ void CPU_CLASS::execute() noexcept(false)
 				src2  = SXTL(opReg[2]);
 				dst   = src2 + src1;
 				storel(opReg[3], dst);
-				UpdateCC_IIZP_L(ccReg, dst);
-				SetV_ADD(ccReg, dst, src2, src1, SGN_LONG);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTL(dst), 0, (ccReg & CC_C));
+				SetV_ADD(ccReg, SXTL(dst), SXTL(src2), SXTL(src1), SGN_LONG);
+
 				if ((src1 < 0) ? (dst >= src) : (dst <= src)) {
 					REG_PC += opReg[4];
 					flushvi();
@@ -1266,7 +1264,11 @@ void CPU_CLASS::execute() noexcept(false)
 				src2 = SXTB(opReg[1]);
 				src  = SXTB(opReg[2]);
 				dst  = src1 - src2;
-				UpdateCC_CMP_B(ccReg, dst, src);
+
+				// Update Condition Codes
+				SetNZ(ccReg, SXTB(dst), SXTB(src), 0);
+				SetC(ccReg, ZXTB(dst), ZXTB(src));
+
 				if (ZXTB(dst) <= ZXTB(src)) {
 					brDisp = readv(REG_PC + (ZXTB(dst) << 1), LN_WORD, RACC);
 					REG_PC += SXTW(brDisp);
@@ -1287,7 +1289,11 @@ void CPU_CLASS::execute() noexcept(false)
 				src2 = SXTW(opReg[1]);
 				src  = SXTW(opReg[2]);
 				dst  = src1 - src2;
-				UpdateCC_CMP_W(ccReg, dst, src);
+
+				// Update Condition Codes
+				SetNZ(ccReg, SXTW(dst), SXTW(src), 0);
+				SetC(ccReg, ZXTW(dst), ZXTW(src));
+
 				if (ZXTW(dst) <= ZXTW(src)) {
 					brDisp = readv(REG_PC + (ZXTW(dst) << 1), LN_WORD, RACC);
 					REG_PC += SXTW(brDisp);
@@ -1302,7 +1308,11 @@ void CPU_CLASS::execute() noexcept(false)
 				src2 = SXTL(opReg[1]);
 				src  = SXTL(opReg[2]);
 				dst  = src1 - src2;
-				UpdateCC_CMP_L(ccReg, dst, src);
+
+				// Update Condition Codes
+				SetNZ(ccReg, SXTL(dst), SXTL(src), 0);
+				SetC(ccReg, ZXTL(dst), ZXTL(src));
+
 				if (ZXTL(dst) <= ZXTL(src)) {
 					brDisp = readv(REG_PC + (ZXTL(dst) << 1), LN_WORD, RACC);
 					REG_PC += SXTW(brDisp);
@@ -1319,8 +1329,11 @@ void CPU_CLASS::execute() noexcept(false)
 				src2 = SXTL(opReg[1]);
 				dst  = src2 + 1;
 				storel(opReg[2], dst);
-				UpdateCC_IIZP_L(ccReg, dst);
-				SetV_ADD(ccReg, dst, src2, 1, SGN_LONG);
+
+				// Update Condition Codes
+				SetNZ(ccReg, SXTL(dst), 0, (ccReg & CC_C));
+				SetV_ADD(ccReg, SXTL(dst), SXTL(src2), 1, SGN_LONG);
+
 				if (dst <= src1) {
 					REG_PC += opReg[3];;
 					flushvi();
@@ -1335,8 +1348,11 @@ void CPU_CLASS::execute() noexcept(false)
 				src2 = SXTL(opReg[1]);
 				dst  = src2 + 1;
 				storel(opReg[2], dst);
-				UpdateCC_IIZP_L(ccReg, dst);
-				SetV_ADD(ccReg, dst, src2, 1, SGN_LONG);
+
+				// Update Condition Codes
+				SetNZ(ccReg, SXTL(dst), 0, (ccReg & CC_C));
+				SetV_ADD(ccReg, SXTL(dst), SXTL(src2), 1, SGN_LONG);
+
 				if (dst < src1) {
 					REG_PC += opReg[3];
 					flushvi();
@@ -1352,8 +1368,11 @@ void CPU_CLASS::execute() noexcept(false)
 				src = SXTL(opReg[0]);
 				dst = src - 1;
 				storel(opReg[1], dst);
-				UpdateCC_IIZP_L(ccReg, dst);
-				SetV_SUB(ccReg, dst, src, 1, SGN_LONG);
+
+				// Update Condition Codes
+				SetNZ(ccReg, SXTL(dst), 0, (ccReg & CC_C));
+				SetV_SUB(ccReg, SXTL(dst), SXTL(src), 1, SGN_LONG);
+
 				if (dst >= 0) {
 					REG_PC += opReg[2];
 					flushvi();
@@ -1367,8 +1386,11 @@ void CPU_CLASS::execute() noexcept(false)
 				src = SXTL(opReg[0]);
 				dst = src - 1;
 				storel(opReg[1], dst);
-				UpdateCC_IIZP_L(ccReg, dst);
-				SetV_SUB(ccReg, dst, src, 1, SGN_LONG);
+
+				// Update Condition Codes
+				SetNZ(ccReg, SXTL(dst), 0, (ccReg & CC_C));
+				SetV_SUB(ccReg, SXTL(dst), SXTL(src), 1, SGN_LONG);
+
 				if (dst > 0) {
 					REG_PC += opReg[2];
 					flushvi();
@@ -1442,14 +1464,20 @@ void CPU_CLASS::execute() noexcept(false)
 			case OPC_nMOVB:
 				dst = opReg[0];
 				storeb(opReg[1], dst);
-				UpdateCC_IIZP_B(ccReg, dst);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTB(dst), 0, (ccReg & CC_C));
+
 				printf("%s: Move %02X: %s\n", devName.c_str(),
 						ZXTB(dst), stringCC(ccReg));
 				break;
 			case OPC_nMOVW:
 				dst = opReg[0];
 				storew(opReg[1], dst);
-				UpdateCC_IIZP_W(ccReg, dst);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTW(dst), 0, (ccReg & CC_C));
+
 				printf("%s: Move %04X: %s\n", devName.c_str(),
 						ZXTW(dst), stringCC(ccReg));
 				break;
@@ -1460,7 +1488,10 @@ void CPU_CLASS::execute() noexcept(false)
 			case OPC_nMOVAQ:
 				dst = opReg[0];
 				storel(opReg[1], dst);
-				UpdateCC_IIZP_L(ccReg, dst);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTL(dst), 0, (ccReg & CC_C));
+
 				printf("%s: Move %08X: %s\n", devName.c_str(),
 						ZXTL(dst), stringCC(ccReg));
 				break;
@@ -1468,7 +1499,10 @@ void CPU_CLASS::execute() noexcept(false)
 				dst1 = opReg[0];
 				dst2 = opReg[1];
 				storeq(opReg[2], dst1, dst2);
-				UpdateCC_IIZP_Q(ccReg, dst1, dst2);
+
+				// Update condition codes
+				SetNZQ(ccReg, SXTL(dst1), SXTL(dst2), (ccReg & CC_C));
+
 				printf("%s: Move %08X %08X: %s\n", devName.c_str(),
 						ZXTL(dst1), ZXTL(dst2), stringCC(ccReg));
 				break;
@@ -1478,7 +1512,10 @@ void CPU_CLASS::execute() noexcept(false)
 				src = SXTB(opReg[0]);
 				dst = ~src;
 				storeb(opReg[1], dst);
-				UpdateCC_IIZP_B(ccReg, dst);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTB(dst), 0, (ccReg & CC_C));
+
 				printf("%s: Move ~%02X => %02X: %s\n", devName.c_str(),
 					ZXTB(src), ZXTB(dst), stringCC(ccReg));
 				break;
@@ -1486,7 +1523,10 @@ void CPU_CLASS::execute() noexcept(false)
 				src = SXTW(opReg[0]);
 				dst = ~src;
 				storew(opReg[1], dst);
-				UpdateCC_IIZP_W(ccReg, dst);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTW(dst), 0, (ccReg & CC_C));
+
 				printf("%s: Move ~%04X => %04X: %s\n", devName.c_str(),
 					ZXTW(src), ZXTW(dst), stringCC(ccReg));
 				break;
@@ -1494,7 +1534,10 @@ void CPU_CLASS::execute() noexcept(false)
 				src = SXTL(opReg[0]);
 				dst = ~src;
 				storel(opReg[1], dst);
-				UpdateCC_IIZP_L(ccReg, dst);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTL(dst), 0, (ccReg & CC_C));
+
 				printf("%s: Move ~%08X => %08X: %s\n", devName.c_str(),
 					ZXTL(src), ZXTL(dst), stringCC(ccReg));
 				break;
@@ -1504,7 +1547,10 @@ void CPU_CLASS::execute() noexcept(false)
 				src = SXTB(opReg[0]);
 				dst = -src;
 				storeb(opReg[1], dst);
+
+				// Update condition codes
 				SetCC_SUB_B(ccReg, dst, 0, src);
+
 				printf("%s: Move -%02X => %02X: %s\n", devName.c_str(),
 					ZXTB(src), ZXTB(dst), stringCC(ccReg));
 				break;
@@ -1512,7 +1558,10 @@ void CPU_CLASS::execute() noexcept(false)
 				src = SXTW(opReg[0]);
 				dst = -src;
 				storew(opReg[1], dst);
+
+				// Update condition codes
 				SetCC_SUB_W(ccReg, dst, 0, src);
+
 				printf("%s: Move -%04X => %04X: %s\n", devName.c_str(),
 					ZXTW(src), ZXTW(dst), stringCC(ccReg));
 				break;
@@ -1520,7 +1569,10 @@ void CPU_CLASS::execute() noexcept(false)
 				src = SXTL(opReg[0]);
 				dst = -src;
 				storel(opReg[1], dst);
+
+				// Update condition codes
 				SetCC_SUB_L(ccReg, dst, 0, src);
+
 				printf("%s: Move -%08X => %08X: %s\n", devName.c_str(),
 					ZXTL(src), ZXTL(dst), stringCC(ccReg));
 				break;
@@ -1529,21 +1581,30 @@ void CPU_CLASS::execute() noexcept(false)
 			case OPC_nMOVZBW:
 				dst = ZXTB(opReg[0]);
 				storew(opReg[1], dst);
-				UpdateCC_IIZP_W(ccReg, dst);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTW(dst), 0, (ccReg & CC_C));
+
 				printf("%s: Move %02X => %04X: %s\n", devName.c_str(),
 					ZXTB(dst), ZXTW(dst), stringCC(ccReg));
 				break;
 			case OPC_nMOVZBL:
 				dst = ZXTB(opReg[0]);
 				storel(opReg[1], dst);
-				UpdateCC_IIZP_L(ccReg, dst);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTL(dst), 0, (ccReg & CC_C));
+
 				printf("%s: Move %02X => %08X: %s\n", devName.c_str(),
 					ZXTB(dst), ZXTL(dst), stringCC(ccReg));
 				break;
 			case OPC_nMOVZWL:
 				dst = ZXTW(opReg[0]);
 				storel(opReg[1], dst);
-				UpdateCC_IIZP_L(ccReg, dst);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTL(dst), 0, (ccReg & CC_C));
+
 				printf("%s: Move %04X => %08X: %s\n", devName.c_str(),
 					ZXTW(dst), ZXTL(dst), stringCC(ccReg));
 				break;
@@ -1553,7 +1614,10 @@ void CPU_CLASS::execute() noexcept(false)
 				src = SXTB(opReg[0]);
 				dst = SXTW(src);
 				storew(opReg[1], dst);
-				UpdateCC_IIZZ_W(ccReg, dst);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTW(dst), 0, 0);
+
 				printf("%s: %02X => %04X: %s\n", devName.c_str(),
 						ZXTB(src), ZXTW(dst), stringCC(ccReg));
 				break;
@@ -1561,7 +1625,10 @@ void CPU_CLASS::execute() noexcept(false)
 				src = SXTB(opReg[0]);
 				dst = SXTL(src);
 				storel(opReg[1], dst);
-				UpdateCC_IIZZ_L(ccReg, dst);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTW(dst), 0, 0);
+
 				printf("%s: %02X => %08X: %s\n", devName.c_str(),
 						ZXTB(src), ZXTL(dst), stringCC(ccReg));
 				break;
@@ -1569,12 +1636,15 @@ void CPU_CLASS::execute() noexcept(false)
 				src = SXTW(opReg[0]);
 				dst = SXTB(src);
 				storeb(opReg[1], dst);
-				UpdateCC_IIZZ_B(ccReg, dst);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTB(dst), 0, 0);
 				if (src < -128 || src > 127) {
 					ccReg |= CC_V;
 					if (psReg & PSW_IV)
 						irqFlags |= IRQ_SETTRAP(TRAP_INTOVF);
 				}
+
 				printf("%s: %04X => %02X: %s\n", devName.c_str(),
 						ZXTW(src), ZXTB(dst), stringCC(ccReg));
 				break;
@@ -1582,7 +1652,10 @@ void CPU_CLASS::execute() noexcept(false)
 				src = SXTW(opReg[0]);
 				dst = SXTL(src);
 				storel(opReg[1], dst);
-				UpdateCC_IIZZ_L(ccReg, dst);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTL(dst), 0, 0);
+
 				printf("%s: %04X => %08X: %s\n", devName.c_str(),
 						ZXTW(src), ZXTL(dst), stringCC(ccReg));
 				break;
@@ -1590,12 +1663,15 @@ void CPU_CLASS::execute() noexcept(false)
 				src = SXTL(opReg[0]);
 				dst = SXTB(src);
 				storeb(opReg[1], dst);
-				UpdateCC_IIZZ_B(ccReg, dst);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTB(dst), 0, 0);
 				if (src < -128 || src > 127) {
 					ccReg |= CC_V;
 					if (psReg & PSW_IV)
 						irqFlags |= IRQ_SETTRAP(TRAP_INTOVF);
 				}
+
 				printf("%s: %08X => %02X: %s\n", devName.c_str(),
 						ZXTL(src), ZXTB(dst), stringCC(ccReg));
 				break;
@@ -1603,12 +1679,15 @@ void CPU_CLASS::execute() noexcept(false)
 				src = SXTL(opReg[0]);
 				dst = SXTW(src);
 				storew(opReg[1], dst);
-				UpdateCC_IIZZ_W(ccReg, dst);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTW(dst), 0, 0);
 				if (src < -128 || src > 127) {
 					ccReg |= CC_V;
 					if (psReg & PSW_IV)
 						irqFlags |= IRQ_SETTRAP(TRAP_INTOVF);
 				}
+
 				printf("%s: %08X => %04X: %s\n", devName.c_str(),
 						ZXTL(src), ZXTW(dst), stringCC(ccReg));
 				break;
@@ -1635,21 +1714,33 @@ void CPU_CLASS::execute() noexcept(false)
 			case OPC_nCMPB:
 				src1 = SXTB(opReg[0]);
 				src2 = SXTB(opReg[1]);
-				UpdateCC_CMP_B(ccReg, src1, src2);
+
+				// Update Condition Codes
+				SetNZ(ccReg, SXTB(src1), SXTB(src2), 0);
+				SetC(ccReg, ZXTB(src1), ZXTB(src2));
+
 				printf("%s: Compare %02X with %02X: %s\n", devName.c_str(),
 						ZXTB(src1), ZXTB(src2), stringCC(ccReg));
 				break;
 			case OPC_nCMPW:
 				src1 = SXTW(opReg[0]);
 				src2 = SXTW(opReg[1]);
-				UpdateCC_CMP_W(ccReg, src1, src2);
+
+				// Update Condition Codes
+				SetNZ(ccReg, SXTW(src1), SXTW(src2), 0);
+				SetC(ccReg, ZXTW(src1), ZXTW(src2));
+
 				printf("%s: Compare %04X with %04X: %s\n", devName.c_str(),
 						ZXTW(src1), ZXTW(src2), stringCC(ccReg));
 				break;
 			case OPC_nCMPL:
 				src1 = SXTL(opReg[0]);
 				src2 = SXTL(opReg[1]);
-				UpdateCC_CMP_L(ccReg, src1, src2);
+
+				// Update Condition Codes
+				SetNZ(ccReg, SXTL(src1), SXTL(src2), 0);
+				SetC(ccReg, ZXTL(src1), ZXTL(src2));
+
 				printf("%s: Compare %08X with %08X: %s\n", devName.c_str(),
 						ZXTL(src1), ZXTL(src2), stringCC(ccReg));
 				break;
@@ -1657,19 +1748,28 @@ void CPU_CLASS::execute() noexcept(false)
 				// TSTx instructions
 			case OPC_nTSTB:
 				src = SXTB(opReg[0]);
-				UpdateCC_IIZZ_B(ccReg, src);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTB(src), 0, 0);
+
 				printf("%s: Test %02X: %s\n", devName.c_str(),
 						ZXTB(src), stringCC(ccReg));
 				break;
 			case OPC_nTSTW:
 				src = SXTW(opReg[0]);
-				UpdateCC_IIZZ_W(ccReg, src);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTW(src), 0, 0);
+
 				printf("%s: Test %04X: %s\n", devName.c_str(),
 						ZXTW(src), stringCC(ccReg));
 				break;
 			case OPC_nTSTL:
 				src = SXTL(opReg[0]);
-				UpdateCC_IIZZ_L(ccReg, src);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTL(src), 0, 0);
+
 				printf("%s: Test %08X: %s\n", devName.c_str(),
 						ZXTL(src), stringCC(ccReg));
 				break;
@@ -1679,7 +1779,10 @@ void CPU_CLASS::execute() noexcept(false)
 				src = SXTB(opReg[0]);
 				dst = src + 1;
 				storeb(opReg[1], dst);
+
+				// Update condition codes
 				SetCC_ADD_B(ccReg, dst, src, 1);
+
 				printf("%s: %02X + 1 => %02X: %s\n",
 					devName.c_str(), ZXTB(src), ZXTB(dst), stringCC(ccReg));
 				break;
@@ -1687,7 +1790,10 @@ void CPU_CLASS::execute() noexcept(false)
 				src = SXTW(opReg[0]);
 				dst = src + 1;
 				storew(opReg[1], dst);
+
+				// Update condition codes
 				SetCC_ADD_W(ccReg, dst, src, 1);
+
 				printf("%s: %04X + 1 => %04X: %s\n",
 					devName.c_str(), ZXTW(src), ZXTW(dst), stringCC(ccReg));
 				break;
@@ -1695,7 +1801,10 @@ void CPU_CLASS::execute() noexcept(false)
 				src = SXTL(opReg[0]);
 				dst = src + 1;
 				storel(opReg[1], dst);
+
+				// Update condition codes
 				SetCC_ADD_L(ccReg, dst, src, 1);
+
 				printf("%s: %08X + 1 => %08X: %s\n",
 					devName.c_str(), ZXTL(src), ZXTL(dst), stringCC(ccReg));
 				break;
@@ -1705,7 +1814,10 @@ void CPU_CLASS::execute() noexcept(false)
 				src = SXTB(opReg[0]);
 				dst = src - 1;
 				storeb(opReg[1], dst);
+
+				// Update condition codes
 				SetCC_SUB_B(ccReg, dst, src, 1);
+
 				printf("%s: %08X - 1 => %08X: %s\n",
 					devName.c_str(), ZXTB(src), ZXTB(dst), stringCC(ccReg));
 				break;
@@ -1713,7 +1825,10 @@ void CPU_CLASS::execute() noexcept(false)
 				src = SXTW(opReg[0]);
 				dst = src - 1;
 				storew(opReg[1], dst);
+
+				// Update condition codes
 				SetCC_SUB_W(ccReg, dst, src, 1);
+
 				printf("%s: %04X - 1 => %04X: %s\n",
 					devName.c_str(), ZXTW(src), ZXTW(dst), stringCC(ccReg));
 				break;
@@ -1721,7 +1836,10 @@ void CPU_CLASS::execute() noexcept(false)
 				src = SXTL(opReg[0]);
 				dst = src - 1;
 				storel(opReg[1], dst);
+
+				// Update condition codes
 				SetCC_SUB_L(ccReg, dst, src, 1);
+
 				printf("%s: %08X - 1 => %08X: %s\n",
 					devName.c_str(), ZXTL(src), ZXTL(dst), stringCC(ccReg));
 				break;
@@ -1740,7 +1858,10 @@ void CPU_CLASS::execute() noexcept(false)
 					dst = src + tmp;
 					writev(opReg[1], dst, LN_WORD, WACC);
 				}
+
+				// Update condition codes
 				SetCC_ADD_W(ccReg, dst, src, tmp);
+
 				printf("%s: %04X + %04X => %04X: %s\n", devName.c_str(),
 						ZXTW(src), ZXTW(tmp), ZXTW(dst), stringCC(ccReg));
 				break;
@@ -1752,7 +1873,10 @@ void CPU_CLASS::execute() noexcept(false)
 				src2 = SXTB(opReg[1]);
 				dst  = src2 + src1;
 				storeb(opReg[2], dst);
+
+				// Update condition codes
 				SetCC_ADD_B(ccReg, dst, src2, src1);
+
 				printf("%s: %02X + %02X => %02X: %s\n", devName.c_str(),
 					ZXTB(src1), ZXTB(src2), ZXTB(dst), stringCC(ccReg));
 				break;
@@ -1762,7 +1886,10 @@ void CPU_CLASS::execute() noexcept(false)
 				src2 = SXTW(opReg[1]);
 				dst  = src2 + src1;
 				storew(opReg[2], dst);
+
+				// Update condition codes
 				SetCC_ADD_W(ccReg, dst, src2, src1);
+
 				printf("%s: %04X + %04X => %04X: %s\n", devName.c_str(),
 					ZXTW(src1), ZXTW(src2), ZXTW(dst), stringCC(ccReg));
 				break;
@@ -1772,7 +1899,10 @@ void CPU_CLASS::execute() noexcept(false)
 				src2 = SXTL(opReg[1]);
 				dst  = src2 + src1;
 				storel(opReg[2], dst);
+
+				// Update condition codes
 				SetCC_ADD_L(ccReg, dst, src2, src1);
+
 				printf("%s: %08X + %08X => %08X: %s\n", devName.c_str(),
 					ZXTL(src1), ZXTL(src2), ZXTL(dst), stringCC(ccReg));
 				break;
@@ -1784,7 +1914,10 @@ void CPU_CLASS::execute() noexcept(false)
 				src2 = SXTB(opReg[1]);
 				dst  = src2 - src1;
 				storeb(opReg[2], dst);
+
+				// Update condition codes
 				SetCC_SUB_B(ccReg, dst, src2, src1);
+
 				printf("%s: %02X - %02X => %02X: %s\n", devName.c_str(),
 					ZXTB(src1), ZXTB(src2), ZXTB(dst), stringCC(ccReg));
 				break;
@@ -1794,7 +1927,10 @@ void CPU_CLASS::execute() noexcept(false)
 				src2 = SXTW(opReg[1]);
 				dst  = src2 - src1;
 				storew(opReg[2], dst);
+
+				// Update condition codes
 				SetCC_SUB_W(ccReg, dst, src2, src1);
+
 				printf("%s: %04X - %04X => %04X: %s\n", devName.c_str(),
 					ZXTW(src1), ZXTW(src2), ZXTW(dst), stringCC(ccReg));
 				break;
@@ -1804,7 +1940,10 @@ void CPU_CLASS::execute() noexcept(false)
 				src2 = SXTL(opReg[1]);
 				dst  = src2 - src1;
 				storel(opReg[2], dst);
+
+				// Update condition codes
 				SetCC_SUB_L(ccReg, dst, src2, src1);
+
 				printf("%s: %08X - %08X => %08X: %s\n", devName.c_str(),
 					ZXTL(src1), ZXTL(src2), ZXTL(dst), stringCC(ccReg));
 				break;
@@ -1816,12 +1955,15 @@ void CPU_CLASS::execute() noexcept(false)
 				src2 = SXTB(opReg[1]);
 				dst  = src2 * src1;
 				storeb(opReg[2], dst);
-				UpdateCC_IIZZ_B(ccReg, dst);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTB(dst), 0, 0);
 				if (dst < SCHAR_MIN || dst > SCHAR_MAX) {
 					ccReg |= CC_V;
 					if (psReg & PSW_IV)
 						irqFlags |= IRQ_SETTRAP(TRAP_INTOVF);
 				}
+
 				printf("%s: %02X * %02X => %02X: %s\n", devName.c_str(),
 					ZXTB(src2), ZXTB(src1), ZXTB(dst), stringCC(ccReg));
 				break;
@@ -1831,12 +1973,15 @@ void CPU_CLASS::execute() noexcept(false)
 				src2 = SXTW(opReg[1]);
 				dst  = src2 * src1;
 				storew(opReg[2], dst);
-				UpdateCC_IIZZ_W(ccReg, dst);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTW(dst), 0, 0);
 				if (dst < SHRT_MIN || dst > SHRT_MAX) {
 					ccReg |= CC_V;
 					if (psReg & PSW_IV)
 						irqFlags |= IRQ_SETTRAP(TRAP_INTOVF);
 				}
+
 				printf("%s: %02X * %02X => %02X: %s\n", devName.c_str(),
 					ZXTW(src2), ZXTW(src1), ZXTW(dst), stringCC(ccReg));
 				break;
@@ -1846,7 +1991,9 @@ void CPU_CLASS::execute() noexcept(false)
 				srcq2 = SXTL(opReg[1]);
 				dstq  = srcq2 * srcq1;
 				storel(opReg[2], SXTL(dstq));
-				UpdateCC_IIZZ_L(ccReg, dstq);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTL(dstq), 0, 0);
 //				if (SXTL(dstq >> 32) != (SXTL(dstq) & SGN_LONG) ? -1LL : 0LL)
 //					ccReg |= CC_V;
 				if (dstq < LONG_MIN || dstq > LONG_MAX) {
@@ -1875,9 +2022,10 @@ void CPU_CLASS::execute() noexcept(false)
 					ovflg = false;
 				}
 				storeb(opReg[2], dst);
-				UpdateCC_IIZZ_B(ccReg, dst);
-				if (ovflg)
-					ccReg |= CC_V;
+
+				// Update condition codes
+				SetNZ(ccReg, SXTB(dst), 0, (ovflg ? CC_V : 0));
+
 				printf("%s: %02X / %02X => %02X: %s\n", devName.c_str(),
 					ZXTB(src2), ZXTB(src1), ZXTB(dst), stringCC(ccReg));
 				break;
@@ -1897,9 +2045,10 @@ void CPU_CLASS::execute() noexcept(false)
 					ovflg = false;
 				}
 				storew(opReg[2], dst);
-				UpdateCC_IIZZ_W(ccReg, dst);
-				if (ovflg)
-					ccReg |= CC_V;
+
+				// Update condition codes
+				SetNZ(ccReg, SXTW(dst), 0, (ovflg ? CC_V : 0));
+
 				printf("%s: %04X / %04X => %04X: %s\n", devName.c_str(),
 					ZXTW(src2), ZXTW(src1), ZXTW(dst), stringCC(ccReg));
 				break;
@@ -1919,9 +2068,10 @@ void CPU_CLASS::execute() noexcept(false)
 					ovflg = false;
 				}
 				storel(opReg[2], dst);
-				UpdateCC_IIZZ_L(ccReg, dst);
-				if (ovflg)
-					ccReg |= CC_V;
+
+				// Update condition codes
+				SetNZ(ccReg, SXTL(dst), 0, (ovflg ? CC_V : 0));
+
 				printf("%s: %08X / %08X => %08X: %s\n", devName.c_str(),
 					ZXTL(src2), ZXTL(src1), ZXTL(dst), stringCC(ccReg));
 				break;
@@ -1933,7 +2083,10 @@ void CPU_CLASS::execute() noexcept(false)
 				srcq  = SXTL(opReg[2]);
 				dstq  = (srcq2 * srcq1) + srcq;
 				storeq(opReg[3], ZXTL(dstq), ZXTL(dstq >> 32));
-				UpdateCC_IIZZ_64(ccReg, dstq);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTQ(dstq), 0LL, 0);
+
 				printf("%s: (%08X * %08X) + %08X => %08X %08X: %s\n", devName.c_str(),
 					ZXTL(srcq2), ZXTL(srcq1), ZXTL(srcq), ZXTL(dstq >> 32), ZXTL(dstq),
 					stringCC(ccReg));
@@ -1969,8 +2122,10 @@ void CPU_CLASS::execute() noexcept(false)
 
 				storel(opReg[3], dstq1);
 				storel(opReg[4], dstq2);
-				UpdateCC_IIZZ_L(ccReg, dstq1);
-				ccReg |= ovflg ? CC_V : 0;
+
+				// Update condition codes
+				SetNZ(ccReg, SXTL(dstq1), 0, (ovflg ? CC_V : 0));
+
 				printf("%s: %08X %08X / %08X => %08X R %08X: %s\n", devName.c_str(),
 					ZXTL(srcq2 >> 32), ZXTL(srcq2), ZXTL(srcq1), ZXTL(dstq1), ZXTL(dstq2),
 					stringCC(ccReg));
@@ -1983,9 +2138,12 @@ void CPU_CLASS::execute() noexcept(false)
 				carry = ccReg & CC_C;
 				dst   = src2 + src1 + carry;
 				storel(opReg[2], dst);
+
+				// Update condition codes
 				SetCC_ADD_L(ccReg, dst, src2, src1);
 				if ((dst == src2) && src1 != 0)
 					ccReg |= CC_C;
+
 				printf("%s: %08X + %08X + %d => %08X: %s\n", devName.c_str(),
 					ZXTL(src1), ZXTL(src2), carry, ZXTL(dst), stringCC(ccReg));
 				break;
@@ -1995,9 +2153,12 @@ void CPU_CLASS::execute() noexcept(false)
 				carry = ccReg & CC_C;
 				dst   = src2 - src1 - carry;
 				storel(opReg[2], dst);
+
+				// Update condition codes
 				SetCC_SUB_L(ccReg, dst, src2, src1);
 				if ((src1 == src2) && dst != 0)
 					ccReg |= CC_C;
+
 				printf("%s: %08X - %08X - %d => %08X: %s\n", devName.c_str(),
 					ZXTL(src1), ZXTL(src2), carry, ZXTL(dst), stringCC(ccReg));
 				break;
@@ -2009,8 +2170,11 @@ void CPU_CLASS::execute() noexcept(false)
 				usrc = ZXTB(opReg[1]);
 				udst = usrc & ~mask;
 				storeb(opReg[2], udst);
-				UpdateCC_IIZP_B(ccReg, udst);
-				printf("%s: %02X & ~%02X => %02X\n", devName.c_str(),
+
+				// Update condition codes
+				SetNZ(ccReg, SXTB(udst), 0, (ccReg & CC_C));
+
+				printf("%s: %02X & ~%02X => %02X: %s\n", devName.c_str(),
 						ZXTB(usrc), ZXTB(mask), ZXTB(udst), stringCC(ccReg));
 				break;
 			case OPC_nBICW2:
@@ -2019,7 +2183,10 @@ void CPU_CLASS::execute() noexcept(false)
 				usrc = ZXTW(opReg[1]);
 				udst = usrc & ~mask;
 				storew(opReg[2], udst);
-				UpdateCC_IIZP_W(ccReg, udst);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTW(udst), 0, (ccReg & CC_C));
+
 				printf("%s: %04X & ~%04X => %04X: %s\n", devName.c_str(),
 						ZXTW(usrc), ZXTW(mask), ZXTW(udst), stringCC(ccReg));
 				break;
@@ -2029,7 +2196,10 @@ void CPU_CLASS::execute() noexcept(false)
 				usrc = ZXTL(opReg[1]);
 				udst = usrc & ~mask;
 				storel(opReg[2], udst);
-				UpdateCC_IIZP_L(ccReg, udst);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTL(udst), 0, (ccReg & CC_C));
+
 				printf("%s: %08X & ~%08X => %08X: %s\n", devName.c_str(),
 						ZXTL(usrc), ZXTL(mask), ZXTL(udst), stringCC(ccReg));
 				break;
@@ -2041,7 +2211,10 @@ void CPU_CLASS::execute() noexcept(false)
 				usrc = ZXTB(opReg[1]);
 				udst = usrc | mask;
 				storeb(opReg[2], udst);
-				UpdateCC_IIZP_B(ccReg, udst);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTB(udst), 0, (ccReg & CC_C));
+
 				printf("%s: %02X | %02X => %02X: %s\n", devName.c_str(),
 						ZXTB(usrc), ZXTB(mask), ZXTB(udst), stringCC(ccReg));
 				break;
@@ -2051,7 +2224,10 @@ void CPU_CLASS::execute() noexcept(false)
 				usrc = ZXTW(opReg[1]);
 				udst = usrc | mask;
 				storew(opReg[2], udst);
-				UpdateCC_IIZP_W(ccReg, udst);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTW(udst), 0, (ccReg & CC_C));
+
 				printf("%s: %04X | %04X => %04X: %s\n", devName.c_str(),
 						ZXTW(usrc), ZXTW(mask), ZXTW(udst), stringCC(ccReg));
 				break;
@@ -2061,7 +2237,10 @@ void CPU_CLASS::execute() noexcept(false)
 				usrc = ZXTL(opReg[1]);
 				udst = usrc | mask;
 				storel(opReg[2], udst);
-				UpdateCC_IIZP_L(ccReg, udst);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTL(udst), 0, (ccReg & CC_C));
+
 				printf("%s: %08X | %08X => %08X: %s\n", devName.c_str(),
 						ZXTL(usrc), ZXTL(mask), ZXTL(udst), stringCC(ccReg));
 				break;
@@ -2071,7 +2250,10 @@ void CPU_CLASS::execute() noexcept(false)
 				mask = ZXTB(opReg[0]);
 				usrc = ZXTB(opReg[1]);
 				udst = usrc & mask;
-				UpdateCC_IIZP_B(ccReg, udst);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTB(udst), 0, (ccReg & CC_C));
+
 				printf("%s: %02X & %02X => %02X: %s\n", devName.c_str(),
 						ZXTB(usrc), ZXTB(mask), ZXTB(udst), stringCC(ccReg));
 				break;
@@ -2079,7 +2261,10 @@ void CPU_CLASS::execute() noexcept(false)
 				mask = ZXTW(opReg[0]);
 				usrc = ZXTW(opReg[1]);
 				udst = usrc & mask;
-				UpdateCC_IIZP_W(ccReg, udst);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTW(udst), 0, (ccReg & CC_C));
+
 				printf("%s: %04X & %04X => %04X: %s\n", devName.c_str(),
 						ZXTW(usrc), ZXTW(mask), ZXTW(udst), stringCC(ccReg));
 				break;
@@ -2087,7 +2272,10 @@ void CPU_CLASS::execute() noexcept(false)
 				mask = ZXTL(opReg[0]);
 				usrc = ZXTL(opReg[1]);
 				udst = usrc & mask;
-				UpdateCC_IIZP_L(ccReg, udst);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTL(udst), 0, (ccReg & CC_C));
+
 				printf("%s: %08X & %08X => %08X: %s\n", devName.c_str(),
 						ZXTL(usrc), ZXTL(mask), ZXTL(udst), stringCC(ccReg));
 				break;
@@ -2099,7 +2287,10 @@ void CPU_CLASS::execute() noexcept(false)
 				usrc = ZXTB(opReg[1]);
 				udst = usrc ^ mask;
 				storeb(opReg[2], udst);
-				UpdateCC_IIZP_B(ccReg, udst);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTB(udst), 0, (ccReg & CC_C));
+
 				printf("%s: %02X ^ %02X => %02X: %s\n", devName.c_str(),
 						ZXTB(usrc), ZXTB(mask), ZXTB(udst), stringCC(ccReg));
 				break;
@@ -2109,7 +2300,10 @@ void CPU_CLASS::execute() noexcept(false)
 				usrc = ZXTW(opReg[1]);
 				udst = usrc ^ mask;
 				storew(opReg[2], udst);
-				UpdateCC_IIZP_W(ccReg, udst);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTW(udst), 0, (ccReg & CC_C));
+
 				printf("%s: %04X ^ %04X => %04X: %s\n", devName.c_str(),
 						ZXTW(usrc), ZXTW(mask), ZXTW(udst), stringCC(ccReg));
 				break;
@@ -2119,7 +2313,10 @@ void CPU_CLASS::execute() noexcept(false)
 				usrc = ZXTL(opReg[1]);
 				udst = usrc ^ mask;
 				storel(opReg[2], udst);
-				UpdateCC_IIZP_L(ccReg, udst);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTL(udst), 0, (ccReg & CC_C));
+
 				printf("%s: %08X ^ %08X => %08X: %s\n", devName.c_str(),
 						ZXTL(usrc), ZXTL(mask), ZXTL(udst), stringCC(ccReg));
 				break;
@@ -2143,12 +2340,15 @@ void CPU_CLASS::execute() noexcept(false)
 					}
 				}
 				storel(opReg[2], dst);
-				UpdateCC_IIZZ_L(ccReg, dst);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTL(dst), 0, 0);
 				if (ovflg) {
 					ccReg |= CC_V;
 					if (psReg & PSW_IV)
 						irqFlags |= IRQ_SETTRAP(TRAP_INTOVF);
 				}
+
 				printf("%s: %08X %s %d => %08X: %s\n", devName.c_str(),
 					ZXTL(src), ((cnt < 0) ? ">>" : "<<"), abs(cnt),
 					ZXTL(dst), stringCC(ccReg));
@@ -2172,12 +2372,15 @@ void CPU_CLASS::execute() noexcept(false)
 					}
 				}
 				storeq(opReg[3], SXTL(dstq), SXTL(dstq >> 32));
-				UpdateCC_IIZZ_64(ccReg, dstq);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTQ(dstq), 0LL, 0);
 				if (ovflg) {
 					ccReg |= CC_V;
 					if (psReg & PSW_IV)
 						irqFlags |= IRQ_SETTRAP(TRAP_INTOVF);
 				}
+
 				printf("%s: %08X %08X %s %d => %08X %08X: %s\n", devName.c_str(),
 					ZXTL(srcq >> 32), ZXTL(srcq), ((cnt < 0) ? ">>" : "<<"), abs(cnt),
 					ZXTL(dstq >> 32), ZXTL(dstq), stringCC(ccReg));
@@ -2188,7 +2391,10 @@ void CPU_CLASS::execute() noexcept(false)
 				usrc = ZXTL(opReg[1]);
 				udst = (cnt != 0) ? ((usrc << cnt) | (usrc >> (32 - cnt))) : usrc;
 				storel(opReg[2], udst);
-				UpdateCC_IIZP_L(ccReg, udst);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTL(udst), 0, (ccReg & CC_C));
+
 				printf("%s: %08X %s %d => %08X: %s\n", devName.c_str(),
 					ZXTL(usrc), ((cnt < 0) ? ">>" : "<<"), abs(cnt),
 					ZXTL(udst), stringCC(ccReg));
@@ -2198,14 +2404,22 @@ void CPU_CLASS::execute() noexcept(false)
 			case OPC_nCMPV:
 				dst = getField(true);
 				src = SXTL(opReg[3]);
-				UpdateCC_CMP_L(ccReg, dst, src);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTL(dst), SXTL(src), 0);
+				SetC(ccReg, ZXTL(dst), ZXTL(src));
+
 				printf("%s: Compare %08X with %08X: %s\n", devName.c_str(),
 					ZXTL(dst), ZXTL(src), stringCC(ccReg));
 				break;
 			case OPC_nCMPZV:
 				dst = getField(false);
 				src = SXTL(opReg[3]);
-				UpdateCC_CMP_L(ccReg, dst, src);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTL(dst), SXTL(src), 0);
+				SetC(ccReg, ZXTL(dst), ZXTL(src));
+
 				printf("%s: Compare %08X with %08X: %s\n", devName.c_str(),
 					ZXTL(dst), ZXTL(src), stringCC(ccReg));
 				break;
@@ -2214,14 +2428,20 @@ void CPU_CLASS::execute() noexcept(false)
 			case OPC_nEXTV:
 				src = getField(true);
 				storel(opReg[3], src);
-				UpdateCC_IIZP_L(ccReg, src);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTL(src), 0, (ccReg & CC_C));
+
 				printf("%s: Extract %08X: %s\n", devName.c_str(),
 					ZXTL(src), stringCC(ccReg));
 				break;
 			case OPC_nEXTZV:
 				src = getField(false);
 				storel(opReg[3], src);
-				UpdateCC_IIZP_L(ccReg, src);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTL(src), 0, (ccReg & CC_C));
+
 				printf("%s: Extract %08X: %s\n", devName.c_str(),
 					ZXTL(src), stringCC(ccReg));
 				break;
@@ -2287,7 +2507,10 @@ void CPU_CLASS::execute() noexcept(false)
 				src = opReg[0];
 				writev(REG_SP - LN_LONG, src, LN_LONG, WACC);
 				REG_SP -= LN_LONG;
-				UpdateCC_IIZP_L(ccReg, src);
+
+				// Update condition codes
+				SetNZ(ccReg, SXTL(src), 0, (ccReg & CC_C));
+
 				printf("%s: Push %08X to SP (%08X): %s\n", devName.c_str(),
 						src, REG_SP + LN_LONG, stringCC(ccReg));
 				break;
