@@ -33,7 +33,7 @@ public:
 	int  boot();
 	void execute();
 
-	static cvax_cpuDevice *create(std::string devName);
+	static cvax_cpuDevice *create(sysDevice *sdev, std::string devName);
 
 protected:
 	// Read/write privileged register access

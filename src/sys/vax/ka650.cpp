@@ -12,6 +12,7 @@
  */
 
 #include "emu/core.h"
+#include "emu/debug.h"
 #include "emu/devsys.h"
 #include "emu/devcpu.h"
 #include "sys/vax/vax.h"
@@ -112,8 +113,7 @@ static Device *create(std::string devName, std::string devType, sysModel *model)
 
 	dev = ka650_sysDevice::create(devName, devType, model);
 
-	cpu = cvax_cpuDevice::create("cpu0");
-	dev->addCPUDevice(cpu);
+	cpu = cvax_cpuDevice::create(dev, "cpu0");
 
 	return dev;
 }

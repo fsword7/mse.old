@@ -7,7 +7,9 @@
 
 #pragma once
 
+class logFile;
 class Device;
+class sysDevice;
 class cpuDevice;
 class Console;
 struct sysModel;
@@ -97,8 +99,9 @@ public:
 	Driver *findDriver(std::string drvName);
 	sysModel *findModel(std::string sysName);
 
-	void setDriver(Driver *driver) { this->driver = driver; }
-	void setParent(Device *parent) { this->parent = parent; }
+	void setDriver(Driver *driver)     { this->driver = driver; }
+	void setParent(Device *parent)     { this->parent = parent; }
+	void setSystemDevice(sysDevice *sdev);
 
 	void setDrivers(Driver **drivers) { this->drivers = drivers; }
 	void setModels(sysModel **models) { sysModels = models; }
@@ -111,7 +114,6 @@ public:
 	virtual int load(std::string fname, uint32_t sAddr);
 	virtual int dump(uint32_t *Addr, uint32_t eAddr, uint32_t sw);
 
-
 protected:
 	std::string devName;  // Device name
 	std::string devType; // Device type (model)
@@ -123,6 +125,11 @@ protected:
 	std::vector<Device*> devices; // child device table
 	Driver  **drivers; // child driver table
 	sysModel **sysModels;
+
+	sysDevice *sdev;
+#ifdef ENABLE_DEBUG
+	Debug      dbg;
+#endif /* ENABLE_DEBUG */
 };
 
 class sysDevice : public Device
@@ -135,9 +142,11 @@ public:
 
 	cpuDevice *getCPUDevice(int idx);
 
+	inline logFile *getLogfile()  { return &logFiles; }
+
 protected:
 	std::vector<cpuDevice *> cpu;
-
+	logFile logFiles;
 };
 
 void setSystemDrivers(Device *dev);

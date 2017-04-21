@@ -9,6 +9,8 @@
  */
 
 #include "emu/core.h"
+#include "emu/debug.h"
+#include "emu/devsys.h"
 #include "emu/devcpu.h"
 #include "dev/cpu/vax/mtpr.h"
 #include "dev/cpu/vax/vax.h"
@@ -92,7 +94,7 @@ cvax_cpuDevice::~cvax_cpuDevice()
 {
 }
 
-cvax_cpuDevice *cvax_cpuDevice::create(std::string devName)
+cvax_cpuDevice *cvax_cpuDevice::create(sysDevice *sdev, std::string devName)
 {
 	cvax_cpuDevice *cpu = new cvax_cpuDevice();
 
@@ -104,8 +106,14 @@ cvax_cpuDevice *cvax_cpuDevice::create(std::string devName)
 //	cpu->devDesc = model->desc;
 //	cpu->driver  = model->driver;
 
+	// Assign system device for I/O access
+	cpu->setSystemDevice(sdev);
+
 	// Initialize CPU processor
 	cpu->reset();
+
+	// Add CPU device to system device
+	sdev->addCPUDevice(cpu);
 
 	return cpu;
 }

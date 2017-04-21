@@ -337,6 +337,7 @@ enum stopCode {
 #define RSVD_ADDR_FAULT		SCB_RESAD            // Reserved address fault
 #define RSVD_OPND_FAULT		SCB_RESOP            // Reserved operand fault
 #define PRIV_INST_FAULT		SCB_RESIN|SCB_NOPRIV // Privileged instruction fault
+#define ARITH_FAULT			SCB_ARITH
 
 // Exception Codes - Page fault
 #define PAGE_TNV            SCB_TNV  // Table Not Valid
@@ -482,6 +483,7 @@ protected:
 	int  exception(int ie, uint32_t vec, uint32_t ipl);
 	void emulate(uint32_t opc);
 	int  fault(uint32_t vec);
+	void faultfp(uint32_t fsts);
 	void change(int mode, int32_t code);
 	void resume();
 
@@ -638,8 +640,4 @@ protected:
 	tlb_t     tlbProcess[TLB_SIZE];
 
 private:
-#ifdef ENABLE_DEBUG
-	uint32_t dbgFlags;
-	Debug    dbg;
-#endif /* ENABLE_DEBUG */
 };

@@ -6,6 +6,7 @@
 //
 
 #include "emu/core.h"
+#include "emu/debug.h"
 #include "emu/devsys.h"
 #include "emu/console.h"
 #include "sys/pdp10/pdp10.h"

@@ -6,6 +6,7 @@
  */
 
 #include "emu/core.h"
+#include "emu/debug.h"
 #include "emu/devsys.h"
 #include "emu/devcpu.h"
 #include "emu/devcore.h"
@@ -18,6 +19,14 @@ Device::Device(int _clsType)
 
 Device::~Device()
 {
+}
+
+void Device::setSystemDevice(sysDevice *sdev)
+{
+	this->sdev = sdev;
+#ifdef ENABLE_DEBUG
+	dbg.setDevice(sdev);
+#endif /* ENABLE_DEBUG */
 }
 
 Device *Device::findDevice(std::string devName)
@@ -126,6 +135,9 @@ sysDevice::sysDevice()
 sysDevice::~sysDevice()
 {
 	cpu.clear();
+
+	// Close all log files
+	logFiles.close(-1);
 }
 
 void sysDevice::addCPUDevice(cpuDevice *cpu)

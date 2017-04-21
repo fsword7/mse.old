@@ -6,9 +6,11 @@
  */
 
 #include "emu/core.h"
+#include "emu/debug.h"
 #include "emu/devcpu.h"
 #include "dev/cpu/vax/mtpr.h"
 #include "dev/cpu/vax/vax.h"
+#include "dev/cpu/vax/fpu.h"
 #include "dev/cpu/vax/opcodes.h"
 
 const uint32_t vax_cpuDevice::mskList[] = {
@@ -623,6 +625,32 @@ void vax_cpuDevice::interrupt()
 		exception(IE_INT, vec, nipl);
 	} else
 		irqFlags = 0;
+}
+
+void vax_cpuDevice::faultfp(uint32_t fsts)
+{
+	switch (fsts) {
+	case VFP_FAULT:
+		throw RSVD_OPND_FAULT;
+
+	case VFP_DZRO: // Floating divide by Zero error
+		paCount  = 1;
+		paReg[0] = FAULT_FLTDIV;
+		throw ARITH_FAULT;
+
+	case VFP_OVFL: // Floating overflow error
+		paCount  = 1;
+		paReg[0] = FAULT_FLTOVF;
+		throw ARITH_FAULT;
+
+	case VFP_UNFL: // Floating underflow error
+		if (psReg & PSW_FU) {
+			paCount  = 1;
+			paReg[0] = FAULT_FLTUND;
+			throw ARITH_FAULT;
+		}
+		return;
+	}
 }
 
 int vax_cpuDevice::fault(uint32_t vec)
