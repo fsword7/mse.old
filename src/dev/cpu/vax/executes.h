@@ -67,18 +67,20 @@ void CPU_CLASS::execute() noexcept(false)
 
 			if (psReg & PSL_TP) {
 				psReg &= ~PSL_TP;
-				printf("%s: (EXC) Trace Trap at PC %08X\n", devName.c_str(), REG_PC);
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_EXCEPTION))
+					dbg.log("%s: (EXC) Trace Trap at PC %08X\n", devName.c_str(), REG_PC);
+#endif /* ENABLE_DEBUG */
 				exception(IE_EXC, SCB_TP, 0);
 				continue;
 			}
 			if (psReg & PSW_T)
 				psReg |= PSL_TP;
 
-//#ifdef ENABLE_DEBUG
-//			if (dbgFlags & DBG_TRACE)
-//				disasm(faultAddr);
-//#endif /* ENABLE_DEBUG */
-			disasm(faultAddr);
+#ifdef ENABLE_DEBUG
+			if (dbg.checkFlags(DBG_TRACE))
+				disasm(faultAddr);
+#endif /* ENABLE_DEBUG */
 
 			// Fetch instruction from current stream
 			opCode = uint8_t(readvi(LN_BYTE));
@@ -92,14 +94,10 @@ void CPU_CLASS::execute() noexcept(false)
 			opc = opCodes[opCode];
 			if (opc->flags & OPF_RSVD)
 				throw RSVD_INST_FAULT;
-//			if (psReg & PSL_FPD) {
-//				if ((opc->flags & OPF_FPD) == 0)
-//					throw RSVD_INST_FAULT;
-//				goto EXECUTE;
-//			}
 
 			if (psReg & PSL_FPD) {
-
+				if ((opc->flags & OPF_FPD) == 0)
+					throw RSVD_INST_FAULT;
 			} else {
 				rqCount = 0;
 				for (int idx = 0, opidx = 0; idx < opc->nOperands; idx++) {
@@ -1005,9 +1003,12 @@ void CPU_CLASS::execute() noexcept(false)
 				storel(opReg[5], dst);
 				// Update condition codes
 				SetNZ(ccReg, SXTL(dst), 0, 0);
-				printf("%s: %08X (%08X to %08X) + %08X * %08X => %08X: %s\n", devName.c_str(),
-					ZXTL(src), ZXTL(opReg[1]), ZXTL(opReg[2]), ZXTL(src2), ZXTL(src1),
-					ZXTL(dst), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %08X (%08X to %08X) + %08X * %08X => %08X: %s\n", devName.c_str(),
+						ZXTL(src), ZXTL(opReg[1]), ZXTL(opReg[2]), ZXTL(src2), ZXTL(src1),
+						ZXTL(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 
 			// BIxPSW instructions
@@ -1030,8 +1031,11 @@ void CPU_CLASS::execute() noexcept(false)
 			case OPC_nMOVPSL:
 				dst = psReg | ccReg;
 				storel(opReg[0], dst);
-				printf("%s: PSL %08X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: PSL %08X: %s\n", devName.c_str(),
 						ZXTL(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 
 			// MTPR/MFPR instructions
@@ -1209,11 +1213,15 @@ void CPU_CLASS::execute() noexcept(false)
 					REG_PC += opReg[4];
 					flushvi();
 				}
-				printf("%s: %02X + %02X => %02X: %s\n", devName.c_str(),
-					ZXTB(src2), ZXTB(src1), ZXTB(dst), stringCC(ccReg));
-				printf("%s: %02X %s %02X: %s\n", devName.c_str(),
-					ZXTB(dst), (src1 < 0) ? ">=" : "<=", ZXTB(src),
-					((src1 < 0) ? (dst >= src) : (dst <= src)) ? "Jumped" : "Continue");
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND)) {
+					dbg.log("%s: %02X + %02X => %02X: %s\n", devName.c_str(),
+						ZXTB(src2), ZXTB(src1), ZXTB(dst), stringCC(ccReg));
+					dbg.log("%s: %02X %s %02X: %s\n", devName.c_str(),
+						ZXTB(dst), (src1 < 0) ? ">=" : "<=", ZXTB(src),
+						((src1 < 0) ? (dst >= src) : (dst <= src)) ? "Jumped" : "Continue");
+				}
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nACBW:
 				src   = SXTW(opReg[0]);
@@ -1230,11 +1238,15 @@ void CPU_CLASS::execute() noexcept(false)
 					REG_PC += opReg[4];
 					flushvi();
 				}
-				printf("%s: %04X + %04X => %04X: %s\n", devName.c_str(),
-					ZXTW(src2), ZXTW(src1), ZXTW(dst), stringCC(ccReg));
-				printf("%s: %04X %s %04X: %s\n", devName.c_str(),
-					ZXTW(dst), (src1 < 0) ? ">=" : "<=", ZXTW(src),
-					((src1 < 0) ? (dst >= src) : (dst <= src)) ? "Jumped" : "Continue");
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND)) {
+					dbg.log("%s: %04X + %04X => %04X: %s\n", devName.c_str(),
+						ZXTW(src2), ZXTW(src1), ZXTW(dst), stringCC(ccReg));
+					dbg.log("%s: %04X %s %04X: %s\n", devName.c_str(),
+						ZXTW(dst), (src1 < 0) ? ">=" : "<=", ZXTW(src),
+						((src1 < 0) ? (dst >= src) : (dst <= src)) ? "Jumped" : "Continue");
+				}
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nACBL:
 				src   = SXTL(opReg[0]);
@@ -1251,11 +1263,15 @@ void CPU_CLASS::execute() noexcept(false)
 					REG_PC += opReg[4];
 					flushvi();
 				}
-				printf("%s: %08X + %08X => %08X: %s\n", devName.c_str(),
-					ZXTL(src2), ZXTL(src1), ZXTL(dst), stringCC(ccReg));
-				printf("%s: %08X %s %08X: %s\n", devName.c_str(),
-					ZXTL(dst), (src1 < 0) ? ">=" : "<=", ZXTL(src),
-					((src1 < 0) ? (dst >= src) : (dst <= src)) ? "Jumped" : "Continue");
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND)) {
+					dbg.log("%s: %08X + %08X => %08X: %s\n", devName.c_str(),
+						ZXTL(src2), ZXTL(src1), ZXTL(dst), stringCC(ccReg));
+					dbg.log("%s: %04X %s %04X: %s\n", devName.c_str(),
+						ZXTL(dst), (src1 < 0) ? ">=" : "<=", ZXTL(src),
+						((src1 < 0) ? (dst >= src) : (dst <= src)) ? "Jumped" : "Continue");
+				}
+#endif /* ENABLE_DEBUG */
 				break;
 
 			// CASEx - Case instructions
@@ -1275,8 +1291,11 @@ void CPU_CLASS::execute() noexcept(false)
 				} else
 					REG_PC += ((ZXTB(src) << 1) + 2);
 				flushvi();
-				printf("%s: (%02X - %02X) => %02X <= %02X\n", devName.c_str(),
-					ZXTB(src1), ZXTB(src2), ZXTB(dst), ZXTB(src));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: (%02X - %02X) => %02X <= %02X\n", devName.c_str(),
+						ZXTB(src1), ZXTB(src2), ZXTB(dst), ZXTB(src));
+#endif /* ENABLE_DEBUG */
 //				if (ZXTB(dst) <= ZXTB(src))
 //					printf("%s: %08X + %02X => %08X\n", devName.c_str(),
 //						REG_PC, dst << 1, REG_PC + (dst << 1));
@@ -1300,8 +1319,11 @@ void CPU_CLASS::execute() noexcept(false)
 				} else
 					REG_PC += ((ZXTW(src) << 1) + 2);
 				flushvi();
-				printf("%s: (%04X - %04X) => %04X <= %04X\n", devName.c_str(),
-					ZXTW(src1), ZXTW(src2), ZXTW(dst), ZXTW(src));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: (%04X - %04X) => %04X <= %04X\n", devName.c_str(),
+						ZXTW(src1), ZXTW(src2), ZXTW(dst), ZXTW(src));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nCASEL:
 				src1 = SXTL(opReg[0]);
@@ -1319,8 +1341,11 @@ void CPU_CLASS::execute() noexcept(false)
 				} else
 					REG_PC += ((ZXTL(src) << 1) + 2);
 				flushvi();
-				printf("%s: (%08X - %08X) => %08X <= %08X\n", devName.c_str(),
-					ZXTL(src1), ZXTL(src2), ZXTL(dst), ZXTL(src));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: (%08X - %08X) => %08X <= %08X\n", devName.c_str(),
+						ZXTL(src1), ZXTL(src2), ZXTL(dst), ZXTL(src));
+#endif /* ENABLE_DEBUG */
 				break;
 
 			// AOBcc instructions
@@ -1338,10 +1363,14 @@ void CPU_CLASS::execute() noexcept(false)
 					REG_PC += opReg[3];;
 					flushvi();
 				}
-				printf("%s: %08X + 1 => %08X <= %08X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND)) {
+					dbg.log("%s: %08X + 1 => %08X <= %08X: %s\n", devName.c_str(),
 						ZXTL(src2), ZXTL(dst), ZXTL(src1), stringCC(ccReg));
-				if (dst <= src1)
-					printf("%s: Jump into PC %08X\n", devName.c_str(), REG_PC);
+					if (dst <= src1)
+						dbg.log("%s: Jump into PC %08X\n", devName.c_str(), REG_PC);
+				}
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nAOBLSS:
 				src1 = SXTL(opReg[0]);
@@ -1357,10 +1386,14 @@ void CPU_CLASS::execute() noexcept(false)
 					REG_PC += opReg[3];
 					flushvi();
 				}
-				printf("%s: %08X + 1 => %08X < %08X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND)) {
+					dbg.log("%s: %08X + 1 => %08X < %08X: %s\n", devName.c_str(),
 						ZXTL(src2), ZXTL(dst), ZXTL(src1), stringCC(ccReg));
-				if (dst < src1)
-					printf("%s: Jump into PC %08X\n", devName.c_str(), REG_PC);
+					if (dst < src1)
+						dbg.log("%s: Jump into PC %08X\n", devName.c_str(), REG_PC);
+				}
+#endif /* ENABLE_DEBUG */
 				break;
 
 			// SOBcc instructions
@@ -1377,10 +1410,14 @@ void CPU_CLASS::execute() noexcept(false)
 					REG_PC += opReg[2];
 					flushvi();
 				}
-				printf("%s: %08X - 1 => %08X >= 0: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND)) {
+					dbg.log("%s: %08X - 1 => %08X >= 0: %s\n", devName.c_str(),
 						ZXTL(src), ZXTL(dst), stringCC(ccReg));
-				if (dst >= 0)
-					printf("%s: Jump into PC %08X\n", devName.c_str(), REG_PC);
+					if (dst >= 0)
+						dbg.log("%s: Jump into PC %08X\n", devName.c_str(), REG_PC);
+				}
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nSOBGTR:
 				src = SXTL(opReg[0]);
@@ -1395,10 +1432,14 @@ void CPU_CLASS::execute() noexcept(false)
 					REG_PC += opReg[2];
 					flushvi();
 				}
-				printf("%s: %08X - 1 => %08X > 0: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND)) {
+					dbg.log("%s: %08X - 1 => %08X > 0: %s\n", devName.c_str(),
 						ZXTL(src), ZXTL(dst), stringCC(ccReg));
-				if (dst > 0)
-					printf("%s: Jump into PC %08X\n", devName.c_str(), REG_PC);
+					if (dst > 0)
+						dbg.log("%s: Jump into PC %08X\n", devName.c_str(), REG_PC);
+				}
+#endif /* ENABLE_DEBUG */
 				break;
 
 			// BBx instructions
@@ -1448,7 +1489,10 @@ void CPU_CLASS::execute() noexcept(false)
 					REG_PC += opReg[1];
 					flushvi();
 				}
-				printf("%s: %08X & 1 => %d\n", devName.c_str(), src, src & 1);
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %08X & 1 => %d\n", devName.c_str(), src, src & 1);
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nBLBC:
 				src = opReg[0];
@@ -1456,7 +1500,10 @@ void CPU_CLASS::execute() noexcept(false)
 					REG_PC += opReg[1];
 					flushvi();
 				}
-				printf("%s: %08X & 1 => %d\n", devName.c_str(), src, src & 1);
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %08X & 1 => %d\n", devName.c_str(), src, src & 1);
+#endif /* ENABLE_DEBUG */
 				break;
 
 			// MOVx instructions
@@ -1468,8 +1515,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTB(dst), 0, (ccReg & CC_C));
 
-				printf("%s: Move %02X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Move %02X: %s\n", devName.c_str(),
 						ZXTB(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nMOVW:
 				dst = opReg[0];
@@ -1478,8 +1528,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTW(dst), 0, (ccReg & CC_C));
 
-				printf("%s: Move %04X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Move %04X: %s\n", devName.c_str(),
 						ZXTW(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nMOVL:
 			case OPC_nMOVAB:
@@ -1492,8 +1545,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTL(dst), 0, (ccReg & CC_C));
 
-				printf("%s: Move %08X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Move %08X: %s\n", devName.c_str(),
 						ZXTL(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nMOVQ:
 				dst1 = opReg[0];
@@ -1503,8 +1559,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZQ(ccReg, SXTL(dst1), SXTL(dst2), (ccReg & CC_C));
 
-				printf("%s: Move %08X %08X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Move %08X %08X: %s\n", devName.c_str(),
 						ZXTL(dst1), ZXTL(dst2), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 
 			// MCOMx - Move complemented instructions
@@ -1516,8 +1575,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTB(dst), 0, (ccReg & CC_C));
 
-				printf("%s: Move ~%02X => %02X: %s\n", devName.c_str(),
-					ZXTB(src), ZXTB(dst), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Move ~%02X => %02X: %s\n", devName.c_str(),
+						ZXTB(src), ZXTB(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nMCOMW:
 				src = SXTW(opReg[0]);
@@ -1527,8 +1589,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTW(dst), 0, (ccReg & CC_C));
 
-				printf("%s: Move ~%04X => %04X: %s\n", devName.c_str(),
-					ZXTW(src), ZXTW(dst), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Move ~%04X => %04X: %s\n", devName.c_str(),
+						ZXTW(src), ZXTW(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nMCOML:
 				src = SXTL(opReg[0]);
@@ -1538,8 +1603,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTL(dst), 0, (ccReg & CC_C));
 
-				printf("%s: Move ~%08X => %08X: %s\n", devName.c_str(),
-					ZXTL(src), ZXTL(dst), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Move ~%08X => %08X: %s\n", devName.c_str(),
+						ZXTL(src), ZXTL(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 
 			// MNEGx - Move negated instructions
@@ -1551,8 +1619,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetCC_SUB_B(ccReg, dst, 0, src);
 
-				printf("%s: Move -%02X => %02X: %s\n", devName.c_str(),
-					ZXTB(src), ZXTB(dst), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Move -%02X => %02X: %s\n", devName.c_str(),
+						ZXTB(src), ZXTB(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nMNEGW:
 				src = SXTW(opReg[0]);
@@ -1562,8 +1633,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetCC_SUB_W(ccReg, dst, 0, src);
 
-				printf("%s: Move -%04X => %04X: %s\n", devName.c_str(),
-					ZXTW(src), ZXTW(dst), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Move -%04X => %04X: %s\n", devName.c_str(),
+						ZXTW(src), ZXTW(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nMNEGL:
 				src = SXTL(opReg[0]);
@@ -1573,8 +1647,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetCC_SUB_L(ccReg, dst, 0, src);
 
-				printf("%s: Move -%08X => %08X: %s\n", devName.c_str(),
-					ZXTL(src), ZXTL(dst), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Move -%08X => %08X: %s\n", devName.c_str(),
+						ZXTL(src), ZXTL(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 
 			// MOVZx instructions
@@ -1585,8 +1662,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTW(dst), 0, (ccReg & CC_C));
 
-				printf("%s: Move %02X => %04X: %s\n", devName.c_str(),
-					ZXTB(dst), ZXTW(dst), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Move %02X => %04X: %s\n", devName.c_str(),
+						ZXTB(dst), ZXTW(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nMOVZBL:
 				dst = ZXTB(opReg[0]);
@@ -1595,8 +1675,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTL(dst), 0, (ccReg & CC_C));
 
-				printf("%s: Move %02X => %08X: %s\n", devName.c_str(),
-					ZXTB(dst), ZXTL(dst), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Move %02X => %08X: %s\n", devName.c_str(),
+						ZXTB(dst), ZXTL(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nMOVZWL:
 				dst = ZXTW(opReg[0]);
@@ -1605,8 +1688,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTL(dst), 0, (ccReg & CC_C));
 
-				printf("%s: Move %04X => %08X: %s\n", devName.c_str(),
-					ZXTW(dst), ZXTL(dst), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Move %04X => %08X: %s\n", devName.c_str(),
+						ZXTW(dst), ZXTL(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 
 			// CVTx - Convert instructions
@@ -1618,8 +1704,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTW(dst), 0, 0);
 
-				printf("%s: %02X => %04X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %02X => %04X: %s\n", devName.c_str(),
 						ZXTB(src), ZXTW(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nCVTBL:
 				src = SXTB(opReg[0]);
@@ -1629,8 +1718,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTW(dst), 0, 0);
 
-				printf("%s: %02X => %08X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %02X => %08X: %s\n", devName.c_str(),
 						ZXTB(src), ZXTL(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nCVTWB:
 				src = SXTW(opReg[0]);
@@ -1645,8 +1737,11 @@ void CPU_CLASS::execute() noexcept(false)
 						irqFlags |= IRQ_SETTRAP(TRAP_INTOVF);
 				}
 
-				printf("%s: %04X => %02X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %04X => %02X: %s\n", devName.c_str(),
 						ZXTW(src), ZXTB(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nCVTWL:
 				src = SXTW(opReg[0]);
@@ -1656,8 +1751,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTL(dst), 0, 0);
 
-				printf("%s: %04X => %08X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %04X => %08X: %s\n", devName.c_str(),
 						ZXTW(src), ZXTL(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nCVTLB:
 				src = SXTL(opReg[0]);
@@ -1672,8 +1770,11 @@ void CPU_CLASS::execute() noexcept(false)
 						irqFlags |= IRQ_SETTRAP(TRAP_INTOVF);
 				}
 
-				printf("%s: %08X => %02X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %08X => %02X: %s\n", devName.c_str(),
 						ZXTL(src), ZXTB(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nCVTLW:
 				src = SXTL(opReg[0]);
@@ -1688,8 +1789,11 @@ void CPU_CLASS::execute() noexcept(false)
 						irqFlags |= IRQ_SETTRAP(TRAP_INTOVF);
 				}
 
-				printf("%s: %08X => %04X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %08X => %04X: %s\n", devName.c_str(),
 						ZXTL(src), ZXTW(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 
 			// CLRx instructions
@@ -1719,8 +1823,11 @@ void CPU_CLASS::execute() noexcept(false)
 				SetNZ(ccReg, SXTB(src1), SXTB(src2), 0);
 				SetC(ccReg, ZXTB(src1), ZXTB(src2));
 
-				printf("%s: Compare %02X with %02X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Compare %02X with %02X: %s\n", devName.c_str(),
 						ZXTB(src1), ZXTB(src2), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nCMPW:
 				src1 = SXTW(opReg[0]);
@@ -1730,8 +1837,11 @@ void CPU_CLASS::execute() noexcept(false)
 				SetNZ(ccReg, SXTW(src1), SXTW(src2), 0);
 				SetC(ccReg, ZXTW(src1), ZXTW(src2));
 
-				printf("%s: Compare %04X with %04X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Compare %04X with %04X: %s\n", devName.c_str(),
 						ZXTW(src1), ZXTW(src2), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nCMPL:
 				src1 = SXTL(opReg[0]);
@@ -1741,8 +1851,11 @@ void CPU_CLASS::execute() noexcept(false)
 				SetNZ(ccReg, SXTL(src1), SXTL(src2), 0);
 				SetC(ccReg, ZXTL(src1), ZXTL(src2));
 
-				printf("%s: Compare %08X with %08X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Compare %08X with %08X: %s\n", devName.c_str(),
 						ZXTL(src1), ZXTL(src2), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 
 				// TSTx instructions
@@ -1752,8 +1865,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTB(src), 0, 0);
 
-				printf("%s: Test %02X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Test %02X: %s\n", devName.c_str(),
 						ZXTB(src), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nTSTW:
 				src = SXTW(opReg[0]);
@@ -1761,8 +1877,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTW(src), 0, 0);
 
-				printf("%s: Test %04X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Test %04X: %s\n", devName.c_str(),
 						ZXTW(src), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nTSTL:
 				src = SXTL(opReg[0]);
@@ -1770,8 +1889,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTL(src), 0, 0);
 
-				printf("%s: Test %08X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Test %08X: %s\n", devName.c_str(),
 						ZXTL(src), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 
 			// INCx instructions
@@ -1783,8 +1905,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetCC_ADD_B(ccReg, dst, src, 1);
 
-				printf("%s: %02X + 1 => %02X: %s\n",
-					devName.c_str(), ZXTB(src), ZXTB(dst), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %02X + 1 => %02X: %s\n",
+						devName.c_str(), ZXTB(src), ZXTB(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nINCW:
 				src = SXTW(opReg[0]);
@@ -1794,8 +1919,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetCC_ADD_W(ccReg, dst, src, 1);
 
-				printf("%s: %04X + 1 => %04X: %s\n",
-					devName.c_str(), ZXTW(src), ZXTW(dst), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %04X + 1 => %04X: %s\n",
+						devName.c_str(), ZXTW(src), ZXTW(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nINCL:
 				src = SXTL(opReg[0]);
@@ -1805,8 +1933,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetCC_ADD_L(ccReg, dst, src, 1);
 
-				printf("%s: %08X + 1 => %08X: %s\n",
-					devName.c_str(), ZXTL(src), ZXTL(dst), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %08X + 1 => %08X: %s\n",
+						devName.c_str(), ZXTL(src), ZXTL(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 
 			// DECx instructions
@@ -1818,8 +1949,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetCC_SUB_B(ccReg, dst, src, 1);
 
-				printf("%s: %08X - 1 => %08X: %s\n",
-					devName.c_str(), ZXTB(src), ZXTB(dst), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %08X - 1 => %08X: %s\n",
+						devName.c_str(), ZXTB(src), ZXTB(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nDECW:
 				src = SXTW(opReg[0]);
@@ -1829,8 +1963,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetCC_SUB_W(ccReg, dst, src, 1);
 
-				printf("%s: %04X - 1 => %04X: %s\n",
-					devName.c_str(), ZXTW(src), ZXTW(dst), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %04X - 1 => %04X: %s\n",
+						devName.c_str(), ZXTW(src), ZXTW(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nDECL:
 				src = SXTL(opReg[0]);
@@ -1840,8 +1977,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetCC_SUB_L(ccReg, dst, src, 1);
 
-				printf("%s: %08X - 1 => %08X: %s\n",
-					devName.c_str(), ZXTL(src), ZXTL(dst), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %08X - 1 => %08X: %s\n",
+						devName.c_str(), ZXTL(src), ZXTL(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 
 			// ADAWI instruction
@@ -1862,8 +2002,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetCC_ADD_W(ccReg, dst, src, tmp);
 
-				printf("%s: %04X + %04X => %04X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %04X + %04X => %04X: %s\n", devName.c_str(),
 						ZXTW(src), ZXTW(tmp), ZXTW(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 
 			// ADDx instructions
@@ -1877,8 +2020,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetCC_ADD_B(ccReg, dst, src2, src1);
 
-				printf("%s: %02X + %02X => %02X: %s\n", devName.c_str(),
-					ZXTB(src1), ZXTB(src2), ZXTB(dst), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %02X + %02X => %02X: %s\n", devName.c_str(),
+						ZXTB(src1), ZXTB(src2), ZXTB(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nADDW2:
 			case OPC_nADDW3:
@@ -1890,8 +2036,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetCC_ADD_W(ccReg, dst, src2, src1);
 
-				printf("%s: %04X + %04X => %04X: %s\n", devName.c_str(),
-					ZXTW(src1), ZXTW(src2), ZXTW(dst), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %04X + %04X => %04X: %s\n", devName.c_str(),
+						ZXTW(src1), ZXTW(src2), ZXTW(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nADDL2:
 			case OPC_nADDL3:
@@ -1903,8 +2052,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetCC_ADD_L(ccReg, dst, src2, src1);
 
-				printf("%s: %08X + %08X => %08X: %s\n", devName.c_str(),
-					ZXTL(src1), ZXTL(src2), ZXTL(dst), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %08X + %08X => %08X: %s\n", devName.c_str(),
+						ZXTL(src1), ZXTL(src2), ZXTL(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 
 			// SUBx instructions
@@ -1918,8 +2070,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetCC_SUB_B(ccReg, dst, src2, src1);
 
-				printf("%s: %02X - %02X => %02X: %s\n", devName.c_str(),
-					ZXTB(src1), ZXTB(src2), ZXTB(dst), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %02X - %02X => %02X: %s\n", devName.c_str(),
+						ZXTB(src1), ZXTB(src2), ZXTB(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nSUBW2:
 			case OPC_nSUBW3:
@@ -1931,8 +2086,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetCC_SUB_W(ccReg, dst, src2, src1);
 
-				printf("%s: %04X - %04X => %04X: %s\n", devName.c_str(),
-					ZXTW(src1), ZXTW(src2), ZXTW(dst), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %04X - %04X => %04X: %s\n", devName.c_str(),
+						ZXTW(src1), ZXTW(src2), ZXTW(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nSUBL2:
 			case OPC_nSUBL3:
@@ -1944,8 +2102,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetCC_SUB_L(ccReg, dst, src2, src1);
 
-				printf("%s: %08X - %08X => %08X: %s\n", devName.c_str(),
-					ZXTL(src1), ZXTL(src2), ZXTL(dst), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %08X - %08X => %08X: %s\n", devName.c_str(),
+						ZXTL(src1), ZXTL(src2), ZXTL(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 
 			// MULx - Multiply instructions
@@ -1964,8 +2125,11 @@ void CPU_CLASS::execute() noexcept(false)
 						irqFlags |= IRQ_SETTRAP(TRAP_INTOVF);
 				}
 
-				printf("%s: %02X * %02X => %02X: %s\n", devName.c_str(),
-					ZXTB(src2), ZXTB(src1), ZXTB(dst), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %02X * %02X => %02X: %s\n", devName.c_str(),
+						ZXTB(src2), ZXTB(src1), ZXTB(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nMULW2:
 			case OPC_nMULW3:
@@ -1982,8 +2146,11 @@ void CPU_CLASS::execute() noexcept(false)
 						irqFlags |= IRQ_SETTRAP(TRAP_INTOVF);
 				}
 
-				printf("%s: %02X * %02X => %02X: %s\n", devName.c_str(),
-					ZXTW(src2), ZXTW(src1), ZXTW(dst), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %02X * %02X => %02X: %s\n", devName.c_str(),
+						ZXTW(src2), ZXTW(src1), ZXTW(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nMULL2:
 			case OPC_nMULL3:
@@ -2001,8 +2168,11 @@ void CPU_CLASS::execute() noexcept(false)
 					if (psReg & PSW_IV)
 						irqFlags |= IRQ_SETTRAP(TRAP_INTOVF);
 				}
-				printf("%s: %08X * %08X => %08X: %s\n", devName.c_str(),
-					ZXTL(srcq2), ZXTL(srcq1), ZXTL(dstq), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %08X * %08X => %08X: %s\n", devName.c_str(),
+						ZXTL(srcq2), ZXTL(srcq1), ZXTL(dstq), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 
 			// DIVx - Divide instructions
@@ -2026,8 +2196,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTB(dst), 0, (ovflg ? CC_V : 0));
 
-				printf("%s: %02X / %02X => %02X: %s\n", devName.c_str(),
-					ZXTB(src2), ZXTB(src1), ZXTB(dst), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %02X / %02X => %02X: %s\n", devName.c_str(),
+						ZXTB(src2), ZXTB(src1), ZXTB(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nDIVW2:
 			case OPC_nDIVW3:
@@ -2049,8 +2222,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTW(dst), 0, (ovflg ? CC_V : 0));
 
-				printf("%s: %04X / %04X => %04X: %s\n", devName.c_str(),
-					ZXTW(src2), ZXTW(src1), ZXTW(dst), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %04X / %04X => %04X: %s\n", devName.c_str(),
+						ZXTW(src2), ZXTW(src1), ZXTW(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nDIVL2:
 			case OPC_nDIVL3:
@@ -2072,8 +2248,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTL(dst), 0, (ovflg ? CC_V : 0));
 
-				printf("%s: %08X / %08X => %08X: %s\n", devName.c_str(),
-					ZXTL(src2), ZXTL(src1), ZXTL(dst), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %08X / %08X => %08X: %s\n", devName.c_str(),
+						ZXTL(src2), ZXTL(src1), ZXTL(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 
 			// EMUL - Extended multiply instruction
@@ -2087,9 +2266,12 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTQ(dstq), 0LL, 0);
 
-				printf("%s: (%08X * %08X) + %08X => %08X %08X: %s\n", devName.c_str(),
-					ZXTL(srcq2), ZXTL(srcq1), ZXTL(srcq), ZXTL(dstq >> 32), ZXTL(dstq),
-					stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: (%08X * %08X) + %08X => %08X %08X: %s\n", devName.c_str(),
+						ZXTL(srcq2), ZXTL(srcq1), ZXTL(srcq), ZXTL(dstq >> 32), ZXTL(dstq),
+						stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			// EDIV - Extended divide instruction
 			case OPC_nEDIV:
@@ -2126,9 +2308,12 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTL(dstq1), 0, (ovflg ? CC_V : 0));
 
-				printf("%s: %08X %08X / %08X => %08X R %08X: %s\n", devName.c_str(),
-					ZXTL(srcq2 >> 32), ZXTL(srcq2), ZXTL(srcq1), ZXTL(dstq1), ZXTL(dstq2),
-					stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %08X %08X / %08X => %08X R %08X: %s\n", devName.c_str(),
+						ZXTL(srcq2 >> 32), ZXTL(srcq2), ZXTL(srcq1), ZXTL(dstq1), ZXTL(dstq2),
+						stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 
 			// ADWC/SBWC instructions
@@ -2144,8 +2329,11 @@ void CPU_CLASS::execute() noexcept(false)
 				if ((dst == src2) && src1 != 0)
 					ccReg |= CC_C;
 
-				printf("%s: %08X + %08X + %d => %08X: %s\n", devName.c_str(),
-					ZXTL(src1), ZXTL(src2), carry, ZXTL(dst), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %08X + %08X + %d => %08X: %s\n", devName.c_str(),
+						ZXTL(src1), ZXTL(src2), carry, ZXTL(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nSBWC:
 				src1  = SXTL(opReg[0]);
@@ -2159,8 +2347,11 @@ void CPU_CLASS::execute() noexcept(false)
 				if ((src1 == src2) && dst != 0)
 					ccReg |= CC_C;
 
-				printf("%s: %08X - %08X - %d => %08X: %s\n", devName.c_str(),
-					ZXTL(src1), ZXTL(src2), carry, ZXTL(dst), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %08X - %08X - %d => %08X: %s\n", devName.c_str(),
+						ZXTL(src1), ZXTL(src2), carry, ZXTL(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 
 			// BICx instructions
@@ -2174,8 +2365,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTB(udst), 0, (ccReg & CC_C));
 
-				printf("%s: %02X & ~%02X => %02X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %02X & ~%02X => %02X: %s\n", devName.c_str(),
 						ZXTB(usrc), ZXTB(mask), ZXTB(udst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nBICW2:
 			case OPC_nBICW3:
@@ -2187,8 +2381,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTW(udst), 0, (ccReg & CC_C));
 
-				printf("%s: %04X & ~%04X => %04X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %04X & ~%04X => %04X: %s\n", devName.c_str(),
 						ZXTW(usrc), ZXTW(mask), ZXTW(udst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nBICL2:
 			case OPC_nBICL3:
@@ -2200,8 +2397,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTL(udst), 0, (ccReg & CC_C));
 
-				printf("%s: %08X & ~%08X => %08X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %08X & ~%08X => %08X: %s\n", devName.c_str(),
 						ZXTL(usrc), ZXTL(mask), ZXTL(udst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 
 			// BISx instructions
@@ -2215,8 +2415,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTB(udst), 0, (ccReg & CC_C));
 
-				printf("%s: %02X | %02X => %02X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %02X | %02X => %02X: %s\n", devName.c_str(),
 						ZXTB(usrc), ZXTB(mask), ZXTB(udst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nBISW2:
 			case OPC_nBISW3:
@@ -2228,8 +2431,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTW(udst), 0, (ccReg & CC_C));
 
-				printf("%s: %04X | %04X => %04X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %04X | %04X => %04X: %s\n", devName.c_str(),
 						ZXTW(usrc), ZXTW(mask), ZXTW(udst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nBISL2:
 			case OPC_nBISL3:
@@ -2241,8 +2447,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTL(udst), 0, (ccReg & CC_C));
 
-				printf("%s: %08X | %08X => %08X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %08X | %08X => %08X: %s\n", devName.c_str(),
 						ZXTL(usrc), ZXTL(mask), ZXTL(udst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 
 			// BITx instructions
@@ -2254,8 +2463,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTB(udst), 0, (ccReg & CC_C));
 
-				printf("%s: %02X & %02X => %02X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %02X & %02X => %02X: %s\n", devName.c_str(),
 						ZXTB(usrc), ZXTB(mask), ZXTB(udst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nBITW:
 				mask = ZXTW(opReg[0]);
@@ -2265,8 +2477,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTW(udst), 0, (ccReg & CC_C));
 
-				printf("%s: %04X & %04X => %04X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %04X & %04X => %04X: %s\n", devName.c_str(),
 						ZXTW(usrc), ZXTW(mask), ZXTW(udst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nBITL:
 				mask = ZXTL(opReg[0]);
@@ -2276,8 +2491,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTL(udst), 0, (ccReg & CC_C));
 
-				printf("%s: %08X & %08X => %08X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %08X & %08X => %08X: %s\n", devName.c_str(),
 						ZXTL(usrc), ZXTL(mask), ZXTL(udst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 
 			// XORx instructions
@@ -2291,8 +2509,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTB(udst), 0, (ccReg & CC_C));
 
-				printf("%s: %02X ^ %02X => %02X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %02X ^ %02X => %02X: %s\n", devName.c_str(),
 						ZXTB(usrc), ZXTB(mask), ZXTB(udst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nXORW2:
 			case OPC_nXORW3:
@@ -2304,8 +2525,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTW(udst), 0, (ccReg & CC_C));
 
-				printf("%s: %04X ^ %04X => %04X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %04X ^ %04X => %04X: %s\n", devName.c_str(),
 						ZXTW(usrc), ZXTW(mask), ZXTW(udst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nXORL2:
 			case OPC_nXORL3:
@@ -2317,8 +2541,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTL(udst), 0, (ccReg & CC_C));
 
-				printf("%s: %08X ^ %08X => %08X: %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %08X ^ %08X => %08X: %s\n", devName.c_str(),
 						ZXTL(usrc), ZXTL(mask), ZXTL(udst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 
 			// ASHx/ROTL - Shift instructions
@@ -2349,9 +2576,12 @@ void CPU_CLASS::execute() noexcept(false)
 						irqFlags |= IRQ_SETTRAP(TRAP_INTOVF);
 				}
 
-				printf("%s: %08X %s %d => %08X: %s\n", devName.c_str(),
-					ZXTL(src), ((cnt < 0) ? ">>" : "<<"), abs(cnt),
-					ZXTL(dst), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %08X %s %d => %08X: %s\n", devName.c_str(),
+						ZXTL(src), ((cnt < 0) ? ">>" : "<<"), abs(cnt),
+						ZXTL(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 
 			case OPC_nASHQ:
@@ -2381,9 +2611,12 @@ void CPU_CLASS::execute() noexcept(false)
 						irqFlags |= IRQ_SETTRAP(TRAP_INTOVF);
 				}
 
-				printf("%s: %08X %08X %s %d => %08X %08X: %s\n", devName.c_str(),
-					ZXTL(srcq >> 32), ZXTL(srcq), ((cnt < 0) ? ">>" : "<<"), abs(cnt),
-					ZXTL(dstq >> 32), ZXTL(dstq), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %08X %08X %s %d => %08X %08X: %s\n", devName.c_str(),
+						ZXTL(srcq >> 32), ZXTL(srcq), ((cnt < 0) ? ">>" : "<<"), abs(cnt),
+						ZXTL(dstq >> 32), ZXTL(dstq), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 
 			case OPC_nROTL:
@@ -2395,9 +2628,12 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTL(udst), 0, (ccReg & CC_C));
 
-				printf("%s: %08X %s %d => %08X: %s\n", devName.c_str(),
-					ZXTL(usrc), ((cnt < 0) ? ">>" : "<<"), abs(cnt),
-					ZXTL(udst), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %08X %s %d => %08X: %s\n", devName.c_str(),
+						ZXTL(usrc), ((cnt < 0) ? ">>" : "<<"), abs(cnt),
+						ZXTL(udst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 
 			// CMPV - Compare field instructions
@@ -2409,8 +2645,11 @@ void CPU_CLASS::execute() noexcept(false)
 				SetNZ(ccReg, SXTL(dst), SXTL(src), 0);
 				SetC(ccReg, ZXTL(dst), ZXTL(src));
 
-				printf("%s: Compare %08X with %08X: %s\n", devName.c_str(),
-					ZXTL(dst), ZXTL(src), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Compare %08X with %08X: %s\n", devName.c_str(),
+						ZXTL(dst), ZXTL(src), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nCMPZV:
 				dst = getField(false);
@@ -2420,8 +2659,11 @@ void CPU_CLASS::execute() noexcept(false)
 				SetNZ(ccReg, SXTL(dst), SXTL(src), 0);
 				SetC(ccReg, ZXTL(dst), ZXTL(src));
 
-				printf("%s: Compare %08X with %08X: %s\n", devName.c_str(),
-					ZXTL(dst), ZXTL(src), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Compare %08X with %08X: %s\n", devName.c_str(),
+						ZXTL(dst), ZXTL(src), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 
 			// EXTV - Extract field instructions
@@ -2432,8 +2674,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTL(src), 0, (ccReg & CC_C));
 
-				printf("%s: Extract %08X: %s\n", devName.c_str(),
-					ZXTL(src), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Extract %08X: %s\n", devName.c_str(),
+						ZXTL(src), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nEXTZV:
 				src = getField(false);
@@ -2442,8 +2687,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTL(src), 0, (ccReg & CC_C));
 
-				printf("%s: Extract %08X: %s\n", devName.c_str(),
-					ZXTL(src), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Extract %08X: %s\n", devName.c_str(),
+						ZXTL(src), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 
 			// FFS/FFC - First find instruction
@@ -2463,9 +2711,12 @@ void CPU_CLASS::execute() noexcept(false)
 				}
 				storel(opReg[3], udst);
 				ccReg = usrc != 0 ? 0 : CC_Z;
-				printf("%s: Find %08X<%d:%d> => %d: %s\n", devName.c_str(),
-					ZXTL(usrc), ZXTL(usrc1), ZXTB(usrc2), udst,
-					stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Find %08X<%d:%d> => %d: %s\n", devName.c_str(),
+						ZXTL(usrc), ZXTL(usrc1), ZXTB(usrc2), udst,
+						stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nFFC:
 				usrc1 = ZXTL(opReg[0]);
@@ -2473,7 +2724,7 @@ void CPU_CLASS::execute() noexcept(false)
 				if (usrc2 > 0) {
 					int idx;
 					usrc = getField(false) ^ mskList[usrc2];
-					printf("%s: %08X\n", devName.c_str(), usrc);
+//					printf("%s: %08X\n", devName.c_str(), usrc);
 					for (idx = 0; idx < usrc2; idx++)
 						if ((usrc >> idx) & 1)
 							break;
@@ -2484,9 +2735,12 @@ void CPU_CLASS::execute() noexcept(false)
 				}
 				storel(opReg[3], udst);
 				ccReg = usrc != 0 ? 0 : CC_Z;
-				printf("%s: Find %08X<%d:%d> => %d: %s\n", devName.c_str(),
-					ZXTL(usrc), ZXTL(usrc1), ZXTB(usrc2), udst,
-					stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Find %08X<%d:%d> => %d: %s\n", devName.c_str(),
+						ZXTL(usrc), ZXTL(usrc1), ZXTB(usrc2), udst,
+						stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 
 			// INSV - Insert field instruction
@@ -2511,8 +2765,11 @@ void CPU_CLASS::execute() noexcept(false)
 				// Update condition codes
 				SetNZ(ccReg, SXTL(src), 0, (ccReg & CC_C));
 
-				printf("%s: Push %08X to SP (%08X): %s\n", devName.c_str(),
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Push %08X to SP (%08X): %s\n", devName.c_str(),
 						src, REG_SP + LN_LONG, stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 
 			// PUSHR/POPR - Push/pop register instructions
@@ -2524,7 +2781,6 @@ void CPU_CLASS::execute() noexcept(false)
 				for (int idx = REG_nSP; idx >= REG_nR0; idx--)
 					if ((mask >> idx) & 1)
 						cnt += LN_LONG;
-				printf("%s: Probe %08X (%d bytes down)\n", devName.c_str(), REG_SP - cnt, cnt);
 				readv(REG_SP - cnt, LN_BYTE, WACC);
 
 				// Push registers into stack
@@ -2532,8 +2788,11 @@ void CPU_CLASS::execute() noexcept(false)
 					if ((mask >> idx) & 1) {
 						writev(REG_SP - LN_LONG, gpReg[idx].l, LN_LONG, WACC);
 						REG_SP -= LN_LONG;
-						printf("%s: R%d %08X => (SP) %08X\n", devName.c_str(),
-							idx, ZXTL(gpReg[idx].l), ZXTL(REG_SP));
+#ifdef ENABLE_DEBUG
+						if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+							dbg.log("%s: R%d %08X => (SP) %08X\n", devName.c_str(),
+								idx, ZXTL(gpReg[idx].l), ZXTL(REG_SP));
+#endif /* ENABLE_DEBUG */
 					}
 				}
 				break;
@@ -2545,15 +2804,17 @@ void CPU_CLASS::execute() noexcept(false)
 				for (int idx = REG_nR0; idx <= REG_nSP; idx++)
 					if ((mask >> idx) & 1)
 						cnt += LN_LONG;
-				printf("%s: Probe %08X\n", devName.c_str(), REG_SP + cnt - 1);
 				readv(REG_SP + cnt - 1, LN_BYTE, RACC);
 
 				// Push registers into stack
 				for (int idx = REG_nR0; idx <= REG_nSP; idx++) {
 					if ((mask >> idx) & 1) {
 						gpReg[idx].l = readv(REG_SP, LN_LONG, RACC);
-						printf("%s: R%d %08X <= (SP) %08X\n", devName.c_str(),
-							idx, ZXTL(gpReg[idx].l), ZXTL(REG_SP));
+#ifdef ENABLE_DEBUG
+						if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+							dbg.log("%s: R%d %08X <= (SP) %08X\n", devName.c_str(),
+								idx, ZXTL(gpReg[idx].l), ZXTL(REG_SP));
+#endif /* ENABLE_DEBUG */
 						if (idx < REG_nSP)
 							REG_SP += LN_LONG;
 					}
@@ -2608,9 +2869,12 @@ void CPU_CLASS::execute() noexcept(false)
 				SetNZ(ccReg, SXTL(succ), SXTL(pred), 0);
 				SetC(ccReg, ZXTL(succ), ZXTL(pred));
 
-				printf("%s: Insert %08X to %08X with next %08X: %s\n",
-					devName.c_str(), ZXTL(entry), ZXTL(pred), ZXTL(succ),
-					stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Insert %08X to %08X with next %08X: %s\n",
+						devName.c_str(), ZXTL(entry), ZXTL(pred), ZXTL(succ),
+						stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 
 			case OPC_nINSQHI:
@@ -2627,8 +2891,11 @@ void CPU_CLASS::execute() noexcept(false)
 					throw RSVD_OPND_FAULT;
 				if (head & 01) {
 					ccReg = CC_C;
-					printf("%s: Queue %08X is busy (interlocked): %s\n",
-						devName.c_str(), queue, stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: Queue %08X is busy (interlocked): %s\n",
+							devName.c_str(), queue, stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				} else {
 					// Lock interlock on that queue
 					writev(QUE_HEAD(queue), head | 1, LN_LONG, WACC);
@@ -2648,8 +2915,11 @@ void CPU_CLASS::execute() noexcept(false)
 					// Update condition codes
 					ccReg = (head == queue) ? CC_Z : 0;
 
-					printf("%s: Enqueue %08X to queue %08X with first %08X: %s\n", devName.c_str(),
-						entry, queue, head, stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: Enqueue %08X to queue %08X with first %08X: %s\n", devName.c_str(),
+							entry, queue, head, stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				}
 				break;
 
@@ -2668,8 +2938,11 @@ void CPU_CLASS::execute() noexcept(false)
 					throw RSVD_OPND_FAULT;
 				if (head & 01) {
 					ccReg = CC_C;
-					printf("%s: Queue %08X is busy (interlocked): %s\n",
-						devName.c_str(), queue, stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: Queue %08X is busy (interlocked): %s\n",
+							devName.c_str(), queue, stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				} else {
 					// Lock interlock om that queue.
 					writev(QUE_HEAD(queue), head | 1, LN_LONG, WACC);
@@ -2699,8 +2972,11 @@ void CPU_CLASS::execute() noexcept(false)
 					// Update Condition Codes
 					ccReg = 0;
 
-					printf("%s: Enqueue %08X to queue %08X with last %08X: %s\n", devName.c_str(),
-						entry, queue, tail, stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: Enqueue %08X to queue %08X with last %08X: %s\n", devName.c_str(),
+							entry, queue, tail, stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				}
 				break;
 
@@ -2730,9 +3006,12 @@ void CPU_CLASS::execute() noexcept(false)
 				// Put entry into register/memory.
 				storel(opReg[1], entry);
 
-				printf("%s: Remove %08X from %08X with next %08X: %s\n",
-					devName.c_str(), ZXTL(entry), ZXTL(pred), ZXTL(succ),
-					stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Remove %08X from %08X with next %08X: %s\n",
+						devName.c_str(), ZXTL(entry), ZXTL(pred), ZXTL(succ),
+						stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				break;
 
 			case OPC_nREMQHI:
@@ -2751,8 +3030,11 @@ void CPU_CLASS::execute() noexcept(false)
 					throw RSVD_OPND_FAULT;
 				if (head & 01) {
 					ccReg = CC_V|CC_C;
-					printf("%s: Queue %08X is busy (interlocked): %s\n",
-						devName.c_str(), queue, stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: Queue %08X is busy (interlocked): %s\n",
+							devName.c_str(), queue, stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				} else if (head != 0) {
 					// Lock interlock on that queue.
 					writev(QUE_HEAD(queue), head | 1, LN_LONG, WACC);
@@ -2780,8 +3062,11 @@ void CPU_CLASS::execute() noexcept(false)
 					// Update Condition Codes
 					ccReg = (next == queue) ? CC_Z : 0;
 
-					printf("%s: Dequeue %08X from queue %08X with first %08X: %s\n",
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: Dequeue %08X from queue %08X with first %08X: %s\n",
 							devName.c_str(), entry, queue, head, stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				} else {
 					// Put empty first entry.
 					storel(opReg[1], (head + queue));
@@ -2789,8 +3074,11 @@ void CPU_CLASS::execute() noexcept(false)
 					// Update Condition Codes.
 					ccReg = CC_Z|CC_V;
 
-					printf("%s: Queue %08X is already empty: %s\n",
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: Queue %08X is already empty: %s\n",
 							devName.c_str(), queue, stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				}
 				break;
 
@@ -2804,23 +3092,32 @@ void CPU_CLASS::execute() noexcept(false)
 					readv(opReg[1], LN_LONG, WACC);
 				}
 				head = readv(queue, LN_LONG, WACC);
-				printf("%s: Head of queue %08X => %08X\n",
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Head of queue %08X => %08X\n",
 						devName.c_str(), queue, head);
+#endif /* ENABLE_DEBUG */
 
 				if (head & 06)
 					throw RSVD_OPND_FAULT;
 				if (head & 01) {
 					ccReg = CC_V|CC_C;
-					printf("%s: Queue %08X is busy (interlocked): %s\n",
-						devName.c_str(), queue, stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: Queue %08X is busy (interlocked): %s\n",
+							devName.c_str(), queue, stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				} else if (head != 0) {
 					// Lock interlock om that queue.
 					writev(QUE_HEAD(queue), head | 1, LN_LONG, WACC);
 
 					// Get last entry from tail of queue.
 					entry = readv(QUE_TAIL(queue), LN_LONG, RACC);
-					printf("%s: Tail of queue %08X => %08X (%08X)\n",
-						devName.c_str(), queue, entry, queue + entry);
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: Tail of queue %08X => %08X (%08X)\n",
+							devName.c_str(), queue, entry, queue + entry);
+#endif /* ENABLE_DEBUG */
 
 					if (entry == head) {
 						writev(QUE_HEAD(queue), head, LN_LONG, WACC);
@@ -2836,8 +3133,11 @@ void CPU_CLASS::execute() noexcept(false)
 
 					// Get previous node from head node.
 					prev = readv(QUE_PREV(entry), LN_LONG, RACC) + entry;
-					printf("%s: Previous of node %08X => %08X (%08X)\n",
-								devName.c_str(), entry, prev - entry, prev);
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: Previous of node %08X => %08X (%08X)\n",
+							devName.c_str(), entry, prev - entry, prev);
+#endif /* ENABLE_DEBUG */
 
 					if (prev & ~ALIGN_QUAD) {
 						writev(QUE_HEAD(queue), head, LN_LONG, WACC);
@@ -2859,8 +3159,11 @@ void CPU_CLASS::execute() noexcept(false)
 					// Update Condition Codes
 					ccReg = 0;
 
-					printf("%s: Dequeue %08X from queue %08X with last %08X: %s\n",
-								devName.c_str(), entry, queue, head, stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: Dequeue %08X from queue %08X with last %08X: %s\n",
+							devName.c_str(), entry, queue, head, stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				} else {
 					// Queue already is empty, so that can put
 					// default queue into operand #1.
@@ -2869,8 +3172,11 @@ void CPU_CLASS::execute() noexcept(false)
 					// Update Condition Codes.
 					ccReg = CC_Z|CC_V;
 
-					printf("%s: Queue %08X is already empty: %s\n",
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: Queue %08X is already empty: %s\n",
 							devName.c_str(), queue, stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 				}
 				break;
 
@@ -3009,28 +3315,5 @@ void CPU_CLASS::execute() noexcept(false)
 				}
 			}
 		}
-
-//		catch (stopCode stCode) {
-//			switch (stCode) {
-//			case STOP_eHALT:
-//				printf("%s: %s at PC %08X\n", devName.c_str(), stopNames[stCode], faultAddr);
-//				return;
-//
-//			case STOP_eUOPC:
-//				printf("%s: Opcode %s - Unimplemented opcode at PC %08X\n",
-//						devName.c_str(), opc->opName, faultAddr);
-//				return;
-//
-//			case STOP_eINIE:
-//				printf("%s: Exception during exception at PC %08X\n",
-//						devName.c_str(), faultAddr);
-//				return;
-//
-//			case STOP_eILLVEC:
-//				printf("%s: Illegal vector at PC %08X\n",
-//						devName.c_str(), faultAddr);
-//				return;
-//			}
-//		}
 	}
 }

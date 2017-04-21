@@ -177,8 +177,11 @@ bool vax_cpuDevice::checktlb(uint32_t vAddr)
 
 tlb_t vax_cpuDevice::pagefault(uint32_t errCode, uint32_t vAddr, uint32_t acc, uint32_t *sts) noexcept(false)
 {
-	printf("%s: (PFT) Page fault on %08X at PC %08X (%s)\n", devName.c_str(),
-		vAddr, faultAddr, (errCode < 8) ? pftMessages[errCode] : "<Unknown>");
+#ifdef ENABLE_DEBUG
+	if (dbg.checkFlags(DBG_EXCEPTION))
+		dbg.log("%s: (PFT) Page fault on %08X at PC %08X (%s)\n", devName.c_str(),
+			vAddr, faultAddr, (errCode < 8) ? pftMessages[errCode] : "<Unknown>");
+#endif /* ENABLE_DEBUG */
 
 	if (sts != nullptr) {
 		*sts = errCode;

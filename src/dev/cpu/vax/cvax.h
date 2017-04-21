@@ -36,10 +36,6 @@ public:
 	static cvax_cpuDevice *create(sysDevice *sdev, std::string devName);
 
 protected:
-	// Read/write privileged register access
-	uint32_t readpr(uint32_t pReg);
-	void     writepr(uint32_t pReg, uint32_t data);
-
 	// Instructions
 	void mfpr();
 	void mtpr();

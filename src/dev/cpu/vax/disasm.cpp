@@ -198,7 +198,7 @@ int vax_cpuDevice::disasm(uint32_t vAddr)
 	*ptr++ = '\0';
 
 #ifdef ENABLE_DEBUG
-	dbg::log("%s", line);
+	dbg.log("%s\n", line);
 #else
 	printf("%s\n", line);
 #endif /* ENABLE_DEBUG */

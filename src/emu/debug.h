@@ -11,7 +11,11 @@
 #define DBG_ALL			0xFFFFFFFF // All log flags
 
 // Debug flags
-#define DBG_TRACE		0x80000000 // Tracing disassembly
+#define DBG_TRACE		0x80000000 // Tracing execution
+#define DBG_OPERAND 	0x40000000 // Operand activity
+#define DBG_IOREGS		0x20000000 // I/O register activity
+#define DBG_IODATA		0x10000000 // I/O data activity
+#define DBG_EXCEPTION	0x08000000 // Interrupt/Exception activity
 
 #define LOG_NFILES		8
 

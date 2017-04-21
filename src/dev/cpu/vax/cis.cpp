@@ -60,8 +60,11 @@ void vax_cpuDevice::movc(int c5flg)
 			ccReg = CC_Z;
 		}
 
-		printf("%s: SRC %08X (%04X bytes) to DST %08X (%04X bytes) with fill %02X: %s\n",
-			devName.c_str(), src, slen, dst, dlen, fill, stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+		if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+			dbg.log("%s: SRC %08X (%04X bytes) to DST %08X (%04X bytes) with fill %02X: %s\n",
+					devName.c_str(), src, slen, dst, dlen, fill, stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 
 		dpc = REG_PC - faultAddr;
 		REG_R0 = STR_PACK(dpc, fill, REG_R2);
@@ -84,8 +87,11 @@ void vax_cpuDevice::movc(int c5flg)
 		if (REG_R4 > 0)
 			REG_R4 &= STR_M_LEN;
 
+#ifdef ENABLE_DEBUG
+		if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
 		printf("%s: (FPD) SRC %08X (%04X bytes) to DST %08X (%04X bytes) with fill %02X\n",
 			devName.c_str(), ZXTL(REG_R1), ZXTW(REG_R2), ZXTL(REG_R3), ZXTW(REG_R4), fill);
+#endif /* ENABLE_DEBUG */
 
 		// Reset PC address and clear instruction look-ahead
 		REG_PC = faultAddr + STR_GETDPC(REG_R0);
@@ -207,8 +213,11 @@ void vax_cpuDevice::cmpc(int c5flg)
 			REG_R3 = dst;
 		}
 
-		printf("%s: Compare %08X (%04X bytes) with %08X (%04X bytes) with fill %02X\n",
-			devName.c_str(), src, slen, dst, dlen, fill);
+#ifdef ENABLE_DEBUG
+		if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+			dbg.log("%s: Compare %08X (%04X bytes) with %08X (%04X bytes) with fill %02X\n",
+				devName.c_str(), src, slen, dst, dlen, fill);
+#endif /* ENABLE_DEBUG */
 
 		dpc = REG_PC - faultAddr;
 		REG_R0  = STR_PACK(dpc, fill, slen);
@@ -219,8 +228,11 @@ void vax_cpuDevice::cmpc(int c5flg)
 		fill = STR_GETCHR(REG_R0);
 		REG_R2 &= STR_M_LEN;
 
-		printf("%s: Compare %08X (%04X bytes) with %08X (%04X bytes) with fill %02X\n",
-			devName.c_str(), ZXTL(REG_R1), ZXTW(REG_R0), ZXTL(REG_R3), ZXTW(REG_R2), fill);
+#ifdef ENABLE_DEBUG
+		if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+			dbg.log("%s: Compare %08X (%04X bytes) with %08X (%04X bytes) with fill %02X\n",
+				devName.c_str(), ZXTL(REG_R1), ZXTW(REG_R0), ZXTL(REG_R3), ZXTW(REG_R2), fill);
+#endif /* ENABLE_DEBUG */
 
 		// Reset PC address and clear instruction look-ahead
 		REG_PC = faultAddr + STR_GETDPC(REG_R0);
@@ -249,7 +261,10 @@ void vax_cpuDevice::cmpc(int c5flg)
 	// Update condition codes
 	SetNZ(ccReg, SXTB(src1), SXTB(src2), 0);
 	SetC(ccReg, ZXTB(src1), ZXTB(src2));
-	printf("%s: CC Status: %s\n", devName.c_str(), stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+	if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+		dbg.log("%s: CC Status: %s\n", devName.c_str(), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
 	// Reset R0 register
 	REG_R0 &= STR_M_LEN;
 }

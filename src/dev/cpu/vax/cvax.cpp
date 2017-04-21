@@ -211,19 +211,15 @@ void cvax_cpuDevice::mfpr()
 	// Evaluate hardware/software interrupts.
 	UpdateIRQ();
 
-#ifdef DEBUG
-//	if (DBG_CHECKALL(cpu, LOG_TRACE|LOG_DATA) || DBG_CHECKANY(cpu, LOG_IOREGS))
-//	if (DBG_CHECKALL(cpu, LOG_TRACE|LOG_DATA))
-//		PrintLog3(LOG_TRACE|LOG_IOREGS, NULL,
-//			"%s: (MFPR) IPR %04X (%s) => %08X: %s\n",
-//				IO_DEVNAME(cpu), ipr, IPR_NAME(ipr), dst, ShowCC(VAX_CC));
-#endif /* DEBUG */
-
-	const char *name = "Undefined Register";
-	if ((ipr < iprSize) && iprName[ipr])
-		name = iprName[ipr];
-	printf("%s: (R) %s (%02X) => %08X: %s\n", devName.c_str(),
-		name, ipr, dst, stringCC(ccReg));
+#ifdef ENABLE_DEBUG
+	if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND) || dbg.checkFlags(DBG_IOREGS)) {
+		const char *name = "Undefined Register";
+		if ((ipr < iprSize) && iprName[ipr])
+			name = iprName[ipr];
+		dbg.log("%s: (R) %s (%02X) => %08X: %s\n", devName.c_str(),
+				name, ipr, dst, stringCC(ccReg));
+	}
+#endif /* ENABLE_DEBUG */
 }
 
 void cvax_cpuDevice::mtpr()
@@ -329,224 +325,13 @@ void cvax_cpuDevice::mtpr()
 	// Evaluate hardware/software interrupts.
 	UpdateIRQ();
 
-#ifdef DEBUG
-//	if (DBG_CHECKALL(cpu, LOG_TRACE|LOG_DATA) || DBG_CHECKANY(cpu, LOG_IOREGS))
-//	if (DBG_CHECKALL(cpu, LOG_TRACE|LOG_DATA))
-//		PrintLog3(LOG_TRACE|LOG_IOREGS, NULL,
-//			"%s: (MTPR) IPR %04X (%s) <= %08X (Now: %08X): %s\n",
-//				IO_DEVNAME(cpu), ipr, IPR_NAME(ipr), src, DPY_IPR(ipr),
-//				ShowCC(VAX_CC));
-#endif /* DEBUG */
-
-	const char *name = "Undefined Register";
-	if ((ipr < iprSize) && iprName[ipr])
-		name = iprName[ipr];
-	printf("%s: (W) %s (%02X) <= %08X: %s\n", devName.c_str(),
-		name, ipr, src, stringCC(ccReg));
-}
-
-// Read Privileged Register
-uint32_t cvax_cpuDevice::readpr(uint32_t rn)
-{
-	uint32_t data;
-
-	switch (rn) {
-		case IPR_nKSP:
-			data = (psReg & PSL_IS) ? ipReg[IPR_nKSP] : gpReg[REG_nSP].l;
-			break;
-
-		case IPR_nISP:
-			data = (psReg & PSL_IS) ? gpReg[REG_nSP].l : ipReg[IPR_nISP];
-			break;
-
-		case IPR_nIPL:
-			data = PSL_GETIPL(psReg);
-//			ipReg[IPR_nIPL] = data;
-			break;
-
-		case IPR_nRXCS:
-//			data = vax_ReadRXCS(vax);
-			break;
-
-		case IPR_nRXDB:
-//			data = vax_ReadRXDB(vax);
-			break;
-
-		case IPR_nTXCS:
-//			data = vax_ReadTXCS(vax);
-			break;
-
-//		case PR_nTXDB:
-//			data = vax_ReadTXDB(vax);
-//			break;
-
-		default:
-			data = (rn < CPU_nPREGS) ? ipReg[rn] : 0;
-			break;
+#ifdef ENABLE_DEBUG
+	if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND) || dbg.checkFlags(DBG_IOREGS)) {
+		const char *name = "Undefined Register";
+		if ((ipr < iprSize) && iprName[ipr])
+			name = iprName[ipr];
+		dbg.log("%s: (W) %s (%02X) <= %08X: %s\n", devName.c_str(),
+			name, ipr, src, stringCC(ccReg));
 	}
-
-//#ifdef DEBUG
-//	if (dbg_Check(DBG_TRACE|DBG_DATA)) {
-//		char *name = "Undefined Register";
-//		if ((pReg < regSize) && regNames[pReg])
-//			name = regNames[pReg];
-//		dbg_Printf("KA650: (R) %s (%02X) => %08X\n", name, pReg, data);
-//	}
-//#endif /* DEBUG */
-
-	const char *name = "Undefined Register";
-	if ((rn < iprSize) && iprName[rn])
-		name = iprName[rn];
-	printf("%s: (R) %s (%02X) => %08X\n", devName.c_str(), name, rn, data);
-
-	return data;
+#endif /* ENABLE_DEBUG */
 }
-
-void cvax_cpuDevice::writepr(uint32_t rn, uint32_t data)
-{
-	uint32_t irq;
-
-	switch (rn) {
-		case IPR_nKSP: // Kernel Stack Pointer
-			if (psReg & PSL_IS)
-				ipReg[IPR_nKSP] = data;
-			else
-				gpReg[REG_nSP].l = data;
-			break;
-
-		case IPR_nESP: // Executive Stack Pointer
-		case IPR_nSSP: // Supervisor Stack Pointer
-		case IPR_nUSP: // User Stack Pointer
-			ipReg[rn] = data;
-			break;
-
-		case IPR_nISP: // Interrupt Stack Pointer
-			if (psReg & PSL_IS)
-				gpReg[REG_nSP].l = data;
-			else
-				ipReg[IPR_nISP] = data;
-			break;
-
-		case IPR_nP0BR:
-		case IPR_nP1BR:
-		case IPR_nSBR:
-			ipReg[rn] = data & BR_MASK;
-			cleartlb(rn == IPR_nSBR);
-			break;
-
-		case IPR_nP0LR:
-		case IPR_nP1LR:
-		case IPR_nSLR:
-			ipReg[rn] = data & LR_MASK;
-			cleartlb(rn == IPR_nSLR);
-			break;
-
-		case IPR_nPCBB:
-		case IPR_nSCBB:
-			ipReg[rn] = data & ALIGN_LONG;
-			break;
-
-		case IPR_nIPL:
-			ipReg[rn] = data & PSL_M_IPL;
-			psReg &= ~PSL_IPL;
-			psReg |= PSL_SETIPL(data);
-			break;
-
-		case IPR_nSIRR:
-//			if ((data > 0xF) || (data == 0))
-//				throw RSVD_OPND_FAULT;
-			if (irq = (data & SIRR_MASK))
-				IPR_SISR |= (1u << irq);
-			break;
-
-		case IPR_nSISR:
-			ipReg[rn] = data & SISR_MASK;
-			break;
-
-		case IPR_nASTLVL:
-			if (ZXTL(data) > AST_MAX)
-				throw RSVD_OPND_FAULT;
-			ipReg[rn] = data;
-			break;
-
-		case IPR_nICCS:
-			// Subset implementation in MicroVAX series
-//			pRegs[PR_ICCS] = data & ICCS_WMASK;
-//#ifdef DEBUG
-//			if (dbg_Check(DBG_INTERRUPT))
-//				dbg_Printf("KA650: Clock Interrupt Enable: %s\n",
-//					(data & ICCS_IE) ? "On" : "Off");
-//#endif /* DEBUG */
-			break;
-
-		case IPR_nRXCS:
-//			if (data & RXCS_MBZ)
-//				throw RSVD_OPND_FAULT;
-//			vax_WriteRXCS(vax, data);
-			break;
-
-		case IPR_nRXDB:
-//			vax_WriteRXDB(vax, data);
-			break;
-
-		case IPR_nTXCS:
-//			if (data & TXCS_MBZ)
-//				throw RSVD_OPND_FAULT;
-//			vax_WriteTXCS(vax, data);
-			break;
-
-		case IPR_nTXDB:
-//			vax_WriteTXDB(vax, data);
-			break;
-
-		case IPR_nCADR:
-//			pRegs[rn] = (data & CADR_RW) | CADR_MBO;
-			break;
-
-		case IPR_nMSER:
-//			pRegs[rn] &= MSER_HM;
-			break;
-
-		case IPR_nCONPC:
-		case IPR_nCONPSL:
-//			pRegs[rn] = data;
-			break;
-
-		case IPR_nIORESET:
-//			cq_ResetAll(((KA650_DEVICE *)vax)->qba);
-			break;
-
-		case IPR_nMAPEN:
-			ipReg[rn] = data & 1;
-		case IPR_nTBIA:
-			cleartlb(true);
-			break;
-
-		case IPR_nTBIS:
-			cleartlb(data);
-			break;
-
-		case IPR_nTBCHK:
-			if (checktlb(data))
-				ccReg |= CC_V;
-			break;
-	}
-
-	// Evaluate hardware/software interrupts
-	UpdateIRQ();
-
-//#ifdef DEBUG
-//	if (dbg_Check(DBG_TRACE|DBG_DATA)) {
-//		char *name = "Undefined Register";
-//		if ((pReg < regSize) && regNames[pReg])
-//			name = regNames[pReg];
-//		dbg_Printf("KA650: (W) %s (%02X) <= %08X\n", name, pReg, data);
-//	}
-//#endif /* DEBUG */
-
-	const char *name = "Undefined Register";
-	if ((rn < iprSize) && iprName[rn])
-		name = iprName[rn];
-	printf("%s: (W) %s (%02X) <= %08X\n", devName.c_str(), name, rn, data);
-}
-

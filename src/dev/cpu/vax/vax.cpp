@@ -288,17 +288,21 @@ void vax_cpuDevice::ldpctx()
 	writev(REG_SP, npc, LN_LONG, WACC);
 	writev(REG_SP+LN_LONG, npsl, LN_LONG, WACC);
 
-	printf("%s: (CTX) Loading User Process\n", devName.c_str());
-	printf("%s: (CTX) PCB Address: %08X, AST Level: %d, PME: %s\n", devName.c_str(),
-		IPR_PCBB, IPR_ASTLVL, (IPR_PME & 1) ? "On" : "Off");
-	printf("%s: (CTX) KSP: %08X  ESP: %08X  SSP: %08X  USP: %08X\n", devName.c_str(),
-		IPR_KSP, IPR_ESP, IPR_SSP, IPR_USP);
-	printf("%s: (CTX) P0 Address: %08X Length: %08X\n", devName.c_str(),
-		IPR_P0BR, IPR_P0LR);
-	printf("%s: (CTX) P1 Address: %08X Length: %08X\n", devName.c_str(),
-		IPR_P1BR, IPR_P1LR);
-	printf("%s: (CTX) SP %08X <= PC %08X PSL %08X\n", devName.c_str(),
-		REG_SP, npc, npsl);
+#ifdef ENABLE_DEBUG
+	if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND)) {
+		dbg.log("%s: (CTX) Loading User Process\n", devName.c_str());
+		dbg.log("%s: (CTX) PCB Address: %08X, AST Level: %d, PME: %s\n", devName.c_str(),
+			IPR_PCBB, IPR_ASTLVL, (IPR_PME & 1) ? "On" : "Off");
+		dbg.log("%s: (CTX) KSP: %08X  ESP: %08X  SSP: %08X  USP: %08X\n", devName.c_str(),
+			IPR_KSP, IPR_ESP, IPR_SSP, IPR_USP);
+		dbg.log("%s: (CTX) P0 Address: %08X Length: %08X\n", devName.c_str(),
+			IPR_P0BR, IPR_P0LR);
+		dbg.log("%s: (CTX) P1 Address: %08X Length: %08X\n", devName.c_str(),
+			IPR_P1BR, IPR_P1LR);
+		dbg.log("%s: (CTX) SP %08X <= PC %08X PSL %08X\n", devName.c_str(),
+			REG_SP, npc, npsl);
+	}
+#endif /* ENABLE_DEBUG */
 }
 
 void vax_cpuDevice::svpctx()
@@ -348,17 +352,21 @@ void vax_cpuDevice::svpctx()
 	writepl(pcb+72, svpc);
 	writepl(pcb+76, svpsl);
 
-	printf("%s: (CTX) Saving User Process\n", devName.c_str());
-	printf("%s: (CTX) PCB Address: %08X, AST Level: %d, PME: %s\n", devName.c_str(),
-		IPR_PCBB, IPR_ASTLVL, (IPR_PME & 1) ? "On" : "Off");
-	printf("%s: (CTX) KSP: %08X  ESP: %08X  SSP: %08X  USP: %08X\n", devName.c_str(),
-		IPR_KSP, IPR_ESP, IPR_SSP, IPR_USP);
-	printf("%s: (CTX) P0 Address: %08X Length: %08X\n", devName.c_str(),
-		IPR_P0BR, IPR_P0LR);
-	printf("%s: (CTX) P1 Address: %08X Length: %08X\n", devName.c_str(),
-		IPR_P1BR, IPR_P1LR);
-	printf("%s: (CTX) SP %08X => PC %08X PSL %08X\n", devName.c_str(),
-		osp, svpc, svpsl);
+#ifdef ENABLE_DEBUG
+	if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND)) {
+		dbg.log("%s: (CTX) Saving User Process\n", devName.c_str());
+		dbg.log("%s: (CTX) PCB Address: %08X, AST Level: %d, PME: %s\n", devName.c_str(),
+			IPR_PCBB, IPR_ASTLVL, (IPR_PME & 1) ? "On" : "Off");
+		dbg.log("%s: (CTX) KSP: %08X  ESP: %08X  SSP: %08X  USP: %08X\n", devName.c_str(),
+			IPR_KSP, IPR_ESP, IPR_SSP, IPR_USP);
+		dbg.log("%s: (CTX) P0 Address: %08X Length: %08X\n", devName.c_str(),
+			IPR_P0BR, IPR_P0LR);
+		dbg.log("%s: (CTX) P1 Address: %08X Length: %08X\n", devName.c_str(),
+			IPR_P1BR, IPR_P1LR);
+		dbg.log("%s: (CTX) SP %08X => PC %08X PSL %08X\n", devName.c_str(),
+			osp, svpc, svpsl);
+	}
+#endif /* ENABLE_DEBUG */
 }
 
 uint32_t vax_cpuDevice::probe(bool rwflg)
@@ -419,14 +427,20 @@ int vax_cpuDevice::getBit()
 		if (ZXTL(pos) > 31)
 			throw RSVD_OPND_FAULT;
 		src = gpReg[~reg].l;
-		printf("%s: R%d %08X<%d> => %d\n", devName.c_str(),
-			reg, src, pos, (src >> pos) & 1);
+#ifdef ENABLE_DEBUG
+		if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+			dbg.log("%s: R%d %08X<%d> => %d\n", devName.c_str(),
+				reg, src, pos, (src >> pos) & 1);
+#endif /* ENABLE_DEBUG */
 	} else {
 		ea   = opReg[1] + (pos >> 3);
 		src  = readv(ea, LN_BYTE, RACC);
 		pos &= 7;
-		printf("%s: %08X => %02X<%d> => %d\n", devName.c_str(),
-			ea, ZXTB(src), pos, (src >> pos) & 1);
+#ifdef ENABLE_DEBUG
+		if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+			dbg.log("%s: %08X => %02X<%d> => %d\n", devName.c_str(),
+				ea, ZXTB(src), pos, (src >> pos) & 1);
+#endif /* ENABLE_DEBUG */
 	}
 
 	return (src >> pos) & 1;
@@ -446,8 +460,11 @@ int vax_cpuDevice::setBit(int bit)
 		obit = (src >> pos) & 1;
 		dst  = bit ? (src | (1u << pos)) : (src & ~(1u << pos));
 		gpReg[~reg].l = dst;
-		printf("%s: R%d %08X<%d> (now: %08X) <= %d (old: %d)\n",
-			devName.c_str(), reg, src, dst, pos, bit, obit);
+#ifdef ENABLE_DEBUG
+		if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+			dbg.log("%s: R%d %08X<%d> (now: %08X) <= %d (old: %d)\n",
+				devName.c_str(), reg, src, dst, pos, bit, obit);
+#endif /* ENABLE_DEBUG */
 	} else {
 		ea   = opReg[1] + (pos >> 3);
 		src  = readv(ea, LN_BYTE, RACC);
@@ -455,8 +472,11 @@ int vax_cpuDevice::setBit(int bit)
 		obit = (src >> pos) & 1;
 		dst  = bit ? (src | (1u << pos)) : (src & ~(1u << pos));
 		writev(ea, dst, LN_BYTE, WACC);
-		printf("%s: %08X => %02X<%d> (now: %02X) <= %d (old: %d)\n",
-			devName.c_str(), ea, ZXTB(src), ZXTB(dst), pos, bit, obit);
+#ifdef ENABLE_DEBUG
+		if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+			dbg.log("%s: %08X => %02X<%d> (now: %02X) <= %d (old: %d)\n",
+				devName.c_str(), ea, ZXTB(src), ZXTB(dst), pos, bit, obit);
+#endif /* ENABLE_DEBUG */
 	}
 
 	return obit;
@@ -605,8 +625,11 @@ void vax_cpuDevice::interrupt()
 	uint32_t vec;
 
 	if ((trap = IRQ_GETTRAP(irqFlags)) != 0) {
-		printf("%s: (EXC) Arithmetic Trap at PC %08X\n",
-			devName.c_str(), faultAddr);
+#ifdef ENABLE_DEBUG
+		if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND) || dbg.checkFlags(DBG_EXCEPTION))
+			dbg.log("%s: (EXC) Arithmetic Trap at PC %08X\n",
+				devName.c_str(), faultAddr);
+#endif /* ENABLE_DEBUG */
 		// Set parameters
 		paCount  = 1;
 		paReg[0] = trap;
@@ -741,8 +764,11 @@ int vax_cpuDevice::exception(int ie, uint32_t vec, uint32_t ipl)
 	if (ie == IE_SVE)
 		npc |= 1;
 
-	printf("%s: (%s) SCB vector %04X  New PC: %08X(%1X) Type: %s\n", devName.c_str(),
-		ieTypes[ie], ZXTW(vec), ZXTL(npc & ~03), ZXTL(npc & 03), ieNames[ie]);
+#ifdef ENABLE_DEBUG
+	if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND) || dbg.checkFlags(DBG_EXCEPTION))
+		dbg.log("%s: (%s) SCB vector %04X  New PC: %08X(%1X) Type: %s\n", devName.c_str(),
+			ieTypes[ie], ZXTW(vec), ZXTL(npc & ~03), ZXTL(npc & 03), ieNames[ie]);
+#endif /* ENABLE_DEBUG */
 
 	if (npc & 2)
 		throw STOP_ILLVEC;
@@ -792,10 +818,14 @@ int vax_cpuDevice::exception(int ie, uint32_t vec, uint32_t ipl)
 	// Clear INIE flag
 	flags &= ~CPU_INIE;
 
-	printf("%s: (%s) Old PC=%08X PSL=%08X SP=%08X Access: %s,%s\n", devName.c_str(),
-		ieTypes[ie], ZXTL(faultAddr), ZXTL(opsl), ZXTL(osp), DSPL_CUR(opsl), DSPL_PRV(opsl));
-	printf("%s: (%s) New PC=%08X PSL=%08X SP=%08X Access: %s,%s\n", devName.c_str(),
-		ieTypes[ie], ZXTL(REG_PC), ZXTL(psReg|ccReg), ZXTL(REG_SP), DSPL_CUR(npsl), DSPL_PRV(npsl));
+#ifdef ENABLE_DEBUG
+	if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND) || dbg.checkFlags(DBG_EXCEPTION)) {
+		dbg.log("%s: (%s) Old PC=%08X PSL=%08X SP=%08X Access: %s,%s\n", devName.c_str(),
+			ieTypes[ie], ZXTL(faultAddr), ZXTL(opsl), ZXTL(osp), DSPL_CUR(opsl), DSPL_PRV(opsl));
+		dbg.log("%s: (%s) New PC=%08X PSL=%08X SP=%08X Access: %s,%s\n", devName.c_str(),
+			ieTypes[ie], ZXTL(REG_PC), ZXTL(psReg|ccReg), ZXTL(REG_SP), DSPL_CUR(npsl), DSPL_PRV(npsl));
+	}
+#endif /* ENABLE_DEBUG */
 
 	return 0;
 }
@@ -842,14 +872,18 @@ void vax_cpuDevice::emulate(uint32_t opCode)
 	REG_PC = npc & SCB_ADDR;
 	flushvi();
 
-	printf("%s: (EMU) Emulated instruction (opcode %04X) at PC %08X\n", devName.c_str(),
-		opCode + ((opCode > OPC_nXFC) ? (OPC_nXFC << 8) : 0), opc);
-	printf("%s: (EMU) SCB vector %04X  New PC: %08X(%1X) Type: Emulate\n", devName.c_str(),
-		ZXTW(vec), ZXTL(npc & ~03), ZXTL(npc & 03));
-	printf("%s: (EMU) Old PC=%08X PSL=%08X SP=%08X Access: %s,%s\n", devName.c_str(),
-		ZXTL(opc), ZXTL(opsl), ZXTL(osp), DSPL_CUR(opsl), DSPL_PRV(opsl));
-	printf("%s: (EMU) New PC=%08X PSL=%08X SP=%08X Access: %s,%s\n", devName.c_str(),
-		ZXTL(REG_PC), ZXTL(psReg|ccReg), ZXTL(REG_SP), DSPL_CUR(psReg), DSPL_PRV(psReg));
+#ifdef ENABLE_DEBUG
+	if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND) || dbg.checkFlags(DBG_EXCEPTION)) {
+		dbg.log("%s: (EMU) Emulated instruction (opcode %04X) at PC %08X\n", devName.c_str(),
+			opCode + ((opCode > OPC_nXFC) ? (OPC_nXFC << 8) : 0), opc);
+		dbg.log("%s: (EMU) SCB vector %04X  New PC: %08X(%1X) Type: Emulate\n", devName.c_str(),
+			ZXTW(vec), ZXTL(npc & ~03), ZXTL(npc & 03));
+		dbg.log("%s: (EMU) Old PC=%08X PSL=%08X SP=%08X Access: %s,%s\n", devName.c_str(),
+			ZXTL(opc), ZXTL(opsl), ZXTL(osp), DSPL_CUR(opsl), DSPL_PRV(opsl));
+		dbg.log("%s: (EMU) New PC=%08X PSL=%08X SP=%08X Access: %s,%s\n", devName.c_str(),
+			ZXTL(REG_PC), ZXTL(psReg|ccReg), ZXTL(REG_SP), DSPL_CUR(psReg), DSPL_PRV(psReg));
+	}
+#endif /* ENABLE_DEBUG */
 }
 
 static const uint32_t scbMode[] = { SCB_CHMK, SCB_CHME, SCB_CHMS, SCB_CHMU };
@@ -897,12 +931,16 @@ void vax_cpuDevice::change(int mode, int32_t code)
 
 	// Evaluate hardware/software interrupts
 
-	printf("%s: (CHM) SCB vector %04X  New PC: %08X(%1X) Type: Change Mode\n", devName.c_str(),
-		ZXTW(scbMode[mode]), ZXTL(npc & ~03), ZXTL(npc & 03));
-	printf("%s: (CHM) Old PC=%08X PSL=%08X SP=%08X Access: %s,%s\n", devName.c_str(),
-		ZXTL(opc), ZXTL(opsl), ZXTL(osp), DSPL_CUR(opsl), DSPL_PRV(opsl));
-	printf("%s: (CHM) New PC=%08X PSL=%08X SP=%08X Access: %s,%s\n", devName.c_str(),
-		ZXTL(REG_PC), ZXTL(psReg|ccReg), ZXTL(REG_SP), DSPL_CUR(psReg), DSPL_PRV(psReg));
+#ifdef ENABLE_DEBUG
+	if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND) || dbg.checkFlags(DBG_EXCEPTION)) {
+		dbg.log("%s: (CHM) SCB vector %04X  New PC: %08X(%1X) Type: Change Mode\n", devName.c_str(),
+			ZXTW(scbMode[mode]), ZXTL(npc & ~03), ZXTL(npc & 03));
+		dbg.log("%s: (CHM) Old PC=%08X PSL=%08X SP=%08X Access: %s,%s\n", devName.c_str(),
+			ZXTL(opc), ZXTL(opsl), ZXTL(osp), DSPL_CUR(opsl), DSPL_PRV(opsl));
+		dbg.log("%s: (CHM) New PC=%08X PSL=%08X SP=%08X Access: %s,%s\n", devName.c_str(),
+			ZXTL(REG_PC), ZXTL(psReg|ccReg), ZXTL(REG_SP), DSPL_CUR(psReg), DSPL_PRV(psReg));
+	}
+#endif /* ENABLE_DEBUG */
 }
 
 // Resume from exception/interrupt routine
@@ -977,13 +1015,17 @@ void vax_cpuDevice::resume()
 	// Update IRQ requests
 	UpdateIRQ();
 
-	printf("%s: (REI) Old PC=%08X PSL=%08X SP=%08X Access: %s,%s\n", devName.c_str(),
-		ZXTL(opc), ZXTL(opsl), ZXTL(osp), DSPL_CUR(opsl), DSPL_PRV(opsl));
-	printf("%s: (REI) New PC=%08X PSL=%08X SP=%08X Access: %s,%s\n", devName.c_str(),
-		ZXTL(REG_PC), ZXTL(psReg|ccReg), ZXTL(REG_SP), DSPL_CUR(npsl), DSPL_PRV(npsl));
-	if ((psReg & PSL_IS) == 0 && nacc >= IPR_ASTLVL)
-		printf("%s: (REI) AST delivered (%d >= %d)\n", devName.c_str(),
-			nacc, IPR_ASTLVL);
+#ifdef ENABLE_DEBUG
+	if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND) || dbg.checkFlags(DBG_EXCEPTION)) {
+		dbg.log("%s: (REI) Old PC=%08X PSL=%08X SP=%08X Access: %s,%s\n", devName.c_str(),
+			ZXTL(opc), ZXTL(opsl), ZXTL(osp), DSPL_CUR(opsl), DSPL_PRV(opsl));
+		dbg.log("%s: (REI) New PC=%08X PSL=%08X SP=%08X Access: %s,%s\n", devName.c_str(),
+			ZXTL(REG_PC), ZXTL(psReg|ccReg), ZXTL(REG_SP), DSPL_CUR(npsl), DSPL_PRV(npsl));
+		if ((psReg & PSL_IS) == 0 && nacc >= IPR_ASTLVL)
+			dbg.log("%s: (REI) AST delivered (%d >= %d)\n", devName.c_str(),
+				nacc, IPR_ASTLVL);
+	}
+#endif /* ENABLE_DEBUG */
 }
 
 
