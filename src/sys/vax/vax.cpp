@@ -61,33 +61,10 @@ int vax_sysDevice::load(std::string fname, uint32_t sAddr)
 	return CMD_OK;
 }
 
-int vax_sysDevice::dump(uint32_t *sAddr, uint32_t eAddr, uint32_t sw)
-{
-	int       idx;
-	char      ascBuffer[16];
-	char     *pasc;
-	uint32_t  data;
-
-	while (*sAddr <= eAddr) {
-		printf("%08X: ", *sAddr);
-		pasc = ascBuffer;
-		for (idx = 0; (idx < 16) && (*sAddr <= eAddr); idx++, (*sAddr)++) {
-//			vax_ReadC(vax, (*sAddr)++, &data, OP_BYTE, sw);
-			data = (*sAddr < memSize) ? mem[*sAddr] : 0;
-			printf("%02X%c", data, (idx == 7) ? '-' : ' ');
-			*pasc++ = ((data >= 32) && (data < 127)) ? data : '.';
-		}
-		*pasc = '\0';
-		printf(" |%-16s|\n", ascBuffer);
-	}
-
-	return CMD_OK;
-}
-
 // *****************************************************************************************
 
 // Usage: boot <device> [options...]
-static int cmdBoot(Console *con, Device *sdev, args_t &args)
+static int cmdBoot(Console *cty, Device *sdev, args_t &args)
 {
 	Device *dev;
 
@@ -110,7 +87,7 @@ static int cmdBoot(Console *con, Device *sdev, args_t &args)
 }
 
 // Usage: disasm <start> [end]
-static int cmdDisasm(Console *con, Device *sdev, args_t &args)
+static int cmdDisasm(Console *cty, Device *sdev, args_t &args)
 {
 	uint32_t  sAddr, eAddr = -1;
 	int       count = -1;
@@ -137,23 +114,23 @@ static int cmdDisasm(Console *con, Device *sdev, args_t &args)
 	cpu = (vax_cpuDevice *)((sysDevice *)sdev)->getCPUDevice(0);
 
 	// Display disassembly listing.
-//	cpu->flushci();
 	if (count > 0) {
 		while (count--)
-			sAddr += cpu->disasm(sAddr);
+			sAddr += cpu->disasm(cty, sAddr);
 	} else {
 		while (sAddr < eAddr)
-			sAddr += cpu->disasm(sAddr);
+			sAddr += cpu->disasm(cty, sAddr);
 	}
 
 	return CMD_OK;
 }
 
 // Usage: dump <start> [end]
-static int cmdDump(Console *con, Device *sdev, args_t &args)
+static int cmdDump(Console *cty, Device *sdev, args_t &args)
 {
 	uint32_t  sAddr, eAddr = -1;
 	char     *strAddr;
+	vax_cpuDevice *cpu;
 
 	// Check number of arguments
 	if (args.size() < 2) {
@@ -172,7 +149,9 @@ static int cmdDump(Console *con, Device *sdev, args_t &args)
 			eAddr = sAddr + 0x140 - 1;
 	}
 
-	sdev->dump(&sAddr, eAddr, 0);
+	cpu = (vax_cpuDevice *)((sysDevice *)sdev)->getCPUDevice(0);
+
+	cpu->dump(cty, &sAddr, eAddr);
 
 	return CMD_OK;
 }

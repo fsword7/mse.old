@@ -79,7 +79,7 @@ void CPU_CLASS::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 			if (dbg.checkFlags(DBG_TRACE))
-				disasm(faultAddr);
+				disasm(nullptr, faultAddr);
 #endif /* ENABLE_DEBUG */
 
 			// Fetch instruction from current stream

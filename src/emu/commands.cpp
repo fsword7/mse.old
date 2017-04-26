@@ -75,6 +75,41 @@ static int cmdLoad(Console *con, Device *cdev, args_t &args)
 	return CMD_OK;
 }
 
+// Usage: log <file>
+static int cmdLog(Console *con, Device *cdev, args_t &args)
+{
+	sysDevice *sdev;
+	logFile   *log;
+	int        slot = 0;
+
+	// Check number of arguments
+	if (args.size() < 2) {
+		std::cout << "Usage: " << args[0] << " <file> [slot]" << std::endl;
+		return CMD_OK;
+	}
+
+	// Check current system device
+	sdev = (sysDevice *)con->getSystemDevice();
+	if (sdev == nullptr) {
+		std::cerr << cdev->getName() << ": Please select system device first" << std::endl;
+		return CMD_OK;
+	}
+
+	// Get slot number
+	if (args.size() > 2) {
+		sscanf(args[2].c_str(), "%d", &slot);
+		if (slot < 0 || slot >= LOG_NFILES) {
+			std::cerr << cdev->getName() << ": Please select slot 0 to " << LOG_NFILES-1 << std::endl;
+			return CMD_OK;
+		}
+	}
+
+	log = sdev->getLogFile();
+	log->open(args[1], slot);
+
+	return CMD_OK;
+}
+
 // Usage: select <device|none>
 static int cmdSelect(Console *con, Device *cdev, args_t &args)
 {
@@ -186,6 +221,7 @@ static int cmdShutdown(Console *, Device *, args_t &)
 Command mseCommands[] = {
 	{ "create", "", cmdCreate },
 	{ "load", "<file> ...", cmdLoad },
+	{ "log", "<file>", cmdLog },
 	{ "exit", "", cmdShutdown },
 	{ "quit", "", cmdShutdown },
 	{ "select", "<device|none>", cmdSelect },

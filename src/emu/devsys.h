@@ -142,11 +142,14 @@ public:
 
 	cpuDevice *getCPUDevice(int idx);
 
-	inline logFile *getLogfile()  { return &logFiles; }
+	inline logFile *getLogFile()  { return &log; }
+
+	virtual uint32_t readio(uint32_t pAddr, uint32_t acc);
+	virtual void     writeio(uint32_t pAddr, uint32_t data, uint32_t acc);
 
 protected:
 	std::vector<cpuDevice *> cpu;
-	logFile logFiles;
+	logFile log;
 };
 
 void setSystemDrivers(Device *dev);

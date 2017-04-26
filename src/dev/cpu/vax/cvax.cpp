@@ -128,17 +128,22 @@ void cvax_cpuDevice::reset()
 	psReg  = PSL_IS | PSL_IPL;
 	ccReg  = 0;
 	REG_SP = 0x00000000;
-	REG_PC = 0; /* ROM_BASE */
+	REG_PC = SRM_START;
 
+	// Standard IPR registers
 	IPR_SID    = (SID_ID|SID_UCODE);
-	IPR_CONPC  = 0;
-	IPR_CONPSL = PSL_IS | PSL_IPL | CON_PWRUP;
 	IPR_MAPEN  = 0;
 	IPR_ICCS   = 0;
 	IPR_MSER   = 0;
 	IPR_CADR   = 0;
 	IPR_SISR   = 0;
 	IPR_ASTLVL = 0;
+
+	// Model-specific IPR registers
+	IPR_CONPC  = 0;
+	IPR_CONPSL = (psReg|ccReg) | CON_PWRUP;
+	IPR_MSER   = 0;
+	IPR_CADR   = 0;
 
 	// Set 30-bit physical addressing mask
 	paMask  = PA_MASK30;
@@ -154,6 +159,38 @@ void cvax_cpuDevice::reset()
 int cvax_cpuDevice::boot()
 {
 	return 0;
+}
+
+void cvax_cpuDevice::halt(uint32_t code)
+{
+	int mode = PSL_GETCUR(psReg);
+
+	// Save current PC and PSL registers
+	IPR_CONPC  = REG_PC;
+	IPR_CONPSL = (psReg|ccReg) | (code << 8) |
+		((IPR_MAPEN & 1) ? CONPSL_MAPEN : 0);
+
+	// Reset processor registers
+	REG_SP    = IPR_ISP;
+	psReg     = PSL_IS|PSL_IPL;
+	ccReg     = 0;
+	IPR_MAPEN = 0;
+
+	// Start address in ROM space
+	REG_PC = SRM_START;
+	flushvi();
+
+#ifdef ENABLE_DEBUG
+	if (dbg.checkFlags(DBG_EXCEPTION))
+		dbg.log("%s: (HALT) Halt Action Code %08X - Jumped to %08X\n",
+			devName.c_str(), code, REG_PC);
+#endif /* ENABLE_DEBUG */
+
+	throw HALT_ACTION;
+}
+
+void cvax_cpuDevice::check(uint32_t code)
+{
 }
 
 #define CPU_CVAX

@@ -21,31 +21,35 @@ logFile::~logFile()
 	close(-1);
 }
 
-void logFile::open(uint32_t nlog, std::string fname)
+void logFile::open(const std::string fname, const uint32_t slot)
 {
-	if (nlog < LOG_NFILES) {
+	if (slot < LOG_NFILES) {
+		// Close old log file if opened
+		if (outFile[slot].is_open())
+			outFile[slot].close();
+
 		// Open log file at specific slot
-		outFile[nlog].open(fname);
-		logFlags |= (1u << nlog);
+		outFile[slot].open(fname);
+		logFlags |= (1u << slot);
 	}
 }
 
-void logFile::close(int32_t nlog)
+void logFile::close(const int32_t slot)
 {
-	if (nlog < 0) {
+	if (slot < 0) {
 		logFlags = 0;
-		for (int idx = 0; idx < 8; idx++) {
+		for (int idx = 0; idx < LOG_NFILES; idx++) {
 			if (outFile[idx].is_open())
 				outFile[idx].close();
 		}
-	} else if (nlog < LOG_NFILES) {
-		logFlags &= ~(1u << nlog);
-		if (outFile[nlog].is_open())
-			outFile[nlog].close();
+	} else if (slot < LOG_NFILES) {
+		logFlags &= ~(1u << slot);
+		if (outFile[slot].is_open())
+			outFile[slot].close();
 	}
 }
 
-void logFile::log(uint32_t flags, const char *out)
+void logFile::log(const uint32_t flags, const char *out)
 {
 	if ((logFlags & (flags & LOG_ALLFILES)) == 0)
 		return;
@@ -94,7 +98,7 @@ void Debug::log(const char *fmt, ...)
 	if (logFlags & LOG_CONSOLE)
 		std::cout << out << std::endl;
 	if (sdev != nullptr) {
-		logFile = sdev->getLogfile();
+		logFile = sdev->getLogFile();
 		logFile->log(logFlags, out);
 	}
 

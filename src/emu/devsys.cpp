@@ -137,7 +137,7 @@ sysDevice::~sysDevice()
 	cpu.clear();
 
 	// Close all log files
-	logFiles.close(-1);
+	log.close(-1);
 }
 
 void sysDevice::addCPUDevice(cpuDevice *cpu)
@@ -151,6 +151,14 @@ cpuDevice *sysDevice::getCPUDevice(int idx)
 	if (idx < 0 || idx >= cpu.size())
 		return nullptr;
 	return cpu[idx];
+}
+
+uint32_t sysDevice::readio(uint32_t, uint32_t)
+{
+}
+
+void sysDevice::writeio(uint32_t, uint32_t, uint32_t)
+{
 }
 
 // ******************************************************************************

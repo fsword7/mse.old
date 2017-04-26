@@ -83,6 +83,15 @@ void vax_cpuDevice::writepr(uint32_t, uint32_t)
 {
 }
 
+void vax_cpuDevice::halt(uint32_t code)
+{
+	throw STOP_HALT;
+}
+
+void vax_cpuDevice::check(uint32_t code)
+{
+}
+
 char *vax_cpuDevice::stringCC(uint32_t cc)
 {
 	static char ccstr[5];
@@ -739,6 +748,9 @@ int vax_cpuDevice::fault(uint32_t vec)
 //		}
 //		exception(IE_SVE, vec, 0);
 //		break;
+
+	case SCB_NEXT: // Passive release - continue
+		break;
 	}
 
 	return 0;

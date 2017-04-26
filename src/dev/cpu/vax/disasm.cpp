@@ -167,7 +167,7 @@ int vax_cpuDevice::disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **p
 	return 0;
 }
 
-int vax_cpuDevice::disasm(uint32_t vAddr)
+int vax_cpuDevice::disasm(Console *cty, uint32_t vAddr)
 {
 	char       line[256], *ptr = line;
 	uint32_t   opCode, opExtend;
@@ -195,13 +195,45 @@ int vax_cpuDevice::disasm(uint32_t vAddr)
 		else
 			ptr += sprintf(ptr, ".BYTE %02X", opCode);
 	}
-	*ptr++ = '\0';
+	*ptr = '\0';
 
+	if (cty != nullptr)
+		printf("%s\n", line);
 #ifdef ENABLE_DEBUG
-	dbg.log("%s\n", line);
-#else
-	printf("%s\n", line);
+	else
+		dbg.log("%s\n", line);
 #endif /* ENABLE_DEBUG */
 
 	return pcAddr - vAddr;
+}
+
+int vax_cpuDevice::dump(Console *cty, uint32_t *sAddr, uint32_t eAddr)
+{
+	int       idx;
+	char      line[256], lasc[32];
+	char      *lptr, *pasc;
+	uint32_t  data;
+	uint32_t  sts;
+
+	while (*sAddr <= eAddr) {
+		lptr = line;
+		pasc = lasc;
+		lptr += sprintf(lptr, "%08X: ", *sAddr);
+		for (idx = 0; (idx < 16) && (*sAddr <= eAddr); idx++) {
+			data = readc((*sAddr)++, LN_BYTE, &sts);
+			lptr += sprintf(lptr, "%02X%c", data, (idx == 7) ? '-' : ' ');
+			*pasc++ = ((data >= 32) && (data < 127)) ? data : '.';
+		}
+		*pasc = '\0';
+		*lptr = '\0';
+
+		if (cty != nullptr)
+			printf("%s |%-16s|\n", line, lasc);
+#ifdef ENABLE_DEBUG
+		else
+			dbg.log("%s |%-16s|\n", line, lasc);
+#endif /* ENABLE_DEBUG */
+	}
+
+	return CMD_OK;
 }

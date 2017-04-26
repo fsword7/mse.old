@@ -236,6 +236,7 @@
 #define SCB_ADDR         ALIGN_LONG // SCB Address Mask
 #define SCB_VECTOR       ALIGN_LONG // SCB Vector Mask
 #define SCB_NOPRIV       1
+#define SCB_NEXT         1
 
 // Arithmetic Exception Type Codes
 #define TRAP_INTOVF   1 // Integer Overflow Trap
@@ -324,20 +325,21 @@
 #define STOP_UIPL			-4      // Undefined IPL level
 #define STOP_INIE			-5		// Exception during exception
 
-enum stopCode {
-	STOP_eHALT = 0,
-	STOP_eUOPC,
-	STOP_eILLVEC,
-	STOP_eUIPL,
-	STOP_eINIE
-};
+//enum stopCode {
+//	STOP_eHALT = 0,
+//	STOP_eUOPC,
+//	STOP_eILLVEC,
+//	STOP_eUIPL,
+//	STOP_eINIE
+//};
 
 // Exception Codes - Fault
 #define RSVD_INST_FAULT		SCB_RESIN            // Reserved instruction fault
 #define RSVD_ADDR_FAULT		SCB_RESAD            // Reserved address fault
 #define RSVD_OPND_FAULT		SCB_RESOP            // Reserved operand fault
 #define PRIV_INST_FAULT		SCB_RESIN|SCB_NOPRIV // Privileged instruction fault
-#define ARITH_FAULT			SCB_ARITH
+#define ARITH_FAULT			SCB_ARITH            // Arithmetic Fault
+#define HALT_ACTION			SCB_NEXT             // Model-specific halt action - continue
 
 // Exception Codes - Page fault
 #define PAGE_TNV            SCB_TNV  // Table Not Valid
@@ -453,7 +455,8 @@ public:
 //	void execute();
 
 	int disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **str);
-	int disasm(uint32_t pcAddr);
+	int disasm(Console *cty, uint32_t pcAddr);
+	int dump(Console *cty, uint32_t *sAddr, uint32_t eAddr);
 
 	void assignMemory(uint8_t *mem, uint32_t memSize);
 	void setPCAddr(uint32_t pcAddr);
@@ -581,6 +584,8 @@ public:
 	// Read/write privileged register access
 	virtual uint32_t readpr(uint32_t pReg);
 	virtual void     writepr(uint32_t pReg, uint32_t data);
+	virtual void     halt(uint32_t code);
+	virtual void     check(uint32_t code);
 
 	// Console memory access routines
 	uint32_t readpc(uint32_t pAddr, int size);

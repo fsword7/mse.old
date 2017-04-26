@@ -39,10 +39,10 @@ public:
 	logFile();
 	~logFile();
 
-	void open(uint32_t nlog, std::string fname);
-	void close(int32_t nlog);
+	void open(const std::string fname, const uint32_t slot);
+	void close(const int32_t slot);
 
-	void log(uint32_t flags, const char *out);
+	void log(const uint32_t flags, const char *out);
 
 private:
 	uint32_t      logFlags;
