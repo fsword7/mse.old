@@ -87,6 +87,9 @@ public:
 	inline std::string getDescription() const { return devDesc; }
 	inline Driver *getDriver() const          { return driver; }
 	inline int getClass() const               { return clsType; }
+#ifdef ENABLE_DEBUG
+	inline Debug *getDebug()				  { return &dbg; }
+#endif /* ENABLE_DEBUG */
 
 	// Function calls for driver table
 	cfgMemory *getMemoryConfig() const;

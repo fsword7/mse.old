@@ -73,6 +73,11 @@ int vax_cpuDevice::disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **p
 		case LIT0: case LIT1: // Literal
 		case LIT2: case LIT3:
 			*ptr += sprintf(*ptr, "S^#%02X", opType);
+
+			// CASEx instructions here
+//			if (opn == 2 && (opCode == OPC_nCASEB ||
+//				 opCode == OPC_nCASEW || opCode == OPC_nCASEL))
+//				*nWords = data;
 			break;
 
 		case REG: // Register
@@ -118,6 +123,12 @@ int vax_cpuDevice::disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **p
 					break;
 				}
 				vAddr += opScale;
+
+				// CASEx instructions here
+//				if (opCode == OPC_nCASEB ||
+//					opCode == OPC_nCASEW ||
+//					opCode == OPC_nCASEL)
+//					*nWords = data;
 			}
 			break;
 
@@ -203,6 +214,18 @@ int vax_cpuDevice::disasm(Console *cty, uint32_t vAddr)
 	else
 		dbg.log("%s\n", line);
 #endif /* ENABLE_DEBUG */
+
+	// Following CASE instruction.
+//	if (nWords > 0) {
+//		int32  basePC = *addr;
+//		uint32 data;
+//		for (idx = 0; idx <= nWords; idx++) {
+//			data = ReadC(cpu, *addr, LN_WORD, sw);
+//			PrintLog2(LOG_TRACE, cty, "%08X .WORD %04X ;Jump to %08X\n",
+//				*addr, data, (basePC + SXTW(data)));
+//		}
+//		nWords = 0;
+//	}
 
 	return pcAddr - vAddr;
 }

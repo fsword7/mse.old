@@ -426,13 +426,18 @@
 
 struct vaxOpcode {
 	const char *opName;           // Name of the Instruction
-	const char *opDesc;           // Description of the Instruction
 	uint32_t    flags;            // Instruction Flags
-	uint8_t     opExtend;         // MSB of Instruction (Normally Zero)
 	uint16_t    opCode;           // Extend/Opcode Value
-	uint8_t     nOperands;        // Number of Operands
-	uint32_t    oprMode[6];       // Attributes/Scales for Each Operand
-	void        (*execute)();     // Execute Routine
+	uint16_t    nOperands;        // Number of Operands
+	uint16_t    oprMode[6];       // Attributes/Scales for Each Operand
+};
+
+// Decode opcode structure
+struct dopc_t {
+	const vaxOpcode *opCode;
+	uint32_t flag;
+	uint16_t nModes;
+	uint16_t opMode[6];
 };
 
 struct tlb_t {
@@ -617,6 +622,8 @@ protected:
 
 	// Opcode table for operand decoding and disassembler
 	const vaxOpcode *opCodes[CPU_nOPCTBL];
+
+	dopc_t dopCode[CPU_nOPCTBL]; // Decode opcode table
 
 	static const uint32_t mskList[];
 	static const uint32_t sgnList[];

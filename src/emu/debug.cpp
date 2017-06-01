@@ -61,6 +61,18 @@ void logFile::log(const uint32_t flags, const char *out)
 }
 
 // ***********************************************************************
+
+static const dbgOption dbgList[7] =
+{
+		{ "trace",		DBG_TRACE },
+		{ "operand",	DBG_OPERAND },
+		{ "exception",	DBG_EXCEPTION },
+		{ "interrupt",	DBG_EXCEPTION },
+		{ "ioregs",		DBG_IOREGS },
+		{ "iodata",		DBG_IODATA },
+		{ "all",		DBG_ALL }
+};
+
 Debug::Debug()
 : dbgFlags(DBG_NONE), logFlags(0), sdev(nullptr)
 {
@@ -69,6 +81,7 @@ Debug::Debug()
 Debug::~Debug()
 {
 }
+
 
 void Debug::loadFlags(uint32_t flags)
 {
@@ -85,6 +98,55 @@ void Debug::clearFlags(uint32_t flags)
 	dbgFlags &= ~flags;
 }
 
+int Debug::enableFlag(const std::string &name)
+{
+	for (auto &&dbg : dbgList)
+		if (boost::iequals(name, dbg.dbgName)) {
+			dbgFlags |= dbg.dbgFlag;
+			return CMD_OK;
+		}
+	return CMD_NOTFOUND;
+}
+
+int Debug::disableFlag(const std::string &name)
+{
+	for (auto &&dbg : dbgList)
+		if (boost::iequals(name, dbg.dbgName)) {
+			dbgFlags &= ~dbg.dbgFlag;
+			return CMD_OK;
+		}
+	return CMD_NOTFOUND;
+}
+
+int Debug::enableLog(const int slot)
+{
+	if (slot >= 0 && slot < LOG_NFILES)
+		logFlags |= (1u << slot);
+	else if (slot == LOG_CTYSLOT)
+		logFlags |= LOG_CONSOLE;
+	else if (slot == LOG_ALLSLOTS) {
+		for (int idx = 0; idx < LOG_NFILES; idx++)
+			logFlags |= (1u << idx);
+	}
+	else
+		return CMD_ERROR;
+	return CMD_OK;
+}
+
+int Debug::disableLog(const int slot)
+{
+	if (slot >= 0 && slot < LOG_NFILES)
+		logFlags &= ~(1u << slot);
+	else if (slot == LOG_CTYSLOT)
+		logFlags &= ~LOG_CONSOLE;
+	else if (slot == LOG_ALLSLOTS) {
+		for (int idx = 0; idx < LOG_NFILES; idx++)
+			logFlags &= ~(1u << idx);
+	} else
+		return CMD_ERROR;
+	return CMD_OK;
+}
+
 void Debug::log(const char *fmt, ...)
 {
 	logFile *logFile;
@@ -96,7 +158,7 @@ void Debug::log(const char *fmt, ...)
 	vsprintf(out, fmt, args);
 
 	if (logFlags & LOG_CONSOLE)
-		std::cout << out << std::endl;
+		std::cout << out;
 	if (sdev != nullptr) {
 		logFile = sdev->getLogFile();
 		logFile->log(logFlags, out);

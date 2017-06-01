@@ -31,7 +31,17 @@
 #define LOG_FILE2		0x00000002
 #define LOG_FILE1		0x00000001
 
+// Enable/disable log slots
+#define LOG_CTYSLOT		-1
+#define LOG_ALLSLOTS	-2
+
 class sysDevice;
+
+struct dbgOption
+{
+	const std::string dbgName; // Debug/log name
+	uint32_t          dbgFlag; // Specific flag(s)
+};
 
 class logFile
 {
@@ -59,6 +69,11 @@ public:
 	void loadFlags(uint32_t flags);
 	void setFlags(uint32_t flags);
 	void clearFlags(uint32_t flags);
+
+	int enableFlag(const std::string &name);
+	int disableFlag(const std::string &name);
+	int enableLog(const int slot);
+	int disableLog(const int slot);
 
 	inline bool checkFlags(uint32_t flags) { return (dbgFlags & flags) == flags; }
 

@@ -28,11 +28,10 @@ static const char *stopNames[] =
 
 void CPU_CLASS::execute() noexcept(false)
 {
-	uint32_t opCode;
 	int32_t  brDisp;
 	bool     ovflg;
 	uint32_t sts;
-	const vaxOpcode *opc;
+	dopc_t   *dopc;
 	register int32_t  src1, src2, carry;
 	register int32_t  dst1, dst2;
 	register int32_t  src, dst, tmp;
@@ -91,17 +90,17 @@ void CPU_CLASS::execute() noexcept(false)
 
 
 			// Decode operands
-			opc = opCodes[opCode];
-			if (opc->flags & OPF_RSVD)
+			dopc = &dopCode[opCode];
+			if (dopc->flag & OPF_RSVD)
 				throw RSVD_INST_FAULT;
 
 			if (psReg & PSL_FPD) {
-				if ((opc->flags & OPF_FPD) == 0)
+				if ((dopc->flag & OPF_FPD) == 0)
 					throw RSVD_INST_FAULT;
 			} else {
 				rqCount = 0;
-				for (int idx = 0, opidx = 0; idx < opc->nOperands; idx++) {
-					int opr = opc->oprMode[idx];
+				for (int idx = 0, opidx = 0; idx < dopc->nModes; idx++) {
+					int opr = dopc->opMode[idx];
 					int rn, ireg, spec;
 					uint32_t mAddr, off;
 
@@ -3300,7 +3299,7 @@ void CPU_CLASS::execute() noexcept(false)
 
 				case STOP_UOPC:
 					printf("%s: Opcode %s - Unimplemented opcode at PC %08X\n",
-							devName.c_str(), opc->opName, faultAddr);
+							devName.c_str(), dopc->opCode->opName, faultAddr);
 					return;
 
 				case STOP_INIE:

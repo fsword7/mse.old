@@ -6,12 +6,16 @@
 #include <string>
 #include <vector>
 #include <iterator>
+#include <thread>
+#include <chrono>
 
 #include <cstdio>
 #include <cstdarg>
 #include <cstdlib>
 #include <cstdint>
 #include <cstring>
+
+#include <boost/algorithm/string.hpp>
 
 // Data length
 #define LN_BYTE  1

@@ -22,7 +22,7 @@
 
 #define OPR(...) __VA_ARGS__
 #define OPC(name, opcode, nopr, opr, flags) \
-	{ name, nullptr, flags, 0x00, opcode, nopr, opr, nullptr }
+	{ name, flags, opcode, nopr, opr }
 
 const vaxOpcode vaxOpcodes[] = {
 	OPC("UOPC",     OPC_nUOPC,     0, OPR({ 0,  0,  0,  0,  0,  0  }), OPC_REG),
@@ -476,7 +476,9 @@ const vaxOpcode vaxOpcodes[] = {
 
 void vax_cpuDevice::buildOpcodes()
 {
-	uint16_t opCode;
+	const vaxOpcode *opc;
+	dopc_t    *dopc;
+	uint16_t   opCode;
 
 	// Initialize all opcode table as default unimplemented opcode
 	for (int idx = 0; idx < CPU_nOPCTBL; idx++)
@@ -487,6 +489,29 @@ void vax_cpuDevice::buildOpcodes()
 		opCode = vaxOpcodes[idx].opCode;
 		if (opCodes[opCode] == &vaxOpcodes[0])
 			opCodes[opCode] = &vaxOpcodes[idx];
+	}
+
+	// Initialize decode opcode table with default illegal instruction
+	// Set flag to issue RSVD_INSTRUCTION_FAULT as default.
+	for (int idx = 0; idx < CPU_nOPCTBL; idx++) {
+		dopCode[idx].opCode = nullptr;
+		dopCode[idx].flag   = OPF_RSVD;
+		dopCode[idx].nModes = 0;
+		for (int oidx = 0; oidx < 6; oidx++)
+			dopCode[idx].opMode[oidx] = 0;
+	}
+
+	// Initialize decode opcode table for each valid instruction
+	for (int idx = 1; vaxOpcodes[idx].opName; idx++) {
+		opc    = &vaxOpcodes[idx];
+		opCode = opc->opCode;
+		dopc   = &dopCode[opCode];
+
+		dopc->opCode = opc;
+		dopc->flag   = opc->flags;
+		dopc->nModes = opc->nOperands;
+		for (int oidx = 0; oidx < dopc->nModes; oidx++)
+			dopc->opMode[oidx] = opc->oprMode[oidx];
 	}
 }
 
