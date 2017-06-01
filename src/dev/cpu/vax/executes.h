@@ -3275,11 +3275,9 @@ void CPU_CLASS::execute() noexcept(false)
 				ccReg = probe(true) | (ccReg & CC_C);
 				break;
 
-			// Illegal/unimplemented instruction
+			// Unimplemented instruction
 			default:
-//				if (opc->opCode != OPC_nUOPC)
-//					throw STOP_UOPC;
-				throw RSVD_INST_FAULT;
+				throw STOP_UOPC;
 			}
 		}
 
