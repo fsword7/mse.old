@@ -12,6 +12,7 @@ public:
 	virtual void reset() = 0;
 	virtual void execute() = 0;
 	virtual int  boot();
+	virtual int  start();
 	virtual int  stop();
 
 private:
