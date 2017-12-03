@@ -86,6 +86,29 @@ static int cmdBoot(Console *cty, Device *sdev, args_t &args)
 	return CMD_OK;
 }
 
+// Usage: stop <device>
+static int cmdStop(Console *cty, Device *sdev, args_t &args)
+{
+	Device *dev;
+
+	// Check number of arguments
+	if (args.size() < 2) {
+		std::cout << "Usage: " << args[0] << " <device>" << std::endl;
+		return CMD_OK;
+	}
+
+	// check existing device by using name
+	dev = sdev->findDevice(args[1]);
+	if (dev == nullptr) {
+		std::cout << args[1] << ": device not found." << std::endl;
+		return CMD_OK;
+	}
+
+//	dev->stop();
+
+	return CMD_OK;
+}
+
 // Usage: disasm <start> [end]
 static int cmdDisasm(Console *cty, Device *sdev, args_t &args)
 {
@@ -209,6 +232,7 @@ Command vaxCommands[] = {
 	{ "dump", "<start> [end]", cmdDump },
 	{ "load", "<file> [start]", cmdLoad },
 	{ "run", "<addr>", cmdRun },
+	{ "stop", "<device>", cmdStop },
 	// null terminator - end of command table
 	{ nullptr }
 };

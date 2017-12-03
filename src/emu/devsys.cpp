@@ -112,6 +112,12 @@ int Device::boot()
 	return CMD_ERROR;
 }
 
+int Device::stop()
+{
+	std::cerr << devName << ": Command not supported" << std::endl;
+	return CMD_ERROR;
+}
+
 int Device::load(std::string, uint32_t)
 {
 	std::cerr << devName << ": Command not supported" << std::endl;

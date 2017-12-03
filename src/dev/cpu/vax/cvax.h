@@ -99,7 +99,7 @@ public:
 	~cvax_cpuDevice();
 
 	void reset();
-	int  boot();
+//	int  boot();
 	void execute();
 
 	static cvax_cpuDevice *create(sysDevice *sdev, std::string devName);

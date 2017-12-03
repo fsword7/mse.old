@@ -456,7 +456,7 @@ public:
 	// CPU function calls
 	virtual void init();
 //	virtual void reset();
-	virtual int  boot();
+//	virtual int  boot();
 //	void execute();
 
 	int disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **str);

@@ -32,6 +32,14 @@ typedef std::vector<std::string> args_t;
 
 typedef int (*cmdfunc)(Console *, Device *, args_t &args);
 
+enum devState {
+	Stopped = 0,
+
+	// CPU device
+	Running = 100,
+	Waiting = 101,
+};
+
 struct Command {
 	const char *name;
 	const char *usage;
@@ -112,15 +120,18 @@ public:
 	void addDevice(Device *dev)       { devices.push_back(dev); }
 
 	// Device virtual function calls
-	virtual int setMemory(uint32_t size);
-	virtual int boot();
-	virtual int load(std::string fname, uint32_t sAddr);
-	virtual int dump(uint32_t *Addr, uint32_t eAddr, uint32_t sw);
+	virtual int  setMemory(uint32_t size);
+	virtual int  boot();
+	virtual int  stop();
+	virtual int  load(std::string fname, uint32_t sAddr);
+	virtual int  dump(uint32_t *Addr, uint32_t eAddr, uint32_t sw);
 
 protected:
 	std::string devName;  // Device name
-	std::string devType; // Device type (model)
+	std::string devType;  // Device type (model)
 	std::string devDesc;  // Device description
+
+	std::thread process;  // Thread process
 
 	int      clsType;
 	Driver  *driver; // Driver table information

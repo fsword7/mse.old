@@ -156,10 +156,10 @@ void cvax_cpuDevice::reset()
 	cleartlb(true);
 }
 
-int cvax_cpuDevice::boot()
-{
-	return 0;
-}
+//int cvax_cpuDevice::boot()
+//{
+//	return 0;
+//}
 
 void cvax_cpuDevice::halt(uint32_t code)
 {

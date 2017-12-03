@@ -54,10 +54,10 @@ vax_cpuDevice::~vax_cpuDevice()
 //		gRegs[idx].l = 0;
 //}
 
-int  vax_cpuDevice::boot()
-{
-	return 0;
-}
+//int  vax_cpuDevice::boot()
+//{
+//	return 0;
+//}
 
 void vax_cpuDevice::init()
 {
