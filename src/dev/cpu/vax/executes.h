@@ -2833,19 +2833,149 @@ void CPU_CLASS::execute() noexcept(false)
 				ret();
 				break;
 
-			// Floating instructions
-			case OPC_nCVTFD:
+			// *********************
+			// Floating Instructions
+			// *********************
+
+			// Convert instructions
+
+			case OPC_nCVTBF:
+			case OPC_nCVTWF:
 			case OPC_nCVTLF:
+			case OPC_nCVTFB:
+			case OPC_nCVTFW:
+			case OPC_nCVTFL:
+			case OPC_nCVTRFL:
+
+			case OPC_nCVTBD:
+			case OPC_nCVTWD:
 			case OPC_nCVTLD:
+			case OPC_nCVTDB:
+			case OPC_nCVTDW:
+			case OPC_nCVTDL:
+			case OPC_nCVTRDL:
+
+			case OPC_nCVTBG:
+			case OPC_nCVTWG:
 			case OPC_nCVTLG:
+			case OPC_nCVTGB:
+			case OPC_nCVTGW:
+			case OPC_nCVTGL:
+			case OPC_nCVTRGL:
 				throw RSVD_INST_FAULT;
+
+			case OPC_nCVTBH:
+			case OPC_nCVTWH:
+			case OPC_nCVTLH:
+			case OPC_nCVTHB:
+			case OPC_nCVTHW:
+			case OPC_nCVTHL:
+			case OPC_nCVTRHL:
+				throw RSVD_INST_FAULT;
+
+			// Note: No CVTDG and CVTGD instructions for VAX architecture
+			case OPC_nCVTFD:
+			case OPC_nCVTFG:
+			case OPC_nCVTFH:
+			case OPC_nCVTDF:
+			case OPC_nCVTDH:
+			case OPC_nCVTGF:
+			case OPC_nCVTGH:
+			case OPC_nCVTHF:
+			case OPC_nCVTHD:
+			case OPC_nCVTHG:
+				throw RSVD_INST_FAULT;
+
+
+			case OPC_nADDF2:
+			case OPC_nADDF3:
+			case OPC_nSUBF2:
+			case OPC_nSUBF3:
+			case OPC_nMULF2:
+			case OPC_nMULF3:
+			case OPC_nDIVF2:
+			case OPC_nDIVF3:
+				throw RSVD_INST_FAULT;
+
+			case OPC_nMOVF:
+			case OPC_nTSTF:
+			case OPC_nCMPF:
+			case OPC_nMNEGF:
+			case OPC_nACBF:
+			case OPC_nEMODF:
+			case OPC_nPOLYF:
+				throw RSVD_INST_FAULT;
+
+
+			case OPC_nADDD2:
+			case OPC_nADDD3:
+			case OPC_nSUBD2:
+			case OPC_nSUBD3:
+			case OPC_nMULD2:
+			case OPC_nMULD3:
+			case OPC_nDIVD2:
+			case OPC_nDIVD3:
+				throw RSVD_INST_FAULT;
+
+			case OPC_nMOVD:
+			case OPC_nTSTD:
+			case OPC_nCMPD:
+			case OPC_nMNEGD:
+			case OPC_nACBD:
+			case OPC_nEMODD:
+			case OPC_nPOLYD:
+				throw RSVD_INST_FAULT;
+
+
+			case OPC_nADDG2:
+			case OPC_nADDG3:
+			case OPC_nSUBG2:
+			case OPC_nSUBG3:
+			case OPC_nMULG2:
+			case OPC_nMULG3:
+			case OPC_nDIVG2:
+			case OPC_nDIVG3:
+				throw RSVD_INST_FAULT;
+
+			case OPC_nMOVG:
+			case OPC_nTSTG:
+			case OPC_nCMPG:
+			case OPC_nMNEGG:
+			case OPC_nACBG:
+			case OPC_nEMODG:
+			case OPC_nPOLYG:
+				throw RSVD_INST_FAULT;
+
+
+			case OPC_nADDH2:
+			case OPC_nADDH3:
+			case OPC_nSUBH2:
+			case OPC_nSUBH3:
+			case OPC_nMULH2:
+			case OPC_nMULH3:
+			case OPC_nDIVH2:
+			case OPC_nDIVH3:
+				throw RSVD_INST_FAULT;
+
+			case OPC_nMOVH:
+			case OPC_nTSTH:
+			case OPC_nCMPH:
+			case OPC_nMNEGH:
+			case OPC_nACBH:
+			case OPC_nEMODH:
+			case OPC_nPOLYH:
+				throw RSVD_INST_FAULT;
+
+
+			// ******************
+			// Queue instructions
+			// ******************
 
 #define QUE_NEXT(entry) ((entry)+(LN_LONG*0))
 #define QUE_PREV(entry) ((entry)+(LN_LONG*1))
 #define QUE_HEAD(entry) ((entry)+(LN_LONG*0))
 #define QUE_TAIL(entry) ((entry)+(LN_LONG*1))
 
-			// Queue instructions
 			case OPC_nINSQUE:
 				entry = SXTL(opReg[0]);
 				pred  = SXTL(opReg[1]);

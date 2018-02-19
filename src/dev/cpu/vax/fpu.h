@@ -11,16 +11,19 @@
 #pragma once
 
 // Result codes
-#define VFP_OK		0 // Successful
-#define VFP_FAULT	1 // Fault
-#define VFP_UNFL	2 // Underflow Error, FP = 0
-#define VFP_OVFL	3 // Overflow Error
-#define VFP_DZRO	4 // Divide by Zero
+#define VFP_OK		0x00 // Successful
+#define VFP_CCMSK   0x0F // Condition codes
+#define VFP_OVFL    CC_V // Overflow Error
+#define VFP_UNFL	0x10 // Underflow Error, FP = 0
+#define VFP_DZRO	0x20 // Divide by Zero
+#define VFP_FAULT	0x80 // Fault
 
 // Word-swapped floating
 #define FP_SWAP(fp)		((ZXTL(fp) >> 16) | (ZXTL(fp) << 16))
 
 #define FP_SIGN			0x00008000 // sign bit in word-swapped floating value
+
+#define FP_MASK32		0x0000FFFF // 32-bit mask field
 
 #define FP_P_NORM		63
 #define FP_NORM			0x8000000000000000ULL
@@ -28,6 +31,11 @@
 #define DFP_ROUND		0x0000000000000080ULL
 #define GFP_ROUND		0x0000000000000400ULL
 #define HFP_ROUND		0x0000000000004000ULL
+
+#define SFP_TYPE		0
+#define DFP_TYPE		1
+#define GFP_TYPE		2
+#define HFP_TYPE		3
 
 // Floating Format Definitions
 
@@ -39,20 +47,7 @@
 // +-+-+-+-^-+-+-+-^-+-+-+-^-+-+-+-^-+-+-+-^-+-+-+-^-+-+-+-^-+-+-+-+
 //  3 3 2 2 2 2 2 2 2 2 2 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0
 //  1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
-
-#define SFP_P_EXP		7
-#define SFP_M_EXP		0xFF
-#define SFP_BIAS		0x80
-#define SFP_SIGN		FP_SIGN
-#define SFP_HBIT		(1u << SFP_P_EXP)
-#define SFP_GUARD		(15 - SFP_P_EXP)
-#define SFP_EXP			(SFP_M_EXP << SFP_P_EXP)
-
-#define SFP_GETEXP(fp)	(((fp) >> SFP_P_EXP) & SFP_M_EXP)
-#define SFP_SETEXP(fp)	(((fp) & SFP_M_EXP) << SFP_P_EXP)
-#define SFP_GETFRAC(fp)	FP_SWAP(((fp) & ~(SFP_SIGN|SFP_EXP)) | SFP_HBIT)
-#define SFP_SETFRAC(fp)	(FP_SWAP(fp) & ~(SFP_SIGN|SFP_EXP|SFP_HBIT))
-
+//
 // D_Floating Format (Double Precision)
 //
 // |<--------- Low-Order --------->|<-------- High-Order --------->|
@@ -64,18 +59,18 @@
 //  3 3 2 2 2 2 2 2 2 2 2 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0
 //  1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
 
-#define DFP_P_EXP		7
-#define DFP_M_EXP		0xFF
-#define DFP_BIAS		0x80
-#define DFP_SIGN		FP_SIGN
-#define DFP_HBIT		(1u << DFP_P_EXP)
-#define DFP_GUARD		(15 - DFP_P_EXP)
-#define DFP_EXP			(DFP_M_EXP << DFP_P_EXP)
+#define UFP_P_EXP		7
+#define UFP_M_EXP		0xFF
+#define UFP_BIAS		0x80
+#define UFP_SIGN		FP_SIGN
+#define UFP_HBIT		(1u << UFP_P_EXP)
+#define UFP_GUARD		(15 - UFP_P_EXP)
+#define UFP_EXP			(UFP_M_EXP << UFP_P_EXP)
 
-#define DFP_GETEXP(fp)	(((fp) >> DFP_P_EXP) & DFP_M_EXP)
-#define DFP_SETEXP(fp)	(((fp) & DFP_M_EXP) << DFP_P_EXP)
-#define DFP_GETFRAC(fp)	FP_SWAP(((fp) & ~(DFP_SIGN|DFP_EXP)) | DFP_HBIT)
-#define DFP_SETFRAC(fp)	(FP_SWAP(fp) & ~(DFP_SIGN|DFP_EXP|DFP_HBIT))
+#define UFP_GETEXP(fp)	(((fp) >> UFP_P_EXP) & UFP_M_EXP)
+#define UFP_SETEXP(fp)	(((fp) & UFP_M_EXP) << UFP_P_EXP)
+#define UFP_GETFRAC(fp)	FP_SWAP(((fp) & ~(UFP_SIGN|UFP_EXP)) | UFP_HBIT)
+#define UFP_SETFRAC(fp)	(FP_SWAP(fp) & ~(UFP_SIGN|UFP_EXP|UFP_HBIT))
 
 // G_Floating Format Definitions
 //
@@ -137,7 +132,47 @@
 	else if ((res) == 0)  cc = CC_Z | (flg); \
 	else                  cc = (flg);
 
+// VAX S/D_Floating class
+class vaxfp_t {
+public:
+	vaxfp_t(int type = SFP_TYPE);
+	~vaxfp_t();
 
+	int unpack(uint32_t *fp);
+	int unpackf(uint32_t *fp);
+	int unpackd(uint32_t *fp);
+	int unpackg(uint32_t *fp);
+//	int unpackh(uint32_t *fp);
+
+	int packf(uint32_t *dst);
+	int packd(uint32_t *dst);
+	int packg(uint32_t *dst);
+//	int packh(uint32_t *dst);
+
+	void normalize();
+
+	void convert(int32_t val);
+
+	static int converti(uint32_t *val, uint32_t *res, int type, int len, int rnd);
+	static int convertfg(uint32_t *val, uint32_t *res);
+	static int convertgf(uint32_t *val, uint32_t *res);
+	static int convertfd(uint32_t *val, uint32_t *res);
+
+protected:
+	int      type;
+	int32_t	 bias, round;
+	int      st;
+
+	int32_t  sign;
+	int32_t  exp;
+	uint64_t frac;
+
+//	const int64_t fpRound[];
+//	const int32_t fpBias[];
+//	const int32_t fpMask[];
+};
+
+#if 0
 class sfp_t {
 public:
 	sfp_t(uint32_t fp);
@@ -185,3 +220,4 @@ protected:
 	int32_t  exp;
 	uint64_t frac;
 };
+#endif
