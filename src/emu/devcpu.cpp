@@ -23,6 +23,11 @@ int cpuDevice::boot()
 	return CMD_OK;
 }
 
+int cpuDevice::start()
+{
+	return CMD_OK;
+}
+
 int cpuDevice::stop()
 {
 	// Send STOP signal to processor and wait for
