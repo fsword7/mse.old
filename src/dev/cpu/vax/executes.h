@@ -2898,7 +2898,43 @@ void CPU_CLASS::execute() noexcept(false)
 				throw RSVD_INST_FAULT;
 
 			case OPC_nMOVF:
+				if (opReg[0] & UFP_EXP) {
+					if (opReg[0] & UFP_SIGN)
+						throw RSVD_OPND_FAULT;
+					dst = 0;
+				} else
+					dst = opReg[0];
+
+				storel(opReg[1], dst);
+
+				// Update condition codes
+				fpSetNZ(ccReg, SXTL(dst), (ccReg & CC_C));
+
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Move %08X to %08X: %s\n", devName.c_str(),
+						ZXTL(opReg[0]), ZXTL(dst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
+				break;
+
 			case OPC_nTSTF:
+				src = opReg[0];
+				if (src & UFP_EXP) {
+					if (src & UFP_SIGN)
+						throw RSVD_OPND_FAULT;
+					src = 0;
+				}
+
+				// Update condition codes
+				fpSetNZ(ccReg, SXTL(src), (ccReg & CC_C));
+
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Test %08X (%08X): %s\n", devName.c_str(),
+						ZXTL(src), ZXTL(opReg[0]), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
+				break;
+
 			case OPC_nCMPF:
 			case OPC_nMNEGF:
 			case OPC_nACBF:
@@ -2918,7 +2954,48 @@ void CPU_CLASS::execute() noexcept(false)
 				throw RSVD_INST_FAULT;
 
 			case OPC_nMOVD:
+				if (opReg[0] & UFP_EXP) {
+					if (opReg[0] & UFP_SIGN)
+						throw RSVD_OPND_FAULT;
+					dst1 = dst2 = 0;
+				} else {
+					dst1 = opReg[0];
+					dst2 = opReg[1];
+				}
+
+				storeq(opReg[2], dst1, dst2);
+
+				// Update condition codes
+				fpSetNZ(ccReg, SXTL(dst1), (ccReg & CC_C));
+
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Move %08X %08X to %08X %08X: %s\n", devName.c_str(),
+						ZXTL(opReg[0]), ZXTL(opReg[1]), ZXTL(dst1), ZXTL(dst2),
+						stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
+				break;
+
 			case OPC_nTSTD:
+				src1 = opReg[0];
+				src2 = opReg[1];
+				if (src1 & UFP_EXP) {
+					if (src1 & UFP_SIGN)
+						throw RSVD_OPND_FAULT;
+					src1 = src2 = 0;
+				}
+
+				// Update condition codes
+				fpSetNZ(ccReg, SXTL(src), (ccReg & CC_C));
+
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Test %08X %08X (%08X %08X): %s\n", devName.c_str(),
+						ZXTL(src1), ZXTL(src2), ZXTL(opReg[0]), ZXTL(opReg[1]),
+						stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
+				break;
+
 			case OPC_nCMPD:
 			case OPC_nMNEGD:
 			case OPC_nACBD:
@@ -2938,7 +3015,48 @@ void CPU_CLASS::execute() noexcept(false)
 				throw RSVD_INST_FAULT;
 
 			case OPC_nMOVG:
+				if (opReg[0] & GFP_EXP) {
+					if (opReg[0] & GFP_SIGN)
+						throw RSVD_OPND_FAULT;
+					dst1 = dst2 = 0;
+				} else {
+					dst1 = opReg[0];
+					dst2 = opReg[1];
+				}
+
+				storeq(opReg[2], dst1, dst2);
+
+				// Update condition codes
+				fpSetNZ(ccReg, SXTL(dst1), (ccReg & CC_C));
+
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Move %08X %08X to %08X %08X: %s\n", devName.c_str(),
+						ZXTL(opReg[0]), ZXTL(opReg[1]), ZXTL(dst1), ZXTL(dst2),
+						stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
+				break;
+
 			case OPC_nTSTG:
+				src1 = opReg[0];
+				src2 = opReg[1];
+				if (src1 & GFP_EXP) {
+					if (src1 & GFP_SIGN)
+						throw RSVD_OPND_FAULT;
+					src1 = src2 = 0;
+				}
+
+				// Update condition codes
+				fpSetNZ(ccReg, SXTL(src), (ccReg & CC_C));
+
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Test %08X %08X (%08X %08X): %s\n", devName.c_str(),
+						ZXTL(src1), ZXTL(src2), ZXTL(opReg[0]), ZXTL(opReg[1]),
+						stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
+				break;
+
 			case OPC_nCMPG:
 			case OPC_nMNEGG:
 			case OPC_nACBG:

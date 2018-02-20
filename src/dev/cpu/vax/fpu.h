@@ -127,7 +127,7 @@
 
 
 // Set N and Z flag
-#define SetNZ_FP(cc, res, flg) \
+#define fpSetNZ(cc, res, flg) \
 	if ((res) & FP_SIGN)  cc = CC_N | (flg); \
 	else if ((res) == 0)  cc = CC_Z | (flg); \
 	else                  cc = (flg);
