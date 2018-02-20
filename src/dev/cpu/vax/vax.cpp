@@ -598,6 +598,21 @@ static const char *ieNames[]  = { "Interrupt", "Exception", "Severe Exception" }
 static const char *ieTypes[]  = { "INT", "EXC", "SVE" };
 static const char *accNames[] = { "Kernel", "Executive", "Supervisor", "User" };
 
+// Arithmetic Exception Trap/Fault Names
+static const char *trpNames[] =
+{
+	"Integer Overflow Trap",
+	"Integer Divide-by-Zero Trap",
+	"Floating Overflow Trap",
+	"Floating/Decimal Divide-by-Zero Trap",
+	"Floating Underflow Trap",
+	"Decimal Overflow Trap",
+	"Subscript Range Trap",
+	"Floating Overflow Fault",
+	"Floating Divide Fault",
+	"Floating Underflow Fault"
+};
+
 #define DSPL_CUR(mode) accNames[PSL_GETCUR(mode)]
 #define DSPL_PRV(mode) accNames[PSL_GETPRV(mode)]
 
@@ -628,6 +643,7 @@ int vax_cpuDevice::evaluate()
 	return 0;
 }
 
+
 void vax_cpuDevice::interrupt()
 {
 	uint32_t nipl, trap;
@@ -636,8 +652,8 @@ void vax_cpuDevice::interrupt()
 	if ((trap = IRQ_GETTRAP(irqFlags)) != 0) {
 #ifdef ENABLE_DEBUG
 		if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND) || dbg.checkFlags(DBG_EXCEPTION))
-			dbg.log("%s: (EXC) Arithmetic Trap at PC %08X\n",
-				devName.c_str(), faultAddr);
+			dbg.log("%s: (EXC) Arithmetic Trap at PC %08X: %s\n",
+				devName.c_str(), faultAddr, trpNames[trap-1]);
 #endif /* ENABLE_DEBUG */
 		// Set parameters
 		paCount  = 1;
