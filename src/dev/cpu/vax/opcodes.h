@@ -13,14 +13,21 @@
 #define OPF_FPD      0x40000000 // FPD
 #define OPF_REGULAR  0x00000000 // Regular Opcode
 #define OPF_EMULATE  0x80000000 // Instruction is emulatable
-#define OPF_STRING   0x00000080 // String Instructions
-#define OPF_PACKED   0x00000040 // Packed Instructions
-#define OPF_VECTOR   0x00000020 // Vector Instructions
-#define OPF_FLOAT    0x00000010 // Floating Instructions
-#define OPF_OCTA     0x00000008 // Octaword/H_Floating Type
-#define OPF_QUAD     0x00000004 // Quadword/G_Floating Type
-#define OPF_WORD     0x00000002 // Word/D_Floating Type
-#define OPF_BYTE     0x00000001 // Byte/F_Floating Type
+
+#define OPF_STRING   0x00000400 // String Instructions
+#define OPF_PACKED   0x00000200 // Packed Instructions
+#define OPF_VECTOR   0x00000100 // Vector Instructions
+
+#define OPF_FLOAT    (OPF_SFLOAT|OPF_DFLOAT|OPF_GFLOAT|OPF_HFLOAT) // Floating Instructions
+#define OPF_HFLOAT   0x00000080 // H_Floating Type
+#define OPF_GFLOAT   0x00000040 // G_Floating Type
+#define OPF_DFLOAT   0x00000020 // D_Floating Type
+#define OPF_SFLOAT   0x00000010 // F_Floating Type
+
+#define OPF_OCTA     0x00000008 // Octaword
+#define OPF_QUAD     0x00000004 // Quadword
+#define OPF_WORD     0x00000002 // Word
+#define OPF_BYTE     0x00000001 // Byte
 
 #define OPC_nEXTEND  0xFC // Extended opcode offset for opcode table
 

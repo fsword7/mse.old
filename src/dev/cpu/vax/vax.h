@@ -651,5 +651,7 @@ protected:
 	tlb_t     tlbSystem[TLB_SIZE];
 	tlb_t     tlbProcess[TLB_SIZE];
 
+	uint32_t  cfgFlag; // Configuration flags
+
 private:
 };
