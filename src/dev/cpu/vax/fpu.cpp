@@ -254,37 +254,43 @@ void vaxfp_t::convert(int32_t val)
 	normalize();
 }
 
-// Convert integer to F/D/G float
-int vaxfp_t::converti(uint32_t *val, uint32_t *res, int type, int len, int rnd)
+// Convert integer (B/W/L) to F/D/G float
+int vaxfp_t::converti(int32_t val, uint32_t *res, int type)
 {
-	int32_t bexp;
 	vaxfp_t fp(type);
-	int     st;
 
-	st = fp.unpack(val);
-	if (st != VFP_OK)
-		return st;
-
-	bexp = fp.exp - fp.bias;
-	if (fp.exp == 0 || bexp < 0) {
-		*res = 0;
+	// When determine value as zero, do nothing and return with zero
+	if (val == 0) {
+		res[0] = 0;
+		if (type == DFP_TYPE)
+			res[1] = 0;
 		return VFP_OK;
 	}
-	if (bexp <= FP_P_NORM) {
-		fp.frac = ((fp.frac >> (FP_P_NORM - bexp)) + rnd) >> 1;
-		if (fp.frac > (fpMask[len] + (fp.sign != 0)))
-			st |= CC_V;
-	} else {
-		if (bexp > (FP_P_NORM + 32)) {
-			*res = 0;
-			return VFP_OK;
-		}
-		fp.frac <<= bexp - FP_P_NORM - 1;
-		st |= CC_V;
-	}
 
-	*res = fp.sign ? (fp.frac ^ FP_MASK32) : fp.frac;
-	return st;
+	// Determine value as positive or negative
+	if (val < 0) {
+		// Negative value
+		fp.sign = FP_SIGN;
+		fp.bias = fpBias[type] + 32;
+		fp.frac = uint64_t(-val) << (FP_P_NORM - 31);
+	} else {
+		// Positive value
+		fp.sign = 0;
+		fp.bias = fpBias[type] + 32;
+		fp.frac = uint64_t(val) << (FP_P_NORM - 31);
+	}
+	fp.normalize();
+
+	// All done, pack into FP words
+	switch (type) {
+	case SFP_TYPE:
+		return fp.packf(res);
+	case DFP_TYPE:
+		return fp.packd(res);
+	case GFP_TYPE:
+		return fp.packg(res);
+	}
+	return VFP_ERROR;
 }
 
 int vaxfp_t::convertfg(uint32_t *val, uint32_t *res)

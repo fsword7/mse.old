@@ -308,17 +308,18 @@ sysModel vax_sysModels[] =
 {
 	SYSTEM(vax,   "VAX minicomputer",    &vax_sysDriver),
 
-//	MODEL(11/730,   vax, "VAX-11/730",       ka730_sysDriver),
-//	MODEL(11/750,   vax, "VAX-11/750",       ka750_sysDriver),
-//	MODEL(11/780,   vax, "VAX-11/780",       ka780_sysDriver),
-//	MODEL(11/785,   vax, "VAX-11/785",       ka780_sysDriver),
+//	MODEL(vax730,   vax, "VAX-11/730",       ka730_sysDriver),
+//	MODEL(vax750,   vax, "VAX-11/750",       ka750_sysDriver),
+//	MODEL(vax780,   vax, "VAX-11/780",       ka780_sysDriver),
+//	MODEL(vax782,   vax, "VAX-11/782",       ka780_sysDriver),
+//	MODEL(vax785,   vax, "VAX-11/785",       ka780_sysDriver),
 
-//	MODEL(8200,     vax, "VAX 8200",         ka820_sysDriver),
-//	MODEL(8250,     vax, "VAX 8250",         ka820_sysDriver),
-//	MODEL(8300,     vax, "VAX 8300",         ka820_sysDriver),
-//	MODEL(8350,     vax, "VAX 8350",         ka820_sysDriver),
-//	MODEL(8600,     vax, "VAX 8600",         ka86_sysDriver),
-//	MODEL(8650,     vax, "VAX 8650",         ka86_sysDriver),
+//	MODEL(vax8200,     vax, "VAX 8200",         ka820_sysDriver),
+//	MODEL(vax8250,     vax, "VAX 8250",         ka820_sysDriver),
+//	MODEL(vax8300,     vax, "VAX 8300",         ka820_sysDriver),
+//	MODEL(vax8350,     vax, "VAX 8350",         ka820_sysDriver),
+//	MODEL(vax8600,     vax, "VAX 8600",         ka86_sysDriver),
+//	MODEL(vax8650,     vax, "VAX 8650",         ka86_sysDriver),
 
 	// MicroVAX model list
 //	MODEL(mv3300,   vax, "MicroVAX 3300",    ka640_sysDriver),

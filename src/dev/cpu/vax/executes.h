@@ -26,6 +26,15 @@ static const char *stopNames[] =
 	"HALT Instruction"
 };
 
+static const char *ferrCodes[] =
+{
+	"Successful",
+	"Overflow Error",
+	"Underflow Error",
+	"Divide by Zero",
+	"Reserved Operand Fault"
+};
+
 void CPU_CLASS::execute() noexcept(false)
 {
 	int32_t  brDisp;
@@ -2840,8 +2849,74 @@ void CPU_CLASS::execute() noexcept(false)
 			// Convert instructions
 
 			case OPC_nCVTBF:
+				src = SXTB(opReg[0]);
+				if ((sts = vaxfp_t::converti(src, &udst, SFP_TYPE)) != VFP_OK) {
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: Convert %02X: %s\n", devName.c_str(),
+								ZXTB(opReg[0]), ferrCodes[sts]);
+#endif /* ENABLE_DEBUG */
+					faultfp(sts);
+				}
+
+				storel(opReg[1], udst);
+
+				// Update condition codes
+				fpSetNZ(ccReg, SXTL(udst), (ccReg & CC_C));
+
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Convert %02X to %08X: %s\n", devName.c_str(),
+						ZXTB(opReg[0]), ZXTL(udst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
+				break;
+
 			case OPC_nCVTWF:
+				src = SXTW(opReg[0]);
+				if ((sts = vaxfp_t::converti(src, &udst, SFP_TYPE)) != VFP_OK) {
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: Convert %04X: %s\n", devName.c_str(),
+								ZXTW(opReg[0]), ferrCodes[sts]);
+#endif /* ENABLE_DEBUG */
+					faultfp(sts);
+				}
+
+				storel(opReg[1], udst);
+
+				// Update condition codes
+				fpSetNZ(ccReg, SXTL(udst), (ccReg & CC_C));
+
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Convert %04X to %08X: %s\n", devName.c_str(),
+						ZXTW(opReg[0]), ZXTL(udst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
+				break;
+
 			case OPC_nCVTLF:
+				src = SXTL(opReg[0]);
+				if ((sts = vaxfp_t::converti(src, &udst, SFP_TYPE)) != VFP_OK) {
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: Convert %08X: %s\n", devName.c_str(),
+								ZXTL(opReg[0]), ferrCodes[sts]);
+#endif /* ENABLE_DEBUG */
+					faultfp(sts);
+				}
+
+				storel(opReg[1], udst);
+
+				// Update condition codes
+				fpSetNZ(ccReg, SXTL(udst), (ccReg & CC_C));
+
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Convert %08X to %08X: %s\n", devName.c_str(),
+						ZXTL(opReg[0]), ZXTL(udst), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
+				break;
+
 			case OPC_nCVTFB:
 			case OPC_nCVTFW:
 			case OPC_nCVTFL:

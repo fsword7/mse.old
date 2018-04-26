@@ -11,12 +11,19 @@
 #pragma once
 
 // Result codes
-#define VFP_OK		0x00 // Successful
-#define VFP_CCMSK   0x0F // Condition codes
-#define VFP_OVFL    CC_V // Overflow Error
-#define VFP_UNFL	0x10 // Underflow Error, FP = 0
-#define VFP_DZRO	0x20 // Divide by Zero
-#define VFP_FAULT	0x80 // Fault
+//#define VFP_OK		0x00 // Successful
+//#define VFP_CCMSK   0x0F // Condition codes
+//#define VFP_OVFL    CC_V // Overflow Error
+//#define VFP_UNFL	0x10 // Underflow Error, FP = 0
+//#define VFP_DZRO	0x20 // Divide by Zero
+//#define VFP_FAULT	0x80 // Fault
+
+#define VFP_OK		0 // Successful
+#define VFP_OVFL	1 // Overflow Error
+#define VFP_UNFL	2 // Underflow Error, FP = 0
+#define VFP_DZRO	3 // Divide by Zero
+#define VFP_FAULT	4 // Reserved Operand Fault
+#define VFP_ERROR	5 // Coding error
 
 // Word-swapped floating
 #define FP_SWAP(fp)		((ZXTL(fp) >> 16) | (ZXTL(fp) << 16))
@@ -153,7 +160,7 @@ public:
 
 	void convert(int32_t val);
 
-	static int converti(uint32_t *val, uint32_t *res, int type, int len, int rnd);
+	static int converti(int32_t val, uint32_t *res, int type);
 	static int convertfg(uint32_t *val, uint32_t *res);
 	static int convertgf(uint32_t *val, uint32_t *res);
 	static int convertfd(uint32_t *val, uint32_t *res);
