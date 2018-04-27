@@ -14,5 +14,7 @@ public:
 	Core();
 	~Core();
 
+	void release();
+
 private:
 };

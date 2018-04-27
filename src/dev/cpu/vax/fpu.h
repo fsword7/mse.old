@@ -165,6 +165,8 @@ public:
 	static int convertgf(uint32_t *val, uint32_t *res);
 	static int convertfd(uint32_t *val, uint32_t *res);
 
+	static int compare(uint32_t *src, uint32_t *dst, int type, uint32_t *cc);
+
 protected:
 	int      type;
 	int32_t	 bias, round;

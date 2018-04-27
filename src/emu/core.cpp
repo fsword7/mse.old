@@ -28,3 +28,8 @@ Core::~Core()
 {
 }
 
+// Cleaning system up
+void Core::release()
+{
+
+}

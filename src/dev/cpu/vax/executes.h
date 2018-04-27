@@ -3171,6 +3171,25 @@ void CPU_CLASS::execute() noexcept(false)
 				break;
 
 			case OPC_nCMPF:
+				usrcx[0] = opReg[0];
+				udstx[0] = opReg[1];
+
+				if ((sts = vaxfp_t::compare(usrcx, udstx, SFP_TYPE, &ccReg)) != VFP_OK) {
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: Compare %08X with %08X: %s\n", devName.c_str(),
+								ZXTL(opReg[0]), ZXTL(opReg[1]), ferrCodes[sts]);
+#endif /* ENABLE_DEBUG */
+					faultfp(sts);
+				}
+
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Compare %08X with %08X: %s\n", devName.c_str(),
+							ZXTL(opReg[0]), ZXTL(opReg[1]), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
+				break;
+
 			case OPC_nACBF:
 			case OPC_nEMODF:
 			case OPC_nPOLYF:
@@ -3254,6 +3273,25 @@ void CPU_CLASS::execute() noexcept(false)
 				break;
 
 			case OPC_nCMPD:
+				usrcx[0] = opReg[0];
+				udstx[0] = opReg[1];
+
+				if ((sts = vaxfp_t::compare(usrcx, udstx, DFP_TYPE, &ccReg)) != VFP_OK) {
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: Compare %08X with %08X: %s\n", devName.c_str(),
+								ZXTL(opReg[0]), ZXTL(opReg[1]), ferrCodes[sts]);
+#endif /* ENABLE_DEBUG */
+					faultfp(sts);
+				}
+
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Compare %08X with %08X: %s\n", devName.c_str(),
+							ZXTL(opReg[0]), ZXTL(opReg[1]), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
+				break;
+
 			case OPC_nACBD:
 			case OPC_nEMODD:
 			case OPC_nPOLYD:
@@ -3317,12 +3355,12 @@ void CPU_CLASS::execute() noexcept(false)
 				break;
 
 			case OPC_nTSTG:
-				src1 = opReg[0];
-				src2 = opReg[1];
+				srcx[0] = opReg[0];
+				srcx[1] = opReg[1];
 				if (src1 & GFP_EXP) {
 					if (src1 & GFP_SIGN)
 						throw RSVD_OPND_FAULT;
-					src1 = src2 = 0;
+					srcx[0] = srcx[1] = 0;
 				}
 
 				// Update condition codes
@@ -3331,12 +3369,35 @@ void CPU_CLASS::execute() noexcept(false)
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
 					dbg.log("%s: Test %08X %08X (%08X %08X): %s\n", devName.c_str(),
-						ZXTL(src1), ZXTL(src2), ZXTL(opReg[0]), ZXTL(opReg[1]),
+						ZXTL(srcx[0]), ZXTL(srcx[1]), ZXTL(opReg[0]), ZXTL(opReg[1]),
 						stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
 
 			case OPC_nCMPG:
+				usrcx[0] = opReg[0];
+				usrcx[1] = opReg[1];
+				udstx[0] = opReg[2];
+				udstx[1] = opReg[3];
+
+				if ((sts = vaxfp_t::compare(usrcx, udstx, GFP_TYPE, &ccReg)) != VFP_OK) {
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: Compare %08X %08X with %08X %08X: %s\n", devName.c_str(),
+								ZXTL(opReg[0]), ZXTL(opReg[1]), ZXTL(opReg[2]), ZXTL(opReg[3]),
+								ferrCodes[sts]);
+#endif /* ENABLE_DEBUG */
+					faultfp(sts);
+				}
+
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: Compare %08X %08X with %08X %08X: %s\n", devName.c_str(),
+							ZXTL(opReg[0]), ZXTL(opReg[1]), ZXTL(opReg[2]), ZXTL(opReg[3]),
+							stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
+				break;
+
 			case OPC_nACBG:
 			case OPC_nEMODG:
 			case OPC_nPOLYG:

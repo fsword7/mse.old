@@ -39,13 +39,17 @@ void logFile::close(const int32_t slot)
 	if (slot < 0) {
 		logFlags = 0;
 		for (int idx = 0; idx < LOG_NFILES; idx++) {
-			if (outFile[idx].is_open())
+			if (outFile[idx].is_open()) {
+				outFile[idx].flush();
 				outFile[idx].close();
+			}
 		}
 	} else if (slot < LOG_NFILES) {
 		logFlags &= ~(1u << slot);
-		if (outFile[slot].is_open())
+		if (outFile[slot].is_open()) {
+			outFile[slot].flush();
 			outFile[slot].close();
+		}
 	}
 }
 
@@ -55,8 +59,10 @@ void logFile::log(const uint32_t flags, const char *out)
 		return;
 
 	for (int idx = 0; idx < LOG_NFILES; idx++) {
-		if (logFlags & (flags & (1u << idx)))
+		if (logFlags & (flags & (1u << idx))) {
 			outFile[idx] << out;
+			outFile[idx].flush();
+		}
 	}
 }
 

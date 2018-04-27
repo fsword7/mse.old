@@ -139,7 +139,7 @@ const vaxOpcode vaxOpcodes[] = {
 	OPC("ACBF",     OPC_nACBF,     4, OPR({ RF, RF, MF, BW, 0,  0  }), OPC_SFL|UOPC),
 
 	OPC("MOVF",     OPC_nMOVF,     2, OPR({ RF, WF, 0,  0,  0,  0  }), OPC_SFL),
-	OPC("CMPF",     OPC_nCMPF,     2, OPR({ RF, RF, 0,  0,  0,  0  }), OPC_SFL|UOPC),
+	OPC("CMPF",     OPC_nCMPF,     2, OPR({ RF, RF, 0,  0,  0,  0  }), OPC_SFL),
 	OPC("MNEGF",    OPC_nMNEGF,    2, OPR({ RF, WF, 0,  0,  0,  0  }), OPC_SFL),
 	OPC("TSTF",     OPC_nTSTF,     1, OPR({ RF, 0,  0,  0,  0,  0  }), OPC_SFL),
 	OPC("EMODF",    OPC_nEMODF,    5, OPR({ RF, RB, RF, WL, WF, 0  }), OPC_SFL|UOPC),
@@ -171,7 +171,7 @@ const vaxOpcode vaxOpcodes[] = {
 	OPC("ACBD",     OPC_nACBD,     4, OPR({ RD, RD, MD, BW, 0,  0  }), OPC_DFL|UOPC),
 
 	OPC("MOVD",     OPC_nMOVD,     2, OPR({ RD, WD, 0,  0,  0,  0  }), OPC_DFL),
-	OPC("CMPD",     OPC_nCMPD,     2, OPR({ RD, RD, 0,  0,  0,  0  }), OPC_DFL|UOPC),
+	OPC("CMPD",     OPC_nCMPD,     2, OPR({ RD, RD, 0,  0,  0,  0  }), OPC_DFL),
 	OPC("MNEGD",    OPC_nMNEGD,    2, OPR({ RD, WD, 0,  0,  0,  0  }), OPC_DFL),
 	OPC("TSTD",     OPC_nTSTD,     1, OPR({ RD, 0,  0,  0,  0,  0  }), OPC_DFL),
 	OPC("EMODD",    OPC_nEMODD,    5, OPR({ RD, RB, RD, WL, WD, 0  }), OPC_DFL|UOPC),
@@ -367,7 +367,7 @@ const vaxOpcode vaxOpcodes[] = {
 	OPC("ACBG",     OPC_nACBG,     4, OPR({ RG, RG, MG, BW, 0,  0  }), OPC_GFL|UOPC),
 
 	OPC("MOVG",     OPC_nMOVG,     2, OPR({ RG, WG, 0,  0,  0,  0  }), OPC_GFL),
-	OPC("CMPG",     OPC_nCMPG,     2, OPR({ RG, RG, 0,  0,  0,  0  }), OPC_GFL|UOPC),
+	OPC("CMPG",     OPC_nCMPG,     2, OPR({ RG, RG, 0,  0,  0,  0  }), OPC_GFL),
 	OPC("MNEGG",    OPC_nMNEGG,    2, OPR({ RG, WG, 0,  0,  0,  0  }), OPC_GFL),
 	OPC("TSTG",     OPC_nTSTG,     1, OPR({ RG, 0,  0,  0,  0,  0  }), OPC_GFL),
 	OPC("EMODG",    OPC_nEMODG,    5, OPR({ RG, RB, RG, WL, WG, 0  }), OPC_GFL|UOPC),

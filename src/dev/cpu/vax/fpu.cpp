@@ -322,6 +322,53 @@ int vaxfp_t::convertfd(uint32_t *val, uint32_t *res)
 	return fp.packd(res);
 }
 
+int vaxfp_t::compare(uint32_t *src, uint32_t *dst, int type, uint32_t *cc)
+{
+	vaxfp_t sfp(type), dfp(type);
+	int     sts;
+	int32_t diff;
+
+	switch (type) {
+	case SFP_TYPE:
+		if ((sts = sfp.unpackf(src)) != VFP_OK)
+			return sts;
+		if ((sts = dfp.unpackf(dst)) != VFP_OK)
+			return sts;
+		break;
+	case DFP_TYPE:
+		if ((sts = sfp.unpackd(src)) != VFP_OK)
+			return sts;
+		if ((sts = dfp.unpackd(dst)) != VFP_OK)
+			return sts;
+		break;
+	case GFP_TYPE:
+		if ((sts = sfp.unpackg(src)) != VFP_OK)
+			return sts;
+		if ((sts = dfp.unpackg(dst)) != VFP_OK)
+			return sts;
+		break;
+	}
+
+	if (sfp.sign != dfp.sign) {
+		*cc = sfp.sign ? CC_N : 0;
+	} else {
+		// Determine difference between two FP numbers (exponent and fraction fields)
+		if ((diff = sfp.exp - dfp.exp) == 0)
+			diff = ((sfp.frac < dfp.frac) ? -1 :
+					(sfp.frac > dfp.frac) ?  1 : 0);
+
+		// Update code condition as result
+		if (diff < 0)
+			*cc = sfp.sign ? 0 : CC_N;
+		else if (diff > 0)
+			*cc = sfp.sign ? CC_N : 0;
+		else
+			*cc = CC_Z;
+	}
+
+	return VFP_OK;
+}
+
 #if 0
 // ****************************************************************************
 
