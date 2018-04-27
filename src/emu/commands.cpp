@@ -291,7 +291,7 @@ static int cmdSetMemory(Console *con, Device *cdev, args_t &args)
 	}
 
 	for (int idx = 0; memcfg[idx].cfgName; idx++) {
-		if (memcfg[idx].cfgName == args[3]) {
+		if (boost::iequals(args[3], memcfg[idx].cfgName)) {
 			cdev->setMemory(memcfg[idx].cfgSize);
 			std::cout << cdev->getName() << ": Set memory to "
 					  << memcfg[idx].cfgName << std::endl;
