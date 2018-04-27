@@ -56,7 +56,7 @@ void logFile::log(const uint32_t flags, const char *out)
 
 	for (int idx = 0; idx < LOG_NFILES; idx++) {
 		if (logFlags & (flags & (1u << idx)))
-			outFile[idx] << out << std::endl;
+			outFile[idx] << out;
 	}
 }
 
