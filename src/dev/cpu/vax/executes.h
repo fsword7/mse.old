@@ -56,6 +56,8 @@ void CPU_CLASS::execute() noexcept(false)
 
 	register int32_t  srcx[4],  dstx[4];
 	register uint32_t usrcx[4], udstx[4];
+	register uint32_t uresx[4];
+
 //	register int64_t  srcqx[4],  dstqx[4];
 //	register uint64_t usrcqx[4], udstqx[4];
 
@@ -3103,8 +3105,56 @@ void CPU_CLASS::execute() noexcept(false)
 
 			case OPC_nADDF2:
 			case OPC_nADDF3:
+				usrcx[0] = opReg[0];
+				udstx[0] = opReg[1];
+
+				if ((sts = vaxfp_t::addf(usrcx, udstx, uresx)) != VFP_OK) {
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: %08X + %08X: %s\n", devName.c_str(),
+							ZXTL(opReg[0]), ZXTL(opReg[1]), ferrCodes[sts]);
+#endif /* ENABLE_DEBUG */
+					faultfp(sts);
+				}
+
+				// Store results
+				storel(opReg[2], dst);
+				// Update condition codes
+				fpSetNZ(ccReg, SXTL(uresx[0]), (ccReg & CC_C));
+
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %08X + %08X => %08X: %s\n", devName.c_str(),
+						ZXTL(usrcx[0]), ZXTL(udstx[0]), ZXTL(uresx[0]), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
+				break;
+
 			case OPC_nSUBF2:
 			case OPC_nSUBF3:
+				usrcx[0] = opReg[0];
+				udstx[0] = opReg[1];
+
+				if ((sts = vaxfp_t::subtractf(usrcx, udstx, uresx)) != VFP_OK) {
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: %08X - %08X: %s\n", devName.c_str(),
+							ZXTL(opReg[1]), ZXTL(opReg[0]), ferrCodes[sts]);
+#endif /* ENABLE_DEBUG */
+					faultfp(sts);
+				}
+
+				// Store results
+				storel(opReg[2], dst);
+				// Update condition codes
+				fpSetNZ(ccReg, SXTL(uresx[0]), (ccReg & CC_C));
+
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %08X - %08X => %08X: %s\n", devName.c_str(),
+						ZXTL(udstx[0]), ZXTL(usrcx[0]), ZXTL(uresx[0]), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
+				break;
+
 			case OPC_nMULF2:
 			case OPC_nMULF3:
 			case OPC_nDIVF2:
@@ -3198,8 +3248,55 @@ void CPU_CLASS::execute() noexcept(false)
 
 			case OPC_nADDD2:
 			case OPC_nADDD3:
+				usrcx[0] = opReg[0];
+				udstx[0] = opReg[1];
+
+				if ((sts = vaxfp_t::addd(usrcx, udstx, uresx)) != VFP_OK) {
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: %08X + %08X: %s\n", devName.c_str(),
+							ZXTL(opReg[0]), ZXTL(opReg[1]), ferrCodes[sts]);
+#endif /* ENABLE_DEBUG */
+					faultfp(sts);
+				}
+
+				// Store results
+				storel(opReg[2], dst);
+				// Update condition codes
+				fpSetNZ(ccReg, SXTL(uresx[0]), (ccReg & CC_C));
+
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %08X + %08X => %08X: %s\n", devName.c_str(),
+						ZXTL(usrcx[0]), ZXTL(udstx[0]), ZXTL(uresx[0]), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
+				break;
+
 			case OPC_nSUBD2:
 			case OPC_nSUBD3:
+				usrcx[0] = opReg[0];
+				udstx[0] = opReg[1];
+
+				if ((sts = vaxfp_t::subtractd(usrcx, udstx, uresx)) != VFP_OK) {
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: %08X - %08X: %s\n", devName.c_str(),
+							ZXTL(opReg[1]), ZXTL(opReg[0]), ferrCodes[sts]);
+#endif /* ENABLE_DEBUG */
+					faultfp(sts);
+				}
+
+				// Store results
+				storel(opReg[2], dst);
+				// Update condition codes
+				fpSetNZ(ccReg, SXTL(uresx[0]), (ccReg & CC_C));
+
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %08X - %08X => %08X: %s\n", devName.c_str(),
+						ZXTL(udstx[0]), ZXTL(usrcx[0]), ZXTL(uresx[0]), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
+				break;
 			case OPC_nMULD2:
 			case OPC_nMULD3:
 			case OPC_nDIVD2:
@@ -3300,8 +3397,63 @@ void CPU_CLASS::execute() noexcept(false)
 
 			case OPC_nADDG2:
 			case OPC_nADDG3:
+				usrcx[0] = opReg[0];
+				usrcx[1] = opReg[1];
+				udstx[0] = opReg[2];
+				udstx[1] = opReg[3];
+
+				if ((sts = vaxfp_t::addg(usrcx, udstx, uresx)) != VFP_OK) {
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: %08X %08X + %08X %08X: %s\n", devName.c_str(),
+							ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
+							ferrCodes[sts]);
+#endif /* ENABLE_DEBUG */
+					faultfp(sts);
+				}
+
+				// Store results
+				storeqp(opReg[4], uresx);
+				// Update condition codes
+				fpSetNZ(ccReg, SXTL(uresx[0]), (ccReg & CC_C));
+
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %08X %08X + %08X %08X => %08X %98X: %s\n", devName.c_str(),
+						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
+						ZXTL(uresx[0]), ZXTL(uresx[1]), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
+				break;
+
 			case OPC_nSUBG2:
 			case OPC_nSUBG3:
+				usrcx[0] = opReg[0];
+				usrcx[1] = opReg[1];
+				udstx[0] = opReg[2];
+				udstx[1] = opReg[3];
+
+				if ((sts = vaxfp_t::subtractg(usrcx, udstx, uresx)) != VFP_OK) {
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: %08X %08X + %08X %08X: %s\n", devName.c_str(),
+							ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
+							ferrCodes[sts]);
+#endif /* ENABLE_DEBUG */
+					faultfp(sts);
+				}
+
+				// Store results
+				storeqp(opReg[4], uresx);
+				// Update condition codes
+				fpSetNZ(ccReg, SXTL(uresx[0]), (ccReg & CC_C));
+
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %08X %08X + %08X %08X => %08X %98X: %s\n", devName.c_str(),
+						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
+						ZXTL(uresx[0]), ZXTL(uresx[1]), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
+				break;
 			case OPC_nMULG2:
 			case OPC_nMULG3:
 			case OPC_nDIVG2:
@@ -3312,21 +3464,21 @@ void CPU_CLASS::execute() noexcept(false)
 				if (opReg[0] & GFP_EXP) {
 					if (opReg[0] & GFP_SIGN)
 						throw RSVD_OPND_FAULT;
-					dst1 = dst2 = 0;
+					udstx[0] = udstx[1] = 0;
 				} else {
-					dst1 = opReg[0];
-					dst2 = opReg[1];
+					udstx[0] = opReg[0];
+					udstx[1] = opReg[1];
 				}
 
-				storeq(opReg[2], dst1, dst2);
+				storeqp(opReg[2], udstx);
 
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(dst1), (ccReg & CC_C));
+				fpSetNZ(ccReg, SXTL(udstx[0]), (ccReg & CC_C));
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
 					dbg.log("%s: Move %08X %08X to %08X %08X: %s\n", devName.c_str(),
-						ZXTL(opReg[0]), ZXTL(opReg[1]), ZXTL(dst1), ZXTL(dst2),
+						ZXTL(opReg[0]), ZXTL(opReg[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
 						stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;

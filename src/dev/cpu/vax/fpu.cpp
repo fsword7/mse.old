@@ -369,6 +369,155 @@ int vaxfp_t::compare(uint32_t *src, uint32_t *dst, int type, uint32_t *cc)
 	return VFP_OK;
 }
 
+int vaxfp_t::add(vaxfp_t *src, vaxfp_t *dst, vaxfp_t *res)
+{
+	vaxfp_t *add, *adr;
+	int      dexp;
+	uint64_t addf;
+
+	// When one of FP numbers contain zero fraction,
+	// return other of FP numbers as result.
+	if (src->frac == 0) {
+		*res = *dst;
+		return VFP_OK;
+	}
+	if (dst->frac == 0) {
+		*res = *src;
+		return VFP_OK;
+	}
+
+	if ((src->exp < dst->exp) || ((src->exp == dst->exp) && (src->frac < dst->frac))) {
+		add = dst;
+		adr = src;
+	} else {
+		add = src;
+		adr = dst;
+	}
+
+	dexp = add->exp - adr->exp;
+	if (res != src) {
+		res->sign = add->sign;
+		res->exp  = add->exp;
+	}
+
+	if (add->sign ^ adr->sign) {
+		if (dexp != 0) {
+			addf = (dexp < 64) ? ((-adr->frac >> dexp) |
+					(FP_MASK64 << (64 - dexp))) : FP_MASK64;
+			res->frac = add->frac + addf;
+		} else
+			res->frac = add->frac - adr->frac;
+		res->normalize();
+	} else {
+		addf = (dexp < 64) ? (adr->frac >> dexp) : 0;
+
+		// Add and normalize it
+		res->frac = add->frac + addf;
+		if (res->frac < addf) {
+			res->frac = FP_NORM | (res->frac >> 1);
+			res->exp++;
+		}
+	}
+
+	return VFP_OK;
+}
+
+
+int vaxfp_t::addf(uint32_t *fp1, uint32_t *fp2, uint32_t *res)
+{
+	vaxfp_t sfp(SFP_TYPE), dfp(SFP_TYPE), rfp(SFP_TYPE);
+	int     sts;
+
+	if ((sts = sfp.unpackf(fp1)) != VFP_OK)
+		return sts;
+	if ((sts = dfp.unpackf(fp2)) != VFP_OK)
+		return sts;
+
+	add(&sfp, &dfp, &rfp);
+
+	return rfp.packf(res);
+}
+
+int vaxfp_t::addd(uint32_t *fp1, uint32_t *fp2, uint32_t *res)
+{
+	vaxfp_t sfp(DFP_TYPE), dfp(DFP_TYPE), rfp(DFP_TYPE);
+	int     sts;
+
+	if ((sts = sfp.unpackf(fp1)) != VFP_OK)
+		return sts;
+	if ((sts = dfp.unpackf(fp2)) != VFP_OK)
+		return sts;
+
+	add(&sfp, &dfp, &rfp);
+
+	return rfp.packd(res);
+}
+
+int vaxfp_t::addg(uint32_t *fp1, uint32_t *fp2, uint32_t *res)
+{
+	vaxfp_t sfp(GFP_TYPE), dfp(GFP_TYPE), rfp(GFP_TYPE);
+	int     sts;
+
+	if ((sts = sfp.unpackf(fp1)) != VFP_OK)
+		return sts;
+	if ((sts = dfp.unpackf(fp2)) != VFP_OK)
+		return sts;
+
+	add(&sfp, &dfp, &rfp);
+
+	return rfp.packg(res);
+}
+
+
+int vaxfp_t::subtractf(uint32_t *fp1, uint32_t *fp2, uint32_t *res)
+{
+	vaxfp_t sfp(SFP_TYPE), dfp(SFP_TYPE), rfp(SFP_TYPE);
+	int     sts;
+
+	if ((sts = sfp.unpackf(fp1)) != VFP_OK)
+		return sts;
+	if ((sts = dfp.unpackf(fp2)) != VFP_OK)
+		return sts;
+
+	sfp.sign ^= FP_SIGN;
+	add(&sfp, &dfp, &rfp);
+
+	return rfp.packf(res);
+}
+
+int vaxfp_t::subtractd(uint32_t *fp1, uint32_t *fp2, uint32_t *res)
+{
+	vaxfp_t sfp(DFP_TYPE), dfp(DFP_TYPE), rfp(DFP_TYPE);
+	int     sts;
+
+	if ((sts = sfp.unpackf(fp1)) != VFP_OK)
+		return sts;
+	if ((sts = dfp.unpackf(fp2)) != VFP_OK)
+		return sts;
+
+	sfp.sign ^= FP_SIGN;
+	add(&sfp, &dfp, &rfp);
+
+	return rfp.packd(res);
+}
+
+int vaxfp_t::subtractg(uint32_t *fp1, uint32_t *fp2, uint32_t *res)
+{
+	vaxfp_t sfp(GFP_TYPE), dfp(GFP_TYPE), rfp(GFP_TYPE);
+	int     sts;
+
+	if ((sts = sfp.unpackf(fp1)) != VFP_OK)
+		return sts;
+	if ((sts = dfp.unpackf(fp2)) != VFP_OK)
+		return sts;
+
+	sfp.sign ^= FP_SIGN;
+	add(&sfp, &dfp, &rfp);
+
+	return rfp.packg(res);
+}
+
+
 #if 0
 // ****************************************************************************
 

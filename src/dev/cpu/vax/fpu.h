@@ -34,6 +34,7 @@
 
 #define FP_P_NORM		63
 #define FP_NORM			0x8000000000000000ULL
+#define FP_MASK64       0xFFFFFFFFFFFFFFFFULL
 #define SFP_ROUND		0x0000008000000000ULL
 #define DFP_ROUND		0x0000000000000080ULL
 #define GFP_ROUND		0x0000000000000400ULL
@@ -166,6 +167,16 @@ public:
 	static int convertfd(uint32_t *val, uint32_t *res);
 
 	static int compare(uint32_t *src, uint32_t *dst, int type, uint32_t *cc);
+
+	static int add(vaxfp_t *src, vaxfp_t *dst, vaxfp_t *res);
+
+	static int addf(uint32_t *fp1, uint32_t *fp2, uint32_t *res);
+	static int addd(uint32_t *fp1, uint32_t *fp2, uint32_t *res);
+	static int addg(uint32_t *fp1, uint32_t *fp2, uint32_t *res);
+
+	static int subtractf(uint32_t *fp1, uint32_t *fp2, uint32_t *res);
+	static int subtractd(uint32_t *fp1, uint32_t *fp2, uint32_t *res);
+	static int subtractg(uint32_t *fp1, uint32_t *fp2, uint32_t *res);
 
 protected:
 	int      type;
