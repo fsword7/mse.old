@@ -422,7 +422,6 @@ int vaxfp_t::add(vaxfp_t *src, vaxfp_t *dst, vaxfp_t *res)
 	return VFP_OK;
 }
 
-
 int vaxfp_t::addf(uint32_t *fp1, uint32_t *fp2, uint32_t *res)
 {
 	vaxfp_t sfp(SFP_TYPE), dfp(SFP_TYPE), rfp(SFP_TYPE);
@@ -517,6 +516,92 @@ int vaxfp_t::subtractg(uint32_t *fp1, uint32_t *fp2, uint32_t *res)
 	return rfp.packg(res);
 }
 
+
+int vaxfp_t::multiply(vaxfp_t *mpy, vaxfp_t *mpr, vaxfp_t *pro)
+{
+	uint64_t rhi, rlo, rm1, rm2, ahi, alo, bhi, blo;
+
+	// Determine one of FP numbers as zero and return as zero
+	if (mpy->exp == 0 || mpr->exp == 0) {
+		pro->sign = 0;
+		pro->exp  = 0;
+		pro->frac = 0;
+		return VFP_OK;
+	}
+
+	// For single precision (F floating), do 64-bit multiply
+	ahi = mpy->frac >> 32;
+	bhi = mpr->frac >> 32;
+	rhi = ahi * bhi;
+
+	// For double precision (D/G floating), do 128-bit multiply
+	if (mpy->type != SFP_TYPE) {
+		alo  = ZXTL(mpy->frac);
+		blo  = ZXTL(mpr->frac);
+		rlo  = alo * blo;
+		rm1  = ahi * blo;
+		rm2  = alo * bhi;
+		rhi += (rm1 >> 32) + (rm2 >> 32);
+		rm1  = rlo + (rm1 << 32);
+		rm2  = rm1 + (rm2 << 32);
+		if (rm1 < rlo)
+			rhi++;
+		if (rm2 < rm1)
+			rhi++;
+	}
+
+	pro->sign = mpy->sign ^ mpr->sign;
+	pro->exp  = mpy->exp + mpr->exp - mpy->bias;
+	pro->frac = rhi;
+	pro->normalize();
+
+	return VFP_OK;
+}
+
+int vaxfp_t::multiplyf(uint32_t *fp1, uint32_t *fp2, uint32_t *res)
+{
+	vaxfp_t sfp(SFP_TYPE), dfp(SFP_TYPE), rfp(SFP_TYPE);
+	int     sts;
+
+	if ((sts = sfp.unpackf(fp1)) != VFP_OK)
+		return sts;
+	if ((sts = dfp.unpackf(fp2)) != VFP_OK)
+		return sts;
+
+	multiply(&sfp, &dfp, &rfp);
+
+	return rfp.packf(res);
+}
+
+int vaxfp_t::multiplyd(uint32_t *fp1, uint32_t *fp2, uint32_t *res)
+{
+	vaxfp_t sfp(DFP_TYPE), dfp(DFP_TYPE), rfp(DFP_TYPE);
+	int     sts;
+
+	if ((sts = sfp.unpackf(fp1)) != VFP_OK)
+		return sts;
+	if ((sts = dfp.unpackf(fp2)) != VFP_OK)
+		return sts;
+
+	multiply(&sfp, &dfp, &rfp);
+
+	return rfp.packd(res);
+}
+
+int vaxfp_t::multiplyg(uint32_t *fp1, uint32_t *fp2, uint32_t *res)
+{
+	vaxfp_t sfp(GFP_TYPE), dfp(GFP_TYPE), rfp(GFP_TYPE);
+	int     sts;
+
+	if ((sts = sfp.unpackf(fp1)) != VFP_OK)
+		return sts;
+	if ((sts = dfp.unpackf(fp2)) != VFP_OK)
+		return sts;
+
+	multiply(&sfp, &dfp, &rfp);
+
+	return rfp.packg(res);
+}
 
 #if 0
 // ****************************************************************************

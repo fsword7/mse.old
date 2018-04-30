@@ -169,6 +169,7 @@ public:
 	static int compare(uint32_t *src, uint32_t *dst, int type, uint32_t *cc);
 
 	static int add(vaxfp_t *src, vaxfp_t *dst, vaxfp_t *res);
+	static int multiply(vaxfp_t *mpy, vaxfp_t *mpr, vaxfp_t *pro);
 
 	static int addf(uint32_t *fp1, uint32_t *fp2, uint32_t *res);
 	static int addd(uint32_t *fp1, uint32_t *fp2, uint32_t *res);
@@ -177,6 +178,10 @@ public:
 	static int subtractf(uint32_t *fp1, uint32_t *fp2, uint32_t *res);
 	static int subtractd(uint32_t *fp1, uint32_t *fp2, uint32_t *res);
 	static int subtractg(uint32_t *fp1, uint32_t *fp2, uint32_t *res);
+
+	static int multiplyf(uint32_t *fp1, uint32_t *fp2, uint32_t *res);
+	static int multiplyd(uint32_t *fp1, uint32_t *fp2, uint32_t *res);
+	static int multiplyg(uint32_t *fp1, uint32_t *fp2, uint32_t *res);
 
 protected:
 	int      type;
