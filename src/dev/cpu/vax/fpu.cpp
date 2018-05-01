@@ -16,7 +16,7 @@
 
 static const int64_t fpRound[] = { SFP_ROUND, DFP_ROUND, GFP_ROUND, HFP_ROUND };
 static const int32_t fpBias[]  = { UFP_BIAS,  UFP_BIAS,  GFP_BIAS,  HFP_BIAS  };
-static const int32_t fpMask[]  = { 0x7F, 0x7FFF, 0x7FFFFFFF };
+static const int32_t fpMask[]  = { 0x7F, 0x7FFF, 0x7FFFFFFF, 0x7FFFFFFF };
 
 vaxfp_t::vaxfp_t(int _type)
 : type(_type)
@@ -294,6 +294,58 @@ int vaxfp_t::converti(int32_t val, uint32_t *res, int type)
 		return fp.packg(res);
 	}
 	return VFP_ERROR;
+}
+
+int vaxfp_t::convertfi(uint32_t *src, int type, uint32_t *dst, int size, uint32_t *cc)
+{
+	vaxfp_t fp(type);
+	int     sts, ubexp;
+
+	// clear code condition flags
+	*cc = 0;
+
+	// Unpack FP value
+	switch (type) {
+	case SFP_TYPE:
+		if ((sts = fp.unpackf(src)) != VFP_OK)
+			return sts;
+		break;
+	case DFP_TYPE:
+		if ((sts = fp.unpackd(src)) != VFP_OK)
+			return sts;
+		break;
+	case GFP_TYPE:
+		if ((sts = fp.unpackg(src)) != VFP_OK)
+			return sts;
+		break;
+	}
+
+	ubexp = fp.exp - fp.bias;
+	if ((fp.exp == 0) || (ubexp < 0)) {
+		*dst = 0;
+		return VFP_OK;
+	}
+
+	if (ubexp <= FP_P_NORM) {
+		fp.frac >>= (FP_P_NORM - ubexp);
+		if (size == VFP_RLONG)
+			fp.frac++;
+		fp.frac >>= 1;
+
+		// Check fraction for maximum value for overflow flag
+		if (fp.frac > fpMask[size] + (fp.sign != 0))
+			*cc = CC_V;
+	} else {
+		*cc = CC_V;
+		if (ubexp > (FP_P_NORM + 32)) {
+			*dst = 0;
+			return VFP_OK;
+		}
+		fp.frac <<= (ubexp - FP_P_NORM - 1);
+	}
+
+	*dst = fp.sign ? -uint32_t(fp.frac) : uint32_t(fp.frac);
+	return VFP_OK;
 }
 
 int vaxfp_t::convertfg(uint32_t *val, uint32_t *res)

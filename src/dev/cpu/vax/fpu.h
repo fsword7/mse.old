@@ -25,6 +25,12 @@
 #define VFP_FAULT	4 // Reserved Operand Fault
 #define VFP_ERROR	5 // Coding error
 
+// Integer size
+#define VFP_BYTE	0 // Byte
+#define VFP_WORD	1 // Word
+#define VFP_LONG	2 // Longword
+#define VFP_RLONG	3 // Longword with round
+
 // Word-swapped floating
 #define FP_SWAP(fp)		((ZXTL(fp) >> 16) | (ZXTL(fp) << 16))
 
@@ -165,6 +171,7 @@ public:
 	void convert(int32_t val);
 
 	static int converti(int32_t val, uint32_t *res, int type);
+	static int convertfi(uint32_t *fp, int type, uint32_t *dst, int size, uint32_t *cc);
 	static int convertfg(uint32_t *val, uint32_t *res);
 	static int convertgf(uint32_t *val, uint32_t *res);
 	static int convertfd(uint32_t *val, uint32_t *res);
