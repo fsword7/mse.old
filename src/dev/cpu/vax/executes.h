@@ -57,6 +57,7 @@ void CPU_CLASS::execute() noexcept(false)
 	register int32_t  srcx[4],  dstx[4];
 	register uint32_t usrcx[4], udstx[4];
 	register uint32_t uresx[4];
+	register uint32_t uidx[4];
 
 //	register int64_t  srcqx[4],  dstqx[4];
 //	register uint64_t usrcqx[4], udstqx[4];
@@ -3186,7 +3187,29 @@ void CPU_CLASS::execute() noexcept(false)
 
 			case OPC_nDIVF2:
 			case OPC_nDIVF3:
-				throw RSVD_INST_FAULT;
+				usrcx[0] = opReg[0];
+				udstx[0] = opReg[1];
+
+				if ((sts = vaxfp_t::dividef(usrcx, udstx, uresx)) != VFP_OK) {
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: %08X / %08X: %s\n", devName.c_str(),
+							ZXTL(usrcx[0]), ZXTL(udstx[0]), ferrCodes[sts]);
+#endif /* ENABLE_DEBUG */
+					faultfp(sts);
+				}
+
+				// Store results
+				storel(opReg[2], uresx[0]);
+				// Update condition codes
+				fpSetNZ(ccReg, SXTL(uresx[0]), (ccReg & CC_C));
+
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %08X / %08X => %08X: %s\n", devName.c_str(),
+						ZXTL(usrcx[0]), ZXTL(udstx[0]), ZXTL(uresx[0]), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
+				break;
 
 			case OPC_nMOVF:
 				if (opReg[0] & UFP_EXP) {
@@ -3268,6 +3291,48 @@ void CPU_CLASS::execute() noexcept(false)
 				break;
 
 			case OPC_nACBF:
+				udstx[0] = opReg[0];
+				usrcx[0] = opReg[1];
+				uidx[0]  = opReg[2];
+
+				if ((sts = vaxfp_t::addf(usrcx, uidx, uresx)) != VFP_OK) {
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: %08X + %08X: %s\n", devName.c_str(),
+							ZXTL(usrcx[0]), ZXTL(uidx[0]), ferrCodes[sts]);
+#endif /* ENABLE_DEBUG */
+					faultfp(sts);
+				}
+
+				if ((sts = vaxfp_t::compare(uresx, udstx, SFP_TYPE, &ccReg)) != VFP_OK) {
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: Compare %08X with %08X: %s\n", devName.c_str(),
+								ZXTL(uresx[0]), ZXTL(udstx[0]), ferrCodes[sts]);
+#endif /* ENABLE_DEBUG */
+					faultfp(sts);
+				}
+
+				// Store results
+				storel(opReg[3], uresx[0]);
+				// Update condition codes
+				fpSetNZ(ccReg, SXTL(uresx[0]), (ccReg & CC_C));
+
+				if ((ccReg & CC_Z) || ((usrcx[0] & FP_SIGN) ? !(ccReg & CC_N) : (ccReg & CC_N))) {
+					REG_PC += opReg[4];
+					flushvi();
+				}
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND)) {
+					dbg.log("%s: %08X + %08X => %08X: %s\n", devName.c_str(),
+						ZXTL(usrcx[0]), ZXTL(uidx[0]), ZXTL(uresx[0]), stringCC(ccReg));
+					dbg.log("%s: %08X %s %08X: %s\n", devName.c_str(),
+						ZXTL(udstx[0]), (usrcx[0] & FP_SIGN) ? ">=" : "<=", ZXTL(usrcx[0]),
+						((ccReg & CC_Z) || (usrcx[0] & FP_SIGN) ? !(ccReg & CC_N) : (ccReg & CC_N))) ? "Jumped" : "Continue");
+				}
+#endif /* ENABLE_DEBUG */
+				break;
+
 			case OPC_nEMODF:
 			case OPC_nPOLYF:
 				throw RSVD_INST_FAULT;
@@ -3367,7 +3432,33 @@ void CPU_CLASS::execute() noexcept(false)
 
 			case OPC_nDIVD2:
 			case OPC_nDIVD3:
-				throw RSVD_INST_FAULT;
+				usrcx[0] = opReg[0];
+				usrcx[1] = opReg[1];
+				udstx[0] = opReg[2];
+				udstx[1] = opReg[3];
+
+				if ((sts = vaxfp_t::divided(usrcx, udstx, uresx)) != VFP_OK) {
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: %08X %08X / %08X %08X: %s\n", devName.c_str(),
+							ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
+							ferrCodes[sts]);
+#endif /* ENABLE_DEBUG */
+					faultfp(sts);
+				}
+
+				// Store results
+				storeqp(opReg[4], uresx);
+				// Update condition codes
+				fpSetNZ(ccReg, SXTL(uresx[0]), (ccReg & CC_C));
+
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %08X %08X / %08X %08X => %08X %98X: %s\n", devName.c_str(),
+						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
+						ZXTL(uresx[0]), ZXTL(uresx[1]), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
+				break;
 
 			case OPC_nMOVD:
 				if (opReg[0] & UFP_EXP) {
@@ -3461,6 +3552,55 @@ void CPU_CLASS::execute() noexcept(false)
 				break;
 
 			case OPC_nACBD:
+				udstx[0] = opReg[0];
+				udstx[1] = opReg[1];
+				usrcx[0] = opReg[2];
+				usrcx[1] = opReg[3];
+				uidx[0]  = opReg[4];
+				uidx[1]  = opReg[5];
+
+				if ((sts = vaxfp_t::addd(usrcx, uidx, uresx)) != VFP_OK) {
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: %08X %08X + %08X %08X: %s\n", devName.c_str(),
+							ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(uidx[0]), ZXTL(uidx[1]),
+							ferrCodes[sts]);
+#endif /* ENABLE_DEBUG */
+					faultfp(sts);
+				}
+
+				if ((sts = vaxfp_t::compare(uresx, udstx, DFP_TYPE, &ccReg)) != VFP_OK) {
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: Compare %08X %08X with %08X %08X: %s\n", devName.c_str(),
+								ZXTL(uresx[0]), ZXTL(uresx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
+								ferrCodes[sts]);
+#endif /* ENABLE_DEBUG */
+					faultfp(sts);
+				}
+
+				// Store results
+				storeqp(opReg[6], uresx);
+				// Update condition codes
+				fpSetNZ(ccReg, SXTL(uresx[0]), (ccReg & CC_C));
+
+				if ((ccReg & CC_Z) || ((usrcx[0] & FP_SIGN) ? !(ccReg & CC_N) : (ccReg & CC_N))) {
+					REG_PC += opReg[4];
+					flushvi();
+				}
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND)) {
+					dbg.log("%s: %08X %08X + %08X %08X => %08X %08X: %s\n", devName.c_str(),
+						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(uidx[0]), ZXTL(uidx[1]),
+						ZXTL(uresx[0]), ZXTL(uresx[1]), stringCC(ccReg));
+					dbg.log("%s: %08X %08X %s %08X %08X: %s\n", devName.c_str(),
+						ZXTL(udstx[0]), ZXTL(udstx[1]), (usrcx[0] & FP_SIGN) ? ">=" : "<=",
+						ZXTL(usrcx[0]), ZXTL(usrcx[1]),
+						((ccReg & CC_Z) || (usrcx[0] & FP_SIGN) ? !(ccReg & CC_N) : (ccReg & CC_N))) ? "Jumped" : "Continue");
+				}
+#endif /* ENABLE_DEBUG */
+				break;
+
 			case OPC_nEMODD:
 			case OPC_nPOLYD:
 				throw RSVD_INST_FAULT;
@@ -3561,7 +3701,33 @@ void CPU_CLASS::execute() noexcept(false)
 
 			case OPC_nDIVG2:
 			case OPC_nDIVG3:
-				throw RSVD_INST_FAULT;
+				usrcx[0] = opReg[0];
+				usrcx[1] = opReg[1];
+				udstx[0] = opReg[2];
+				udstx[1] = opReg[3];
+
+				if ((sts = vaxfp_t::divideg(usrcx, udstx, uresx)) != VFP_OK) {
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: %08X %08X / %08X %08X: %s\n", devName.c_str(),
+							ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
+							ferrCodes[sts]);
+#endif /* ENABLE_DEBUG */
+					faultfp(sts);
+				}
+
+				// Store results
+				storeqp(opReg[4], uresx);
+				// Update condition codes
+				fpSetNZ(ccReg, SXTL(uresx[0]), (ccReg & CC_C));
+
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+					dbg.log("%s: %08X %08X / %08X %08X => %08X %98X: %s\n", devName.c_str(),
+						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
+						ZXTL(uresx[0]), ZXTL(uresx[1]), stringCC(ccReg));
+#endif /* ENABLE_DEBUG */
+				break;
 
 			case OPC_nMOVG:
 				if (opReg[0] & GFP_EXP) {
@@ -3654,6 +3820,55 @@ void CPU_CLASS::execute() noexcept(false)
 				break;
 
 			case OPC_nACBG:
+				udstx[0] = opReg[0];
+				udstx[1] = opReg[1];
+				usrcx[0] = opReg[2];
+				usrcx[1] = opReg[3];
+				uidx[0]  = opReg[4];
+				uidx[1]  = opReg[5];
+
+				if ((sts = vaxfp_t::addg(usrcx, uidx, uresx)) != VFP_OK) {
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: %08X %08X + %08X %08X: %s\n", devName.c_str(),
+							ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(uidx[0]), ZXTL(uidx[1]),
+							ferrCodes[sts]);
+#endif /* ENABLE_DEBUG */
+					faultfp(sts);
+				}
+
+				if ((sts = vaxfp_t::compare(uresx, udstx, GFP_TYPE, &ccReg)) != VFP_OK) {
+#ifdef ENABLE_DEBUG
+					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
+						dbg.log("%s: Compare %08X %08X with %08X %08X: %s\n", devName.c_str(),
+								ZXTL(uresx[0]), ZXTL(uresx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
+								ferrCodes[sts]);
+#endif /* ENABLE_DEBUG */
+					faultfp(sts);
+				}
+
+				// Store results
+				storeqp(opReg[6], uresx);
+				// Update condition codes
+				fpSetNZ(ccReg, SXTL(uresx[0]), (ccReg & CC_C));
+
+				if ((ccReg & CC_Z) || ((usrcx[0] & FP_SIGN) ? !(ccReg & CC_N) : (ccReg & CC_N))) {
+					REG_PC += opReg[4];
+					flushvi();
+				}
+#ifdef ENABLE_DEBUG
+				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND)) {
+					dbg.log("%s: %08X %08X + %08X %08X => %08X %08X: %s\n", devName.c_str(),
+						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(uidx[0]), ZXTL(uidx[1]),
+						ZXTL(uresx[0]), ZXTL(uresx[1]), stringCC(ccReg));
+					dbg.log("%s: %08X %08X %s %08X %08X: %s\n", devName.c_str(),
+						ZXTL(udstx[0]), ZXTL(udstx[1]), (usrcx[0] & FP_SIGN) ? ">=" : "<=",
+						ZXTL(usrcx[0]), ZXTL(usrcx[1]),
+						((ccReg & CC_Z) || (usrcx[0] & FP_SIGN) ? !(ccReg & CC_N) : (ccReg & CC_N))) ? "Jumped" : "Continue");
+				}
+#endif /* ENABLE_DEBUG */
+				break;
+
 			case OPC_nEMODG:
 			case OPC_nPOLYG:
 				throw RSVD_INST_FAULT;

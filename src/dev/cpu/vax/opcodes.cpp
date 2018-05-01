@@ -126,8 +126,8 @@ const vaxOpcode vaxOpcodes[] = {
 	OPC("SUBF3",    OPC_nSUBF3,    3, OPR({ RF, RF, WF, 0,  0,  0  }), OPC_SFL),
 	OPC("MULF2",    OPC_nMULF2,    2, OPR({ RF, MF, 0,  0,  0,  0  }), OPC_SFL),
 	OPC("MULF3",    OPC_nMULF3,    3, OPR({ RF, RF, WF, 0,  0,  0  }), OPC_SFL),
-	OPC("DIVF2",    OPC_nDIVF2,    2, OPR({ RF, MF, 0,  0,  0,  0  }), OPC_SFL|UOPC),
-	OPC("DIVF3",    OPC_nDIVF3,    3, OPR({ RF, RF, WF, 0,  0,  0  }), OPC_SFL|UOPC),
+	OPC("DIVF2",    OPC_nDIVF2,    2, OPR({ RF, MF, 0,  0,  0,  0  }), OPC_SFL),
+	OPC("DIVF3",    OPC_nDIVF3,    3, OPR({ RF, RF, WF, 0,  0,  0  }), OPC_SFL),
 
 	OPC("CVTFB",    OPC_nCVTFB,    2, OPR({ RF, WB, 0,  0,  0,  0  }), OPC_SFL|UOPC),
 	OPC("CVTFW",    OPC_nCVTFW,    2, OPR({ RF, WW, 0,  0,  0,  0  }), OPC_SFL|UOPC),
@@ -136,7 +136,7 @@ const vaxOpcode vaxOpcodes[] = {
 	OPC("CVTBF",    OPC_nCVTBF,    2, OPR({ RB, WF, 0,  0,  0,  0  }), OPC_SFL),
 	OPC("CVTWF",    OPC_nCVTWF,    2, OPR({ RW, WF, 0,  0,  0,  0  }), OPC_SFL),
 	OPC("CVTLF",    OPC_nCVTLF,    2, OPR({ RL, WF, 0,  0,  0,  0  }), OPC_SFL),
-	OPC("ACBF",     OPC_nACBF,     4, OPR({ RF, RF, MF, BW, 0,  0  }), OPC_SFL|UOPC),
+	OPC("ACBF",     OPC_nACBF,     4, OPR({ RF, RF, MF, BW, 0,  0  }), OPC_SFL),
 
 	OPC("MOVF",     OPC_nMOVF,     2, OPR({ RF, WF, 0,  0,  0,  0  }), OPC_SFL),
 	OPC("CMPF",     OPC_nCMPF,     2, OPR({ RF, RF, 0,  0,  0,  0  }), OPC_SFL),
@@ -158,8 +158,8 @@ const vaxOpcode vaxOpcodes[] = {
 	OPC("SUBD3",    OPC_nSUBD3,    3, OPR({ RD, RD, WD, 0,  0,  0  }), OPC_DFL),
 	OPC("MULD2",    OPC_nMULD2,    2, OPR({ RD, MD, 0,  0,  0,  0  }), OPC_DFL),
 	OPC("MULD3",    OPC_nMULD3,    3, OPR({ RD, RD, WD, 0,  0,  0  }), OPC_DFL),
-	OPC("DIVD2",    OPC_nDIVD2,    2, OPR({ RD, MD, 0,  0,  0,  0  }), OPC_DFL|UOPC),
-	OPC("DIVD3",    OPC_nDIVD3,    3, OPR({ RD, RD, WD, 0,  0,  0  }), OPC_DFL|UOPC),
+	OPC("DIVD2",    OPC_nDIVD2,    2, OPR({ RD, MD, 0,  0,  0,  0  }), OPC_DFL),
+	OPC("DIVD3",    OPC_nDIVD3,    3, OPR({ RD, RD, WD, 0,  0,  0  }), OPC_DFL),
 
 	OPC("CVTDB",    OPC_nCVTDB,    2, OPR({ RD, WB, 0,  0,  0,  0  }), OPC_DFL|UOPC),
 	OPC("CVTDW",    OPC_nCVTDW,    2, OPR({ RD, WW, 0,  0,  0,  0  }), OPC_DFL|UOPC),
@@ -168,7 +168,7 @@ const vaxOpcode vaxOpcodes[] = {
 	OPC("CVTBD",    OPC_nCVTBD,    2, OPR({ RB, WD, 0,  0,  0,  0  }), OPC_DFL),
 	OPC("CVTWD",    OPC_nCVTWD,    2, OPR({ RW, WD, 0,  0,  0,  0  }), OPC_DFL),
 	OPC("CVTLD",    OPC_nCVTLD,    2, OPR({ RL, WD, 0,  0,  0,  0  }), OPC_DFL),
-	OPC("ACBD",     OPC_nACBD,     4, OPR({ RD, RD, MD, BW, 0,  0  }), OPC_DFL|UOPC),
+	OPC("ACBD",     OPC_nACBD,     4, OPR({ RD, RD, MD, BW, 0,  0  }), OPC_DFL),
 
 	OPC("MOVD",     OPC_nMOVD,     2, OPR({ RD, WD, 0,  0,  0,  0  }), OPC_DFL),
 	OPC("CMPD",     OPC_nCMPD,     2, OPR({ RD, RD, 0,  0,  0,  0  }), OPC_DFL),
@@ -354,8 +354,8 @@ const vaxOpcode vaxOpcodes[] = {
 	OPC("SUBG3",    OPC_nSUBG3,    3, OPR({ RG, RG, WG, 0,  0,  0  }), OPC_GFL),
 	OPC("MULG2",    OPC_nMULG2,    2, OPR({ RG, MG, 0,  0,  0,  0  }), OPC_GFL),
 	OPC("MULG3",    OPC_nMULG3,    3, OPR({ RG, RG, WG, 0,  0,  0  }), OPC_GFL),
-	OPC("DIVG2",    OPC_nDIVG2,    2, OPR({ RG, MG, 0,  0,  0,  0  }), OPC_GFL|UOPC),
-	OPC("DIVG3",    OPC_nDIVG3,    3, OPR({ RG, RG, WG, 0,  0,  0  }), OPC_GFL|UOPC),
+	OPC("DIVG2",    OPC_nDIVG2,    2, OPR({ RG, MG, 0,  0,  0,  0  }), OPC_GFL),
+	OPC("DIVG3",    OPC_nDIVG3,    3, OPR({ RG, RG, WG, 0,  0,  0  }), OPC_GFL),
 
 	OPC("CVTGB",    OPC_nCVTGB,    2, OPR({ RG, WB, 0,  0,  0,  0  }), OPC_GFL|UOPC),
 	OPC("CVTGW",    OPC_nCVTGW,    2, OPR({ RG, WW, 0,  0,  0,  0  }), OPC_GFL|UOPC),
@@ -364,7 +364,7 @@ const vaxOpcode vaxOpcodes[] = {
 	OPC("CVTBG",    OPC_nCVTBG,    2, OPR({ RB, WG, 0,  0,  0,  0  }), OPC_GFL),
 	OPC("CVTWG",    OPC_nCVTWG,    2, OPR({ RW, WG, 0,  0,  0,  0  }), OPC_GFL),
 	OPC("CVTLG",    OPC_nCVTLG,    2, OPR({ RL, WG, 0,  0,  0,  0  }), OPC_GFL),
-	OPC("ACBG",     OPC_nACBG,     4, OPR({ RG, RG, MG, BW, 0,  0  }), OPC_GFL|UOPC),
+	OPC("ACBG",     OPC_nACBG,     4, OPR({ RG, RG, MG, BW, 0,  0  }), OPC_GFL),
 
 	OPC("MOVG",     OPC_nMOVG,     2, OPR({ RG, WG, 0,  0,  0,  0  }), OPC_GFL),
 	OPC("CMPG",     OPC_nCMPG,     2, OPR({ RG, RG, 0,  0,  0,  0  }), OPC_GFL),

@@ -49,8 +49,9 @@ int vaxfp_t::unpack(uint32_t *val)
 
 int vaxfp_t::unpackf(uint32_t *val)
 {
-	sign = *val & UFP_SIGN;
-	exp  = UFP_GETEXP(*val);
+	sign  = *val & UFP_SIGN;
+	exp   = UFP_GETEXP(*val);
+	fprec = SFP_FPREC;
 	if (exp == 0) {
 		if (sign & FP_SIGN)
 			return VFP_FAULT;
@@ -64,8 +65,9 @@ int vaxfp_t::unpackf(uint32_t *val)
 
 int vaxfp_t::unpackd(uint32_t *val)
 {
-	sign = val[0] & UFP_SIGN;
-	exp  = UFP_GETEXP(val[0]);
+	sign  = val[0] & UFP_SIGN;
+	exp   = UFP_GETEXP(val[0]);
+	fprec = DFP_FPREC;
 	if (exp == 0) {
 		if (sign & FP_SIGN)
 			return VFP_FAULT;
@@ -79,8 +81,9 @@ int vaxfp_t::unpackd(uint32_t *val)
 
 int vaxfp_t::unpackg(uint32_t *val)
 {
-	sign = val[0] & UFP_SIGN;
-	exp  = GFP_GETEXP(val[0]);
+	sign  = val[0] & UFP_SIGN;
+	exp   = GFP_GETEXP(val[0]);
+	fprec = GFP_FPREC;
 	if (exp == 0) {
 		if (sign & FP_SIGN)
 			return VFP_FAULT;
@@ -529,13 +532,13 @@ int vaxfp_t::multiply(vaxfp_t *mpy, vaxfp_t *mpr, vaxfp_t *pro)
 		return VFP_OK;
 	}
 
-	// For single precision (F floating), do 64-bit multiply
+	// For single precision (F floating), do 32/64-bit multiply
 	ahi = mpy->frac >> 32;
 	bhi = mpr->frac >> 32;
 	rhi = ahi * bhi;
 
-	// For double precision (D/G floating), do 128-bit multiply
-	if (mpy->type != SFP_TYPE) {
+	// For double precision (D/G floating), do 64/128-bit multiply
+	if (mpy->fprec > 32) {
 		alo  = ZXTL(mpy->frac);
 		blo  = ZXTL(mpr->frac);
 		rlo  = alo * blo;
@@ -554,6 +557,40 @@ int vaxfp_t::multiply(vaxfp_t *mpy, vaxfp_t *mpr, vaxfp_t *pro)
 	pro->exp  = mpy->exp + mpr->exp - mpy->bias;
 	pro->frac = rhi;
 	pro->normalize();
+
+	return VFP_OK;
+}
+
+int vaxfp_t::divide(vaxfp_t *dvd, vaxfp_t *dvr, vaxfp_t *quo)
+{
+	uint64_t fdvd, fdvr, fquo;
+	int      idx, prec;
+
+	if (dvr->exp == 0)
+		return VFP_DZRO;
+	if (dvd->exp == 0) {
+		if (dvd != quo)
+			*quo = *dvd;
+		return VFP_OK;
+	}
+
+	prec = dvd->fprec + 3;
+	fdvd = dvd->frac >> 1;
+	fdvr = dvr->frac >> 1;
+	fquo = 0;
+	for (idx = 0; (idx < prec) && (fdvd != 0); idx++) {
+		fquo <<= 1;
+		if (fdvd >= fdvr) {
+			fdvd -= fdvr;
+			fquo++;
+		}
+		fdvd <<= 1;
+	}
+
+	quo->sign = dvd->sign ^ dvr->sign;
+	quo->exp  = dvd->exp - dvr->exp + dvd->bias + 1;
+	quo->frac = fquo << (FP_P_NORM - idx + 1);
+	quo->normalize();
 
 	return VFP_OK;
 }
@@ -599,6 +636,52 @@ int vaxfp_t::multiplyg(uint32_t *fp1, uint32_t *fp2, uint32_t *res)
 		return sts;
 
 	multiply(&sfp, &dfp, &rfp);
+
+	return rfp.packg(res);
+}
+
+
+int vaxfp_t::dividef(uint32_t *fp1, uint32_t *fp2, uint32_t *res)
+{
+	vaxfp_t sfp(SFP_TYPE), dfp(SFP_TYPE), rfp(SFP_TYPE);
+	int     sts;
+
+	if ((sts = sfp.unpackf(fp1)) != VFP_OK)
+		return sts;
+	if ((sts = dfp.unpackf(fp2)) != VFP_OK)
+		return sts;
+
+	divide(&sfp, &dfp, &rfp);
+
+	return rfp.packf(res);
+}
+
+int vaxfp_t::divided(uint32_t *fp1, uint32_t *fp2, uint32_t *res)
+{
+	vaxfp_t sfp(DFP_TYPE), dfp(DFP_TYPE), rfp(DFP_TYPE);
+	int     sts;
+
+	if ((sts = sfp.unpackf(fp1)) != VFP_OK)
+		return sts;
+	if ((sts = dfp.unpackf(fp2)) != VFP_OK)
+		return sts;
+
+	divide(&sfp, &dfp, &rfp);
+
+	return rfp.packd(res);
+}
+
+int vaxfp_t::divideg(uint32_t *fp1, uint32_t *fp2, uint32_t *res)
+{
+	vaxfp_t sfp(GFP_TYPE), dfp(GFP_TYPE), rfp(GFP_TYPE);
+	int     sts;
+
+	if ((sts = sfp.unpackf(fp1)) != VFP_OK)
+		return sts;
+	if ((sts = dfp.unpackf(fp2)) != VFP_OK)
+		return sts;
+
+	divide(&sfp, &dfp, &rfp);
 
 	return rfp.packg(res);
 }

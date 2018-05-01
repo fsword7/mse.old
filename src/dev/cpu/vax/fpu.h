@@ -74,6 +74,8 @@
 #define UFP_HBIT		(1u << UFP_P_EXP)
 #define UFP_GUARD		(15 - UFP_P_EXP)
 #define UFP_EXP			(UFP_M_EXP << UFP_P_EXP)
+#define SFP_FPREC		23
+#define DFP_FPREC		55
 
 #define UFP_GETEXP(fp)	(((fp) >> UFP_P_EXP) & UFP_M_EXP)
 #define UFP_SETEXP(fp)	(((fp) & UFP_M_EXP) << UFP_P_EXP)
@@ -98,6 +100,7 @@
 #define GFP_HBIT		(1u << GFP_P_EXP)
 #define GFP_GUARD		(15 - GFP_P_EXP)
 #define GFP_EXP			(GFP_M_EXP << GFP_P_EXP)
+#define GFP_FPREC		52
 
 #define GFP_GETEXP(fp)	(((fp) >> GFP_P_EXP) & GFP_M_EXP)
 #define GFP_SETEXP(fp)	(((fp) & GFP_M_EXP) << GFP_P_EXP)
@@ -168,8 +171,9 @@ public:
 
 	static int compare(uint32_t *src, uint32_t *dst, int type, uint32_t *cc);
 
-	static int add(vaxfp_t *src, vaxfp_t *dst, vaxfp_t *res);
+	static int add(vaxfp_t *add, vaxfp_t *adr, vaxfp_t *sum);
 	static int multiply(vaxfp_t *mpy, vaxfp_t *mpr, vaxfp_t *pro);
+	static int divide(vaxfp_t *dvd, vaxfp_t *dvr, vaxfp_t *quo);
 
 	static int addf(uint32_t *fp1, uint32_t *fp2, uint32_t *res);
 	static int addd(uint32_t *fp1, uint32_t *fp2, uint32_t *res);
@@ -183,10 +187,14 @@ public:
 	static int multiplyd(uint32_t *fp1, uint32_t *fp2, uint32_t *res);
 	static int multiplyg(uint32_t *fp1, uint32_t *fp2, uint32_t *res);
 
+	static int dividef(uint32_t *fp1, uint32_t *fp2, uint32_t *res);
+	static int divided(uint32_t *fp1, uint32_t *fp2, uint32_t *res);
+	static int divideg(uint32_t *fp1, uint32_t *fp2, uint32_t *res);
+
 protected:
 	int      type;
 	int32_t	 bias, round;
-	int      st;
+	int      fprec;
 
 	int32_t  sign;
 	int32_t  exp;
