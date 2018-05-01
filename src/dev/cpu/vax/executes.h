@@ -3324,11 +3324,16 @@ void CPU_CLASS::execute() noexcept(false)
 				}
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND)) {
+					char *jump;
+					if ((ccReg & CC_Z) || ((usrcx[0] & FP_SIGN) ? !(ccReg & CC_N) : (ccReg & CC_N)))
+						jump = "Jumped";
+					else
+						jump = "Continue";
+
 					dbg.log("%s: %08X + %08X => %08X: %s\n", devName.c_str(),
 						ZXTL(usrcx[0]), ZXTL(uidx[0]), ZXTL(uresx[0]), stringCC(ccReg));
 					dbg.log("%s: %08X %s %08X: %s\n", devName.c_str(),
-						ZXTL(udstx[0]), (usrcx[0] & FP_SIGN) ? ">=" : "<=", ZXTL(usrcx[0]),
-						((ccReg & CC_Z) || (usrcx[0] & FP_SIGN) ? !(ccReg & CC_N) : (ccReg & CC_N))) ? "Jumped" : "Continue");
+						ZXTL(udstx[0]), (usrcx[0] & FP_SIGN) ? ">=" : "<=", ZXTL(usrcx[0]), jump);
 				}
 #endif /* ENABLE_DEBUG */
 				break;
@@ -3590,13 +3595,18 @@ void CPU_CLASS::execute() noexcept(false)
 				}
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND)) {
+					char *jump;
+					if ((ccReg & CC_Z) || ((usrcx[0] & FP_SIGN) ? !(ccReg & CC_N) : (ccReg & CC_N)))
+						jump = "Jumped";
+					else
+						jump = "Continue";
+
 					dbg.log("%s: %08X %08X + %08X %08X => %08X %08X: %s\n", devName.c_str(),
 						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(uidx[0]), ZXTL(uidx[1]),
 						ZXTL(uresx[0]), ZXTL(uresx[1]), stringCC(ccReg));
 					dbg.log("%s: %08X %08X %s %08X %08X: %s\n", devName.c_str(),
 						ZXTL(udstx[0]), ZXTL(udstx[1]), (usrcx[0] & FP_SIGN) ? ">=" : "<=",
-						ZXTL(usrcx[0]), ZXTL(usrcx[1]),
-						((ccReg & CC_Z) || (usrcx[0] & FP_SIGN) ? !(ccReg & CC_N) : (ccReg & CC_N))) ? "Jumped" : "Continue");
+						ZXTL(usrcx[0]), ZXTL(usrcx[1]), jump);
 				}
 #endif /* ENABLE_DEBUG */
 				break;
@@ -3858,13 +3868,18 @@ void CPU_CLASS::execute() noexcept(false)
 				}
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND)) {
+					char *jump;
+					if ((ccReg & CC_Z) || ((usrcx[0] & FP_SIGN) ? !(ccReg & CC_N) : (ccReg & CC_N)))
+						jump = "Jumped";
+					else
+						jump = "Continue";
+
 					dbg.log("%s: %08X %08X + %08X %08X => %08X %08X: %s\n", devName.c_str(),
 						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(uidx[0]), ZXTL(uidx[1]),
 						ZXTL(uresx[0]), ZXTL(uresx[1]), stringCC(ccReg));
 					dbg.log("%s: %08X %08X %s %08X %08X: %s\n", devName.c_str(),
 						ZXTL(udstx[0]), ZXTL(udstx[1]), (usrcx[0] & FP_SIGN) ? ">=" : "<=",
-						ZXTL(usrcx[0]), ZXTL(usrcx[1]),
-						((ccReg & CC_Z) || (usrcx[0] & FP_SIGN) ? !(ccReg & CC_N) : (ccReg & CC_N))) ? "Jumped" : "Continue");
+						ZXTL(usrcx[0]), ZXTL(usrcx[1]), jump);
 				}
 #endif /* ENABLE_DEBUG */
 				break;

@@ -26,7 +26,7 @@ vaxfp_t::vaxfp_t(int _type)
 	sign  = 0;
 	exp   = 0;
 	frac  = 0;
-	st    = VFP_OK;
+//	st    = VFP_OK;
 }
 
 vaxfp_t::~vaxfp_t()
