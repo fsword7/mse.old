@@ -670,6 +670,37 @@ int vaxfp_t::divide(vaxfp_t *dvd, vaxfp_t *dvr, vaxfp_t *quo)
 	return VFP_OK;
 }
 
+int vaxfp_t::modulus(vaxfp_t *fp, uint32_t *res, uint32_t *ccFlag)
+{
+	int sc;
+
+	*ccFlag = 0;
+	if (fp->exp <= fp->bias) {
+		*res = 0;
+	} else if (fp->exp > (fp->bias + 64)) {
+		fp->sign = 0;
+		fp->exp  = 0;
+		fp->frac = 0;
+
+		*res = 0;
+		*ccFlag = CC_V;
+	} else {
+		sc   = fp->exp - fp->bias;
+		*res = fp->frac >> (64 - sc);
+
+		if ((fp->exp > (fp->bias + 32)) || ((fp->exp == (fp->bias + 32)) &&
+			(uint32_t(*res) > ((fp->sign == FP_SIGN) ? 0x8000000 : 0x7FFFFFF))))
+			*ccFlag = CC_V;
+		if (fp->sign == FP_SIGN)
+			*res = -*res;
+
+		fp->frac = (sc < 64) ? (fp->frac << sc) : 0;
+		fp->exp  = fp->bias;
+	}
+
+	fp->normalize();
+}
+
 int vaxfp_t::multiplyf(uint32_t *fp1, uint32_t *fp2, uint32_t *res)
 {
 	vaxfp_t sfp(SFP_TYPE), dfp(SFP_TYPE), rfp(SFP_TYPE);
@@ -759,6 +790,64 @@ int vaxfp_t::divideg(uint32_t *fp1, uint32_t *fp2, uint32_t *res)
 	divide(&sfp, &dfp, &rfp);
 
 	return rfp.packg(res);
+}
+
+
+int vaxfp_t::modulusf(uint32_t *fp1, uint32_t *fp2, uint32_t *res,
+		uint32_t ext, uint32_t *val, uint32_t *ccFlag)
+{
+	vaxfp_t mpc(SFP_TYPE), mpr(SFP_TYPE), pro(SFP_TYPE);
+	int     sts;
+
+	if ((sts = mpc.unpackf(fp1)) != VFP_OK)
+		return sts;
+	if ((sts = mpr.unpackf(fp2)) != VFP_OK)
+		return sts;
+
+	mpc.frac |= uint64_t(ext) << 32;
+	if ((sts = multiply(&mpc, &mpr, &pro)) != VFP_OK)
+		return sts;
+	modulus(&pro, val, ccFlag);
+
+	return pro.packf(res);
+}
+
+int vaxfp_t::modulusd(uint32_t *fp1, uint32_t *fp2, uint32_t *res,
+		uint32_t ext, uint32_t *val, uint32_t *ccFlag)
+{
+	vaxfp_t mpc(DFP_TYPE), mpr(DFP_TYPE), pro(DFP_TYPE);
+	int     sts;
+
+	if ((sts = mpc.unpackf(fp1)) != VFP_OK)
+		return sts;
+	if ((sts = mpr.unpackf(fp2)) != VFP_OK)
+		return sts;
+
+	mpc.frac |= ext;
+	if ((sts = multiply(&mpc, &mpr, &pro)) != VFP_OK)
+		return sts;
+	modulus(&pro, val, ccFlag);
+
+	return pro.packd(res);
+}
+
+int vaxfp_t::modulusg(uint32_t *fp1, uint32_t *fp2, uint32_t *res,
+		uint32_t ext, uint32_t *val, uint32_t *ccFlag)
+{
+	vaxfp_t mpc(GFP_TYPE), mpr(GFP_TYPE), pro(GFP_TYPE);
+	int     sts;
+
+	if ((sts = mpc.unpackf(fp1)) != VFP_OK)
+		return sts;
+	if ((sts = mpr.unpackf(fp2)) != VFP_OK)
+		return sts;
+
+	mpc.frac |= (ext >> 5);
+	if ((sts = multiply(&mpc, &mpr, &pro)) != VFP_OK)
+		return sts;
+	modulus(&pro, val, ccFlag);
+
+	return pro.packg(res);
 }
 
 #if 0
