@@ -2870,7 +2870,7 @@ void CPU_CLASS::execute() noexcept(false)
 				storel(opReg[1], udstx[0]);
 
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(udstx[0]), 0);
+				fpSetNZ(ccReg, udstx[0], 0);
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -2893,7 +2893,7 @@ void CPU_CLASS::execute() noexcept(false)
 				storel(opReg[1], udstx[0]);
 
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(udstx[0]), 0);
+				fpSetNZ(ccReg, udstx[0], 0);
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -2916,7 +2916,7 @@ void CPU_CLASS::execute() noexcept(false)
 				storel(opReg[1], udstx[0]);
 
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(udstx[0]), 0);
+				fpSetNZ(ccReg, udstx[0], 0);
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -3039,7 +3039,7 @@ void CPU_CLASS::execute() noexcept(false)
 				storeqp(opReg[1], udstx);
 
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(udstx[0]), 0);
+				fpSetNZ(ccReg, udstx[0], 0);
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -3062,7 +3062,7 @@ void CPU_CLASS::execute() noexcept(false)
 				storeqp(opReg[1], udstx);
 
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(udstx[0]), 0);
+				fpSetNZ(ccReg, udstx[0], 0);
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -3085,7 +3085,7 @@ void CPU_CLASS::execute() noexcept(false)
 				storeqp(opReg[1], udstx);
 
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(udstx[0]), 0);
+				fpSetNZ(ccReg, udstx[0], 0);
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -3217,7 +3217,7 @@ void CPU_CLASS::execute() noexcept(false)
 				storeqp(opReg[1], udstx);
 
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(udstx[0]), 0);
+				fpSetNZ(ccReg, udstx[0], 0);
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -3240,7 +3240,7 @@ void CPU_CLASS::execute() noexcept(false)
 				storeqp(opReg[1], udstx);
 
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(udstx[0]), 0);
+				fpSetNZ(ccReg, udstx[0], 0);
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -3263,7 +3263,7 @@ void CPU_CLASS::execute() noexcept(false)
 				storeqp(opReg[1], udstx);
 
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(udstx[0]), 0);
+				fpSetNZ(ccReg, udstx[0], 0);
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -3406,7 +3406,7 @@ void CPU_CLASS::execute() noexcept(false)
 
 				storeqp(opReg[1], udstx);
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(udstx[0]), 0);
+				fpSetNZ(ccReg, udstx[0], 0);
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -3430,7 +3430,7 @@ void CPU_CLASS::execute() noexcept(false)
 
 				storel(opReg[1], udstx[0]);
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(udstx[0]), 0);
+				fpSetNZ(ccReg, udstx[0], 0);
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -3453,7 +3453,7 @@ void CPU_CLASS::execute() noexcept(false)
 
 				storeqp(opReg[1], udstx);
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(udstx[0]), 0);
+				fpSetNZ(ccReg, udstx[0], 0);
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -3477,7 +3477,7 @@ void CPU_CLASS::execute() noexcept(false)
 
 				storel(opReg[1], udstx[0]);
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(udstx[0]), 0);
+				fpSetNZ(ccReg, udstx[0], 0);
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -3515,7 +3515,7 @@ void CPU_CLASS::execute() noexcept(false)
 				// Store results
 				storel(opReg[2], uresx[0]);
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(uresx[0]), (ccReg & CC_C));
+				fpSetNZ(ccReg, uresx[0], 0);
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -3541,7 +3541,7 @@ void CPU_CLASS::execute() noexcept(false)
 				// Store results
 				storel(opReg[2], uresx[0]);
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(uresx[0]), (ccReg & CC_C));
+				fpSetNZ(ccReg, uresx[0], 0);
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -3567,7 +3567,7 @@ void CPU_CLASS::execute() noexcept(false)
 				// Store results
 				storel(opReg[2], uresx[0]);
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(uresx[0]), (ccReg & CC_C));
+				fpSetNZ(ccReg, uresx[0], 0);
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -3593,7 +3593,7 @@ void CPU_CLASS::execute() noexcept(false)
 				// Store results
 				storel(opReg[2], uresx[0]);
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(uresx[0]), (ccReg & CC_C));
+				fpSetNZ(ccReg, uresx[0], 0);
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -3603,7 +3603,7 @@ void CPU_CLASS::execute() noexcept(false)
 				break;
 
 			case OPC_nMOVF:
-				if (opReg[0] & UFP_EXP) {
+				if ((opReg[0] & UFP_EXP) == 0) {
 					if (opReg[0] & UFP_SIGN)
 						throw RSVD_OPND_FAULT;
 					udstx[0] = 0;
@@ -3613,7 +3613,7 @@ void CPU_CLASS::execute() noexcept(false)
 				storel(opReg[1], udstx[0]);
 
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(udstx[0]), (ccReg & CC_C));
+				fpSetNZ(ccReg, udstx[0], (ccReg & CC_C));
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -3645,14 +3645,14 @@ void CPU_CLASS::execute() noexcept(false)
 
 			case OPC_nTSTF:
 				usrcx[0] = opReg[0];
-				if (src & UFP_EXP) {
-					if (src & UFP_SIGN)
+				if ((usrcx[0] & UFP_EXP) == 0) {
+					if (usrcx[0] & UFP_SIGN)
 						throw RSVD_OPND_FAULT;
 					usrcx[0] = 0;
 				}
 
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(usrcx[0]), (ccReg & CC_C));
+				fpSetNZ(ccReg, usrcx[0], (ccReg & CC_C));
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -3707,7 +3707,7 @@ void CPU_CLASS::execute() noexcept(false)
 				// Store results
 				storel(opReg[3], uresx[0]);
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(uresx[0]), (ccReg & CC_C));
+				fpSetNZ(ccReg, uresx[0], (ccReg & CC_C));
 
 				if ((ccReg & CC_Z) || ((usrcx[0] & FP_SIGN) ? !(ccReg & CC_N) : (ccReg & CC_N))) {
 					REG_PC += opReg[4];
@@ -3756,7 +3756,7 @@ void CPU_CLASS::execute() noexcept(false)
 				// Store results
 				storeqp(opReg[4], uresx);
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(uresx[0]), (ccReg & CC_C));
+				fpSetNZ(ccReg, uresx[0], 0);
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -3786,7 +3786,7 @@ void CPU_CLASS::execute() noexcept(false)
 				// Store results
 				storeqp(opReg[4], uresx);
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(uresx[0]), (ccReg & CC_C));
+				fpSetNZ(ccReg, uresx[0], 0);
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -3816,7 +3816,7 @@ void CPU_CLASS::execute() noexcept(false)
 				// Store results
 				storeqp(opReg[4], uresx);
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(uresx[0]), (ccReg & CC_C));
+				fpSetNZ(ccReg, uresx[0], 0);
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -3846,7 +3846,7 @@ void CPU_CLASS::execute() noexcept(false)
 				// Store results
 				storeqp(opReg[4], uresx);
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(uresx[0]), (ccReg & CC_C));
+				fpSetNZ(ccReg, uresx[0], 0);
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -3857,7 +3857,7 @@ void CPU_CLASS::execute() noexcept(false)
 				break;
 
 			case OPC_nMOVD:
-				if (opReg[0] & UFP_EXP) {
+				if ((opReg[0] & UFP_EXP) == 0) {
 					if (opReg[0] & UFP_SIGN)
 						throw RSVD_OPND_FAULT;
 					udstx[0] = udstx[1] = 0;
@@ -3869,7 +3869,7 @@ void CPU_CLASS::execute() noexcept(false)
 				storeqp(opReg[2], udstx);
 
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(udstx[0]), (ccReg & CC_C));
+				fpSetNZ(ccReg, udstx[0], (ccReg & CC_C));
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -3892,7 +3892,7 @@ void CPU_CLASS::execute() noexcept(false)
 				storeqp(opReg[2], udstx);
 
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(udstx[0]), 0);
+				fpSetNZ(ccReg, udstx[0], 0);
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -3906,14 +3906,14 @@ void CPU_CLASS::execute() noexcept(false)
 				usrcx[0] = opReg[0];
 				usrcx[1] = opReg[1];
 
-				if (usrcx[0] & UFP_EXP) {
+				if ((usrcx[0] & UFP_EXP) == 0) {
 					if (usrcx[0] & UFP_SIGN)
 						throw RSVD_OPND_FAULT;
 					usrcx[0] = usrcx[1] = 0;
 				}
 
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(usrcx[0]), (ccReg & CC_C));
+				fpSetNZ(ccReg, usrcx[0], (ccReg & CC_C));
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -3978,7 +3978,7 @@ void CPU_CLASS::execute() noexcept(false)
 				// Store results
 				storeqp(opReg[6], uresx);
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(uresx[0]), (ccReg & CC_C));
+				fpSetNZ(ccReg, uresx[0], (ccReg & CC_C));
 
 				if ((ccReg & CC_Z) || ((usrcx[0] & FP_SIGN) ? !(ccReg & CC_N) : (ccReg & CC_N))) {
 					REG_PC += opReg[4];
@@ -4030,7 +4030,7 @@ void CPU_CLASS::execute() noexcept(false)
 				// Store results
 				storeqp(opReg[4], uresx);
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(uresx[0]), (ccReg & CC_C));
+				fpSetNZ(ccReg, uresx[0], 0);
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -4060,7 +4060,7 @@ void CPU_CLASS::execute() noexcept(false)
 				// Store results
 				storeqp(opReg[4], uresx);
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(uresx[0]), (ccReg & CC_C));
+				fpSetNZ(ccReg, uresx[0], 0);
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -4090,7 +4090,7 @@ void CPU_CLASS::execute() noexcept(false)
 				// Store results
 				storeqp(opReg[4], uresx);
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(uresx[0]), (ccReg & CC_C));
+				fpSetNZ(ccReg, uresx[0], 0);
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -4120,7 +4120,7 @@ void CPU_CLASS::execute() noexcept(false)
 				// Store results
 				storeqp(opReg[4], uresx);
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(uresx[0]), (ccReg & CC_C));
+				fpSetNZ(ccReg, uresx[0], 0);
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -4131,7 +4131,7 @@ void CPU_CLASS::execute() noexcept(false)
 				break;
 
 			case OPC_nMOVG:
-				if (opReg[0] & GFP_EXP) {
+				if ((opReg[0] & GFP_EXP) == 0) {
 					if (opReg[0] & GFP_SIGN)
 						throw RSVD_OPND_FAULT;
 					udstx[0] = udstx[1] = 0;
@@ -4143,7 +4143,7 @@ void CPU_CLASS::execute() noexcept(false)
 				storeqp(opReg[2], udstx);
 
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(udstx[0]), (ccReg & CC_C));
+				fpSetNZ(ccReg, udstx[0], (ccReg & CC_C));
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -4166,7 +4166,7 @@ void CPU_CLASS::execute() noexcept(false)
 				storeqp(opReg[2], udstx);
 
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(udstx[0]), 0);
+				fpSetNZ(ccReg, udstx[0], 0);
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -4179,14 +4179,14 @@ void CPU_CLASS::execute() noexcept(false)
 			case OPC_nTSTG:
 				srcx[0] = opReg[0];
 				srcx[1] = opReg[1];
-				if (src1 & GFP_EXP) {
-					if (src1 & GFP_SIGN)
+				if ((srcx[0] & GFP_EXP) == 0) {
+					if (srcx[0] & GFP_SIGN)
 						throw RSVD_OPND_FAULT;
 					srcx[0] = srcx[1] = 0;
 				}
 
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(srcx[0]), (ccReg & CC_C));
+				fpSetNZ(ccReg, srcx[0], (ccReg & CC_C));
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -4251,7 +4251,7 @@ void CPU_CLASS::execute() noexcept(false)
 				// Store results
 				storeqp(opReg[6], uresx);
 				// Update condition codes
-				fpSetNZ(ccReg, SXTL(uresx[0]), (ccReg & CC_C));
+				fpSetNZ(ccReg, uresx[0], (ccReg & CC_C));
 
 				if ((ccReg & CC_Z) || ((usrcx[0] & FP_SIGN) ? !(ccReg & CC_N) : (ccReg & CC_N))) {
 					REG_PC += opReg[4];

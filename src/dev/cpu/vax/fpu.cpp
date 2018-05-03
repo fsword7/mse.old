@@ -274,12 +274,12 @@ int vaxfp_t::converti(int32_t val, uint32_t *res, int type)
 	if (val < 0) {
 		// Negative value
 		fp.sign = FP_SIGN;
-		fp.bias = fpBias[type] + 32;
+		fp.exp  = fpBias[type] + 32;
 		fp.frac = uint64_t(-val) << (FP_P_NORM - 31);
 	} else {
 		// Positive value
 		fp.sign = 0;
-		fp.bias = fpBias[type] + 32;
+		fp.exp  = fpBias[type] + 32;
 		fp.frac = uint64_t(val) << (FP_P_NORM - 31);
 	}
 	fp.normalize();
