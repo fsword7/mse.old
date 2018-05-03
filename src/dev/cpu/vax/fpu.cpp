@@ -296,13 +296,13 @@ int vaxfp_t::converti(int32_t val, uint32_t *res, int type)
 	return VFP_ERROR;
 }
 
-int vaxfp_t::convertfi(uint32_t *src, int type, uint32_t *dst, int size, uint32_t *cc)
+int vaxfp_t::convertfi(uint32_t *src, int type, uint32_t *dst, int size, uint32_t *ccFlag)
 {
 	vaxfp_t fp(type);
 	int     sts, ubexp;
 
 	// clear code condition flags
-	*cc = 0;
+	*ccFlag = 0;
 
 	// Unpack FP value
 	switch (type) {
@@ -334,9 +334,9 @@ int vaxfp_t::convertfi(uint32_t *src, int type, uint32_t *dst, int size, uint32_
 
 		// Check fraction for maximum value for overflow flag
 		if (fp.frac > fpMask[size] + (fp.sign != 0))
-			*cc = CC_V;
+			*ccFlag = CC_V;
 	} else {
-		*cc = CC_V;
+		*ccFlag = CC_V;
 		if (ubexp > (FP_P_NORM + 32)) {
 			*dst = 0;
 			return VFP_OK;
