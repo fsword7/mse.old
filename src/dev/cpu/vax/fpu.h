@@ -172,9 +172,10 @@ public:
 
 	static int converti(int32_t val, uint32_t *res, int type);
 	static int convertfi(uint32_t *fp, int type, uint32_t *dst, int size, uint32_t *cc);
+	static int convertfd(uint32_t *val, uint32_t *res);
+	static int convertdf(uint32_t *val, uint32_t *res);
 	static int convertfg(uint32_t *val, uint32_t *res);
 	static int convertgf(uint32_t *val, uint32_t *res);
-	static int convertfd(uint32_t *val, uint32_t *res);
 
 	static int compare(uint32_t *src, uint32_t *dst, int type, uint32_t *cc);
 

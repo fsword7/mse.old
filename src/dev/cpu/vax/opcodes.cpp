@@ -144,7 +144,7 @@ const vaxOpcode vaxOpcodes[] = {
 	OPC("TSTF",     OPC_nTSTF,     1, OPR({ RF, 0,  0,  0,  0,  0  }), OPC_SFL),
 	OPC("EMODF",    OPC_nEMODF,    5, OPR({ RF, RB, RF, WL, WF, 0  }), OPC_SFL|UOPC),
 	OPC("POLYF",    OPC_nPOLYF,    3, OPR({ RF, RW, AB, 0,  0,  0  }), OPC_SFL|UOPC),
-	OPC("CVTFD",    OPC_nCVTFD,    2, OPR({ RF, WD, 0,  0,  0,  0  }), OPC_SDF|UOPC),
+	OPC("CVTFD",    OPC_nCVTFD,    2, OPR({ RF, WD, 0,  0,  0,  0  }), OPC_SDF),
 
 	OPC("ADAWI",    OPC_nADAWI,    2, OPR({ RW, WW, 0,  0,  0,  0  }), OPC_REG),
 	OPC("INSQHI",   OPC_nINSQHI,   2, OPR({ AB, AQ, 0,  0,  0,  0  }), OPC_REG),
@@ -176,7 +176,7 @@ const vaxOpcode vaxOpcodes[] = {
 	OPC("TSTD",     OPC_nTSTD,     1, OPR({ RD, 0,  0,  0,  0,  0  }), OPC_DFL),
 	OPC("EMODD",    OPC_nEMODD,    5, OPR({ RD, RB, RD, WL, WD, 0  }), OPC_DFL|UOPC),
 	OPC("POLYD",    OPC_nPOLYD,    3, OPR({ RD, RW, AB, 0,  0,  0  }), OPC_DFL|UOPC),
-	OPC("CVTDF",    OPC_nCVTDF,    2, OPR({ RD, WF, 0,  0,  0,  0  }), OPC_DSF|UOPC),
+	OPC("CVTDF",    OPC_nCVTDF,    2, OPR({ RD, WF, 0,  0,  0,  0  }), OPC_DSF),
 
 	OPC("ASHL",     OPC_nASHL,     3, OPR({ RB, RL, WL, 0,  0,  0  }), OPC_REG),
 	OPC("ASHQ",     OPC_nASHQ,     3, OPR({ RB, RQ, WQ, 0,  0,  0  }), OPC_REG),
@@ -341,8 +341,8 @@ const vaxOpcode vaxOpcodes[] = {
 	OPC("WAIT",     OPC_nWAIT,     0, OPR({ 0,  0,  0,  0,  0,  0  }), OPC_REG|UOPC),
 
 	OPC("MFVP",     OPC_nMFVP,     0, OPR({ 0,  0,  0,  0,  0,  0  }), OPC_VEC|UOPC),
-	OPC("CVTDH",    OPC_nCVTDH,    2, OPR({ RD, WH, 0,  0,  0,  0  }), OPC_REG|UOPC),
-	OPC("CVTGF",    OPC_nCVTGF,    2, OPR({ RG, WF, 0,  0,  0,  0  }), OPC_REG|UOPC),
+	OPC("CVTDH",    OPC_nCVTDH,    2, OPR({ RD, WH, 0,  0,  0,  0  }), OPC_DHF|UOPC),
+	OPC("CVTGF",    OPC_nCVTGF,    2, OPR({ RG, WF, 0,  0,  0,  0  }), OPC_SGF),
 	OPC("VLDL",     OPC_nVLDL,     0, OPR({ 0,  0,  0,  0,  0,  0  }), OPC_VEC|UOPC),
 	OPC("VGATHL",   OPC_nVGATHL,   0, OPR({ 0,  0,  0,  0,  0,  0  }), OPC_VEC|UOPC),
 	OPC("VLDQ",     OPC_nVLDQ,     0, OPR({ 0,  0,  0,  0,  0,  0  }), OPC_VEC|UOPC),
@@ -427,7 +427,7 @@ const vaxOpcode vaxOpcodes[] = {
 	OPC("VSSUBD",   OPC_nVSSUBD,   0, OPR({ 0,  0,  0,  0,  0,  0  }), OPC_VEC|UOPC),
 
 	OPC("CVTFH",    OPC_nCVTFH,    2, OPR({ RF, WH, 0,  0,  0,  0  }), OPC_SHF|UOPC),
-	OPC("CVTFG",    OPC_nCVTFG,    2, OPR({ RF, WG, 0,  0,  0,  0  }), OPC_SGF|UOPC),
+	OPC("CVTFG",    OPC_nCVTFG,    2, OPR({ RF, WG, 0,  0,  0,  0  }), OPC_SGF),
 	OPC("PROBEVMR", OPC_nPROBEVMR, 0, OPR({ 0,  0,  0,  0,  0,  0  }), OPC_REG|UOPC),
 	OPC("PROBEVMW", OPC_nPROBEVMW, 0, OPR({ 0,  0,  0,  0,  0,  0  }), OPC_REG|UOPC),
 	OPC("VSTL",     OPC_nVSTL,     0, OPR({ 0,  0,  0,  0,  0,  0  }), OPC_VEC|UOPC),

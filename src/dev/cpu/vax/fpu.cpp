@@ -348,34 +348,57 @@ int vaxfp_t::convertfi(uint32_t *src, int type, uint32_t *dst, int size, uint32_
 	return VFP_OK;
 }
 
-int vaxfp_t::convertfg(uint32_t *val, uint32_t *res)
-{
-	vaxfp_t fp = vaxfp_t(SFP_TYPE);
 
-	fp.unpackf(val);
+int vaxfp_t::convertfd(uint32_t *src, uint32_t *dst)
+{
+	vaxfp_t fp(SFP_TYPE);
+	int     sts;
+
+	if ((sts = fp.unpackf(src)) != VFP_OK)
+		return sts;
+	fp.type = DFP_TYPE;
+
+	return fp.packd(dst);
+}
+
+int vaxfp_t::convertdf(uint32_t *src, uint32_t *dst)
+{
+	vaxfp_t fp(DFP_TYPE);
+	int     sts;
+
+	if ((sts = fp.unpackd(src)) != VFP_OK)
+		return sts;
+	fp.type = SFP_TYPE;
+
+	return fp.packf(dst);
+}
+
+int vaxfp_t::convertfg(uint32_t *src, uint32_t *dst)
+{
+	vaxfp_t fp(SFP_TYPE);
+	int     sts;
+
+	if ((sts = fp.unpackf(src)) != VFP_OK)
+		return sts;
 	fp.exp  = fp.exp - UFP_BIAS + GFP_BIAS;
 	fp.type = GFP_TYPE;
-	return fp.packg(res);
+
+	return fp.packg(dst);
 }
 
-int vaxfp_t::convertgf(uint32_t *val, uint32_t *res)
+int vaxfp_t::convertgf(uint32_t *src, uint32_t *dst)
 {
-	vaxfp_t fp = vaxfp_t(GFP_TYPE);
+	vaxfp_t fp(GFP_TYPE);
+	int     sts;
 
-	fp.unpackg(val);
+	if ((sts = fp.unpackg(src)) != VFP_OK)
+		return sts;
 	fp.exp  = fp.exp - GFP_BIAS + UFP_BIAS;
 	fp.type = SFP_TYPE;
-	return fp.packf(res);
+
+	return fp.packf(dst);
 }
 
-int vaxfp_t::convertfd(uint32_t *val, uint32_t *res)
-{
-	vaxfp_t fp = vaxfp_t(SFP_TYPE);
-
-	fp.unpackf(val);
-	fp.type = DFP_TYPE;
-	return fp.packd(res);
-}
 
 int vaxfp_t::compare(uint32_t *src, uint32_t *dst, int type, uint32_t *cc)
 {
