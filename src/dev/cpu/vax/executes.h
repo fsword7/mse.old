@@ -3107,7 +3107,7 @@ void CPU_CLASS::execute() noexcept(false)
 					faultfp(sts);
 				}
 
-				storeb(opReg[1], udstx[0]);
+				storeb(opReg[2], udstx[0]);
 
 				// Update condition codes
 				SetNZ(ccReg, SXTB(udstx[0]), 0, flg);
@@ -3134,7 +3134,7 @@ void CPU_CLASS::execute() noexcept(false)
 					faultfp(sts);
 				}
 
-				storew(opReg[1], udstx[0]);
+				storew(opReg[2], udstx[0]);
 
 				// Update condition codes
 				SetNZ(ccReg, SXTW(udstx[0]), 0, flg);
@@ -3161,7 +3161,7 @@ void CPU_CLASS::execute() noexcept(false)
 					faultfp(sts);
 				}
 
-				storel(opReg[1], udstx[0]);
+				storel(opReg[2], udstx[0]);
 
 				// Update condition codes
 				SetNZ(ccReg, SXTL(udstx[0]), 0, flg);
@@ -3188,7 +3188,7 @@ void CPU_CLASS::execute() noexcept(false)
 					faultfp(sts);
 				}
 
-				storel(opReg[1], udstx[0]);
+				storel(opReg[2], udstx[0]);
 
 				// Update condition codes
 				SetNZ(ccReg, SXTL(udstx[0]), 0, flg);
@@ -3205,6 +3205,7 @@ void CPU_CLASS::execute() noexcept(false)
 
 			case OPC_nCVTBG:
 				usrcx[0] = SXTB(opReg[0]);
+
 				if ((sts = vaxfp_t::converti(usrcx[0], udstx, GFP_TYPE)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -3286,7 +3287,7 @@ void CPU_CLASS::execute() noexcept(false)
 					faultfp(sts);
 				}
 
-				storeb(opReg[1], udstx[0]);
+				storeb(opReg[2], udstx[0]);
 
 				// Update condition codes
 				SetNZ(ccReg, SXTB(udstx[0]), 0, flg);
@@ -3313,7 +3314,7 @@ void CPU_CLASS::execute() noexcept(false)
 					faultfp(sts);
 				}
 
-				storew(opReg[1], udstx[0]);
+				storew(opReg[2], udstx[0]);
 
 				// Update condition codes
 				SetNZ(ccReg, SXTW(udstx[0]), 0, flg);
@@ -3340,7 +3341,7 @@ void CPU_CLASS::execute() noexcept(false)
 					faultfp(sts);
 				}
 
-				storel(opReg[1], udstx[0]);
+				storel(opReg[2], udstx[0]);
 
 				// Update condition codes
 				SetNZ(ccReg, SXTL(udstx[0]), 0, flg);
@@ -3367,7 +3368,7 @@ void CPU_CLASS::execute() noexcept(false)
 					faultfp(sts);
 				}
 
-				storel(opReg[1], udstx[0]);
+				storel(opReg[2], udstx[0]);
 
 				// Update condition codes
 				SetNZ(ccReg, SXTL(udstx[0]), 0, flg);
@@ -3428,7 +3429,7 @@ void CPU_CLASS::execute() noexcept(false)
 					faultfp(sts);
 				}
 
-				storel(opReg[1], udstx[0]);
+				storel(opReg[2], udstx[0]);
 				// Update condition codes
 				fpSetNZ(ccReg, udstx[0], 0);
 
@@ -3475,7 +3476,7 @@ void CPU_CLASS::execute() noexcept(false)
 					faultfp(sts);
 				}
 
-				storel(opReg[1], udstx[0]);
+				storel(opReg[2], udstx[0]);
 				// Update condition codes
 				fpSetNZ(ccReg, udstx[0], 0);
 
@@ -3585,7 +3586,7 @@ void CPU_CLASS::execute() noexcept(false)
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
 						dbg.log("%s: %08X / %08X: %s\n", devName.c_str(),
-							ZXTL(usrcx[0]), ZXTL(udstx[0]), ferrCodes[sts]);
+							ZXTL(udstx[0]), ZXTL(usrcx[0]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
 				}
@@ -3598,7 +3599,7 @@ void CPU_CLASS::execute() noexcept(false)
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
 					dbg.log("%s: %08X / %08X => %08X: %s\n", devName.c_str(),
-						ZXTL(usrcx[0]), ZXTL(udstx[0]), ZXTL(uresx[0]), stringCC(ccReg));
+						ZXTL(udstx[0]), ZXTL(usrcx[0]), ZXTL(uresx[0]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
 
@@ -3652,7 +3653,7 @@ void CPU_CLASS::execute() noexcept(false)
 				}
 
 				// Update condition codes
-				fpSetNZ(ccReg, usrcx[0], (ccReg & CC_C));
+				fpSetNZ(ccReg, usrcx[0], 0);
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -3760,7 +3761,7 @@ void CPU_CLASS::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X %08X + %08X %08X => %08X %98X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X %08X + %08X %08X => %08X %08X: %s\n", devName.c_str(),
 						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
 						ZXTL(uresx[0]), ZXTL(uresx[1]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
@@ -3790,7 +3791,7 @@ void CPU_CLASS::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X %08X - %08X %08X => %08X %98X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X %08X - %08X %08X => %08X %08X: %s\n", devName.c_str(),
 						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
 						ZXTL(uresx[0]), ZXTL(uresx[1]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
@@ -3820,7 +3821,7 @@ void CPU_CLASS::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X %08X * %08X %08X => %08X %98X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X %08X * %08X %08X => %08X %08X: %s\n", devName.c_str(),
 						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
 						ZXTL(uresx[0]), ZXTL(uresx[1]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
@@ -3837,7 +3838,7 @@ void CPU_CLASS::execute() noexcept(false)
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
 						dbg.log("%s: %08X %08X / %08X %08X: %s\n", devName.c_str(),
-							ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
+							ZXTL(udstx[0]), ZXTL(udstx[1]), ZXTL(usrcx[0]), ZXTL(usrcx[1]),
 							ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -3850,8 +3851,8 @@ void CPU_CLASS::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X %08X / %08X %08X => %08X %98X: %s\n", devName.c_str(),
-						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
+					dbg.log("%s: %08X %08X / %08X %08X => %08X %08X: %s\n", devName.c_str(),
+						ZXTL(udstx[0]), ZXTL(udstx[1]), ZXTL(usrcx[0]), ZXTL(usrcx[1]),
 						ZXTL(uresx[0]), ZXTL(uresx[1]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -3913,7 +3914,7 @@ void CPU_CLASS::execute() noexcept(false)
 				}
 
 				// Update condition codes
-				fpSetNZ(ccReg, usrcx[0], (ccReg & CC_C));
+				fpSetNZ(ccReg, usrcx[0], 0);
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
@@ -4034,7 +4035,7 @@ void CPU_CLASS::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X %08X + %08X %08X => %08X %98X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X %08X + %08X %08X => %08X %08X: %s\n", devName.c_str(),
 						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
 						ZXTL(uresx[0]), ZXTL(uresx[1]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
@@ -4064,7 +4065,7 @@ void CPU_CLASS::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X %08X - %08X %08X => %08X %98X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X %08X - %08X %08X => %08X %08X: %s\n", devName.c_str(),
 						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
 						ZXTL(uresx[0]), ZXTL(uresx[1]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
@@ -4081,7 +4082,7 @@ void CPU_CLASS::execute() noexcept(false)
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
 						dbg.log("%s: %08X %08X * %08X %08X: %s\n", devName.c_str(),
-							ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
+							ZXTL(udstx[0]), ZXTL(udstx[1]), ZXTL(usrcx[0]), ZXTL(usrcx[1]),
 							ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -4094,8 +4095,8 @@ void CPU_CLASS::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X %08X * %08X %08X => %08X %98X: %s\n", devName.c_str(),
-						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
+					dbg.log("%s: %08X %08X * %08X %08X => %08X %08X: %s\n", devName.c_str(),
+						ZXTL(udstx[0]), ZXTL(udstx[1]), ZXTL(usrcx[0]), ZXTL(usrcx[1]),
 						ZXTL(uresx[0]), ZXTL(uresx[1]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -4111,7 +4112,7 @@ void CPU_CLASS::execute() noexcept(false)
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
 						dbg.log("%s: %08X %08X / %08X %08X: %s\n", devName.c_str(),
-							ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
+							ZXTL(udstx[0]), ZXTL(udstx[1]), ZXTL(usrcx[0]), ZXTL(usrcx[1]),
 							ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -4124,8 +4125,8 @@ void CPU_CLASS::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X %08X / %08X %08X => %08X %98X: %s\n", devName.c_str(),
-						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
+					dbg.log("%s: %08X %08X / %08X %08X => %08X %08X: %s\n", devName.c_str(),
+						ZXTL(udstx[0]), ZXTL(udstx[1]), ZXTL(usrcx[0]), ZXTL(usrcx[1]),
 						ZXTL(uresx[0]), ZXTL(uresx[1]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -4186,7 +4187,7 @@ void CPU_CLASS::execute() noexcept(false)
 				}
 
 				// Update condition codes
-				fpSetNZ(ccReg, srcx[0], (ccReg & CC_C));
+				fpSetNZ(ccReg, srcx[0], 0);
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))

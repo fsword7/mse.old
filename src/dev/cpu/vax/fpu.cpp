@@ -265,7 +265,7 @@ int vaxfp_t::converti(int32_t val, uint32_t *res, int type)
 	// When determine value as zero, do nothing and return with zero
 	if (val == 0) {
 		res[0] = 0;
-		if (type == DFP_TYPE)
+		if (type > SFP_TYPE)
 			res[1] = 0;
 		return VFP_OK;
 	}
@@ -333,7 +333,7 @@ int vaxfp_t::convertfi(uint32_t *src, int type, uint32_t *dst, int size, uint32_
 		fp.frac >>= 1;
 
 		// Check fraction for maximum value for overflow flag
-		if (fp.frac > fpMask[size] + (fp.sign != 0))
+		if (fp.frac > (ZXTQ(fpMask[size]) + (fp.sign != 0)))
 			*ccFlag = CC_V;
 	} else {
 		*ccFlag = CC_V;
@@ -480,8 +480,9 @@ int vaxfp_t::add(vaxfp_t *src, vaxfp_t *dst, vaxfp_t *res)
 
 	if (add->sign ^ adr->sign) {
 		if (dexp != 0) {
-			addf = (dexp < 64) ? ((-adr->frac >> dexp) |
-					(FP_MASK64 << (64 - dexp))) : FP_MASK64;
+			addf = (dexp < 64)
+				? ((-adr->frac >> dexp) | (FP_MASK64 << (64 - dexp)))
+				: FP_MASK64;
 			res->frac = add->frac + addf;
 		} else
 			res->frac = add->frac - adr->frac;
@@ -491,6 +492,7 @@ int vaxfp_t::add(vaxfp_t *src, vaxfp_t *dst, vaxfp_t *res)
 
 		// Add and normalize it
 		res->frac = add->frac + addf;
+//		printf("ADD: %016llX %016llX => %016llX\n", add->frac, addf, res->frac);
 		if (res->frac < addf) {
 			res->frac = FP_NORM | (res->frac >> 1);
 			res->exp++;
@@ -520,9 +522,9 @@ int vaxfp_t::addd(uint32_t *fp1, uint32_t *fp2, uint32_t *res)
 	vaxfp_t sfp(DFP_TYPE), dfp(DFP_TYPE), rfp(DFP_TYPE);
 	int     sts;
 
-	if ((sts = sfp.unpackf(fp1)) != VFP_OK)
+	if ((sts = sfp.unpackd(fp1)) != VFP_OK)
 		return sts;
-	if ((sts = dfp.unpackf(fp2)) != VFP_OK)
+	if ((sts = dfp.unpackd(fp2)) != VFP_OK)
 		return sts;
 
 	add(&sfp, &dfp, &rfp);
@@ -535,9 +537,9 @@ int vaxfp_t::addg(uint32_t *fp1, uint32_t *fp2, uint32_t *res)
 	vaxfp_t sfp(GFP_TYPE), dfp(GFP_TYPE), rfp(GFP_TYPE);
 	int     sts;
 
-	if ((sts = sfp.unpackf(fp1)) != VFP_OK)
+	if ((sts = sfp.unpackg(fp1)) != VFP_OK)
 		return sts;
-	if ((sts = dfp.unpackf(fp2)) != VFP_OK)
+	if ((sts = dfp.unpackg(fp2)) != VFP_OK)
 		return sts;
 
 	add(&sfp, &dfp, &rfp);
@@ -567,9 +569,9 @@ int vaxfp_t::subtractd(uint32_t *fp1, uint32_t *fp2, uint32_t *res)
 	vaxfp_t sfp(DFP_TYPE), dfp(DFP_TYPE), rfp(DFP_TYPE);
 	int     sts;
 
-	if ((sts = sfp.unpackf(fp1)) != VFP_OK)
+	if ((sts = sfp.unpackd(fp1)) != VFP_OK)
 		return sts;
-	if ((sts = dfp.unpackf(fp2)) != VFP_OK)
+	if ((sts = dfp.unpackd(fp2)) != VFP_OK)
 		return sts;
 
 	sfp.sign ^= FP_SIGN;
@@ -583,9 +585,9 @@ int vaxfp_t::subtractg(uint32_t *fp1, uint32_t *fp2, uint32_t *res)
 	vaxfp_t sfp(GFP_TYPE), dfp(GFP_TYPE), rfp(GFP_TYPE);
 	int     sts;
 
-	if ((sts = sfp.unpackf(fp1)) != VFP_OK)
+	if ((sts = sfp.unpackg(fp1)) != VFP_OK)
 		return sts;
-	if ((sts = dfp.unpackf(fp2)) != VFP_OK)
+	if ((sts = dfp.unpackg(fp2)) != VFP_OK)
 		return sts;
 
 	sfp.sign ^= FP_SIGN;
@@ -721,9 +723,9 @@ int vaxfp_t::multiplyd(uint32_t *fp1, uint32_t *fp2, uint32_t *res)
 	vaxfp_t sfp(DFP_TYPE), dfp(DFP_TYPE), rfp(DFP_TYPE);
 	int     sts;
 
-	if ((sts = sfp.unpackf(fp1)) != VFP_OK)
+	if ((sts = sfp.unpackd(fp1)) != VFP_OK)
 		return sts;
-	if ((sts = dfp.unpackf(fp2)) != VFP_OK)
+	if ((sts = dfp.unpackd(fp2)) != VFP_OK)
 		return sts;
 
 	multiply(&sfp, &dfp, &rfp);
@@ -736,9 +738,9 @@ int vaxfp_t::multiplyg(uint32_t *fp1, uint32_t *fp2, uint32_t *res)
 	vaxfp_t sfp(GFP_TYPE), dfp(GFP_TYPE), rfp(GFP_TYPE);
 	int     sts;
 
-	if ((sts = sfp.unpackf(fp1)) != VFP_OK)
+	if ((sts = sfp.unpackg(fp1)) != VFP_OK)
 		return sts;
-	if ((sts = dfp.unpackf(fp2)) != VFP_OK)
+	if ((sts = dfp.unpackg(fp2)) != VFP_OK)
 		return sts;
 
 	multiply(&sfp, &dfp, &rfp);
@@ -747,49 +749,52 @@ int vaxfp_t::multiplyg(uint32_t *fp1, uint32_t *fp2, uint32_t *res)
 }
 
 
-int vaxfp_t::dividef(uint32_t *fp1, uint32_t *fp2, uint32_t *res)
+int vaxfp_t::dividef(uint32_t *src, uint32_t *dst, uint32_t *res)
 {
-	vaxfp_t sfp(SFP_TYPE), dfp(SFP_TYPE), rfp(SFP_TYPE);
+	vaxfp_t dvd(SFP_TYPE), dvr(SFP_TYPE), quo(SFP_TYPE);
 	int     sts;
 
-	if ((sts = sfp.unpackf(fp1)) != VFP_OK)
+	if ((sts = dvr.unpackf(src)) != VFP_OK)
 		return sts;
-	if ((sts = dfp.unpackf(fp2)) != VFP_OK)
+	if ((sts = dvd.unpackf(dst)) != VFP_OK)
 		return sts;
 
-	divide(&sfp, &dfp, &rfp);
+	if ((sts = divide(&dvd, &dvr, &quo)) != VFP_OK)
+		return sts;
 
-	return rfp.packf(res);
+	return quo.packf(res);
 }
 
-int vaxfp_t::divided(uint32_t *fp1, uint32_t *fp2, uint32_t *res)
+int vaxfp_t::divided(uint32_t *src, uint32_t *dst, uint32_t *res)
 {
-	vaxfp_t sfp(DFP_TYPE), dfp(DFP_TYPE), rfp(DFP_TYPE);
+	vaxfp_t dvd(DFP_TYPE), dvr(DFP_TYPE), quo(DFP_TYPE);
 	int     sts;
 
-	if ((sts = sfp.unpackf(fp1)) != VFP_OK)
+	if ((sts = dvr.unpackd(src)) != VFP_OK)
 		return sts;
-	if ((sts = dfp.unpackf(fp2)) != VFP_OK)
+	if ((sts = dvd.unpackd(dst)) != VFP_OK)
 		return sts;
 
-	divide(&sfp, &dfp, &rfp);
+	if ((sts = divide(&dvd, &dvr, &quo)) != VFP_OK)
+		return sts;
 
-	return rfp.packd(res);
+	return quo.packd(res);
 }
 
-int vaxfp_t::divideg(uint32_t *fp1, uint32_t *fp2, uint32_t *res)
+int vaxfp_t::divideg(uint32_t *src, uint32_t *dst, uint32_t *res)
 {
-	vaxfp_t sfp(GFP_TYPE), dfp(GFP_TYPE), rfp(GFP_TYPE);
+	vaxfp_t dvd(GFP_TYPE), dvr(GFP_TYPE), quo(GFP_TYPE);
 	int     sts;
 
-	if ((sts = sfp.unpackf(fp1)) != VFP_OK)
+	if ((sts = dvr.unpackg(src)) != VFP_OK)
 		return sts;
-	if ((sts = dfp.unpackf(fp2)) != VFP_OK)
+	if ((sts = dvd.unpackg(dst)) != VFP_OK)
 		return sts;
 
-	divide(&sfp, &dfp, &rfp);
+	if ((sts = divide(&dvd, &dvr, &quo)) != VFP_OK)
+		return sts;
 
-	return rfp.packg(res);
+	return quo.packg(res);
 }
 
 
@@ -818,9 +823,9 @@ int vaxfp_t::modulusd(uint32_t *fp1, uint32_t *fp2, uint32_t *res,
 	vaxfp_t mpc(DFP_TYPE), mpr(DFP_TYPE), pro(DFP_TYPE);
 	int     sts;
 
-	if ((sts = mpc.unpackf(fp1)) != VFP_OK)
+	if ((sts = mpc.unpackd(fp1)) != VFP_OK)
 		return sts;
-	if ((sts = mpr.unpackf(fp2)) != VFP_OK)
+	if ((sts = mpr.unpackd(fp2)) != VFP_OK)
 		return sts;
 
 	mpc.frac |= ext;
@@ -837,9 +842,9 @@ int vaxfp_t::modulusg(uint32_t *fp1, uint32_t *fp2, uint32_t *res,
 	vaxfp_t mpc(GFP_TYPE), mpr(GFP_TYPE), pro(GFP_TYPE);
 	int     sts;
 
-	if ((sts = mpc.unpackf(fp1)) != VFP_OK)
+	if ((sts = mpc.unpackg(fp1)) != VFP_OK)
 		return sts;
-	if ((sts = mpr.unpackf(fp2)) != VFP_OK)
+	if ((sts = mpr.unpackg(fp2)) != VFP_OK)
 		return sts;
 
 	mpc.frac |= (ext >> 5);
