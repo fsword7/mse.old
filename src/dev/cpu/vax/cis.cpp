@@ -89,8 +89,8 @@ void vax_cpuDevice::movc(int c5flg)
 
 #ifdef ENABLE_DEBUG
 		if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-		printf("%s: (FPD) SRC %08X (%04X bytes) to DST %08X (%04X bytes) with fill %02X\n",
-			devName.c_str(), ZXTL(REG_R1), ZXTW(REG_R2), ZXTL(REG_R3), ZXTW(REG_R4), fill);
+			dbg.log("%s: (FPD) SRC %08X (%04X bytes) to DST %08X (%04X bytes) with fill %02X\n",
+					devName.c_str(), ZXTL(REG_R1), ZXTW(REG_R2), ZXTL(REG_R3), ZXTW(REG_R4), fill);
 #endif /* ENABLE_DEBUG */
 
 		// Reset PC address and clear instruction look-ahead
