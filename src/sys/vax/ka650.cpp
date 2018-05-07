@@ -15,10 +15,11 @@
 #include "emu/debug.h"
 #include "emu/devsys.h"
 #include "emu/devcpu.h"
-#include "sys/vax/vax.h"
-#include "sys/vax/ka650.h"
 #include "dev/cpu/vax/vax.h"
 #include "dev/cpu/vax/cvax.h"
+#include "dev/comm/dec/cty.h"
+#include "sys/vax/vax.h"
+#include "sys/vax/ka650.h"
 
 
 ka650_sysDevice::ka650_sysDevice()
@@ -486,10 +487,12 @@ static Device *create(std::string devName, std::string devType, sysModel *model)
 {
 	ka650_sysDevice *dev;
 	cvax_cpuDevice *cpu;
+	dec::ctyDevice *cty;
 
 	dev = ka650_sysDevice::create(devName, devType, model);
 
 	cpu = cvax_cpuDevice::create(dev, "cpu0");
+	cty = dec::ctyDevice::create(dev, "cty0");
 
 	return dev;
 }

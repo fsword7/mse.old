@@ -21,4 +21,6 @@ public:
 protected:
 	uint32_t  memSize;
 	uint8_t  *mem;
+
+	dec::ctyDevice *cty;
 };

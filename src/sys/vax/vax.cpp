@@ -10,11 +10,12 @@
 #include "emu/devsys.h"
 #include "emu/devcpu.h"
 #include "emu/console.h"
-#include "sys/vax/vax.h"
 #include "dev/cpu/vax/vax.h"
+#include "dev/comm/dec/cty.h"
+#include "sys/vax/vax.h"
 
 vax_sysDevice::vax_sysDevice()
-: memSize(0), mem(nullptr)
+: memSize(0), mem(nullptr), cty(nullptr)
 {
 }
 

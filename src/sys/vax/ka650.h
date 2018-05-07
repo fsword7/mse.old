@@ -7,7 +7,7 @@
 
 #pragma once
 
-// KA650/KA655 Memory Map
+// KA650/KA655/KA655X Memory Map
 //
 // 00000000 +-------------------------------------+
 //          |            Main Memory              |

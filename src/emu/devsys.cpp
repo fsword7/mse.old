@@ -152,6 +152,12 @@ void sysDevice::addCPUDevice(cpuDevice *cpu)
 	addDevice(cpu);
 }
 
+void sysDevice::addConsoleDevice(ttyDevice *cty)
+{
+	this->cty.push_back(cty);
+	addDevice(cty);
+}
+
 cpuDevice *sysDevice::getCPUDevice(int idx)
 {
 	if (idx < 0 || idx >= cpu.size())
@@ -164,6 +170,55 @@ uint32_t sysDevice::readio(uint32_t, uint32_t)
 }
 
 void sysDevice::writeio(uint32_t, uint32_t, uint32_t)
+{
+}
+
+// ******************************************************************************
+
+ioDevice::ioDevice(int clsType)
+: Device(clsType)
+{
+}
+
+ioDevice::~ioDevice()
+{
+	// Close all log files
+//	log.close(-1);
+}
+
+uint8_t ioDevice::read8(uint32_t)
+{
+	return 0;
+}
+
+uint16_t ioDevice::read16(uint32_t)
+{
+	return 0;
+}
+
+uint32_t ioDevice::read32(uint32_t)
+{
+	return 0;
+}
+
+uint64_t ioDevice::read64(uint32_t)
+{
+	return 0;
+}
+
+void ioDevice::write8(uint32_t, uint8_t)
+{
+}
+
+void ioDevice::write16(uint32_t, uint16_t)
+{
+}
+
+void ioDevice::write32(uint32_t, uint32_t)
+{
+}
+
+void ioDevice::write64(uint32_t, uint64_t)
 {
 }
 

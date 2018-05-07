@@ -22,11 +22,12 @@ struct cfgMemory;
 #define CMD_ERROR      3
 
 // Device Class Type
-#define CLS_UNKNOWN    0
-#define CLS_ROOT       1
-#define CLS_SYSTEM     2
-#define CLS_CPU        3
-#define CLS_IODEV      4
+#define CLS_UNKNOWN		0
+#define CLS_ROOT		1
+#define CLS_SYSTEM		2
+#define CLS_CPU			3
+#define CLS_IODEV		4
+#define CLS_TTYDEV		5
 
 typedef std::vector<std::string> args_t;
 
@@ -146,6 +147,32 @@ protected:
 #endif /* ENABLE_DEBUG */
 };
 
+class ioDevice : public Device
+{
+public:
+	ioDevice(int clsType = CLS_IODEV);
+	~ioDevice();
+
+	virtual uint8_t  read8(uint32_t ioAddr);
+	virtual uint16_t read16(uint32_t ioAddr);
+	virtual uint32_t read32(uint32_t ioAddr);
+	virtual uint64_t read64(uint32_t ioAddr);
+
+	virtual void     write8(uint32_t ioAddr, uint8_t data);
+	virtual void     write16(uint32_t ioAddr, uint16_t data);
+	virtual void     write32(uint32_t ioAddr, uint32_t data);
+	virtual void     write64(uint32_t ioAddr, uint64_t data);
+
+protected:
+};
+
+class ttyDevice : public ioDevice
+{
+public:
+	ttyDevice();
+	~ttyDevice();
+};
+
 class sysDevice : public Device
 {
 public:
@@ -153,6 +180,7 @@ public:
 	~sysDevice();
 
 	void addCPUDevice(cpuDevice *cdev);
+	void addConsoleDevice(ttyDevice *tdev);
 
 	cpuDevice *getCPUDevice(int idx);
 
@@ -163,7 +191,11 @@ public:
 
 protected:
 	std::vector<cpuDevice *> cpu;
+	std::vector<ttyDevice *> cty;
+	std::vector<ioDevice *>  io;
+
 	logFile log;
 };
+
 
 void setSystemDrivers(Device *dev);
