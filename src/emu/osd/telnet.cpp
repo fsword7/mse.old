@@ -5,10 +5,11 @@
  *      Author: Timothy Stark
  */
 
+#include "emu/core.h"
 #include "emu/osd/telnet.h"
 
 // Telnet Code Initialization
-static char tlnCodes[] =
+static uint8_t tlnCodes[] =
 {
 	TLN_IAC, TLN_WILL, TLN_LINEMODE,  // IAC WILL LINEMODE
 	TLN_IAC, TLN_WILL, TLN_SGA,       // IAC WILL SGA
