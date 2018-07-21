@@ -2,7 +2,7 @@
  * vax.h
  *
  *  Created on: Feb 26, 2017
- *      Author: fswor
+ *      Author: Timothy Stark
  */
 
 #pragma once
@@ -457,7 +457,7 @@ public:
 	virtual void init();
 //	virtual void reset();
 //	virtual int  boot();
-//	void execute();
+	virtual void execute();
 
 	int disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **str);
 	int disasm(Console *cty, uint32_t pcAddr);

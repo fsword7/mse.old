@@ -194,9 +194,9 @@ void cvax_cpuDevice::check(uint32_t code)
 {
 }
 
-#define CPU_CVAX
-#define CPU_CLASS cvax_cpuDevice
-#include "dev/cpu/vax/executes.h"
+//#define CPU_CVAX
+//#define CPU_CLASS cvax_cpuDevice
+//#include "dev/cpu/vax/executes.h"
 
 void cvax_cpuDevice::mfpr()
 {

@@ -1,15 +1,19 @@
 /*
- * executes.h
+ * execute.cpp
  *
- *  Created on: Mar 14, 2017
- *      Author: fswor
+ *  Created on: July 21, 2018
+ *      Author: Timothy Stark
  */
 
-#pragma once
-
-#ifndef CPU_CLASS
-#define CPU_CLASS vax_cpuDevice
-#endif
+#include "emu/core.h"
+#include "emu/debug.h"
+#include "emu/devsys.h"
+#include "emu/devcpu.h"
+#include "dev/cpu/vax/mtpr.h"
+#include "dev/cpu/vax/vax.h"
+#include "dev/cpu/vax/fpu.h"
+#include "dev/cpu/vax/cvax.h"
+#include "dev/cpu/vax/opcodes.h"
 
 // Register validation check
 #define Validate(rn, max) if ((rn) >= (max)) throw RSVD_ADDR_FAULT;
@@ -35,7 +39,7 @@ static const char *ferrCodes[] =
 	"Reserved Operand Fault"
 };
 
-void CPU_CLASS::execute() noexcept(false)
+void vax_cpuDevice::execute() noexcept(false)
 {
 	int32_t  brDisp;
 	bool     ovflg;

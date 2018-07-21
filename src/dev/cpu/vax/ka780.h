@@ -37,7 +37,7 @@ public:
 	~ka780_cpuDevice();
 
 	void reset();
-	void execute();
+//	void execute();
 
 protected:
 	void mfpr();

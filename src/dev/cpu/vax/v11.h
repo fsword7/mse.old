@@ -39,7 +39,7 @@ public:
 	~v11_cpuDevice();
 
 	void reset();
-	void execute();
+//	void execute();
 
 protected:
 	void mfpr();

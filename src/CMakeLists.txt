@@ -10,6 +10,7 @@ set(mse_cpp_SRCS
 	dev/cpu/vax/cis.cpp
 	dev/cpu/vax/cvax.cpp
 	dev/cpu/vax/disasm.cpp
+	dev/cpu/vax/execute.cpp
 	dev/cpu/vax/fpu.cpp
 	dev/cpu/vax/ka780.cpp
 	dev/cpu/vax/mem.cpp
@@ -55,7 +56,6 @@ set(mse_h_SRCS
 	dev/cpu/pdp11/models.h
 	dev/cpu/pdp11/pdp11.h
 	dev/cpu/vax/cvax.h
-	dev/cpu/vax/executes.h
 	dev/cpu/vax/fpu.h
 	dev/cpu/vax/ka780.h
 	dev/cpu/vax/mmu.h

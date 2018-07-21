@@ -40,6 +40,6 @@ void v11_cpuDevice::mtpr()
 {
 }
 
-#define CPU_V11
-#define CPU_CLASS v11_cpuDevice
-#include "dev/cpu/vax/executes.h"
+//#define CPU_V11
+//#define CPU_CLASS v11_cpuDevice
+//#include "dev/cpu/vax/executes.h"
