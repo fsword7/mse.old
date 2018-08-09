@@ -46,6 +46,7 @@ ka650_sysDevice *ka650_sysDevice::create(std::string devName, std::string devTyp
 	// Set up ROM space for SRM firmware
 	dev->romData = new uint8_t[ROM_SIZE];
 	dev->romSize = ROM_SIZE;
+	memset(dev->romData, 0xFF, ROM_SIZE);
 
 	std::ifstream in("data/fw/vax/ka655x.bin", std::ios::binary);
 	while (in.read((char *)&dev->romData[addr], 512))
