@@ -171,6 +171,12 @@ void cvax_cpuDevice::halt(uint32_t code)
 	IPR_CONPSL = (psReg|ccReg) | (code << 8) |
 		((IPR_MAPEN & 1) ? CONPSL_MAPEN : 0);
 
+	// Switch to interrupt stack mode and IPL 31
+	if (mode > AM_INTERRUPT)
+		IPR_CONPSL |= CONPSL_INVALID;
+	else
+		ipReg[mode] = REG_SP;
+
 	// Reset processor registers
 	REG_SP    = IPR_ISP;
 	psReg     = PSL_IS|PSL_IPL;
@@ -192,6 +198,30 @@ void cvax_cpuDevice::halt(uint32_t code)
 
 void cvax_cpuDevice::check(uint32_t code)
 {
+	register uint32_t sirq;
+
+	// Find highest software interrupt
+	for (sirq = IPL_SMAX; sirq > 0; sirq--)
+		if ((IPR_SISR >> sirq) & 1)
+			break;
+
+	// Set parameters for exception.
+	paCount  = 5;
+	paReg[0] = (paCount - 1) * LN_LONG;
+	paReg[1] = (code & 0x80) ? mchkRef : 0;
+	paReg[2] = mchkAddr + LN_LONG;
+	paReg[3] = (opCode << 24) | (sirq << 16) |
+		((IPR_CADR & 0xFF) << 8) | (IPR_MSER & 0xFF);
+	paReg[4] = 0x00C07000 | ((faultAddr - REG_PC) & 0xFF);
+
+#ifdef ENABLE_DEBUG
+	if (dbg.checkFlags(DBG_EXCEPTION))
+		dbg.log("%s: (MCHK) Machine Check Exception Code %08X\n",
+			devName.c_str(), code);
+#endif /* ENABLE_DEBUG */
+
+	// Entering an exception routine.
+	exception(IE_SVE, SCB_MCHK, 0);
 }
 
 //#define CPU_CVAX

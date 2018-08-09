@@ -71,25 +71,6 @@
 #define MCHK_READ    0x80 // Read Reference Check
 #define MCHK_WRITE   0x82 // Write Reference Check
 
-// Halt Action Codes
-#define HALT_PWRON   0x03 // Initial Power On
-#define HALT_ISNV    0x04 // Interrupt Stack Not Valid During Exception
-#define HALT_MCHK    0x05 // Machine Check During Normal Exception
-#define HALT_INST    0x06 // HALT Instruction in Kernel Mode
-#define HALT_SCB11   0x07 // SCB Vector <1:0> = 11
-#define HALT_SCB10   0x08 // SCB Vector <1:0> = 10
-#define HALT_CHMFIS  0x0A // CHMx Executed while on Interrupt Stack
-#define HALT_CHMTIS  0x0B // CHMx Executed to the Interrupt Stack
-#define HALT_AMCHK   0x10 // ACV/TNV during Machine Check
-#define HALT_AKSNV   0x11 // ACV/TNV during Kernel Stack Not Valid
-#define HALT_DMCHK   0x12 // Machine Check during Machine Check
-#define HALT_MKSNV   0x13 // Machine Check during Kernel Stack Not Valid
-#define HALT_INIE0   0x19 // PSL<26:24> = 101 during Interrupt/Exception
-#define HALT_INIE1   0x1A // PSL<26:24> = 110 during Interrupt/Exception
-#define HALT_INIE2   0x1B // PSL<26:24> = 111 during Interrupt/Exception
-#define HALT_REI0    0x1D // PSL<26:24> = 101 during REI Instruction
-#define HALT_REI1    0x1E // PSL<26:24> = 110 during REI Instruction
-#define HALT_REI2    0x1F // PSL<26:24> = 111 during REI Instruction
 
 
 class cvax_cpuDevice : public vax_cpuDevice
@@ -100,7 +81,6 @@ public:
 
 	void reset();
 //	int  boot();
-//	void execute();
 
 	static cvax_cpuDevice *create(sysDevice *sdev, std::string devName);
 

@@ -299,7 +299,7 @@
 // KA650 IPL levels
 #define IPL_MEMERR		0x1D
 #define IPL_CRDERR		0x1A
-// standard IPL levels
+// Standard IPL levels
 #define IPL_HMAX		0x17
 #define IPL_HMIN		0x14
 #define IPL_SMAX		0x0F
@@ -315,23 +315,17 @@
 #define IRQ_GETTRAP(irq)       (((irq) >> IRQ_P_TRAP) & IRQ_M_TRAP)
 #define IRQ_SETTRAP(trap)      ((trap & IRQ_M_TRAP) << IRQ_P_TRAP)
 
+// Processor Interrupt Request Signals
+#define IRQ_HALT				0x80000000
+#define IRQ_CLOCK				0x00100000
+#define IRQ_CRDERR				0x00080000
+#define IRQ_MEMERR				0x00040000
+#define IRQ_CTYOUT				0x00020000
+#define IRQ_CTYIN				0x00010000
+
 #define UpdateIRQ() \
 	irqFlags = evaluate();
 
-// Exception Codes - Stop
-#define STOP_HALT			-1		// HALT opcode
-#define STOP_UOPC			-2		// Unimplemented opcode
-#define STOP_ILLVEC			-3		// Illegal vector
-#define STOP_UIPL			-4      // Undefined IPL level
-#define STOP_INIE			-5		// Exception during exception
-
-//enum stopCode {
-//	STOP_eHALT = 0,
-//	STOP_eUOPC,
-//	STOP_eILLVEC,
-//	STOP_eUIPL,
-//	STOP_eINIE
-//};
 
 // Exception Codes - Fault
 #define RSVD_INST_FAULT		SCB_RESIN            // Reserved instruction fault
@@ -345,6 +339,43 @@
 #define PAGE_TNV            SCB_TNV  // Table Not Valid
 #define PAGE_ACV            SCB_ACV  // Access Violation
 #define PAGE_KSNV           SCB_KSNV // Kernel Stack Not Valid
+
+// Halt Action Codes
+#define HALT_PIN		0x02	// Halt Pin
+#define HALT_PWRON		0x03	// Initial Power On
+#define HALT_ISNV		0x04	// Interrupt Stack Not Valid During Exception
+#define HALT_MCHK		0x05	// Machine Check During Normal Exception
+#define HALT_INST		0x06	// HALT Instruction in Kernel Mode
+#define HALT_SCB11		0x07	// SCB Vector <1:0> = 11
+#define HALT_SCB10		0x08	// SCB Vector <1:0> = 10
+#define HALT_CHMFIS		0x0A	// CHMx Executed while on Interrupt Stack
+#define HALT_CHMTIS		0x0B	// CHMx Executed to the Interrupt Stack
+#define HALT_AMCHK		0x10	// ACV/TNV during Machine Check
+#define HALT_AKSNV		0x11	// ACV/TNV during Kernel Stack Not Valid
+#define HALT_DMCHK		0x12	// Machine Check during Machine Check
+#define HALT_MKSNV		0x13	// Machine Check during Kernel Stack Not Valid
+#define HALT_INIE0		0x19	// PSL<26:24> = 101 during Interrupt/Exception
+#define HALT_INIE1		0x1A	// PSL<26:24> = 110 during Interrupt/Exception
+#define HALT_INIE2		0x1B	// PSL<26:24> = 111 during Interrupt/Exception
+#define HALT_REI0		0x1D	// PSL<26:24> = 101 during REI Instruction
+#define HALT_REI1		0x1E	// PSL<26:24> = 110 during REI Instruction
+#define HALT_REI2		0x1F	// PSL<26:24> = 111 during REI Instruction
+
+// Exception Codes - Stop
+#define STOP_HALT			-1		// HALT opcode
+#define STOP_UOPC			-2		// Unimplemented opcode
+#define STOP_ILLVEC			-3		// Illegal vector
+#define STOP_UIPL			-4      // Undefined IPL level
+#define STOP_INIE			-5		// Exception during exception
+#define STOP_OPR			-6		// Operator request
+
+//enum stopCode {
+//	STOP_eHALT = 0,
+//	STOP_eUOPC,
+//	STOP_eILLVEC,
+//	STOP_eUIPL,
+//	STOP_eINIE
+//};
 
 // Update Condition Codes
 

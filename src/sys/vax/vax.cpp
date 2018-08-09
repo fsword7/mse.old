@@ -82,7 +82,7 @@ static int cmdBoot(Console *cty, Device *sdev, args_t &args)
 		return CMD_OK;
 	}
 
-//	dev->boot();
+	dev->boot();
 
 	return CMD_OK;
 }
@@ -128,7 +128,7 @@ static int cmdStop(Console *cty, Device *sdev, args_t &args)
 		return CMD_OK;
 	}
 
-//	dev->stop();
+	dev->stop();
 
 	return CMD_OK;
 }

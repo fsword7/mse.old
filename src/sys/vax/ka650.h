@@ -345,8 +345,8 @@ public:
 	uint32_t readcdg(uint32_t pAddr, uint32_t acc);
 	void     writecdg(uint32_t pAddr, uint32_t data, uint32_t acc);
 
-	uint32_t readio(uint32_t pAddr, uint32_t acc);
-	void     writeio(uint32_t pAddr, uint32_t data, uint32_t acc);
+	uint32_t readio(cpuDevice *cpu, uint32_t pAddr, uint32_t acc);
+	void     writeio(cpuDevice *cpu, uint32_t pAddr, uint32_t data, uint32_t acc);
 
 private:
 	// local I/O register area

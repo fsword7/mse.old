@@ -165,11 +165,11 @@ cpuDevice *sysDevice::getCPUDevice(int idx)
 	return cpu[idx];
 }
 
-uint32_t sysDevice::readio(uint32_t, uint32_t)
+uint32_t sysDevice::readio(cpuDevice *, uint32_t, uint32_t)
 {
 }
 
-void sysDevice::writeio(uint32_t, uint32_t, uint32_t)
+void sysDevice::writeio(cpuDevice *, uint32_t, uint32_t, uint32_t)
 {
 }
 

@@ -186,8 +186,8 @@ public:
 
 	inline logFile *getLogFile()  { return &log; }
 
-	virtual uint32_t readio(uint32_t pAddr, uint32_t acc);
-	virtual void     writeio(uint32_t pAddr, uint32_t data, uint32_t acc);
+	virtual uint32_t readio(cpuDevice *cpu, uint32_t pAddr, uint32_t acc);
+	virtual void     writeio(cpuDevice *cpu, uint32_t pAddr, uint32_t data, uint32_t acc);
 
 protected:
 	std::vector<cpuDevice *> cpu;

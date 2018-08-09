@@ -987,6 +987,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				// Must be in kernel mode
 				if (PSL_GETCUR(psReg) != AM_KERNEL)
 					throw PRIV_INST_FAULT;
+//				halt(HALT_INST);
 				throw STOP_HALT;
 
 			case OPC_nNOP:

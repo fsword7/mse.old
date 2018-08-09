@@ -83,11 +83,6 @@ void vax_cpuDevice::writepr(uint32_t, uint32_t)
 {
 }
 
-void vax_cpuDevice::halt(uint32_t code)
-{
-	throw STOP_HALT;
-}
-
 void vax_cpuDevice::check(uint32_t code)
 {
 }
@@ -624,6 +619,13 @@ static const uint32_t swMasks[IPL_SMAX] =
 	0xE000, 0xC000, 0x8000          // IPL 0C - 0E
 };
 
+void vax_cpuDevice::halt(uint32_t code)
+{
+	printf("%s: (DIE) Exception during exception at PC %08X\n",
+		devName.c_str(), faultAddr);
+	throw STOP_INIE;
+}
+
 // Evaluate IRQ levels
 int vax_cpuDevice::evaluate()
 {
@@ -661,6 +663,9 @@ void vax_cpuDevice::interrupt()
 		// perform exception routine
 		exception(IE_EXC, SCB_ARITH, 0);
 	} else if ((nipl = IRQ_GETIPL(irqFlags)) != 0) {
+//		if (nipl == IPL_HALTPIN) {
+//			halt(HALT_PIN);
+//		}
 		if (nipl <= IPL_SMAX) {
 			// Software interrupts
 			IPR_SISR &= ~(1u << nipl);
@@ -723,47 +728,48 @@ int vax_cpuDevice::fault(uint32_t vec)
 	case SCB_RESAD:
 	case SCB_RESOP:
 	case SCB_RESIN:
-		if (flags & CPU_INIE) {
-			printf("%s: (DIE) Exception during exception at PC %08X\n",
-				devName.c_str(), faultAddr);
-			throw STOP_INIE;
-		}
+		if (flags & CPU_INIE)
+			halt(HALT_ISNV);
 		if ((rc = exception(IE_EXC, vec, 0)) != 0)
 			return rc;
 		break;
 
+//	case SCB_CMODE:
 	case SCB_ARITH:
-		if (flags & CPU_INIE) {
-			printf("%s: (DIE) Exception during exception at PC %08X\n",
-				devName.c_str(), faultAddr);
-			throw STOP_INIE;
-		}
+		if (flags & CPU_INIE)
+			halt(HALT_ISNV);
 		exception(IE_EXC, vec, 0);
 		break;
 
 	case SCB_TNV: // Translation Invalid
 	case SCB_ACV: // Access Control Violation
-		if (flags & CPU_INIE) {
-			if (psReg & PSL_IS) {
-				printf("%s: (DIE) Page fault during interrupt mode at PC %08X\n",
-						devName.c_str(), faultAddr);
-				throw STOP_INIE;
-			}
-			// Kernel Stack Not Valid
-			paCount = 0;
-			exception(IE_SVE, SCB_KSNV, 0);
-		} else
-			exception(IE_EXC, vec, 0);
+//		if (flags & CPU_INIE) {
+//			if (psReg & PSL_IS) {
+//				printf("%s: (DIE) Page fault during interrupt mode at PC %08X\n",
+//						devName.c_str(), faultAddr);
+//				throw STOP_INIE;
+//			}
+//			// Kernel Stack Not Valid
+//			paCount = 0;
+//			exception(IE_SVE, SCB_KSNV, 0);
+//		} else
+//			exception(IE_EXC, vec, 0);
+		if (flags & CPU_INIE)
+			halt(HALT_ISNV);
+		exception(IE_EXC, vec, 0);
 		break;
 
-//	case SCB_KSNV: // Kernel Stack Not Valid
-//		if (flags & CPU_INIE) {
-//			printf("%s: (DIE) Exception during exception at PC %08X\n",
-//				devName.c_str(), faultAddr);
-//			throw STOP_eINIE;
-//		}
-//		exception(IE_SVE, vec, 0);
-//		break;
+	case SCB_KSNV: // Kernel Stack Not Valid
+		if (psReg & PSL_IS)
+			halt(HALT_ISNV);
+		exception(IE_SVE, vec, 0);
+		break;
+
+	case SCB_MCHK: // Machine Check (model-specific)
+		if (flags & CPU_INIE)
+			halt(HALT_MCHK);
+		check(paReg[1]);
+		break;
 
 	case SCB_NEXT: // Passive release - continue
 		break;
@@ -791,6 +797,8 @@ int vax_cpuDevice::exception(int ie, uint32_t vec, uint32_t ipl)
 	npc = readpl(IPR_SCBB + vec);
 	if (ie == IE_SVE)
 		npc |= 1;
+	if (npc & 2)
+		halt((npc & 1) ? HALT_SCB11 : HALT_SCB10);
 
 #ifdef ENABLE_DEBUG
 	if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND) || dbg.checkFlags(DBG_EXCEPTION))
@@ -929,8 +937,8 @@ void vax_cpuDevice::change(int mode, int32_t code)
 	osp  = REG_SP;
 
 	// Must not be in interrupt mode
-	if (psReg & PSL_IS) {
-	}
+	if (psReg & PSL_IS)
+		halt(HALT_CHMFIS);
 
 	// Get vector address from SCB block
 	npc = readpl(IPR_SCBB + scbMode[mode]);
@@ -1055,7 +1063,3 @@ void vax_cpuDevice::resume()
 	}
 #endif /* ENABLE_DEBUG */
 }
-
-
-//#define CPU_CLASS vax_cpuDevice
-//#include "dev/cpu/vax/executes.h"

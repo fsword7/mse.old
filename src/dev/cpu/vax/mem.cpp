@@ -99,7 +99,7 @@ uint32_t vax_cpuDevice::readpl(uint32_t pAddr)
 		return MEML(pAddr >> 2);
 	mchkAddr = pAddr;
 	mchkRef  = REF_P;
-	return sdev->readio(pAddr, LN_LONG);
+	return sdev->readio(this, pAddr, LN_LONG);
 }
 
 // Aligned longword read access with physical address
@@ -110,7 +110,7 @@ void vax_cpuDevice::writepl(uint32_t pAddr, uint32_t data)
 		MEML(pAddr >> 2) = data;
 	mchkAddr = pAddr;
 	mchkRef  = REF_P;
-	sdev->writeio(pAddr, data, LN_LONG);
+	sdev->writeio(this, pAddr, data, LN_LONG);
 }
 
 // Aligned read access with physical address
@@ -125,7 +125,7 @@ uint32_t vax_cpuDevice::readp(uint32_t pAddr, int size)
 		return MEMB(pAddr);
 	}
 	mchkRef = REF_V;
-	return sdev->readio(pAddr, size);
+	return sdev->readio(this, pAddr, size);
 }
 
 // Aligned write access with physical address
@@ -141,7 +141,7 @@ void vax_cpuDevice::writep(uint32_t pAddr, uint32_t data, int size)
 			MEMB(pAddr) = data;
 	}
 	mchkRef = REF_V;
-	sdev->writeio(pAddr, data, size);
+	sdev->writeio(this, pAddr, data, size);
 }
 
 void vax_cpuDevice::cleartlb(bool sysFlag)
@@ -198,10 +198,10 @@ tlb_t vax_cpuDevice::pagefault(uint32_t errCode, uint32_t vAddr, uint32_t acc, u
 
 	// During interrupt/exception routine,
 	// aborting as kernel stack not valid
-//	if (flags & CPU_INIE) {
-//		flags &= ~CPU_INIE;
-//		throw PAGE_KSNV;
-//	}
+	if (flags & CPU_INIE) {
+		flags &= ~CPU_INIE;
+		throw PAGE_KSNV;
+	}
 
 	// Set parameter registers
 	paCount = 2;
@@ -536,7 +536,7 @@ uint32_t vax_cpuDevice::readpc(uint32_t pAddr, int size)
 		return MEMB(pAddr);
 	}
 	mchkRef |= REF_C;
-	return sdev->readio(pAddr, size);
+	return sdev->readio(this, pAddr, size);
 }
 
 // Console read access with physical address
@@ -552,7 +552,7 @@ void vax_cpuDevice::writepc(uint32_t pAddr, uint32_t data, int size)
 			MEMB(pAddr) = data;
 	}
 	mchkRef |= REF_C;
-	sdev->writeio(pAddr, data, size);
+	sdev->writeio(this, pAddr, data, size);
 }
 
 // Console write access with virtual address

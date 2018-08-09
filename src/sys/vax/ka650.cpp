@@ -352,7 +352,7 @@ void ka650_sysDevice::writecdg(uint32_t pAddr, uint32_t data, uint32_t acc)
 #define NVRL(addr) ((uint32_t *)nvrData)[addr >> 2]
 
 // Aligned I/O read access
-uint32_t ka650_sysDevice::readio(uint32_t pAddr, uint32_t acc)
+uint32_t ka650_sysDevice::readio(cpuDevice *cpu, uint32_t pAddr, uint32_t acc)
 {
 	uint32_t data;
 
@@ -410,11 +410,12 @@ NXM:
 //	// Go to machine check exception.
 //	SSC_BTO |= (BTO_BTO|BTO_RWT);
 //	MACH_CHECK(MCHK_READ);
+//	cpu->check(MCHK_READ);
 	return 0;
 }
 
 // Aligned I/O write access
-void ka650_sysDevice::writeio(uint32_t pAddr, uint32_t data, uint32_t acc)
+void ka650_sysDevice::writeio(cpuDevice *cpu, uint32_t pAddr, uint32_t data, uint32_t acc)
 {
 	if ((pAddr >= NVR_BASE) && (pAddr < NVR_END)) {
 		pAddr &= NVR_MASK;
@@ -452,8 +453,8 @@ void ka650_sysDevice::writeio(uint32_t pAddr, uint32_t data, uint32_t acc)
 //		// Go to machine check exception.
 //		SSC_BTO |= (BTO_BTO|BTO_RWT);
 //		MACH_CHECK(MCHK_WRITE);
+//		return MCHK_WRITE;
 	}
-
 }
 
 // ******************************************************************************
