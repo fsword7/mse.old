@@ -32,8 +32,12 @@ int cpuDevice::stop()
 {
 	// Send STOP signal to processor and wait for
 	// thread process to be terminated
-//	send(CPU_STOP);
+	send(cpuStop);
 	process.join();
 
 	return CMD_OK;
+}
+
+void cpuDevice::send(cpuSignal)
+{
 }

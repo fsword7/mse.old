@@ -69,8 +69,13 @@ void vax_cpuDevice::execute() noexcept(false)
 	// Reset instruction steam
 	flushvi();
 
+	state = cpuRunning;
+
 	while (1) {
 		try {
+			if (state == cpuStopping)
+				throw STOP_OPR;
+
 			// Check any pending SCB code
 			if (scbCode != -1) {
 				fault(scbCode);
@@ -4761,6 +4766,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 			// Stop codes
 			if (exCode < 0) {
+				state = cpuStopped;
 				switch (exCode) {
 				case STOP_HALT:
 					printf("%s: %s at PC %08X\n", devName.c_str(), stopNames[~exCode], faultAddr);
@@ -4778,6 +4784,11 @@ void vax_cpuDevice::execute() noexcept(false)
 
 				case STOP_ILLVEC:
 					printf("%s: Illegal vector at PC %08X\n",
+							devName.c_str(), faultAddr);
+					return;
+
+				case STOP_OPR:
+					printf("%s: Operator request at PC %08X\n",
 							devName.c_str(), faultAddr);
 					return;
 				}

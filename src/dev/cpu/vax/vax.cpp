@@ -63,6 +63,15 @@ void vax_cpuDevice::init()
 {
 }
 
+void vax_cpuDevice::send(cpuSignal signal)
+{
+	switch (signal) {
+	case cpuStop:
+		state = cpuStopping;
+		break;
+	}
+}
+
 void vax_cpuDevice::assignMemory(uint8_t *mem, uint32_t memSize)
 {
 	this->mem     = mem;

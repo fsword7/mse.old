@@ -490,6 +490,8 @@ public:
 //	virtual int  boot();
 	virtual void execute();
 
+	virtual void send(cpuSignal signal);
+
 	int disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **str);
 	int disasm(Console *cty, uint32_t pcAddr);
 	int dump(Console *cty, uint32_t *sAddr, uint32_t eAddr);
