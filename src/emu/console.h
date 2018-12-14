@@ -17,6 +17,7 @@ public:
 
 	int  executeCommand(args_t &args);
 	void prompt();
+	void script(std::string fname);
 
 	inline Device *getDevice() const { return cdev; }
 	inline Device *getSystemDevice() const { return sdev; }

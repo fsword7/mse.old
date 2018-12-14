@@ -32,6 +32,8 @@ int main(int argc, char **argv)
 
 	printf("Welcome to Multi-System Emulator System\n\n");
 
+	if (argc > 1)
+		con->script(std::string(argv[1]));
 	con->prompt();
 
 	delete con;
