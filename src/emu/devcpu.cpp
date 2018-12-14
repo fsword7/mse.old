@@ -4,7 +4,8 @@
 #include "emu/devcpu.h"
 
 cpuDevice::cpuDevice()
-: Device(CLS_CPU)
+: Device(CLS_CPU),
+  state(cpuStopped)
 {
 }
 
