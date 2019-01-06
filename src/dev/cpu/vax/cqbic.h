@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "dev/bus/dec/uqbus.h"
+
 #define QBA_REG(reg)  uqReg[reg]
 
 // 1F40 (17500) IPC - Interprocessor Communication Register
