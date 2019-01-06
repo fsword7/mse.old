@@ -390,17 +390,7 @@ uint32_t ka650_sysDevice::readio(cpuDevice *cpu, uint32_t pAddr, uint32_t acc)
 //		data = ka650qba_ReadMEM(KA650_REG(cpu, qbaUnit), pAddr, acc);
 	else if ((pAddr >= CDG_BASE) && (pAddr < CDG_END))
 		data = readcdg(pAddr, acc);
-	else
-		goto NXM;
-
-	if (acc == LN_LONG)
-		return data;
-	else if (acc == LN_WORD)
-		return (data >> ((pAddr & 2) ? 16 : 0)) & MSK_WORD;
-	else
-		return (data >> ((pAddr & 3) << 3)) & MSK_BYTE;
-
-NXM:
+	else {
 #ifdef ENABLE_DEBUG
 //	if (dbg.checkFlags(DBG_PAGEFAULT))
 //		dbg.log("%s: (R) CPU Non-Existant Memory on %08X at PC %08X\n",
@@ -412,7 +402,15 @@ NXM:
 //	SSC_BTO |= (BTO_BTO|BTO_RWT);
 //	MACH_CHECK(MCHK_READ);
 //	cpu->check(MCHK_READ);
-	return 0;
+
+	}
+
+	if (acc == LN_LONG)
+		return data;
+	else if (acc == LN_WORD)
+		return (data >> ((pAddr & 2) ? 16 : 0)) & MSK_WORD;
+	else
+		return (data >> ((pAddr & 3) << 3)) & MSK_BYTE;
 }
 
 // Aligned I/O write access
