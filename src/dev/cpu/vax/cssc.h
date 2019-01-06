@@ -115,3 +115,9 @@
 
 // SSC - Address Strobes
 #define ADS_MASK   0x3FFFFFFC
+
+
+class cssc
+{
+
+};
