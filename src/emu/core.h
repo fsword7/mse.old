@@ -9,8 +9,10 @@
 #include <thread>
 #include <mutex>
 #include <chrono>
+#include <vector>
 
 #include <cstdio>
+#include <cstddef>
 #include <cstdarg>
 #include <cstdlib>
 #include <cstdint>
