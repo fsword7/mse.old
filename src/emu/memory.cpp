@@ -11,11 +11,11 @@
 #include "emu/memory.h"
 
 
-memManager::memManager(Device *sys)
+mapManager::mapManager(Device *sys)
 {
 }
 
-memManager::~memManager()
+mapManager::~mapManager()
 {
 }
 

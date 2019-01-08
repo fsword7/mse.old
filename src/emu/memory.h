@@ -14,13 +14,18 @@
 
 class Device;
 class mapAddress;
+class mapAddressSpace;
 
 using offs_t = std::size_t;
 
-class memManager {
+using mapConstructor = named_delegate<void (mapAddressSpace &)>;
+
+using read8_delegate = device_delegate<uint8_t (mapAddress &, offs_t, uint8_t)>;
+
+class mapManager {
 public:
-	memManager(Device *sys);
-	~memManager();
+	mapManager(Device *sys);
+	~mapManager();
 
 private:
 };
@@ -106,4 +111,19 @@ public:
 private:
 	Device &sys;
 	std::vector<mapAddressEntry> list;
+};
+
+class mapAddressSpaceConfig
+{
+
+};
+
+class mapAddressSpace
+{
+
+protected:
+	const char	*name;		// Name of the address space
+	device_t	&device;	// Reference to the owning device
+	mapManager	&manager;	// Reference to the owning map manager
+	mapAddress	*map;		// Original address map database
 };
