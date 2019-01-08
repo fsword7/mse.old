@@ -22,6 +22,14 @@ using offs_t = std::size_t;
 using mapConstructor = named_delegate<void (mapAddressSpace &)>;
 
 using read8_delegate = device_delegate<uint8_t(mapAddress &, offs_t, uint8_t)>;
+using read16_delegate = device_delegate<uint16_t(mapAddress &, offs_t, uint16_t)>;
+using read32_delegate = device_delegate<uint32_t(mapAddress &, offs_t, uint32_t)>;
+using read64_delegate = device_delegate<uint64_t(mapAddress &, offs_t, uint64_t)>;
+
+using write8_delegate = device_delegate<uint8_t(mapAddress &, offs_t, uint8_t)>;
+using write16_delegate = device_delegate<uint16_t(mapAddress &, offs_t, uint16_t)>;
+using write32_delegate = device_delegate<uint32_t(mapAddress &, offs_t, uint32_t)>;
+using write64_delegate = device_delegate<uint64_t(mapAddress &, offs_t, uint64_t)>;
 
 class mapManager {
 public:

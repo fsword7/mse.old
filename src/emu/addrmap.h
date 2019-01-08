@@ -75,6 +75,15 @@ public:
 
 	// access handlers
 	read8_delegate		read8;
+	read16_delegate		read16;
+	read32_delegate		read32;
+	read64_delegate		read64;
+
+	write8_delegate		write8;
+	write16_delegate	write16;
+	write32_delegate	write32;
+	write64_delegate	write64;
+
 };
 
 class mapAddress {
