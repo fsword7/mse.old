@@ -1,27 +1,16 @@
 /*
- * memory.cpp
+ * addrmap.cpp
  *
  *  Created on: Jan 6, 2019
  *      Author: Tim Stark
  */
 
 #include "emu/core.h"
-#include "emu/debug.h"
-#include "emu/devsys.h"
-#include "emu/memory.h"
+#include "addrmap.h"
 
 
-mapManager::mapManager(Device *sys)
-{
-}
-
-mapManager::~mapManager()
-{
-}
-
-
-mapAddressEntry::mapAddressEntry(Device &_dev, mapAddress &_map, offs_t start, offs_t end)
-: mapNext(nullptr), map(_map), dev(_dev),
+mapAddressEntry::mapAddressEntry(device_t &_dev, mapAddress &_map, offs_t start, offs_t end)
+: mapNext(nullptr), map(_map), device(_dev),
   adrStart(start), adrEnd(end),
   adrMask(0), adrMirror(0), adrSelect(0),
   tagShare(nullptr)

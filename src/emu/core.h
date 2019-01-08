@@ -23,6 +23,7 @@
 #include "lib/util/delegate.h"
 #include "emu/devdelegate.h"
 #include "emu/device.h"
+#include "emu/emumap.h"
 
 // Data length
 #define LN_BYTE  1

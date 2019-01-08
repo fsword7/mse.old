@@ -1,5 +1,5 @@
 /*
- * memory.h - Memory Manager facility
+ * addrmap.h - Address space mapping
  *
  *  Created on: Jan 6, 2019
  *      Author: Tim Stark
@@ -7,28 +7,7 @@
 
 #pragma once
 
-// Address space type
-#define AS_PROGRAM		0
-#define AS_DATA			1
-#define AS_IO			2
-
-class Device;
 class mapAddress;
-class mapAddressSpace;
-
-using offs_t = std::size_t;
-
-using mapConstructor = named_delegate<void (mapAddressSpace &)>;
-
-using read8_delegate = device_delegate<uint8_t (mapAddress &, offs_t, uint8_t)>;
-
-class mapManager {
-public:
-	mapManager(Device *sys);
-	~mapManager();
-
-private:
-};
 
 enum mapType {
 	mapNone = 0,
@@ -57,7 +36,7 @@ struct mapHandler {
 
 class mapAddressEntry {
 public:
-	mapAddressEntry(Device &dev, mapAddress &map, offs_t start, offs_t end);
+	mapAddressEntry(device_t &device, mapAddress &map, offs_t start, offs_t end);
 
 	// Mapping parameter setting function calls
 
@@ -81,8 +60,8 @@ public:
 
 	// Address entry information (public access)
 	mapAddressEntry *mapNext;	// Point to the next entry
-	mapAddress   	&map;	// Reference to address map database
-	Device			&dev;	// Reference to base device
+	mapAddress   	&map;		// Reference to address map database
+	device_t		&device;	// Reference to base device
 
 	// Address parameters (public address)
 	offs_t		adrStart;	// Start address
@@ -99,7 +78,7 @@ public:
 
 class mapAddress {
 public:
-	mapAddress(Device &sys);
+	mapAddress(device_t &device);
 	~mapAddress();
 
 	mapAddressEntry &operator()(offs_t start, offs_t end);
@@ -109,21 +88,7 @@ public:
 	offs_t	gmask;	// Global bit mask
 
 private:
-	Device &sys;
+	device_t &device;
 	std::vector<mapAddressEntry> list;
 };
 
-class mapAddressSpaceConfig
-{
-
-};
-
-class mapAddressSpace
-{
-
-protected:
-	const char	*name;		// Name of the address space
-	device_t	&device;	// Reference to the owning device
-	mapManager	&manager;	// Reference to the owning map manager
-	mapAddress	*map;		// Original address map database
-};

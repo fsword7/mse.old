@@ -17,6 +17,7 @@ set(mse_cpp_SRCS
 	dev/cpu/vax/opcodes.cpp
 	dev/cpu/vax/v11.cpp
 	dev/cpu/vax/vax.cpp
+	emu/addrmap.cpp
 	emu/commands.cpp
 	emu/console.cpp
 	emu/core.cpp
@@ -24,7 +25,7 @@ set(mse_cpp_SRCS
 	emu/devcpu.cpp
 	emu/devsys.cpp
 	emu/devtty.cpp
-	emu/memory.cpp
+	emu/emumap.cpp
 	emu/misc.cpp
 	emu/osd/ether.cpp
 	emu/osd/main.cpp
@@ -66,6 +67,7 @@ set(mse_h_SRCS
 	dev/cpu/vax/opcodes.h
 	dev/cpu/vax/v11.h
 	dev/cpu/vax/vax.h
+	emu/addrmap.h
 	emu/commands.h
 	emu/console.h
 	emu/core.h
@@ -73,7 +75,7 @@ set(mse_h_SRCS
 	emu/devcore.h
 	emu/devcpu.h
 	emu/devsys.h
-	emu/memory.h
+	emu/emumap.h
 	emu/osd/ether.h
 	emu/osd/socket.h
 	emu/osd/telnet.h
