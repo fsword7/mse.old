@@ -21,6 +21,8 @@
 #include <boost/algorithm/string.hpp>
 
 #include "lib/util/delegate.h"
+#include "emu/devdelegate.h"
+#include "emu/device.h"
 
 // Data length
 #define LN_BYTE  1

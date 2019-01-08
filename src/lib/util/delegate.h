@@ -10,11 +10,11 @@
 using delegate_generic_func = void(*)();
 
 
-class delegate_late_bind
+class delegate_bind
 {
 public:
-	delegate_late_bind() {}
-	virtual ~delegate_late_bind() {}
+	delegate_bind() {}
+	virtual ~delegate_bind() {}
 };
 
 template<typename Class, typename Return, typename... Params>
