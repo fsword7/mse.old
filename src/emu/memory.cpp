@@ -10,15 +10,6 @@
 #include "emu/devsys.h"
 #include "emu/memory.h"
 
-// Address space type
-#define AS_PROGRAM		0
-#define AS_DATA			1
-#define AS_IO			2
-
-// Memory handler type
-#define AMH_NONE		0
-#define AMH_RAM			1
-#define AMH_ROM			2
 
 memManager::memManager(Device *sys)
 {
@@ -29,28 +20,37 @@ memManager::~memManager()
 }
 
 
-memAddressEntry::memAddressEntry(Device &_dev, memAddressMap &_map, offs_t start, offs_t end)
-: next(nullptr), map(_map), dev(_dev),
+mapAddressEntry::mapAddressEntry(Device &_dev, mapAddress &_map, offs_t start, offs_t end)
+: mapNext(nullptr), map(_map), dev(_dev),
   adrStart(start), adrEnd(end),
-  adrMask(0), adrMirror(0), adrSelect(0)
+  adrMask(0), adrMirror(0), adrSelect(0),
+  tagShare(nullptr)
 {
 
 }
 
-memAddressMap::memAddressMap(Device &_sys)
+mapAddressEntry &mapAddressEntry::mask(offs_t mask)
+{
+	adrMask = mask;
+	if (map.gmask != 0)
+		adrMask &= map.gmask;
+	return *this;
+}
+
+mapAddress::mapAddress(Device &_sys)
 : sys(_sys)
 {
 }
 
-memAddressMap::~memAddressMap()
+mapAddress::~mapAddress()
 {
 }
 
-memAddressEntry &memAddressMap::operator()(offs_t start, offs_t end)
+mapAddressEntry &mapAddress::operator()(offs_t start, offs_t end)
 {
-	memAddressEntry *entry;
+	mapAddressEntry *entry;
 
-	entry = new memAddressEntry(sys, *this, start, end);
+	entry = new mapAddressEntry(sys, *this, start, end);
 	list.push_back(*entry);
 
 	return *entry;
