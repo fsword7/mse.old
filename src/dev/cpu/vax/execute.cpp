@@ -45,23 +45,23 @@ void vax_cpuDevice::execute() noexcept(false)
 	bool     ovflg;
 	uint32_t sts, flg;
 	dopc_t   *dopc;
-	register int32_t  src1, src2, carry;
-	register int32_t  dst1, dst2;
-	register int32_t  src, dst, tmp;
-	register int64_t  srcq, srcq1, srcq2;
-	register int64_t  dstq, dstq1, dstq2;
-	register uint32_t usrc, usrc1, usrc2;
-	register uint32_t udst, utmp;
-	register uint32_t mask;
-	register int32_t  cnt;
-	register int32_t  entry, pred, succ;
-	register int32_t  prev, next;
-	register int32_t  queue, head, tail;
+	int32_t  src1, src2, carry;
+	int32_t  dst1, dst2;
+	int32_t  src, dst, tmp;
+	int64_t  srcq, srcq1, srcq2;
+	int64_t  dstq, dstq1, dstq2;
+	uint32_t usrc, usrc1, usrc2;
+	uint32_t udst, utmp;
+	uint32_t mask;
+	int32_t  cnt;
+	int32_t  entry, pred, succ;
+	int32_t  prev, next;
+	int32_t  queue, head, tail;
 
-	register int32_t  srcx[4],  dstx[4];
-	register uint32_t usrcx[4], udstx[4];
-	register uint32_t uresx[4];
-	register uint32_t uidx[4];
+	int32_t  srcx[4],  dstx[4];
+	uint32_t usrcx[4], udstx[4];
+	uint32_t uresx[4];
+	uint32_t uidx[4];
 
 //	register int64_t  srcqx[4],  dstqx[4];
 //	register uint64_t usrcqx[4], udstqx[4];
@@ -3726,7 +3726,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				}
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND)) {
-					char *jump;
+					const char *jump;
 					if ((ccReg & CC_Z) || ((usrcx[0] & FP_SIGN) ? !(ccReg & CC_N) : (ccReg & CC_N)))
 						jump = "Jumped";
 					else
@@ -3997,7 +3997,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				}
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND)) {
-					char *jump;
+					const char *jump;
 					if ((ccReg & CC_Z) || ((usrcx[0] & FP_SIGN) ? !(ccReg & CC_N) : (ccReg & CC_N)))
 						jump = "Jumped";
 					else
@@ -4270,7 +4270,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				}
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND)) {
-					char *jump;
+					const char *jump;
 					if ((ccReg & CC_Z) || ((usrcx[0] & FP_SIGN) ? !(ccReg & CC_N) : (ccReg & CC_N)))
 						jump = "Jumped";
 					else

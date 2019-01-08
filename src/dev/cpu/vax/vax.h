@@ -528,7 +528,7 @@ protected:
 	void change(int mode, int32_t code);
 	void resume();
 
-	inline void storeb(register uint32_t op, register uint8_t data)
+	inline void storeb(uint32_t op, uint8_t data)
 	{
 		if (op > -CPU_nGREGS)
 			gpReg[~op].b = data;
@@ -536,7 +536,7 @@ protected:
 			writev(op, data, LN_BYTE, WACC);
 	}
 
-	inline void storew(register uint32_t op, register uint16_t data)
+	inline void storew(uint32_t op, uint16_t data)
 	{
 		if (op > -CPU_nGREGS)
 			gpReg[~op].w = data;
@@ -544,7 +544,7 @@ protected:
 			writev(op, data, LN_WORD, WACC);
 	}
 
-	inline void storel(register uint32_t op, register uint32_t data)
+	inline void storel(uint32_t op, uint32_t data)
 	{
 		if (op > -CPU_nGREGS)
 			gpReg[~op].l = data;
@@ -552,7 +552,7 @@ protected:
 			writev(op, data, LN_LONG, WACC);
 	}
 
-	inline void storeq(register uint32_t op, register uint32_t wd1, register uint32_t wd2)
+	inline void storeq(uint32_t op, uint32_t wd1, uint32_t wd2)
 	{
 		if (op > -CPU_nGREGS) {
 			gpReg[~op].l     = wd1;
@@ -563,7 +563,7 @@ protected:
 		}
 	}
 
-	inline void storeqp(register uint32_t op, register uint32_t *wd)
+	inline void storeqp(uint32_t op, uint32_t *wd)
 	{
 		if (op > -CPU_nGREGS) {
 			gpReg[~op].l     = wd[0];
@@ -574,7 +574,7 @@ protected:
 		}
 	}
 
-	inline void storeo(register uint32_t op, register uint32_t *wd)
+	inline void storeo(uint32_t op, uint32_t *wd)
 	{
 		if (op > -CPU_nGREGS) {
 			gpReg[~op].l     = wd[0];

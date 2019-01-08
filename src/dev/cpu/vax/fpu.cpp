@@ -701,6 +701,8 @@ int vaxfp_t::modulus(vaxfp_t *fp, uint32_t *res, uint32_t *ccFlag)
 	}
 
 	fp->normalize();
+
+	return VFP_OK;
 }
 
 int vaxfp_t::multiplyf(uint32_t *fp1, uint32_t *fp2, uint32_t *res)

@@ -198,7 +198,7 @@ void cvax_cpuDevice::halt(uint32_t code)
 
 void cvax_cpuDevice::check(uint32_t code)
 {
-	register uint32_t sirq;
+	uint32_t sirq;
 
 	// Find highest software interrupt
 	for (sirq = IPL_SMAX; sirq > 0; sirq--)
