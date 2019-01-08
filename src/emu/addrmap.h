@@ -74,7 +74,7 @@ public:
 	const char	*tagShare;		// Tag of shared map block
 
 	// access handlers
-//	read8_delegate		read8;
+	read8_delegate		read8;
 };
 
 class mapAddress {

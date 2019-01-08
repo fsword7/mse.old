@@ -19,10 +19,9 @@ class mapAddressSpace;
 
 using offs_t = std::size_t;
 
-//using mapConstructor = named_delegate<void (mapAddressSpace &)>;
+using mapConstructor = named_delegate<void (mapAddressSpace &)>;
 
-//using read8_delegate = device_delegate<std::uint8_t (mapAddress &, offs_t, std::uint8_t)>;
-//using read8_delegate = delegate<uint8_t(mapAddress &, offs_t, uint8_t)>;
+using read8_delegate = device_delegate<uint8_t(mapAddress &, offs_t, uint8_t)>;
 
 class mapManager {
 public:
@@ -44,8 +43,8 @@ private:
 	uint8_t		addrShift;
 	uint8_t		pageShift;
 
-//	mapConstructor internalMap;
-//	mapConstructor defaultMap;
+	mapConstructor internalMap;
+	mapConstructor defaultMap;
 };
 
 class mapAddressSpace
