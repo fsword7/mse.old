@@ -5,7 +5,7 @@
  *      Author: Tim Stark
  */
 
-#include "emu/core.h"
+#include "emu/emucore.h"
 #include "addrmap.h"
 
 
@@ -26,8 +26,8 @@ mapAddressEntry &mapAddressEntry::mask(offs_t mask)
 	return *this;
 }
 
-mapAddress::mapAddress(Device &_sys)
-: sys(_sys)
+mapAddress::mapAddress(device_t &_dev)
+: device(_dev)
 {
 }
 
@@ -39,7 +39,7 @@ mapAddressEntry &mapAddress::operator()(offs_t start, offs_t end)
 {
 	mapAddressEntry *entry;
 
-	entry = new mapAddressEntry(sys, *this, start, end);
+	entry = new mapAddressEntry(device, *this, start, end);
 	list.push_back(*entry);
 
 	return *entry;

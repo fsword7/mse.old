@@ -5,7 +5,7 @@
  *      Author: Tim Stark
  */
 
-#include "emu/core.h"
+#include "emu/emucore.h"
 #include "emu/device.h"
 
 

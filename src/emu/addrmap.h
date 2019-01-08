@@ -73,7 +73,8 @@ public:
 	mapHandler  read, write;	// Memory map handler for read and write access
 	const char	*tagShare;		// Tag of shared map block
 
-
+	// access handlers
+//	read8_delegate		read8;
 };
 
 class mapAddress {

@@ -19,6 +19,8 @@ private:
 public:
 	named_delegate() : base(), delegateName(nullptr) {}
 
+	named_delegate(const base &src)
+		: base(src), delegateName(src.name()) {}
 
 	const char *name() const { return delegateName; }
 

@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <functional>
+
 using delegate_generic_func = void(*)();
 
 
@@ -44,15 +46,27 @@ struct delegate_traits
 //	int			thisDelta;
 //};
 
-template<typename Return, typename... Params>
+template<typename ReturnType, typename... Params>
 class delegate_base
 {
 public:
+	template <class FunctionClass>
+		using traits = delegate_traits<FunctionClass, ReturnType, Params...>;
+	using functype = std::function<ReturnType (Params...)>;
+
 	delegate_base();
 
-protected:
+	delegate_base(functype func)
+		: stdfunc(func)
+	{
+	}
 
+protected:
+	functype stdfunc;	// std::funcion pointer
 };
+
+//template<typename Signature>
+//class delegate;
 
 template<typename Return, typename... Params>
 class delegate : public delegate_base<Return, Params...>
@@ -60,6 +74,31 @@ class delegate : public delegate_base<Return, Params...>
 private:
 	using base = delegate_base<Return, Params...>;
 
+protected:
+//	template <class FunctionClass> using traits = typename base::template traits<FunctionClass>;
+//	template <class FunciionClass> using member_func = typename traits<FunctionClass>::member_func;
+//	template <class FunctionClass> using const_member_func = typename traits<FunctionClass>::const_member_func;
+//	templete <class FunctionClass> using static_ref_func = typename traits<FunctionClass>::static_ref_func;
+
 public:
 	delegate() : base() {};
+
+	delegate(const base &src) : base(src) {}
+	delegate(const base &src, delegate_bind &obj) : base(src, obj) {}
+
+	explicit delegate(std::function<Return (Params...)> func) : base(func) {}
+
+//	template<class FunctionCall>
+//	delegate(member_func<FunctionClass> func, FunctionClass *obj)
+//		: base(func, obj) {}
+//
+//	template<class FunctionCall>
+//	delegate(const_member_func<FunctionClass> func, FunctionClass *obj)
+//		: base(func, obj) {}
+//
+//	template<class FunctionCall>
+//	delegate(static_ref_func<FunctionClass> func, FunctionClass *obj)
+//		: base(func, obj) {}
+
+
 };

@@ -1,3 +1,10 @@
+/*
+ * emucore.h - main header
+ *
+ *  Created on: Jan 8, 2019
+ *      Author: Tim Stark
+ */
+
 #pragma once
 
 #include <iostream>
@@ -19,6 +26,11 @@
 #include <cstring>
 
 #include <boost/algorithm/string.hpp>
+
+#include "lib/util/delegate.h"
+#include "emu/devdelegate.h"
+#include "emu/device.h"
+#include "emu/emumap.h"
 
 // Data length
 #define LN_BYTE  1
