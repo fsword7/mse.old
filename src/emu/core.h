@@ -20,6 +20,8 @@
 
 #include <boost/algorithm/string.hpp>
 
+#include "lib/util/delegate.h"
+
 // Data length
 #define LN_BYTE  1
 #define LN_WORD  2

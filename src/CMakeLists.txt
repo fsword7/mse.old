@@ -31,6 +31,7 @@ set(mse_cpp_SRCS
 	emu/osd/telnet.cpp
 	emu/user.cpp
 	formats/dec/image.cpp
+	lib/util/delegate.cpp
 	sys/drivers/alpha.cpp
 	sys/drivers/hsc.cpp
 	sys/drivers/ibm3x0.cpp
@@ -78,6 +79,7 @@ set(mse_h_SRCS
 	emu/osd/telnet.h
 	emu/user.h
 	formats/dec/word10.h
+	lib/util/delegate.h
 	sys/pdp10/pdp10.h
 	sys/vax/ka650.h
 	sys/vax/vax.h
