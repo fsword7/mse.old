@@ -117,7 +117,7 @@
 #define ADS_MASK   0x3FFFFFFC
 
 
-class cssc
+class cssc_device : public device_t
 {
 
 };

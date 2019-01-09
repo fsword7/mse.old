@@ -109,7 +109,7 @@
 #define MBR_ADDR  0x1FFF8000 // 32KB-Aligned Map Base Address
 
 
-class cqbic
+class cqbic_device : public device_t
 {
 
 };

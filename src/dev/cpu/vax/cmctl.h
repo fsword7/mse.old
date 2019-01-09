@@ -58,7 +58,7 @@
 
 #define CMCSR_RW (CMCSR_PMI|CMCSR_CRD|CMCSR_DET|CMCSR_FDT|CMCSR_DCM|CMCSR_SYN)
 
-class cmctl
+class cmctl_device : public device_t
 {
 
 };
