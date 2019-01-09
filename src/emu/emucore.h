@@ -27,6 +27,9 @@
 
 #include <boost/algorithm/string.hpp>
 
+// named function call parameters
+#define FUNC(func) func, #func
+
 #include "lib/util/delegate.h"
 #include "emu/devdelegate.h"
 #include "emu/device.h"
