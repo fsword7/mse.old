@@ -26,6 +26,9 @@ private:
 
 	};
 
+protected:
+	device_t(const char *tag);
+
 public:
 	virtual ~device_t();
 
@@ -42,6 +45,6 @@ protected:
 
 private:
 	std::string		tagName;			// Tag name for linking named devices
-	std::string		devName;			// Device name for command line access
+	std::string		drvName;			// Device name for command line access
 
 };

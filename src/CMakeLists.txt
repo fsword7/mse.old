@@ -23,7 +23,9 @@ set(mse_cpp_SRCS
 	emu/core.cpp
 	emu/debug.cpp
 	emu/devcpu.cpp
+	emu/device.cpp
 	emu/devsys.cpp
+	emu/devsys2.cpp
 	emu/devtty.cpp
 	emu/emumap.cpp
 	emu/misc.cpp
@@ -41,6 +43,7 @@ set(mse_cpp_SRCS
 	sys/pdp10/pdp10.cpp
 	sys/vax/ka640.cpp
 	sys/vax/ka650.cpp
+	sys/vax/ka650new.cpp
 	sys/vax/ka780.cpp
 	sys/vax/ka820.cpp
 	sys/vax/vax.cpp
@@ -74,7 +77,9 @@ set(mse_h_SRCS
 	emu/debug.h
 	emu/devcore.h
 	emu/devcpu.h
+	emu/device.h
 	emu/devsys.h
+	emu/devsys2.h
 	emu/emumap.h
 	emu/osd/ether.h
 	emu/osd/socket.h
@@ -84,6 +89,7 @@ set(mse_h_SRCS
 	lib/util/delegate.h
 	sys/pdp10/pdp10.h
 	sys/vax/ka650.h
+	sys/vax/ka650new.h
 	sys/vax/vax.h
 )
 
