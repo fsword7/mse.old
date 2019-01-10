@@ -9,5 +9,7 @@
 
 class ka650_device : public system_device
 {
+public:
 
+	static void mv3900_init();
 };
