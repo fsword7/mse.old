@@ -23,6 +23,7 @@ set(mse_cpp_SRCS
 	emu/core.cpp
 	emu/debug.cpp
 	emu/devcpu.cpp
+	emu/devcpu2.cpp
 	emu/device.cpp
 	emu/devsys.cpp
 	emu/devsys2.cpp
@@ -77,6 +78,7 @@ set(mse_h_SRCS
 	emu/debug.h
 	emu/devcore.h
 	emu/devcpu.h
+	emu/devcpu2.h
 	emu/device.h
 	emu/devsys.h
 	emu/devsys2.h
