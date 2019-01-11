@@ -13,8 +13,8 @@ extern system_driver vax_syslist;
 
 const system_driver *system_list::syslist[] =
 {
-	vax_syslist,
+	&vax_syslist,
 
 	// null terminator
-	{ nullptr }
+	nullptr
 };

@@ -9,5 +9,32 @@
 #include "emu/driver.h"
 #include "emu/syslist.h"
 
+using namespace std;
 
+const system_driver *system_list::find(string name)
+{
+	const system_driver *model;
 
+	for (int idx = 0; syslist[idx]; idx++) {
+		model = syslist[idx];
+		while (model->name != nullptr) {
+			if (string(model->name) == name)
+				return model;
+			model++;
+		}
+	}
+	return nullptr;
+}
+
+void system_list::list()
+{
+	const system_driver *model;
+
+	for (int idx = 0; syslist[idx]; idx++) {
+		model = syslist[idx];
+		while (model->name != nullptr) {
+			cout << "Model: " << model->name << endl;
+			model++;
+		}
+	}
+}

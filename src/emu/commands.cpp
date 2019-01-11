@@ -5,10 +5,12 @@
  *      Author: Timothy Stark
  */
 
-#include "emu/core.h"
+#include "emu/emucore.h"
 #include "emu/debug.h"
 #include "emu/devsys.h"
 #include "emu/console.h"
+#include "emu/driver.h"
+#include "emu/syslist.h"
 
 // Usage: create [device] <options...>
 static int cmdCreate(Console *con, Device *cdev, args_t &args)
@@ -143,6 +145,48 @@ static int cmdDebug(Console *con, Device *cdev, args_t &args)
 	}
 
 	return CMD_OK;
+}
+
+// Usage: list <options...>
+static int cmdList(Console *con, Device *cdev, args_t &args)
+{
+	Device  *dev;
+	const Command *cmds;
+	int      rc;
+
+	// Check number of arguments
+	if (args.size() < 2) {
+		std::cout << "Usage: " << args[0] << " <options...>" << std::endl;
+		return CMD_OK;
+	}
+
+	// check existing device by using name
+//	dev = cdev->findDevice(args[1]);
+//	if (dev == nullptr) {
+//		std::cout << args[1] << ": device not found." << std::endl;
+//		return CMD_OK;
+//	}
+
+	// Process commands by using console device
+	cmds = cdev->getListCommandTable();
+	if (cmds != nullptr) {
+		rc = CMD_NOTFOUND;
+		for (int idx = 0; cmds[idx].name; idx++) {
+			if (cmds[idx].name == args[1]) {
+				rc = cmds[idx].execute(con, dev, args);
+				break;
+			}
+		}
+		if (rc == CMD_NOTFOUND) {
+			std::cerr << cdev->getName() << ": Unknown option " << args[2] << std::endl;
+			return CMD_OK;
+		}
+	} else {
+		std::cerr << cdev->getName() << ": set command table not found." << std::endl;
+		return CMD_OK;
+	}
+
+	return rc;
 }
 
 // Usage: load <file> ...
@@ -309,11 +353,21 @@ static int cmdShutdown(Console *, Device *, args_t &)
 	return CMD_SHUTDOWN;
 }
 
+static int cmdListSystem(Console *, Device *, args_t &)
+{
+	system_list sys;
+
+	std::cout << "System List" << std::endl;
+	sys.list();
+
+	return CMD_OK;
+}
 
 // General commands table
 Command mseCommands[] = {
 	{ "create", "", cmdCreate },
 	{ "debug", "", cmdDebug },
+	{ "list", "<option> ...", cmdList },
 	{ "load", "<file> ...", cmdLoad },
 	{ "log", "<file>", cmdLog },
 	{ "exit", "", cmdShutdown },
@@ -339,6 +393,7 @@ Command mseShowCommands[] = {
 
 // General list commands table
 Command mseListCommands[] = {
+	{ "system", "list system", cmdListSystem },
 	// null terminator - end of command table
 	{ nullptr }
 };

@@ -6,10 +6,11 @@
  */
 
 #include "emu/emucore.h"
+#include "emu/devsys2.h"
 #include "emu/driver.h"
 #include "sys/vax/ka650new.h"
 
-const system_driver *vax_syslist[] = {
+system_driver vax_syslist[] = {
 
 	// MicroVAX III series
 	COMP(mv3900,  nullptr, ka650_device, mv3900_init,  "MicroVAX 3900"),

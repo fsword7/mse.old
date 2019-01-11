@@ -94,10 +94,9 @@ const Command *Device::getShowCommandTable() const
 
 const Command *Device::getListCommandTable() const
 {
-//	if (driver == nullptr || driver->listCommands == nullptr)
-//		return nullptr;
-//	return driver->listCommands;
-	return nullptr;
+	if (driver == nullptr || driver->listCommands == nullptr)
+		return nullptr;
+	return driver->listCommands;
 }
 
 int Device::setMemory(uint32_t)

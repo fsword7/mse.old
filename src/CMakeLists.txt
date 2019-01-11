@@ -30,6 +30,8 @@ set(mse_cpp_SRCS
 	emu/devtty.cpp
 	emu/emumap.cpp
 	emu/misc.cpp
+	emu/syslist.cpp
+	emu/systems.cpp
 	emu/osd/ether.cpp
 	emu/osd/main.cpp
 	emu/osd/telnet.cpp
@@ -47,6 +49,7 @@ set(mse_cpp_SRCS
 	sys/vax/ka650new.cpp
 	sys/vax/ka780.cpp
 	sys/vax/ka820.cpp
+	sys/vax/syslist.cpp
 	sys/vax/vax.cpp
 )
 
@@ -86,6 +89,7 @@ set(mse_h_SRCS
 	emu/osd/ether.h
 	emu/osd/socket.h
 	emu/osd/telnet.h
+	emu/syslist.h
 	emu/user.h
 	formats/dec/word10.h
 	lib/util/delegate.h
