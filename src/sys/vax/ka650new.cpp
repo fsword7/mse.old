@@ -15,5 +15,7 @@ void ka650_device::mv3900_init()
 
 }
 
+void ka650_device::mv3900x_init()
+{
 
-COMP(mv3900, nullptr, ka650_device, mv3900_init, "MicroVAX 3900")
+}

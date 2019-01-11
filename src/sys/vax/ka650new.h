@@ -11,5 +11,7 @@ class ka650_device : public system_device
 {
 public:
 
+	// Model-specific system initialize routines
 	static void mv3900_init();
+	static void mv3900x_init();
 };
