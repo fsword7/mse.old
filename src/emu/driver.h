@@ -9,11 +9,12 @@
 
 struct system_driver
 {
-	typedef void (*create)(device_t &);
+	typedef void (*system_creator)();
 	typedef void (*driver_init)(device_t &);
 
 	const char		*name;		// machine name
 	const char 		*parent;	// parent of machine name
+	system_creator	create;		// system create callback
 	driver_init		init;		// system initialize callback
 };
 
@@ -32,6 +33,6 @@ struct system_driver
 {													\
 	#Name,											\
 	#Parent,										\
-	[] (device_t &owner) { static_cast<Class &>(owner).Create(); }, \
+	[] () { Class::Create(); }, \
 	[] (device_t &owner) { static_cast<Class &>(owner).Init(); },	\
 }
