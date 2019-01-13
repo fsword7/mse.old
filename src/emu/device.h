@@ -33,6 +33,8 @@ public:
 	virtual ~device_t();
 
 	const char *tag() { return tagName.c_str(); }
+//	const char *name() { return drvName.c_str(); }
+	std::string &name() { return drvName; }
 	device_t *owner() { return devOwner; }
 	device_t *next()  { return devNext; }
 

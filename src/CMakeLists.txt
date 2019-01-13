@@ -29,6 +29,7 @@ set(mse_cpp_SRCS
 	emu/devsys2.cpp
 	emu/devtty.cpp
 	emu/emumap.cpp
+	emu/engine.cpp
 	emu/misc.cpp
 	emu/syslist.cpp
 	emu/systems.cpp
@@ -86,6 +87,7 @@ set(mse_h_SRCS
 	emu/devsys.h
 	emu/devsys2.h
 	emu/emumap.h
+	emu/engine.h
 	emu/osd/ether.h
 	emu/osd/socket.h
 	emu/osd/telnet.h
