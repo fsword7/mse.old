@@ -43,7 +43,6 @@ device_t *system_engine::create(string devName, string sysName)
 		return nullptr;
 
 	// Initialize system device
-//	driver->init();
 
 	if (sys != nullptr)
 		machine.push_back(*sys);

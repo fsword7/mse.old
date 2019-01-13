@@ -9,6 +9,7 @@
 
 struct system_driver
 {
+	typedef void (*create)(device_t &);
 	typedef void (*driver_init)(device_t &);
 
 	const char		*name;		// machine name
@@ -27,9 +28,10 @@ struct system_driver
 //	[] (device_t &owner) { static_cast<Class &>(owner).Init(); },	\
 //};
 
-#define COMP(Name, Parent, Class, Init, Fullname)	\
+#define COMP(Name, Parent, Class, Create, Init, Fullname)	\
 {													\
 	#Name,											\
 	#Parent,										\
+	[] (device_t &owner) { static_cast<Class &>(owner).Create(); }, \
 	[] (device_t &owner) { static_cast<Class &>(owner).Init(); },	\
 }
