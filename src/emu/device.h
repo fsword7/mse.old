@@ -7,7 +7,47 @@
 
 #pragma once
 
+#include <typeinfo>
 
+class system_config;
+class device_t;
+
+template<class SystemClass>
+struct system_tag_struct { typedef SystemClass type; };
+
+template<class SystemClass>
+auto system_tag_func() { return system_tag_struct<SystemClass>{ }; };
+
+class device_type
+{
+private:
+	typedef device_t *(*create_func)(const char *tag, device_type const &type, system_config &config, device_t *owner);
+
+	template<typename SystemClass>
+	static device_t *create_system(const char *tag, device_type const &type, system_config &config, device_t *owner)
+	{
+		return new SystemClass(tag, type, config);
+	}
+
+public:
+	template <class SystemClass>
+	device_type(system_tag_struct<SystemClass>(*)())
+	: typeInfo(typeid(SystemClass)),
+	  creator(&create_system<SystemClass>)
+	{
+	}
+
+private:
+
+	const std::type_info &typeInfo;
+	const create_func     creator;
+};
+
+//template <typename DeviceClass, const char *name>
+//constexpr auto device_creator = &device_tag_func<DeviceClass, name>;
+
+template <typename SystemClass>
+constexpr auto system_creator = &system_tag_func<SystemClass>;
 
 class device_t : public delegate_bind
 {
@@ -27,7 +67,7 @@ private:
 	};
 
 protected:
-	device_t(const char *tag);
+	device_t(const char *tag, device_type type, const system_config &config, device_t *owner);
 
 public:
 	virtual ~device_t();
@@ -39,11 +79,13 @@ public:
 	device_t *next()  { return devNext; }
 
 protected:
-
+	device_type		typeInfo;
 	device_t 		*devOwner;			// Parent device owner
 	device_t 		*devNext;			// Next device of the same owner
 	device_list 	deviceList;			// List of child devices - container
 	interface_list	interfaceList;		// List of interfaces - container
+
+	const system_config &sysConfig;
 
 private:
 	std::string		tagName;			// Tag name for linking named devices

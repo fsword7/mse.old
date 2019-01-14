@@ -16,7 +16,8 @@
 #include <thread>
 #include <mutex>
 #include <chrono>
-#include <vector>
+#include <memory>
+#include <utility>
 
 #include <cstdio>
 #include <cstddef>
@@ -33,6 +34,8 @@
 #include "lib/util/delegate.h"
 #include "emu/devdelegate.h"
 #include "emu/device.h"
+#include "emu/driver.h"
+#include "emu/sysconfig.h"
 #include "emu/emumap.h"
 
 // Data length

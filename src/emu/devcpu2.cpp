@@ -8,8 +8,8 @@
 #include "emu/emucore.h"
 #include "emu/devcpu2.h"
 
-cpu_device::cpu_device(const char *tag, const char *drv, device_t *owner)
-: device_t(tag)
+cpu_device::cpu_device(const char *tag, device_type type, const system_config &config, device_t *owner)
+: device_t(tag, type, config, owner)
 {
 
 }

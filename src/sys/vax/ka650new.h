@@ -10,6 +10,10 @@
 class ka650_device : public system_device
 {
 public:
+	ka650_device(const char *tag, device_type type, const system_config &config)
+	: system_device(tag, type, config, nullptr)
+	{
+	}
 
 	// System creator routines
 	static void mv3900();

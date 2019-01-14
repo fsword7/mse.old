@@ -31,6 +31,7 @@ set(mse_cpp_SRCS
 	emu/emumap.cpp
 	emu/engine.cpp
 	emu/misc.cpp
+	emu/sysconfig.cpp
 	emu/syslist.cpp
 	emu/systems.cpp
 	emu/osd/ether.cpp
@@ -91,6 +92,7 @@ set(mse_h_SRCS
 	emu/osd/ether.h
 	emu/osd/socket.h
 	emu/osd/telnet.h
+	emu/sysconfig.h
 	emu/syslist.h
 	emu/user.h
 	formats/dec/word10.h
