@@ -13,12 +13,10 @@
 // Create system routines
 void ka650_device::mv3900()
 {
-
 }
 
 void ka650_device::mv3900x()
 {
-
 }
 
 // Initialize system routines

@@ -9,7 +9,7 @@
 
 struct system_driver
 {
-	typedef void (*system_creator)();
+	typedef void (*system_creator)(device_t &);
 	typedef void (*driver_init)(device_t &);
 
 	const char		*name;		// machine name
@@ -33,6 +33,6 @@ struct system_driver
 {													\
 	#Name,											\
 	#Parent,										\
-	[] () { Class::Create(); }, \
+	[] (device_t &owner) { static_cast<Class &>(owner).Create(); }, \
 	[] (device_t &owner) { static_cast<Class &>(owner).Init(); },	\
 }
