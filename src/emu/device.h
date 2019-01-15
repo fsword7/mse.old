@@ -18,20 +18,20 @@ struct system_tag_struct { typedef SystemClass type; };
 template<class SystemClass>
 auto system_tag_func() { return system_tag_struct<SystemClass>{ }; };
 
-class device_type
+class device_type_base
 {
 private:
-	typedef device_t *(*create_func)(const char *tag, device_type const &type, system_config &config, device_t *owner);
+	typedef device_t *(*create_func)(const char *tag, device_type_base const &type, system_config &config, device_t *owner);
 
 	template<typename SystemClass>
-	static device_t *create_system(const char *tag, device_type const &type, system_config &config, device_t *owner)
+	static device_t *create_system(const char *tag, device_type_base const &type, system_config &config, device_t *owner)
 	{
 		return new SystemClass(tag, type, config);
 	}
 
 public:
 	template <class SystemClass>
-	device_type(system_tag_struct<SystemClass>(*)())
+	device_type_base(system_tag_struct<SystemClass>(*)())
 	: typeInfo(typeid(SystemClass)),
 	  creator(&create_system<SystemClass>)
 	{
@@ -48,6 +48,8 @@ private:
 
 template <typename SystemClass>
 constexpr auto system_creator = &system_tag_func<SystemClass>;
+
+typedef device_type_base const &device_type;
 
 class device_t : public delegate_bind
 {
