@@ -10,6 +10,7 @@
 #include <typeinfo>
 
 class system_config;
+class device_list;
 class device_t;
 
 template<class SystemClass>
@@ -21,10 +22,10 @@ auto system_tag_func() { return system_tag_struct<SystemClass>{ }; };
 class device_type_base
 {
 private:
-	typedef device_t *(*create_func)(const char *tag, device_type_base const &type, system_config &config, device_t *owner);
+	typedef device_t *(*create_func)(const char *tag, device_type_base const &type, const system_config &config, device_t *owner);
 
 	template<typename SystemClass>
-	static device_t *create_system(const char *tag, device_type_base const &type, system_config &config, device_t *owner)
+	static device_t *create_system(const char *tag, device_type_base const &type, const system_config &config, device_t *owner)
 	{
 		return new SystemClass(tag, type, config);
 	}
@@ -35,6 +36,11 @@ public:
 	: typeInfo(typeid(SystemClass)),
 	  creator(&create_system<SystemClass>)
 	{
+	}
+
+	device_t *create(const char *tag, system_config const &config, device_t *owner) const
+	{
+		return creator(tag, *this, config, owner);
 	}
 
 private:
@@ -51,6 +57,7 @@ constexpr auto system_creator = &system_tag_func<SystemClass>;
 
 typedef device_type_base const &device_type;
 
+
 class device_t : public delegate_bind
 {
 private:
@@ -59,8 +66,17 @@ private:
 	public:
 		device_list() {}
 
+		device_t *find(const std::string &name) const
+		{
+			for(auto cdev : list) {
+				if (cdev->tag() == name)
+					return cdev;
+			}
+			return nullptr;
+		}
+
 	private:
-		std::vector<device_list> list;
+		std::vector<device_t *> list;
 	};
 
 	class interface_list
@@ -74,11 +90,15 @@ protected:
 public:
 	virtual ~device_t();
 
-	const char *tag() { return tagName.c_str(); }
+//	const char *tag() { return tagName.c_str(); }
+	std::string &tag() { return tagName; }
 //	const char *name() { return drvName.c_str(); }
 	std::string &name() { return drvName; }
 	device_t *owner() { return devOwner; }
 	device_t *next()  { return devNext; }
+
+	device_list &devices() { return deviceList; }
+	const device_list &devices() const { return deviceList; }
 
 protected:
 	device_type		typeInfo;
@@ -94,3 +114,5 @@ private:
 	std::string		drvName;			// Device name for command line access
 
 };
+
+
