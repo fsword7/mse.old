@@ -19,8 +19,20 @@ system_config::system_config(const system_driver &driver)
 device_t *system_config::addDevice(const char *tag, device_type type)
 {
 	std::pair<const char *, device_t *> const owner = resolveOwner(tag);
+	device_t *dev = type.create(owner.first, *this, owner.second);
 
-	return nullptr;
+	return addDevice(dev, owner.second);
+}
+
+device_t *system_config::addDevice(device_t *dev, device_t *owner)
+{
+	if (owner != nullptr) {
+		owner->devices().add(dev);
+	} else {
+		sysDevice = dev;
+	}
+
+	return dev;
 }
 
 std::pair<const char *, device_t *> system_config::resolveOwner(const char *tag)

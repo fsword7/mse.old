@@ -75,6 +75,10 @@ private:
 			return nullptr;
 		}
 
+		void add(device_t *dev) {
+			list.push_back(dev);
+		}
+
 	private:
 		std::vector<device_t *> list;
 	};
