@@ -101,6 +101,8 @@ public:
 	device_t *owner() { return devOwner; }
 	device_t *next()  { return devNext; }
 
+//	void setSystemConfig(const system_config &config) { sysConfig = config; }
+
 	device_list &devices() { return deviceList; }
 	const device_list &devices() const { return deviceList; }
 

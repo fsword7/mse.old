@@ -19,6 +19,7 @@ set(mse_cpp_SRCS
 	dev/cpu/vax/vax.cpp
 	emu/addrmap.cpp
 	emu/commands.cpp
+	emu/commands2.cpp
 	emu/console.cpp
 	emu/core.cpp
 	emu/debug.cpp
