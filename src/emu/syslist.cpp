@@ -17,13 +17,11 @@ const system_driver *system_list::find(string name)
 
 	for (int idx = 0; syslist[idx]; idx++) {
 		model = syslist[idx];
-//		while (model->name != nullptr) {
-//			if (string(model->name) == name)
-//				return model;
-//			model++;
-//		}
-		if (string(model->name) == name)
-			return model;
+		while (model->name != nullptr) {
+			if (string(model->name) == name)
+				return model;
+			model++;
+		}
 	}
 	return nullptr;
 }
@@ -34,10 +32,9 @@ void system_list::list()
 
 	for (int idx = 0; syslist[idx]; idx++) {
 		model = syslist[idx];
-//		while (model != nullptr) {
-//			cout << "Model: " << model->name << endl;
-//			model++;
-//		}
-		cout << "Model: " << model->name << endl;
+		while (model->name != nullptr) {
+			cout << "Model: " << model->name << endl;
+			model++;
+		}
 	}
 }

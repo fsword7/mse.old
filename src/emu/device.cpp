@@ -9,9 +9,9 @@
 #include "emu/sysconfig.h"
 #include "emu/device.h"
 
-device_t::device_t(const char *tag, device_type type, const system_config &config, device_t *owner)
-: typeInfo(type), devOwner(owner), devNext(nullptr),
-  tagName(tag), drvName(nullptr),
+device_t::device_t(const char *tag, const system_config &config, device_t *owner, uint64_t clock)
+: devOwner(owner), devNext(nullptr),
+  tagName(tag), drvName(""),
   sysConfig(config)
 {
 }

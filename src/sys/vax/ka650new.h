@@ -10,8 +10,8 @@
 class ka650_device : public system_device
 {
 public:
-	ka650_device(const char *tag, device_type type, const system_config &config)
-	: system_device(tag, type, config, nullptr)
+	ka650_device(const char *tag, const system_config &config, uint64_t clock)
+	: system_device(tag, config, nullptr, clock)
 	{
 	}
 

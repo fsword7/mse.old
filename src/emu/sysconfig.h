@@ -14,7 +14,8 @@ public:
 
 	std::pair<const char *, device_t *> resolveOwner(const char *tag);
 
-	device_t *addDevice(const char *tag, device_type type);
+	device_t *addDevice(const char *tag);
+
 	device_t *addDevice(device_t *dev, device_t *owner);
 
 private:

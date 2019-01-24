@@ -10,18 +10,23 @@
 #include "emu/sysconfig.h"
 
 
-system_config::system_config(const system_driver &driver)
-: sysDriver(driver), sysDevice(nullptr), curDevice(nullptr)
+system_config::system_config(const system_driver &model)
+: sysDriver(model), curDevice(nullptr)
 {
-	addDevice("root", driver.type);
+	// Create root of system device
+	sysDevice = model.creator(model.name, *this, nullptr, 0);
+
+	model.create(*sysDevice);
+
 }
 
-device_t *system_config::addDevice(const char *tag, device_type type)
+device_t *system_config::addDevice(const char *tag)
 {
-	std::pair<const char *, device_t *> const owner = resolveOwner(tag);
-	device_t *dev = type.create(owner.first, *this, owner.second);
-
-	return addDevice(dev, owner.second);
+//	std::pair<const char *, device_t *> const owner = resolveOwner(tag);
+//	device_t *dev = type.create(owner.first, *this, owner.second);
+//
+//	return addDevice(dev, owner.second);
+	return nullptr;
 }
 
 device_t *system_config::addDevice(device_t *dev, device_t *owner)

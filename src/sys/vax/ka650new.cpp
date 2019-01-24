@@ -10,13 +10,17 @@
 #include "emu/driver.h"
 #include "sys/vax/ka650new.h"
 
+using namespace std;
+
 // Create system routines
 void ka650_device::mv3900()
 {
+	cout << "This is MicroVAX 3900 system" << endl;
 }
 
 void ka650_device::mv3900x()
 {
+	cout << "This is MicroVAX 3800x system" << endl;
 }
 
 // Initialize system routines
