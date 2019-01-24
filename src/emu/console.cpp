@@ -56,26 +56,18 @@ void Console::prompt()
 	command_handler cmd;
 	std::string cmdLine;
     args_t args;
-    int rc = CMD_OK;
+    cmdStatus st = cmdOk;
     
-    while(rc == CMD_OK) {
+    while(st == cmdOk) {
     	std::cout << "mse> ";
     	std::getline(std::cin, cmdLine);
 //    	std::cout << "Entered line: " << cmdLine << std::endl;
     
-    	cmd.execute(cmdLine);
-//    	args = split(cmdLine);
-////    	for (auto &&word : args)
-////    		printf("Arg: %s\n", word.c_str());
-//
-//    	if (args.size() == 0)
-//    		continue;
-//
-//    	rc = executeCommand(args);
-//    	if (rc == CMD_NOTFOUND) {
-//    		std::cerr << cdev->getName() <<  ": Unknown command " << args[0] << std::endl;
-//    		rc = CMD_OK;
-//    	}
+    	st = cmd.execute(cmdLine);
+    	if (st == cmdInvalid) {
+    		std::cerr << "Invalid command" << std::endl;
+    		st = cmdOk;
+    	}
     }
 }
 

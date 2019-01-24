@@ -11,6 +11,8 @@ class command_handler;
 
 enum cmdStatus {
 	cmdOk = 0,
+	cmdInvalid,
+	cmdShutdown
 };
 
 typedef std::vector<std::string> args_t;
@@ -27,7 +29,7 @@ public:
 	command_handler() {}
 
 
-	void execute(std::string cmdLine);
+	cmdStatus execute(std::string cmdLine);
 
 protected:
 	std::vector<std::string> split(std::string const &line);

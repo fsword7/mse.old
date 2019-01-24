@@ -21,7 +21,7 @@ std::vector<std::string> command_handler::split(std::string const &line)
     return ret;
 }
 
-void command_handler::execute(std::string cmdLine)
+cmdStatus command_handler::execute(std::string cmdLine)
 {
 	args_t		args;
 	int			argc = 0;
@@ -29,7 +29,7 @@ void command_handler::execute(std::string cmdLine)
 
 	args = split(cmdLine);
 	if (args.size() == 0)
-		return;
+		return cmdOk;
 
 	if (args[0] == "set") {
 		cmdList = mseSetCommands;
@@ -44,11 +44,12 @@ void command_handler::execute(std::string cmdLine)
 		cmdList = mseCommands;
 
 	for (int idx = 0; cmdList[idx].name; idx++) {
-		if (cmdList[idx].name == args[argc]) {
-			cmdList[idx].func(argc, args);
-			return;
-		}
+		if (cmdList[idx].name == args[argc])
+			return cmdList[idx].func(argc, args);
 	}
+
+	// Not found - invalid command
+	return cmdInvalid;
 }
 
 static cmdStatus /* command_handler:: */ cmdCreate(int argc, args_t &args)
@@ -67,6 +68,10 @@ static cmdStatus /* command_handler:: */ cmdCreate(int argc, args_t &args)
 	return cmdOk;
 }
 
+static cmdStatus /* command_handler:: */ cmdExit(int argc, args_t &args)
+{
+	return cmdShutdown;
+}
 
 static cmdStatus /* command_handler:: */ cmdListSystem(int argc, args_t &args)
 {
@@ -81,6 +86,8 @@ static cmdStatus /* command_handler:: */ cmdListSystem(int argc, args_t &args)
 // General commands table
 command_t command_handler::mseCommands[] = {
 	{ "create", cmdCreate },
+	{ "exit", cmdExit },
+	{ "quit", cmdExit },
 	// null terminator - end of command table
 	{ nullptr }
 };
