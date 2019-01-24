@@ -2,6 +2,7 @@
 #include "emu/emucore.h"
 #include "emu/debug.h"
 #include "emu/devsys.h"
+#include "emu/commands.h"
 #include "emu/console.h"
 
 std::vector<std::string> split(std::string const &line)
@@ -52,6 +53,7 @@ int Console::executeCommand(args_t &args)
 
 void Console::prompt()
 {
+	command_handler cmd;
 	std::string cmdLine;
     args_t args;
     int rc = CMD_OK;
@@ -61,18 +63,19 @@ void Console::prompt()
     	std::getline(std::cin, cmdLine);
 //    	std::cout << "Entered line: " << cmdLine << std::endl;
     
-    	args = split(cmdLine);
-//    	for (auto &&word : args)
-//    		printf("Arg: %s\n", word.c_str());
-    
-    	if (args.size() == 0)
-    		continue;
-
-    	rc = executeCommand(args);
-    	if (rc == CMD_NOTFOUND) {
-    		std::cerr << cdev->getName() <<  ": Unknown command " << args[0] << std::endl;
-    		rc = CMD_OK;
-    	}
+    	cmd.execute(cmdLine);
+//    	args = split(cmdLine);
+////    	for (auto &&word : args)
+////    		printf("Arg: %s\n", word.c_str());
+//
+//    	if (args.size() == 0)
+//    		continue;
+//
+//    	rc = executeCommand(args);
+//    	if (rc == CMD_NOTFOUND) {
+//    		std::cerr << cdev->getName() <<  ": Unknown command " << args[0] << std::endl;
+//    		rc = CMD_OK;
+//    	}
     }
 }
 

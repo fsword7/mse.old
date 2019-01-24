@@ -43,22 +43,32 @@ void command_handler::execute(std::string cmdLine)
 	} else
 		cmdList = mseCommands;
 
-//	for (int idx = 0; cmdList[idx].name; idx++) {
-//		if (cmdList[idx].name == args[argc]) {
-//			cmdList[idx].*func(argc, args);
-//			return;
-//		}
-//	}
+	for (int idx = 0; cmdList[idx].name; idx++) {
+		if (cmdList[idx].name == args[argc]) {
+			cmdList[idx].func(argc, args);
+			return;
+		}
+	}
 }
 
-cmdStatus command_handler::cmdCreate(int argc, args_t &args)
+static cmdStatus /* command_handler:: */ cmdCreate(int argc, args_t &args)
 {
+	system_list    sys;
+	const system_driver *model;
+	const system_config *config;
+
+
+	if ((model = sys.find(args[2])) == nullptr) {
+		std::cout << args[0] << ": System " << args[2] << " not found" << std::endl;
+		return cmdOk;
+	}
+	config = new system_config(*model);
 
 	return cmdOk;
 }
 
 
-cmdStatus command_handler::cmdListSystem(int argc, args_t &args)
+static cmdStatus /* command_handler:: */ cmdListSystem(int argc, args_t &args)
 {
 	system_list sys;
 

@@ -14,7 +14,7 @@ enum cmdStatus {
 };
 
 typedef std::vector<std::string> args_t;
-typedef cmdStatus (command_handler::*cmdfunc_t)(int, args_t &);
+typedef cmdStatus (/* command_handler:: */ *cmdfunc_t)(int, args_t &);
 
 struct command_t {
 	const char *name;
@@ -33,11 +33,11 @@ protected:
 	std::vector<std::string> split(std::string const &line);
 
 	// commands table
-	cmdStatus cmdCreate(int argc, args_t &args);
+//	cmdStatus cmdCreate(int argc, args_t &args);
 //	cmdStatus cmdList(int argc, args_t &args);
 
 	// List commands table
-	cmdStatus cmdListSystem(int argc, args_t &args);
+//	cmdStatus cmdListSystem(int argc, args_t &args);
 
 	static command_t mseCommands[];
 	static command_t mseSetCommands[];
