@@ -32,3 +32,16 @@ devauto_base *device_t::register_device(devauto_base *autodev)
 
 	return old;
 }
+
+
+// ********************************************************
+
+device_interface::device_interface(device_t &dev, tag_t *name)
+: next(nullptr), device(dev), typeName(name)
+{
+
+}
+
+device_interface::~device_interface()
+{
+}

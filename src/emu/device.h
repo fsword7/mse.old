@@ -46,6 +46,10 @@ private:
 	public:
 		interface_list() {}
 
+	private:
+		interface_list	*head;
+//		di_execute		*execute;
+//		di_memory 		*memory;
 	};
 
 protected:
@@ -72,6 +76,8 @@ public:
 	device_list &devices() { return deviceList; }
 	const device_list &devices() const { return deviceList; }
 
+	interface_list &interfaces() { return interfaceList; }
+
 protected:
 	devauto_base *register_device(devauto_base *autodev);
 
@@ -88,4 +94,19 @@ private:
 	std::string		drvName;			// Device name for command line access
 
 	devauto_base	*autodevList;		// List of auto device configurations
+};
+
+class device_interface
+{
+protected:
+	device_interface(device_t &dev, tag_t *name);
+	virtual ~device_interface();
+
+public:
+	tag_t *type() { return typeName; }
+
+protected:
+	device_interface	*next;
+	device_t			&device;
+	tag_t				*typeName;
 };

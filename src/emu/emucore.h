@@ -28,6 +28,8 @@
 
 #include <boost/algorithm/string.hpp>
 
+typedef const char tag_t;
+
 // named function call parameters
 #define FUNC(func) func, #func
 
@@ -37,9 +39,6 @@
 #include "emu/driver.h"
 #include "emu/sysconfig.h"
 #include "emu/emumap.h"
-
-
-typedef const char tag_t;
 
 // Data length
 #define LN_BYTE  1
