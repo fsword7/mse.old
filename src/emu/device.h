@@ -12,10 +12,12 @@
 class system_config;
 class device_list;
 class device_t;
-
+class devauto_base;
 
 class device_t : public delegate_bind
 {
+	friend class devauto_base;
+
 private:
 	class device_list
 	{
@@ -71,6 +73,9 @@ public:
 	const device_list &devices() const { return deviceList; }
 
 protected:
+	devauto_base *register_device(devauto_base *autodev);
+
+protected:
 	device_t 		*devOwner;			// Parent device owner
 	device_t 		*devNext;			// Next device of the same owner
 	device_list 	deviceList;			// List of child devices - container
@@ -82,6 +87,5 @@ private:
 	std::string		tagName;			// Tag name for linking named devices
 	std::string		drvName;			// Device name for command line access
 
+	devauto_base	*autodevList;		// List of auto device configurations
 };
-
-

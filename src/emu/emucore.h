@@ -38,6 +38,9 @@
 #include "emu/sysconfig.h"
 #include "emu/emumap.h"
 
+
+typedef const char tag_t;
+
 // Data length
 #define LN_BYTE  1
 #define LN_WORD  2
