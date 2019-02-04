@@ -1,19 +1,17 @@
 
-#include "emu/core.h"
-#include "emu/debug.h"
-#include "emu/devcpu-old.h"
-#include "dev/cpu/alpha/axp.h"
+#include "emu/emucore.h"
 #include "dev/cpu/alpha/ev4.h"
 
-ev4_cpuDevice::ev4_cpuDevice()
+ev4_cpu::ev4_cpu(tag_t *tag, const system_config &config, device_t *owner, uint64_t clock)
+: axp_cpu_base(tag, config, owner, clock)
 {
 }
 
-ev4_cpuDevice::~ev4_cpuDevice()
+ev4_cpu::~ev4_cpu()
 {
 }
 
-void ev4_cpuDevice::execute()
+void ev4_cpu::execute()
 {
 	uint32_t inst, opc;
 	uint32_t pal;

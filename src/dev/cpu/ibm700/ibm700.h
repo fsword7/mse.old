@@ -9,11 +9,11 @@
 
 #pragma once
 
-class i700_cpuDevice : public cpuDevice
+class i700_cpu_base : public cpu_device
 {
 public:
-	i700_cpuDevice() {};
-	~i700_cpuDevice() {};
+	i700_cpu_base() {};
+	~i700_cpu_base() {};
 
 private:
 };

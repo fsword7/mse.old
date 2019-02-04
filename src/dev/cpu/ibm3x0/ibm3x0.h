@@ -111,11 +111,11 @@
 #define CC_BUSY       2 // Device Busy
 #define CC_NFOUND     3 // Device Not Found
 
-class i3x0_cpuDevice : public cpuDevice
+class i360_cpu_base : public cpu_device
 {
 public:
-	i3x0_cpuDevice() {};
-	~i3x0_cpuDevice() {};
+	i360_cpu_base() {};
+	~i360_cpu_base() {};
 
 private:
 	// Host/guest registers

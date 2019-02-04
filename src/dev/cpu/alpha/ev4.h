@@ -7,11 +7,13 @@
 
 #pragma once
 
-class ev4_cpuDevice : public axp_cpuDevice
+#include "dev/cpu/alpha/axp.h"
+
+class ev4_cpu : public axp_cpu_base
 {
 public:
-	ev4_cpuDevice();
-	~ev4_cpuDevice();
+	ev4_cpu(tag_t *tag, const system_config &config, device_t *owner, uint64_t clock);
+	~ev4_cpu();
 
 	void execute();
 };
