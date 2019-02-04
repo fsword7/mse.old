@@ -1,12 +1,12 @@
 
 set(mse_cpp_SRCS
 	dev/comm/dec/console.cpp
-	dev/cpu/alpha/axp.cpp
-	dev/cpu/alpha/ev4.cpp
-	dev/cpu/alpha/opcodes.cpp
-	dev/cpu/pdp10/opcodes.cpp
-	dev/cpu/pdp11/models.cpp
-	dev/cpu/pdp11/opcodes.cpp
+#	dev/cpu/alpha/axp.cpp
+#	dev/cpu/alpha/ev4.cpp
+#	dev/cpu/alpha/opcodes.cpp
+#	dev/cpu/pdp10/opcodes.cpp
+#	dev/cpu/pdp11/models.cpp
+#	dev/cpu/pdp11/opcodes.cpp
 	dev/cpu/vax/cis.cpp
 	dev/cpu/vax/cvax.cpp
 	dev/cpu/vax/disasm.cpp
@@ -42,33 +42,33 @@ set(mse_cpp_SRCS
 	emu/user.cpp
 	formats/dec/image.cpp
 	lib/util/delegate.cpp
-	sys/drivers/alpha.cpp
-	sys/drivers/hsc.cpp
-	sys/drivers/ibm3x0.cpp
-	sys/drivers/ibm700.cpp
-	sys/drivers/pdp11.cpp
-	sys/pdp10/pdp10.cpp
-	sys/vax/ka640.cpp
-	sys/vax/ka650-old.cpp
+#	sys/drivers/alpha.cpp
+#	sys/drivers/hsc.cpp
+#	sys/drivers/ibm3x0.cpp
+#	sys/drivers/ibm700.cpp
+#	sys/drivers/pdp11.cpp
+#	sys/pdp10/pdp10.cpp
+#	sys/vax/ka640.cpp
+#	sys/vax/ka650-old.cpp
+#	sys/vax/ka780.cpp
+#	sys/vax/ka820.cpp
+#	sys/vax/vax.cpp
 	sys/vax/ka650.cpp
-	sys/vax/ka780.cpp
-	sys/vax/ka820.cpp
 	sys/vax/syslist.cpp
-	sys/vax/vax.cpp
 )
 
 set(mse_h_SRCS
 	dev/comm/dec/cty.h
-	dev/cpu/alpha/axp.h
-	dev/cpu/alpha/ev4.h
-	dev/cpu/ibm3x0/ibm3x0.h
-	dev/cpu/ibm700/ibm700.h
-	dev/cpu/pdp10/executes.h
-	dev/cpu/pdp10/ks10.h
-	dev/cpu/pdp10/opcodes.h
-	dev/cpu/pdp10/pdp10.h
-	dev/cpu/pdp11/models.h
-	dev/cpu/pdp11/pdp11.h
+#	dev/cpu/alpha/axp.h
+#	dev/cpu/alpha/ev4.h
+#	dev/cpu/ibm3x0/ibm3x0.h
+#	dev/cpu/ibm700/ibm700.h
+#	dev/cpu/pdp10/executes.h
+#	dev/cpu/pdp10/ks10.h
+#	dev/cpu/pdp10/opcodes.h
+#	dev/cpu/pdp10/pdp10.h
+#	dev/cpu/pdp11/models.h
+#	dev/cpu/pdp11/pdp11.h
 	dev/cpu/vax/cvax.h
 	dev/cpu/vax/fpu.h
 	dev/cpu/vax/ka780.h
@@ -100,10 +100,10 @@ set(mse_h_SRCS
 	emu/user.h
 	formats/dec/word10.h
 	lib/util/delegate.h
-	sys/pdp10/pdp10.h
-	sys/vax/ka650-old.h
+#	sys/pdp10/pdp10.h
+#	sys/vax/ka650-old.h
+#	sys/vax/vax.h
 	sys/vax/ka650.h
-	sys/vax/vax.h
 )
 
 set(tools_SRCS
