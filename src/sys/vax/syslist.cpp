@@ -8,7 +8,7 @@
 #include "emu/emucore.h"
 #include "emu/devsys.h"
 #include "emu/driver.h"
-#include "sys/vax/ka650new.h"
+#include "sys/vax/ka650.h"
 
 
 //COMPX(mv3900,  nullptr, ka650_device, mv3900,  mv3900_init,  "MicroVAX 3900")

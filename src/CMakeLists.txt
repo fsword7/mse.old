@@ -49,8 +49,8 @@ set(mse_cpp_SRCS
 	sys/drivers/pdp11.cpp
 	sys/pdp10/pdp10.cpp
 	sys/vax/ka640.cpp
+	sys/vax/ka650-old.cpp
 	sys/vax/ka650.cpp
-	sys/vax/ka650new.cpp
 	sys/vax/ka780.cpp
 	sys/vax/ka820.cpp
 	sys/vax/syslist.cpp
@@ -101,8 +101,8 @@ set(mse_h_SRCS
 	formats/dec/word10.h
 	lib/util/delegate.h
 	sys/pdp10/pdp10.h
+	sys/vax/ka650-old.h
 	sys/vax/ka650.h
-	sys/vax/ka650new.h
 	sys/vax/vax.h
 )
 
