@@ -14,16 +14,16 @@ std::vector<std::string> split(std::string const &line)
     return ret;
 }
 
-Console::Console()
+console_base::console_base()
 //: cdev(dev), sdev(nullptr)
 {
 }
 
-Console::~Console()
+console_base::~console_base()
 {
 }
 
-//int Console::executeCommand(args_t &args)
+//int console_base::executeCommand(args_t &args)
 //{
 //	const Command *cmds;
 
@@ -49,7 +49,7 @@ Console::~Console()
 //	return CMD_NOTFOUND;
 //}
 
-void Console::prompt()
+void console_base::prompt()
 {
 	command_handler cmd;
 	std::string cmdLine;
@@ -69,7 +69,7 @@ void Console::prompt()
     }
 }
 
-void Console::script(std::string fname)
+void console_base::script(std::string fname)
 {
 //	std::ifstream in;
 //	std::string cmdLine;

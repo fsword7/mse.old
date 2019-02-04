@@ -26,7 +26,7 @@ int main(int argc, char **argv)
 	// Create root core device and console handler
 //	Core    *app = new Core();
 //	Console *con = new Console(app);
-	Console *con = new Console();
+	console_base *con = new console_base();
 
 	printf("Welcome to Multi-System Emulator System\n\n");
 

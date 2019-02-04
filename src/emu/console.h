@@ -9,10 +9,10 @@
 
 #include "emu/commands.h"
 
-class Console {
+class console_base {
 public:
-	Console();
-	~Console();
+	console_base();
+	~console_base();
 
 	void prompt();
 	void script(std::string fname);
@@ -27,4 +27,4 @@ private:
 //	Device *sdev; // Current system device
 };
 
-
+using cty_t = console_base;
