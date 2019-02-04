@@ -5,9 +5,9 @@
  *      Author: Timothy Stark
  */
 
+#include "../old/devsys-old.h"
 #include "emu/emucore.h"
 #include "emu/debug.h"
-#include "emu/devsys-old.h"
 #include "emu/console.h"
 #include "emu/driver.h"
 #include "emu/syslist.h"

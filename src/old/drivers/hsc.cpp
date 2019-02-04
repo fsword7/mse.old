@@ -1,24 +1,24 @@
-//
-//  alpha.cpp
-//  mse
-//
-//  Created by Timothy Stark on 10/28/16.
-//
+/*
+ * hsc.cpp
+ *
+ *  Created on: Mar 7, 2017
+ *      Author: fswor
+ */
 
+#include "../../old/devsys-old.h"
 #include "emu/core.h"
 #include "emu/debug.h"
-#include "emu/devsys-old.h"
 
 //GROUP(alpha)
 //SYSTEM(as400, alpha,   "AlphaServer 400")
 
-Driver axp_sysDriver {
-	"AXP",
-	"AlphaServer",
+Driver hsc_sysDriver {
+	"HSC",
+	"DEC HSC Series",
 	__FILE__,
 	nullptr,
 
-	// Configurations,
+	// Configurations
 	nullptr,
 
 	// Command handlers
@@ -30,3 +30,6 @@ Driver axp_sysDriver {
 	// Function calls
 	nullptr
 };
+
+
+

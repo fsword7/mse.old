@@ -1,20 +1,20 @@
 /*
- * ibm700.cpp
+ * pdp11.cpp
  *
- *  Created on: Mar 2, 2017
- *      Author: Timothy Stark
+ *  Created on: Mar 7, 2017
+ *      Author: fswor
  */
 
+#include "../../old/devsys-old.h"
 #include "emu/core.h"
 #include "emu/debug.h"
-#include "emu/devsys-old.h"
 
 //GROUP(alpha)
 //SYSTEM(as400, alpha,   "AlphaServer 400")
 
-Driver ibm700_sysDriver {
-	"IBM700",
-	"IBM 700 Series",
+Driver pdp11_sysDriver {
+	"PDP11",
+	"DEC PDP-11 Series",
 	__FILE__,
 	nullptr,
 

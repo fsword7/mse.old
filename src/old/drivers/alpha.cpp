@@ -1,24 +1,24 @@
-/*
- * pdp11.cpp
- *
- *  Created on: Mar 7, 2017
- *      Author: fswor
- */
+//
+//  alpha.cpp
+//  mse
+//
+//  Created by Timothy Stark on 10/28/16.
+//
 
+#include "../../old/devsys-old.h"
 #include "emu/core.h"
 #include "emu/debug.h"
-#include "emu/devsys-old.h"
 
 //GROUP(alpha)
 //SYSTEM(as400, alpha,   "AlphaServer 400")
 
-Driver pdp11_sysDriver {
-	"PDP11",
-	"DEC PDP-11 Series",
+Driver axp_sysDriver {
+	"AXP",
+	"AlphaServer",
 	__FILE__,
 	nullptr,
 
-	// Configurations
+	// Configurations,
 	nullptr,
 
 	// Command handlers

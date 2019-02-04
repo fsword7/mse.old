@@ -5,11 +5,12 @@
 //  Created by Timothy Stark on 10/28/16.
 //
 
+#include "../../old/pdp10/pdp10.h"
+
 #include "emu/core.h"
 #include "emu/debug.h"
-#include "emu/devsys-old.h"
 #include "emu/console.h"
-#include "sys/pdp10/pdp10.h"
+#include "../../old/devsys-old.h"
 
 pdp10_sysDevice::pdp10_sysDevice()
 : memSize(0), mem(nullptr)

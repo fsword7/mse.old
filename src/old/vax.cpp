@@ -5,14 +5,15 @@
  *      Author: Timothy Stark
  */
 
+#include "../../old/vax.h"
+
 #include "emu/core.h"
 #include "emu/debug.h"
-#include "emu/devsys-old.h"
-#include "emu/devcpu-old.h"
 #include "emu/console.h"
 #include "dev/cpu/vax/vax.h"
 #include "dev/comm/dec/cty.h"
-#include "sys/vax/vax.h"
+#include "../../old/devcpu-old.h"
+#include "../../old/devsys-old.h"
 
 vax_sysDevice::vax_sysDevice()
 : memSize(0), mem(nullptr), cty(nullptr)
