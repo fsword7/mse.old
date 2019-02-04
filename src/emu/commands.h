@@ -8,6 +8,7 @@
 #pragma once
 
 class command_handler;
+class console_base;
 
 enum cmdStatus {
 	cmdOk = 0,
@@ -16,7 +17,7 @@ enum cmdStatus {
 };
 
 typedef std::vector<std::string> args_t;
-typedef cmdStatus (/* command_handler:: */ *cmdfunc_t)(int, args_t &);
+typedef cmdStatus (/* command_handler:: */ *cmdfunc_t)(console_base *, int, args_t &);
 
 struct command_t {
 	const char *name;
@@ -29,7 +30,7 @@ public:
 	command_handler() {}
 
 
-	cmdStatus execute(std::string cmdLine);
+	cmdStatus execute(console_base *cty, std::string cmdLine);
 
 protected:
 	std::vector<std::string> split(std::string const &line);

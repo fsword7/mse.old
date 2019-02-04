@@ -6,11 +6,12 @@
  */
 
 #include "emu/emucore.h"
+#include "emu/console.h"
 #include "emu/commands.h"
 #include "emu/driver.h"
 #include "emu/syslist.h"
 
-static cmdStatus /* command_handler:: */ cmdCreate(int argc, args_t &args)
+static cmdStatus /* command_handler:: */ cmdCreate(cty_t *cty, int argc, args_t &args)
 {
 	system_list    sys;
 	const system_driver *model;
@@ -26,12 +27,12 @@ static cmdStatus /* command_handler:: */ cmdCreate(int argc, args_t &args)
 	return cmdOk;
 }
 
-static cmdStatus /* command_handler:: */ cmdExit(int argc, args_t &args)
+static cmdStatus /* command_handler:: */ cmdExit(cty_t *cty, int argc, args_t &args)
 {
 	return cmdShutdown;
 }
 
-static cmdStatus /* command_handler:: */ cmdListSystem(int argc, args_t &args)
+static cmdStatus /* command_handler:: */ cmdListSystem(cty_t *cty, int argc, args_t &args)
 {
 	system_list sys;
 

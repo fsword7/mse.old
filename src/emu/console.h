@@ -14,6 +14,8 @@ public:
 	console_base();
 	~console_base();
 
+	void printf(const char *format, ...);
+
 	void prompt();
 	void script(std::string fname);
 
@@ -21,6 +23,7 @@ public:
 //	inline Device *getSystemDevice() const { return sdev; }
 //
 //	void setSystemDevice(Device *dev)  { sdev = dev; }
+
 
 private:
 //	Device *cdev; // Console device

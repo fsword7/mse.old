@@ -6,6 +6,7 @@
  */
 
 #include "emu/emucore.h"
+#include "emu/console.h"
 #include "emu/commands.h"
 #include "emu/driver.h"
 #include "emu/syslist.h"
@@ -21,7 +22,7 @@ std::vector<std::string> command_handler::split(std::string const &line)
     return ret;
 }
 
-cmdStatus command_handler::execute(std::string cmdLine)
+cmdStatus command_handler::execute(cty_t *cty, std::string cmdLine)
 {
 	args_t		args;
 	int			argc = 0;
@@ -45,7 +46,7 @@ cmdStatus command_handler::execute(std::string cmdLine)
 
 	for (int idx = 0; cmdList[idx].name; idx++) {
 		if (cmdList[idx].name == args[argc])
-			return cmdList[idx].func(argc, args);
+			return cmdList[idx].func(cty, argc, args);
 	}
 
 	// Not found - invalid command

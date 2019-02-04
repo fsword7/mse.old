@@ -23,31 +23,21 @@ console_base::~console_base()
 {
 }
 
-//int console_base::executeCommand(args_t &args)
-//{
-//	const Command *cmds;
 
-//	// Process commands by using current system device
-//	if (sdev != nullptr && (cmds = sdev->getCommandTable()) != nullptr) {
-//		for (int idx = 0; cmds[idx].name; idx++) {
-////    		std::cout << "Command: " << cmd.name << std::endl;
-//			if (cmds[idx].name == args[0])
-//				return cmds[idx].execute(this, sdev, args);
-//		}
-//	}
-//
-//	// Process commands by using console device
-//	if ((cmds = cdev->getCommandTable()) != nullptr) {
-//		for (int idx = 0; cmds[idx].name; idx++) {
-////    		std::cout << "Command: " << cmd.name << std::endl;
-//			if (cmds[idx].name == args[0])
-//				return cmds[idx].execute(this, cdev, args);
-//		}
-//	}
+void console_base::printf(const char *format, ...)
+{
+	char     out[2048];
+	va_list  args;
 
-	// command not found as default
-//	return CMD_NOTFOUND;
-//}
+	va_start(args, format);
+
+	vsprintf(out, format, args);
+
+	std::cout << out;
+
+	// All done, release arguments.
+	va_end(args);
+}
 
 void console_base::prompt()
 {
@@ -61,7 +51,7 @@ void console_base::prompt()
     	std::getline(std::cin, cmdLine);
 //    	std::cout << "Entered line: " << cmdLine << std::endl;
     
-    	st = cmd.execute(cmdLine);
+    	st = cmd.execute(this, cmdLine);
     	if (st == cmdInvalid) {
     		std::cerr << "Invalid command" << std::endl;
     		st = cmdOk;
