@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "emu/devcpu.h"
+
 #define CPU_nGREGS  8
 
 // Register List
@@ -406,11 +408,11 @@ struct pdp11_Opcode {
 	uint16_t    opMask;
 };
 
-class pdp11_cpuDevice : public cpuDevice
+class pdp11_cpu : public cpu_device
 {
 public:
-	pdp11_cpuDevice() {};
-	~pdp11_cpuDevice() {};
+	pdp11_cpu() {};
+	~pdp11_cpu() {};
 
 protected:
 	uint32_t cpuFlag;  // CPU feature flags
