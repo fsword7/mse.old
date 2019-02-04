@@ -9,7 +9,9 @@
 
 #include "emu/device.h"
 
-class device_memory_interface : public device_interface
+class di_memory : public device_interface
 {
-
+public:
+	di_memory(device_t *dev);
+	~di_memory();
 };

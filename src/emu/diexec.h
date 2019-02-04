@@ -9,7 +9,9 @@
 
 #include "emu/device.h"
 
-class device_execute_interface : public device_interface
+class di_execute : public device_interface
 {
-
+public:
+	di_execute(device_t *dev);
+	~di_execute();
 };

@@ -99,7 +99,7 @@ private:
 class device_interface
 {
 protected:
-	device_interface(device_t &dev, tag_t *name);
+	device_interface(device_t *dev, tag_t *name);
 	virtual ~device_interface();
 
 public:
@@ -107,6 +107,6 @@ public:
 
 protected:
 	device_interface	*next;
-	device_t			&device;
+	device_t			*device;
 	tag_t				*typeName;
 };

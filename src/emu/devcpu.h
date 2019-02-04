@@ -7,7 +7,14 @@
 
 #pragma once
 
-class cpu_device : public device_t
+#include "emu/device.h"
+#include "emu/diexec.h"
+#include "emu/dimem.h"
+
+class cpu_device
+: public device_t,
+  public di_execute,
+  public di_memory
 {
 public:
 	enum cpuSignal {
