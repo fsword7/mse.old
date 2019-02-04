@@ -5,10 +5,7 @@
  *      Author: Timothy Stark
  */
 
-#include "emu/core.h"
-#include "emu/debug.h"
-#include "emu/devsys-old.h"
-#include "emu/devcpu-old.h"
+#include "emu/emucore.h"
 #include "dev/cpu/vax/mtpr.h"
 #include "dev/cpu/vax/vax.h"
 #include "dev/cpu/vax/fpu.h"
@@ -20,7 +17,7 @@
 
 //#define Validate(rn, max) \
 //	if ((rn) >= (max)) {          \
-//		printf("%s: (BAD!!) reg=%d (max %d) idx=%d spec=%02X\n", devName.c_str(), \
+//		printf("%s: (BAD!!) reg=%d (max %d) idx=%d spec=%02X\n", name().c_str(), \
 //			rn, max, idx, spec);  \
 //		throw RSVD_ADDR_FAULT;    \
 //	}
@@ -39,7 +36,7 @@ static const char *ferrCodes[] =
 	"Reserved Operand Fault"
 };
 
-void vax_cpuDevice::execute() noexcept(false)
+void vax_cpu_base::execute() noexcept(false)
 {
 	int32_t  brDisp;
 	bool     ovflg;
@@ -94,7 +91,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				psReg &= ~PSL_TP;
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_EXCEPTION))
-					dbg.log("%s: (EXC) Trace Trap at PC %08X\n", devName.c_str(), REG_PC);
+					dbg.log("%s: (EXC) Trace Trap at PC %08X\n", name().c_str(), REG_PC);
 #endif /* ENABLE_DEBUG */
 				exception(IE_EXC, SCB_TP, 0);
 				continue;
@@ -103,8 +100,8 @@ void vax_cpuDevice::execute() noexcept(false)
 				psReg |= PSL_TP;
 
 #ifdef ENABLE_DEBUG
-			if (dbg.checkFlags(DBG_TRACE))
-				disasm(nullptr, faultAddr);
+//			if (dbg.checkFlags(DBG_TRACE))
+//				disasm(nullptr, faultAddr);
 #endif /* ENABLE_DEBUG */
 
 			// Fetch instruction from current stream
@@ -145,7 +142,7 @@ void vax_cpuDevice::execute() noexcept(false)
 							opr  |= (spec & 0xF0);
 					}
 
-	//				printf("%s: OP %d %02X => R%d (%04X)\n", devName.c_str(),
+	//				printf("%s: OP %d %02X => R%d (%04X)\n", name().c_str(),
 	//					idx, spec, rn, opr);
 
 					switch(opr) {
@@ -1031,7 +1028,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				SetNZ(ccReg, SXTL(dst), 0, 0);
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X (%08X to %08X) + %08X * %08X => %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X (%08X to %08X) + %08X * %08X => %08X: %s\n", name().c_str(),
 						ZXTL(src), ZXTL(opReg[1]), ZXTL(opReg[2]), ZXTL(src2), ZXTL(src1),
 						ZXTL(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
@@ -1059,7 +1056,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				storel(opReg[0], dst);
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: PSL %08X: %s\n", devName.c_str(),
+					dbg.log("%s: PSL %08X: %s\n", name().c_str(),
 						ZXTL(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1241,9 +1238,9 @@ void vax_cpuDevice::execute() noexcept(false)
 				}
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND)) {
-					dbg.log("%s: %02X + %02X => %02X: %s\n", devName.c_str(),
+					dbg.log("%s: %02X + %02X => %02X: %s\n", name().c_str(),
 						ZXTB(src2), ZXTB(src1), ZXTB(dst), stringCC(ccReg));
-					dbg.log("%s: %02X %s %02X: %s\n", devName.c_str(),
+					dbg.log("%s: %02X %s %02X: %s\n", name().c_str(),
 						ZXTB(dst), (src1 < 0) ? ">=" : "<=", ZXTB(src),
 						((src1 < 0) ? (dst >= src) : (dst <= src)) ? "Jumped" : "Continue");
 				}
@@ -1266,9 +1263,9 @@ void vax_cpuDevice::execute() noexcept(false)
 				}
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND)) {
-					dbg.log("%s: %04X + %04X => %04X: %s\n", devName.c_str(),
+					dbg.log("%s: %04X + %04X => %04X: %s\n", name().c_str(),
 						ZXTW(src2), ZXTW(src1), ZXTW(dst), stringCC(ccReg));
-					dbg.log("%s: %04X %s %04X: %s\n", devName.c_str(),
+					dbg.log("%s: %04X %s %04X: %s\n", name().c_str(),
 						ZXTW(dst), (src1 < 0) ? ">=" : "<=", ZXTW(src),
 						((src1 < 0) ? (dst >= src) : (dst <= src)) ? "Jumped" : "Continue");
 				}
@@ -1291,9 +1288,9 @@ void vax_cpuDevice::execute() noexcept(false)
 				}
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND)) {
-					dbg.log("%s: %08X + %08X => %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X + %08X => %08X: %s\n", name().c_str(),
 						ZXTL(src2), ZXTL(src1), ZXTL(dst), stringCC(ccReg));
-					dbg.log("%s: %04X %s %04X: %s\n", devName.c_str(),
+					dbg.log("%s: %04X %s %04X: %s\n", name().c_str(),
 						ZXTL(dst), (src1 < 0) ? ">=" : "<=", ZXTL(src),
 						((src1 < 0) ? (dst >= src) : (dst <= src)) ? "Jumped" : "Continue");
 				}
@@ -1319,14 +1316,14 @@ void vax_cpuDevice::execute() noexcept(false)
 				flushvi();
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: (%02X - %02X) => %02X <= %02X\n", devName.c_str(),
+					dbg.log("%s: (%02X - %02X) => %02X <= %02X\n", name().c_str(),
 						ZXTB(src1), ZXTB(src2), ZXTB(dst), ZXTB(src));
 #endif /* ENABLE_DEBUG */
 //				if (ZXTB(dst) <= ZXTB(src))
-//					printf("%s: %08X + %02X => %08X\n", devName.c_str(),
+//					printf("%s: %08X + %02X => %08X\n", name().c_str(),
 //						REG_PC, dst << 1, REG_PC + (dst << 1));
 //				else
-//					printf("%s: %08X + %02X + 2 => %08X\n", devName.c_str(),
+//					printf("%s: %08X + %02X + 2 => %08X\n", name().c_str(),
 //						REG_PC, src << 1, REG_PC + (src << 1) + 2);
 				break;
 			case OPC_nCASEW:
@@ -1347,7 +1344,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				flushvi();
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: (%04X - %04X) => %04X <= %04X\n", devName.c_str(),
+					dbg.log("%s: (%04X - %04X) => %04X <= %04X\n", name().c_str(),
 						ZXTW(src1), ZXTW(src2), ZXTW(dst), ZXTW(src));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1369,7 +1366,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				flushvi();
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: (%08X - %08X) => %08X <= %08X\n", devName.c_str(),
+					dbg.log("%s: (%08X - %08X) => %08X <= %08X\n", name().c_str(),
 						ZXTL(src1), ZXTL(src2), ZXTL(dst), ZXTL(src));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1391,10 +1388,10 @@ void vax_cpuDevice::execute() noexcept(false)
 				}
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND)) {
-					dbg.log("%s: %08X + 1 => %08X <= %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X + 1 => %08X <= %08X: %s\n", name().c_str(),
 						ZXTL(src2), ZXTL(dst), ZXTL(src1), stringCC(ccReg));
 					if (dst <= src1)
-						dbg.log("%s: Jump into PC %08X\n", devName.c_str(), REG_PC);
+						dbg.log("%s: Jump into PC %08X\n", name().c_str(), REG_PC);
 				}
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1414,10 +1411,10 @@ void vax_cpuDevice::execute() noexcept(false)
 				}
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND)) {
-					dbg.log("%s: %08X + 1 => %08X < %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X + 1 => %08X < %08X: %s\n", name().c_str(),
 						ZXTL(src2), ZXTL(dst), ZXTL(src1), stringCC(ccReg));
 					if (dst < src1)
-						dbg.log("%s: Jump into PC %08X\n", devName.c_str(), REG_PC);
+						dbg.log("%s: Jump into PC %08X\n", name().c_str(), REG_PC);
 				}
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1438,10 +1435,10 @@ void vax_cpuDevice::execute() noexcept(false)
 				}
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND)) {
-					dbg.log("%s: %08X - 1 => %08X >= 0: %s\n", devName.c_str(),
+					dbg.log("%s: %08X - 1 => %08X >= 0: %s\n", name().c_str(),
 						ZXTL(src), ZXTL(dst), stringCC(ccReg));
 					if (dst >= 0)
-						dbg.log("%s: Jump into PC %08X\n", devName.c_str(), REG_PC);
+						dbg.log("%s: Jump into PC %08X\n", name().c_str(), REG_PC);
 				}
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1460,10 +1457,10 @@ void vax_cpuDevice::execute() noexcept(false)
 				}
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND)) {
-					dbg.log("%s: %08X - 1 => %08X > 0: %s\n", devName.c_str(),
+					dbg.log("%s: %08X - 1 => %08X > 0: %s\n", name().c_str(),
 						ZXTL(src), ZXTL(dst), stringCC(ccReg));
 					if (dst > 0)
-						dbg.log("%s: Jump into PC %08X\n", devName.c_str(), REG_PC);
+						dbg.log("%s: Jump into PC %08X\n", name().c_str(), REG_PC);
 				}
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1517,7 +1514,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				}
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X & 1 => %d\n", devName.c_str(), src, src & 1);
+					dbg.log("%s: %08X & 1 => %d\n", name().c_str(), src, src & 1);
 #endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nBLBC:
@@ -1528,7 +1525,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				}
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X & 1 => %d\n", devName.c_str(), src, src & 1);
+					dbg.log("%s: %08X & 1 => %d\n", name().c_str(), src, src & 1);
 #endif /* ENABLE_DEBUG */
 				break;
 
@@ -1543,7 +1540,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Move %02X: %s\n", devName.c_str(),
+					dbg.log("%s: Move %02X: %s\n", name().c_str(),
 						ZXTB(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1556,7 +1553,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Move %04X: %s\n", devName.c_str(),
+					dbg.log("%s: Move %04X: %s\n", name().c_str(),
 						ZXTW(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1573,7 +1570,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Move %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Move %08X: %s\n", name().c_str(),
 						ZXTL(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1587,7 +1584,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Move %08X %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Move %08X %08X: %s\n", name().c_str(),
 						ZXTL(dst1), ZXTL(dst2), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1603,7 +1600,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Move ~%02X => %02X: %s\n", devName.c_str(),
+					dbg.log("%s: Move ~%02X => %02X: %s\n", name().c_str(),
 						ZXTB(src), ZXTB(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1617,7 +1614,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Move ~%04X => %04X: %s\n", devName.c_str(),
+					dbg.log("%s: Move ~%04X => %04X: %s\n", name().c_str(),
 						ZXTW(src), ZXTW(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1631,7 +1628,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Move ~%08X => %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Move ~%08X => %08X: %s\n", name().c_str(),
 						ZXTL(src), ZXTL(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1647,7 +1644,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Move -%02X => %02X: %s\n", devName.c_str(),
+					dbg.log("%s: Move -%02X => %02X: %s\n", name().c_str(),
 						ZXTB(src), ZXTB(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1661,7 +1658,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Move -%04X => %04X: %s\n", devName.c_str(),
+					dbg.log("%s: Move -%04X => %04X: %s\n", name().c_str(),
 						ZXTW(src), ZXTW(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1675,7 +1672,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Move -%08X => %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Move -%08X => %08X: %s\n", name().c_str(),
 						ZXTL(src), ZXTL(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1690,7 +1687,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Move %02X => %04X: %s\n", devName.c_str(),
+					dbg.log("%s: Move %02X => %04X: %s\n", name().c_str(),
 						ZXTB(dst), ZXTW(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1703,7 +1700,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Move %02X => %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Move %02X => %08X: %s\n", name().c_str(),
 						ZXTB(dst), ZXTL(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1716,7 +1713,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Move %04X => %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Move %04X => %08X: %s\n", name().c_str(),
 						ZXTW(dst), ZXTL(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1732,7 +1729,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %02X => %04X: %s\n", devName.c_str(),
+					dbg.log("%s: %02X => %04X: %s\n", name().c_str(),
 						ZXTB(src), ZXTW(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1746,7 +1743,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %02X => %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %02X => %08X: %s\n", name().c_str(),
 						ZXTB(src), ZXTL(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1765,7 +1762,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %04X => %02X: %s\n", devName.c_str(),
+					dbg.log("%s: %04X => %02X: %s\n", name().c_str(),
 						ZXTW(src), ZXTB(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1779,7 +1776,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %04X => %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %04X => %08X: %s\n", name().c_str(),
 						ZXTW(src), ZXTL(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1798,7 +1795,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X => %02X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X => %02X: %s\n", name().c_str(),
 						ZXTL(src), ZXTB(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1817,7 +1814,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X => %04X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X => %04X: %s\n", name().c_str(),
 						ZXTL(src), ZXTW(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1851,7 +1848,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Compare %02X with %02X: %s\n", devName.c_str(),
+					dbg.log("%s: Compare %02X with %02X: %s\n", name().c_str(),
 						ZXTB(src1), ZXTB(src2), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1865,7 +1862,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Compare %04X with %04X: %s\n", devName.c_str(),
+					dbg.log("%s: Compare %04X with %04X: %s\n", name().c_str(),
 						ZXTW(src1), ZXTW(src2), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1879,7 +1876,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Compare %08X with %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Compare %08X with %08X: %s\n", name().c_str(),
 						ZXTL(src1), ZXTL(src2), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1893,7 +1890,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Test %02X: %s\n", devName.c_str(),
+					dbg.log("%s: Test %02X: %s\n", name().c_str(),
 						ZXTB(src), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1905,7 +1902,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Test %04X: %s\n", devName.c_str(),
+					dbg.log("%s: Test %04X: %s\n", name().c_str(),
 						ZXTW(src), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1917,7 +1914,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Test %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Test %08X: %s\n", name().c_str(),
 						ZXTL(src), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -1934,7 +1931,7 @@ void vax_cpuDevice::execute() noexcept(false)
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
 					dbg.log("%s: %02X + 1 => %02X: %s\n",
-						devName.c_str(), ZXTB(src), ZXTB(dst), stringCC(ccReg));
+						name().c_str(), ZXTB(src), ZXTB(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nINCW:
@@ -1948,7 +1945,7 @@ void vax_cpuDevice::execute() noexcept(false)
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
 					dbg.log("%s: %04X + 1 => %04X: %s\n",
-						devName.c_str(), ZXTW(src), ZXTW(dst), stringCC(ccReg));
+						name().c_str(), ZXTW(src), ZXTW(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nINCL:
@@ -1962,7 +1959,7 @@ void vax_cpuDevice::execute() noexcept(false)
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
 					dbg.log("%s: %08X + 1 => %08X: %s\n",
-						devName.c_str(), ZXTL(src), ZXTL(dst), stringCC(ccReg));
+						name().c_str(), ZXTL(src), ZXTL(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
 
@@ -1978,7 +1975,7 @@ void vax_cpuDevice::execute() noexcept(false)
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
 					dbg.log("%s: %08X - 1 => %08X: %s\n",
-						devName.c_str(), ZXTB(src), ZXTB(dst), stringCC(ccReg));
+						name().c_str(), ZXTB(src), ZXTB(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nDECW:
@@ -1992,7 +1989,7 @@ void vax_cpuDevice::execute() noexcept(false)
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
 					dbg.log("%s: %04X - 1 => %04X: %s\n",
-						devName.c_str(), ZXTW(src), ZXTW(dst), stringCC(ccReg));
+						name().c_str(), ZXTW(src), ZXTW(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
 			case OPC_nDECL:
@@ -2006,7 +2003,7 @@ void vax_cpuDevice::execute() noexcept(false)
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
 					dbg.log("%s: %08X - 1 => %08X: %s\n",
-						devName.c_str(), ZXTL(src), ZXTL(dst), stringCC(ccReg));
+						name().c_str(), ZXTL(src), ZXTL(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
 
@@ -2030,7 +2027,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %04X + %04X => %04X: %s\n", devName.c_str(),
+					dbg.log("%s: %04X + %04X => %04X: %s\n", name().c_str(),
 						ZXTW(src), ZXTW(tmp), ZXTW(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2048,7 +2045,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %02X + %02X => %02X: %s\n", devName.c_str(),
+					dbg.log("%s: %02X + %02X => %02X: %s\n", name().c_str(),
 						ZXTB(src1), ZXTB(src2), ZXTB(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2064,7 +2061,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %04X + %04X => %04X: %s\n", devName.c_str(),
+					dbg.log("%s: %04X + %04X => %04X: %s\n", name().c_str(),
 						ZXTW(src1), ZXTW(src2), ZXTW(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2080,7 +2077,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X + %08X => %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X + %08X => %08X: %s\n", name().c_str(),
 						ZXTL(src1), ZXTL(src2), ZXTL(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2098,7 +2095,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %02X - %02X => %02X: %s\n", devName.c_str(),
+					dbg.log("%s: %02X - %02X => %02X: %s\n", name().c_str(),
 						ZXTB(src1), ZXTB(src2), ZXTB(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2114,7 +2111,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %04X - %04X => %04X: %s\n", devName.c_str(),
+					dbg.log("%s: %04X - %04X => %04X: %s\n", name().c_str(),
 						ZXTW(src1), ZXTW(src2), ZXTW(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2130,7 +2127,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X - %08X => %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X - %08X => %08X: %s\n", name().c_str(),
 						ZXTL(src1), ZXTL(src2), ZXTL(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2153,7 +2150,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %02X * %02X => %02X: %s\n", devName.c_str(),
+					dbg.log("%s: %02X * %02X => %02X: %s\n", name().c_str(),
 						ZXTB(src2), ZXTB(src1), ZXTB(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2174,7 +2171,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %02X * %02X => %02X: %s\n", devName.c_str(),
+					dbg.log("%s: %02X * %02X => %02X: %s\n", name().c_str(),
 						ZXTW(src2), ZXTW(src1), ZXTW(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2196,7 +2193,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				}
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X * %08X => %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X * %08X => %08X: %s\n", name().c_str(),
 						ZXTL(srcq2), ZXTL(srcq1), ZXTL(dstq), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2224,7 +2221,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %02X / %02X => %02X: %s\n", devName.c_str(),
+					dbg.log("%s: %02X / %02X => %02X: %s\n", name().c_str(),
 						ZXTB(src2), ZXTB(src1), ZXTB(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2250,7 +2247,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %04X / %04X => %04X: %s\n", devName.c_str(),
+					dbg.log("%s: %04X / %04X => %04X: %s\n", name().c_str(),
 						ZXTW(src2), ZXTW(src1), ZXTW(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2276,7 +2273,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X / %08X => %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X / %08X => %08X: %s\n", name().c_str(),
 						ZXTL(src2), ZXTL(src1), ZXTL(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2294,7 +2291,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: (%08X * %08X) + %08X => %08X %08X: %s\n", devName.c_str(),
+					dbg.log("%s: (%08X * %08X) + %08X => %08X %08X: %s\n", name().c_str(),
 						ZXTL(srcq2), ZXTL(srcq1), ZXTL(srcq), ZXTL(dstq >> 32), ZXTL(dstq),
 						stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
@@ -2307,7 +2304,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((srcq1 == 0) || ((srcq1 == -1LL) && (srcq2 == LLONG_MIN))) {
 					ovflg = true;
 				} else {
-//					printf("%s: %08X >= %08X\n", devName.c_str(),
+//					printf("%s: %08X >= %08X\n", name().c_str(),
 //						abs(srcq2 >> 32), abs(srcq1));
 					if (abs(srcq2 >> 32) >= abs(srcq1) && ZXTL(srcq1) != SGN_LONG)
 						ovflg = true;
@@ -2336,7 +2333,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X %08X / %08X => %08X R %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X %08X / %08X => %08X R %08X: %s\n", name().c_str(),
 						ZXTL(srcq2 >> 32), ZXTL(srcq2), ZXTL(srcq1), ZXTL(dstq1), ZXTL(dstq2),
 						stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
@@ -2357,7 +2354,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X + %08X + %d => %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X + %08X + %d => %08X: %s\n", name().c_str(),
 						ZXTL(src1), ZXTL(src2), carry, ZXTL(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2375,7 +2372,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X - %08X - %d => %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X - %08X - %d => %08X: %s\n", name().c_str(),
 						ZXTL(src1), ZXTL(src2), carry, ZXTL(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2393,7 +2390,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %02X & ~%02X => %02X: %s\n", devName.c_str(),
+					dbg.log("%s: %02X & ~%02X => %02X: %s\n", name().c_str(),
 						ZXTB(usrc), ZXTB(mask), ZXTB(udst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2409,7 +2406,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %04X & ~%04X => %04X: %s\n", devName.c_str(),
+					dbg.log("%s: %04X & ~%04X => %04X: %s\n", name().c_str(),
 						ZXTW(usrc), ZXTW(mask), ZXTW(udst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2425,7 +2422,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X & ~%08X => %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X & ~%08X => %08X: %s\n", name().c_str(),
 						ZXTL(usrc), ZXTL(mask), ZXTL(udst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2443,7 +2440,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %02X | %02X => %02X: %s\n", devName.c_str(),
+					dbg.log("%s: %02X | %02X => %02X: %s\n", name().c_str(),
 						ZXTB(usrc), ZXTB(mask), ZXTB(udst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2459,7 +2456,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %04X | %04X => %04X: %s\n", devName.c_str(),
+					dbg.log("%s: %04X | %04X => %04X: %s\n", name().c_str(),
 						ZXTW(usrc), ZXTW(mask), ZXTW(udst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2475,7 +2472,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X | %08X => %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X | %08X => %08X: %s\n", name().c_str(),
 						ZXTL(usrc), ZXTL(mask), ZXTL(udst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2491,7 +2488,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %02X & %02X => %02X: %s\n", devName.c_str(),
+					dbg.log("%s: %02X & %02X => %02X: %s\n", name().c_str(),
 						ZXTB(usrc), ZXTB(mask), ZXTB(udst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2505,7 +2502,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %04X & %04X => %04X: %s\n", devName.c_str(),
+					dbg.log("%s: %04X & %04X => %04X: %s\n", name().c_str(),
 						ZXTW(usrc), ZXTW(mask), ZXTW(udst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2519,7 +2516,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X & %08X => %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X & %08X => %08X: %s\n", name().c_str(),
 						ZXTL(usrc), ZXTL(mask), ZXTL(udst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2537,7 +2534,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %02X ^ %02X => %02X: %s\n", devName.c_str(),
+					dbg.log("%s: %02X ^ %02X => %02X: %s\n", name().c_str(),
 						ZXTB(usrc), ZXTB(mask), ZXTB(udst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2553,7 +2550,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %04X ^ %04X => %04X: %s\n", devName.c_str(),
+					dbg.log("%s: %04X ^ %04X => %04X: %s\n", name().c_str(),
 						ZXTW(usrc), ZXTW(mask), ZXTW(udst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2569,7 +2566,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X ^ %08X => %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X ^ %08X => %08X: %s\n", name().c_str(),
 						ZXTL(usrc), ZXTL(mask), ZXTL(udst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2604,7 +2601,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X %s %d => %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X %s %d => %08X: %s\n", name().c_str(),
 						ZXTL(src), ((cnt < 0) ? ">>" : "<<"), abs(cnt),
 						ZXTL(dst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
@@ -2639,7 +2636,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X %08X %s %d => %08X %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X %08X %s %d => %08X %08X: %s\n", name().c_str(),
 						ZXTL(srcq >> 32), ZXTL(srcq), ((cnt < 0) ? ">>" : "<<"), abs(cnt),
 						ZXTL(dstq >> 32), ZXTL(dstq), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
@@ -2656,7 +2653,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X %s %d => %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X %s %d => %08X: %s\n", name().c_str(),
 						ZXTL(usrc), ((cnt < 0) ? ">>" : "<<"), abs(cnt),
 						ZXTL(udst), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
@@ -2673,7 +2670,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Compare %08X with %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Compare %08X with %08X: %s\n", name().c_str(),
 						ZXTL(dst), ZXTL(src), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2687,7 +2684,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Compare %08X with %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Compare %08X with %08X: %s\n", name().c_str(),
 						ZXTL(dst), ZXTL(src), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2702,7 +2699,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Extract %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Extract %08X: %s\n", name().c_str(),
 						ZXTL(src), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2715,7 +2712,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Extract %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Extract %08X: %s\n", name().c_str(),
 						ZXTL(src), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2739,7 +2736,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				ccReg = usrc != 0 ? 0 : CC_Z;
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Find %08X<%d:%d> => %d: %s\n", devName.c_str(),
+					dbg.log("%s: Find %08X<%d:%d> => %d: %s\n", name().c_str(),
 						ZXTL(usrc), ZXTL(usrc1), ZXTB(usrc2), udst,
 						stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
@@ -2750,7 +2747,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if (usrc2 > 0) {
 					int idx;
 					usrc = getField(false) ^ mskList[usrc2];
-//					printf("%s: %08X\n", devName.c_str(), usrc);
+//					printf("%s: %08X\n", name().c_str(), usrc);
 					for (idx = 0; idx < usrc2; idx++)
 						if ((usrc >> idx) & 1)
 							break;
@@ -2763,7 +2760,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				ccReg = usrc != 0 ? 0 : CC_Z;
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Find %08X<%d:%d> => %d: %s\n", devName.c_str(),
+					dbg.log("%s: Find %08X<%d:%d> => %d: %s\n", name().c_str(),
 						ZXTL(usrc), ZXTL(usrc1), ZXTB(usrc2), udst,
 						stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
@@ -2793,7 +2790,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Push %08X to SP (%08X): %s\n", devName.c_str(),
+					dbg.log("%s: Push %08X to SP (%08X): %s\n", name().c_str(),
 						src, REG_SP + LN_LONG, stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2816,7 +2813,7 @@ void vax_cpuDevice::execute() noexcept(false)
 						REG_SP -= LN_LONG;
 #ifdef ENABLE_DEBUG
 						if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-							dbg.log("%s: R%d %08X => (SP) %08X\n", devName.c_str(),
+							dbg.log("%s: R%d %08X => (SP) %08X\n", name().c_str(),
 								idx, ZXTL(gpReg[idx].l), ZXTL(REG_SP));
 #endif /* ENABLE_DEBUG */
 					}
@@ -2838,7 +2835,7 @@ void vax_cpuDevice::execute() noexcept(false)
 						gpReg[idx].l = readv(REG_SP, LN_LONG, RACC);
 #ifdef ENABLE_DEBUG
 						if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-							dbg.log("%s: R%d %08X <= (SP) %08X\n", devName.c_str(),
+							dbg.log("%s: R%d %08X <= (SP) %08X\n", name().c_str(),
 								idx, ZXTL(gpReg[idx].l), ZXTL(REG_SP));
 #endif /* ENABLE_DEBUG */
 						if (idx < REG_nSP)
@@ -2871,7 +2868,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::converti(usrcx[0], udstx, SFP_TYPE)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Convert %02X: %s\n", devName.c_str(),
+						dbg.log("%s: Convert %02X: %s\n", name().c_str(),
 								ZXTB(usrcx[0]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -2884,7 +2881,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Convert %02X to %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Convert %02X to %08X: %s\n", name().c_str(),
 						ZXTB(usrcx[0]), ZXTL(udstx[0]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2894,7 +2891,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::converti(usrcx[0], udstx, SFP_TYPE)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Convert %04X: %s\n", devName.c_str(),
+						dbg.log("%s: Convert %04X: %s\n", name().c_str(),
 								ZXTW(usrcx[0]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -2907,7 +2904,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Convert %04X to %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Convert %04X to %08X: %s\n", name().c_str(),
 						ZXTW(usrcx[0]), ZXTL(udstx[0]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2917,7 +2914,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::converti(usrcx[0], udstx, SFP_TYPE)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Convert %08X: %s\n", devName.c_str(),
+						dbg.log("%s: Convert %08X: %s\n", name().c_str(),
 								ZXTL(usrcx[0]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -2930,7 +2927,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Convert %08X to %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Convert %08X to %08X: %s\n", name().c_str(),
 						ZXTL(usrcx[0]), ZXTL(udstx[0]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2940,7 +2937,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::convertfi(usrcx, SFP_TYPE, udstx, VFP_BYTE, &flg)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Convert %08X: %s\n", devName.c_str(),
+						dbg.log("%s: Convert %08X: %s\n", name().c_str(),
 								ZXTL(usrcx[0]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -2955,7 +2952,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Convert %08X to %02X: %s\n", devName.c_str(),
+					dbg.log("%s: Convert %08X to %02X: %s\n", name().c_str(),
 						ZXTL(usrcx[0]), ZXTB(udstx[0]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2965,7 +2962,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::convertfi(usrcx, SFP_TYPE, udstx, VFP_WORD, &flg)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Convert %08X: %s\n", devName.c_str(),
+						dbg.log("%s: Convert %08X: %s\n", name().c_str(),
 								ZXTL(usrcx[0]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -2980,7 +2977,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Convert %08X to %04X: %s\n", devName.c_str(),
+					dbg.log("%s: Convert %08X to %04X: %s\n", name().c_str(),
 						ZXTL(usrcx[0]), ZXTW(udstx[0]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -2990,7 +2987,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::convertfi(usrcx, SFP_TYPE, udstx, VFP_LONG, &flg)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Convert %08X: %s\n", devName.c_str(),
+						dbg.log("%s: Convert %08X: %s\n", name().c_str(),
 								ZXTL(usrcx[0]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -3005,7 +3002,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Convert %08X to %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Convert %08X to %08X: %s\n", name().c_str(),
 						ZXTL(usrcx[0]), ZXTL(udstx[0]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -3015,7 +3012,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::convertfi(usrcx, SFP_TYPE, udstx, VFP_RLONG, &flg)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Convert %08X: %s\n", devName.c_str(),
+						dbg.log("%s: Convert %08X: %s\n", name().c_str(),
 								ZXTL(usrcx[0]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -3030,7 +3027,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Convert %08X to %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Convert %08X to %08X: %s\n", name().c_str(),
 						ZXTL(usrcx[0]), ZXTL(udstx[0]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -3040,7 +3037,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::converti(usrcx[0], udstx, DFP_TYPE)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Convert %02X: %s\n", devName.c_str(),
+						dbg.log("%s: Convert %02X: %s\n", name().c_str(),
 								ZXTB(usrcx[0]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -3053,7 +3050,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Convert %02X to %08X %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Convert %02X to %08X %08X: %s\n", name().c_str(),
 						ZXTB(usrcx[0]), ZXTL(udstx[0]), ZXTL(udstx[1]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -3063,7 +3060,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::converti(usrcx[0], udstx, DFP_TYPE)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Convert %04X: %s\n", devName.c_str(),
+						dbg.log("%s: Convert %04X: %s\n", name().c_str(),
 								ZXTW(usrcx[0]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -3076,7 +3073,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Convert %04X to %08X %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Convert %04X to %08X %08X: %s\n", name().c_str(),
 						ZXTW(usrcx[0]), ZXTL(udstx[0]), ZXTL(udstx[1]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -3086,7 +3083,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::converti(usrcx[0], udstx, DFP_TYPE)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Convert %08X: %s\n", devName.c_str(),
+						dbg.log("%s: Convert %08X: %s\n", name().c_str(),
 								ZXTL(usrcx[0]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -3099,7 +3096,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Convert %08X to %08X %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Convert %08X to %08X %08X: %s\n", name().c_str(),
 						ZXTL(usrcx[0]), ZXTL(udstx[0]), ZXTL(udstx[1]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -3111,7 +3108,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::convertfi(usrcx, DFP_TYPE, udstx, VFP_BYTE, &flg)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Convert %08X %08X: %s\n", devName.c_str(),
+						dbg.log("%s: Convert %08X %08X: %s\n", name().c_str(),
 								ZXTL(usrcx[0]), ZXTL(usrcx[1]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -3126,7 +3123,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Convert %08X %08X to %02X: %s\n", devName.c_str(),
+					dbg.log("%s: Convert %08X %08X to %02X: %s\n", name().c_str(),
 						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTB(udstx[0]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -3138,7 +3135,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::convertfi(usrcx, DFP_TYPE, udstx, VFP_WORD, &flg)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Convert %08X %08X: %s\n", devName.c_str(),
+						dbg.log("%s: Convert %08X %08X: %s\n", name().c_str(),
 								ZXTL(usrcx[0]), ZXTL(usrcx[1]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -3153,7 +3150,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Convert %08X %08X to %04X: %s\n", devName.c_str(),
+					dbg.log("%s: Convert %08X %08X to %04X: %s\n", name().c_str(),
 						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTW(udstx[0]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -3165,7 +3162,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::convertfi(usrcx, DFP_TYPE, udstx, VFP_LONG, &flg)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Convert %08X %08X: %s\n", devName.c_str(),
+						dbg.log("%s: Convert %08X %08X: %s\n", name().c_str(),
 								ZXTL(usrcx[0]), ZXTL(usrcx[1]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -3180,7 +3177,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Convert %08X %08X to %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Convert %08X %08X to %08X: %s\n", name().c_str(),
 						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -3192,7 +3189,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::convertfi(usrcx, DFP_TYPE, udstx, VFP_RLONG, &flg)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Convert %08X %08X: %s\n", devName.c_str(),
+						dbg.log("%s: Convert %08X %08X: %s\n", name().c_str(),
 								ZXTL(usrcx[0]), ZXTL(usrcx[1]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -3207,7 +3204,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Convert %08X %08X to %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Convert %08X %08X to %08X: %s\n", name().c_str(),
 						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -3219,7 +3216,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::converti(usrcx[0], udstx, GFP_TYPE)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Convert %02X: %s\n", devName.c_str(),
+						dbg.log("%s: Convert %02X: %s\n", name().c_str(),
 								ZXTB(usrcx[0]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -3232,7 +3229,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Convert %02X to %08X %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Convert %02X to %08X %08X: %s\n", name().c_str(),
 						ZXTB(usrcx[0]), ZXTL(udstx[0]), ZXTL(udstx[1]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -3242,7 +3239,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::converti(usrcx[0], udstx, GFP_TYPE)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Convert %04X: %s\n", devName.c_str(),
+						dbg.log("%s: Convert %04X: %s\n", name().c_str(),
 								ZXTW(usrcx[0]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -3255,7 +3252,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Convert %04X to %08X %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Convert %04X to %08X %08X: %s\n", name().c_str(),
 						ZXTW(usrcx[0]), ZXTL(udstx[0]), ZXTL(udstx[1]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -3265,7 +3262,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::converti(usrcx[0], udstx, GFP_TYPE)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Convert %08X: %s\n", devName.c_str(),
+						dbg.log("%s: Convert %08X: %s\n", name().c_str(),
 								ZXTL(usrcx[0]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -3278,7 +3275,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Convert %08X to %08X %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Convert %08X to %08X %08X: %s\n", name().c_str(),
 						ZXTL(usrcx[0]), ZXTL(udstx[0]), ZXTL(udstx[1]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -3291,7 +3288,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::convertfi(usrcx, GFP_TYPE, udstx, VFP_BYTE, &flg)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Convert %08X %08X: %s\n", devName.c_str(),
+						dbg.log("%s: Convert %08X %08X: %s\n", name().c_str(),
 								ZXTL(usrcx[0]), ZXTL(usrcx[1]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -3306,7 +3303,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Convert %08X %08X to %02X: %s\n", devName.c_str(),
+					dbg.log("%s: Convert %08X %08X to %02X: %s\n", name().c_str(),
 						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTB(udstx[0]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -3318,7 +3315,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::convertfi(usrcx, GFP_TYPE, udstx, VFP_WORD, &flg)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Convert %08X %08X: %s\n", devName.c_str(),
+						dbg.log("%s: Convert %08X %08X: %s\n", name().c_str(),
 								ZXTL(usrcx[0]), ZXTL(usrcx[1]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -3333,7 +3330,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Convert %08X %08X to %04X: %s\n", devName.c_str(),
+					dbg.log("%s: Convert %08X %08X to %04X: %s\n", name().c_str(),
 						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTW(udstx[0]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -3345,7 +3342,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::convertfi(usrcx, GFP_TYPE, udstx, VFP_LONG, &flg)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Convert %08X %08X: %s\n", devName.c_str(),
+						dbg.log("%s: Convert %08X %08X: %s\n", name().c_str(),
 								ZXTL(usrcx[0]), ZXTL(usrcx[1]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -3360,7 +3357,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Convert %08X %08X to %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Convert %08X %08X to %08X: %s\n", name().c_str(),
 						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -3372,7 +3369,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::convertfi(usrcx, GFP_TYPE, udstx, VFP_RLONG, &flg)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Convert %08X %08X: %s\n", devName.c_str(),
+						dbg.log("%s: Convert %08X %08X: %s\n", name().c_str(),
 								ZXTL(usrcx[0]), ZXTL(usrcx[1]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -3387,7 +3384,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Convert %08X %08X to %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Convert %08X %08X to %08X: %s\n", name().c_str(),
 						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -3409,7 +3406,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::convertfd(usrcx, udstx)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Convert %08X: %s\n", devName.c_str(),
+						dbg.log("%s: Convert %08X: %s\n", name().c_str(),
 								ZXTL(usrcx[0]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -3421,7 +3418,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Convert %08X to %08X %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Convert %08X to %08X %08X: %s\n", name().c_str(),
 						ZXTL(usrcx[0]), ZXTL(udstx[0]), ZXTL(udstx[1]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -3433,7 +3430,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::convertdf(usrcx, udstx)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Convert %08X %08X: %s\n", devName.c_str(),
+						dbg.log("%s: Convert %08X %08X: %s\n", name().c_str(),
 								ZXTL(usrcx[0]), ZXTL(usrcx[1]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -3445,7 +3442,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Convert %08X %08X to %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Convert %08X %08X to %08X: %s\n", name().c_str(),
 						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -3456,7 +3453,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::convertfg(usrcx, udstx)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Convert %08X: %s\n", devName.c_str(),
+						dbg.log("%s: Convert %08X: %s\n", name().c_str(),
 								ZXTL(usrcx[0]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -3468,7 +3465,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Convert %08X to %08X %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Convert %08X to %08X %08X: %s\n", name().c_str(),
 						ZXTL(usrcx[0]), ZXTL(udstx[0]), ZXTL(udstx[1]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -3480,7 +3477,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::convertgf(usrcx, udstx)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Convert %08X %08X: %s\n", devName.c_str(),
+						dbg.log("%s: Convert %08X %08X: %s\n", name().c_str(),
 								ZXTL(usrcx[0]), ZXTL(usrcx[1]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -3492,7 +3489,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Convert %08X %08X to %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Convert %08X %08X to %08X: %s\n", name().c_str(),
 						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -3517,7 +3514,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::addf(usrcx, udstx, uresx)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: %08X + %08X: %s\n", devName.c_str(),
+						dbg.log("%s: %08X + %08X: %s\n", name().c_str(),
 							ZXTL(opReg[0]), ZXTL(opReg[1]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -3530,7 +3527,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X + %08X => %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X + %08X => %08X: %s\n", name().c_str(),
 						ZXTL(usrcx[0]), ZXTL(udstx[0]), ZXTL(uresx[0]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -3543,7 +3540,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::subtractf(usrcx, udstx, uresx)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: %08X - %08X: %s\n", devName.c_str(),
+						dbg.log("%s: %08X - %08X: %s\n", name().c_str(),
 							ZXTL(opReg[1]), ZXTL(opReg[0]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -3556,7 +3553,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X - %08X => %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X - %08X => %08X: %s\n", name().c_str(),
 						ZXTL(udstx[0]), ZXTL(usrcx[0]), ZXTL(uresx[0]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -3569,7 +3566,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::multiplyf(usrcx, udstx, uresx)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: %08X + %08X: %s\n", devName.c_str(),
+						dbg.log("%s: %08X + %08X: %s\n", name().c_str(),
 							ZXTL(opReg[0]), ZXTL(opReg[1]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -3582,7 +3579,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X + %08X => %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X + %08X => %08X: %s\n", name().c_str(),
 						ZXTL(usrcx[0]), ZXTL(udstx[0]), ZXTL(uresx[0]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -3595,7 +3592,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::dividef(usrcx, udstx, uresx)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: %08X / %08X: %s\n", devName.c_str(),
+						dbg.log("%s: %08X / %08X: %s\n", name().c_str(),
 							ZXTL(udstx[0]), ZXTL(usrcx[0]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -3608,7 +3605,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X / %08X => %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X / %08X => %08X: %s\n", name().c_str(),
 						ZXTL(udstx[0]), ZXTL(usrcx[0]), ZXTL(uresx[0]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -3628,7 +3625,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Move %08X to %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Move %08X to %08X: %s\n", name().c_str(),
 						ZXTL(opReg[0]), ZXTL(udstx[0]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -3649,7 +3646,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Move/Negate %08X to %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Move/Negate %08X to %08X: %s\n", name().c_str(),
 						ZXTL(opReg[0]), ZXTL(udstx[0]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -3667,7 +3664,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Test %08X (%08X): %s\n", devName.c_str(),
+					dbg.log("%s: Test %08X (%08X): %s\n", name().c_str(),
 						ZXTL(usrcx[0]), ZXTL(opReg[0]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -3679,7 +3676,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::compare(usrcx, udstx, SFP_TYPE, &ccReg)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Compare %08X with %08X: %s\n", devName.c_str(),
+						dbg.log("%s: Compare %08X with %08X: %s\n", name().c_str(),
 								ZXTL(usrcx[0]), ZXTL(udstx[0]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -3687,7 +3684,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Compare %08X with %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Compare %08X with %08X: %s\n", name().c_str(),
 							ZXTL(usrcx[0]), ZXTL(udstx[0]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -3700,7 +3697,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::addf(usrcx, uidx, uresx)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: %08X + %08X: %s\n", devName.c_str(),
+						dbg.log("%s: %08X + %08X: %s\n", name().c_str(),
 							ZXTL(usrcx[0]), ZXTL(uidx[0]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -3709,7 +3706,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::compare(uresx, udstx, SFP_TYPE, &ccReg)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Compare %08X with %08X: %s\n", devName.c_str(),
+						dbg.log("%s: Compare %08X with %08X: %s\n", name().c_str(),
 								ZXTL(uresx[0]), ZXTL(udstx[0]), ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
 					faultfp(sts);
@@ -3732,9 +3729,9 @@ void vax_cpuDevice::execute() noexcept(false)
 					else
 						jump = "Continue";
 
-					dbg.log("%s: %08X + %08X => %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X + %08X => %08X: %s\n", name().c_str(),
 						ZXTL(usrcx[0]), ZXTL(uidx[0]), ZXTL(uresx[0]), stringCC(ccReg));
-					dbg.log("%s: %08X %s %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X %s %08X: %s\n", name().c_str(),
 						ZXTL(udstx[0]), (usrcx[0] & FP_SIGN) ? ">=" : "<=", ZXTL(usrcx[0]), jump);
 				}
 #endif /* ENABLE_DEBUG */
@@ -3757,7 +3754,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::addd(usrcx, udstx, uresx)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: %08X %08X + %08X %08X: %s\n", devName.c_str(),
+						dbg.log("%s: %08X %08X + %08X %08X: %s\n", name().c_str(),
 							ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
 							ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
@@ -3771,7 +3768,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X %08X + %08X %08X => %08X %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X %08X + %08X %08X => %08X %08X: %s\n", name().c_str(),
 						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
 						ZXTL(uresx[0]), ZXTL(uresx[1]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
@@ -3787,7 +3784,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::subtractd(usrcx, udstx, uresx)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: %08X %08X - %08X %08X: %s\n", devName.c_str(),
+						dbg.log("%s: %08X %08X - %08X %08X: %s\n", name().c_str(),
 							ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
 							ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
@@ -3801,7 +3798,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X %08X - %08X %08X => %08X %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X %08X - %08X %08X => %08X %08X: %s\n", name().c_str(),
 						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
 						ZXTL(uresx[0]), ZXTL(uresx[1]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
@@ -3817,7 +3814,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::multiplyd(usrcx, udstx, uresx)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: %08X %08X * %08X %08X: %s\n", devName.c_str(),
+						dbg.log("%s: %08X %08X * %08X %08X: %s\n", name().c_str(),
 							ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
 							ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
@@ -3831,7 +3828,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X %08X * %08X %08X => %08X %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X %08X * %08X %08X => %08X %08X: %s\n", name().c_str(),
 						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
 						ZXTL(uresx[0]), ZXTL(uresx[1]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
@@ -3847,7 +3844,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::divided(usrcx, udstx, uresx)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: %08X %08X / %08X %08X: %s\n", devName.c_str(),
+						dbg.log("%s: %08X %08X / %08X %08X: %s\n", name().c_str(),
 							ZXTL(udstx[0]), ZXTL(udstx[1]), ZXTL(usrcx[0]), ZXTL(usrcx[1]),
 							ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
@@ -3861,7 +3858,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X %08X / %08X %08X => %08X %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X %08X / %08X %08X => %08X %08X: %s\n", name().c_str(),
 						ZXTL(udstx[0]), ZXTL(udstx[1]), ZXTL(usrcx[0]), ZXTL(usrcx[1]),
 						ZXTL(uresx[0]), ZXTL(uresx[1]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
@@ -3884,7 +3881,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Move %08X %08X to %08X %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Move %08X %08X to %08X %08X: %s\n", name().c_str(),
 						ZXTL(opReg[0]), ZXTL(opReg[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
 						stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
@@ -3907,7 +3904,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Move/Negate %08X %08X to %08X %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Move/Negate %08X %08X to %08X %08X: %s\n", name().c_str(),
 						ZXTL(opReg[0]), ZXTL(opReg[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
 						stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
@@ -3928,7 +3925,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Test %08X %08X (%08X %08X): %s\n", devName.c_str(),
+					dbg.log("%s: Test %08X %08X (%08X %08X): %s\n", name().c_str(),
 						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(opReg[0]), ZXTL(opReg[1]),
 						stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
@@ -3943,7 +3940,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::compare(usrcx, udstx, DFP_TYPE, &ccReg)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Compare %08X %08X with %08X %08X: %s\n", devName.c_str(),
+						dbg.log("%s: Compare %08X %08X with %08X %08X: %s\n", name().c_str(),
 								ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
 								ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
@@ -3952,7 +3949,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Compare %08X %08X with %08X %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Compare %08X %08X with %08X %08X: %s\n", name().c_str(),
 							ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
 							stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
@@ -3969,7 +3966,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::addd(usrcx, uidx, uresx)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: %08X %08X + %08X %08X: %s\n", devName.c_str(),
+						dbg.log("%s: %08X %08X + %08X %08X: %s\n", name().c_str(),
 							ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(uidx[0]), ZXTL(uidx[1]),
 							ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
@@ -3979,7 +3976,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::compare(uresx, udstx, DFP_TYPE, &ccReg)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Compare %08X %08X with %08X %08X: %s\n", devName.c_str(),
+						dbg.log("%s: Compare %08X %08X with %08X %08X: %s\n", name().c_str(),
 								ZXTL(uresx[0]), ZXTL(uresx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
 								ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
@@ -4003,10 +4000,10 @@ void vax_cpuDevice::execute() noexcept(false)
 					else
 						jump = "Continue";
 
-					dbg.log("%s: %08X %08X + %08X %08X => %08X %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X %08X + %08X %08X => %08X %08X: %s\n", name().c_str(),
 						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(uidx[0]), ZXTL(uidx[1]),
 						ZXTL(uresx[0]), ZXTL(uresx[1]), stringCC(ccReg));
-					dbg.log("%s: %08X %08X %s %08X %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X %08X %s %08X %08X: %s\n", name().c_str(),
 						ZXTL(udstx[0]), ZXTL(udstx[1]), (usrcx[0] & FP_SIGN) ? ">=" : "<=",
 						ZXTL(usrcx[0]), ZXTL(usrcx[1]), jump);
 				}
@@ -4031,7 +4028,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::addg(usrcx, udstx, uresx)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: %08X %08X + %08X %08X: %s\n", devName.c_str(),
+						dbg.log("%s: %08X %08X + %08X %08X: %s\n", name().c_str(),
 							ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
 							ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
@@ -4045,7 +4042,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X %08X + %08X %08X => %08X %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X %08X + %08X %08X => %08X %08X: %s\n", name().c_str(),
 						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
 						ZXTL(uresx[0]), ZXTL(uresx[1]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
@@ -4061,7 +4058,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::subtractg(usrcx, udstx, uresx)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: %08X %08X - %08X %08X: %s\n", devName.c_str(),
+						dbg.log("%s: %08X %08X - %08X %08X: %s\n", name().c_str(),
 							ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
 							ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
@@ -4075,7 +4072,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X %08X - %08X %08X => %08X %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X %08X - %08X %08X => %08X %08X: %s\n", name().c_str(),
 						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
 						ZXTL(uresx[0]), ZXTL(uresx[1]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
@@ -4091,7 +4088,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::multiplyg(usrcx, udstx, uresx)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: %08X %08X * %08X %08X: %s\n", devName.c_str(),
+						dbg.log("%s: %08X %08X * %08X %08X: %s\n", name().c_str(),
 							ZXTL(udstx[0]), ZXTL(udstx[1]), ZXTL(usrcx[0]), ZXTL(usrcx[1]),
 							ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
@@ -4105,7 +4102,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X %08X * %08X %08X => %08X %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X %08X * %08X %08X => %08X %08X: %s\n", name().c_str(),
 						ZXTL(udstx[0]), ZXTL(udstx[1]), ZXTL(usrcx[0]), ZXTL(usrcx[1]),
 						ZXTL(uresx[0]), ZXTL(uresx[1]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
@@ -4121,7 +4118,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::divideg(usrcx, udstx, uresx)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: %08X %08X / %08X %08X: %s\n", devName.c_str(),
+						dbg.log("%s: %08X %08X / %08X %08X: %s\n", name().c_str(),
 							ZXTL(udstx[0]), ZXTL(udstx[1]), ZXTL(usrcx[0]), ZXTL(usrcx[1]),
 							ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
@@ -4135,7 +4132,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: %08X %08X / %08X %08X => %08X %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X %08X / %08X %08X => %08X %08X: %s\n", name().c_str(),
 						ZXTL(udstx[0]), ZXTL(udstx[1]), ZXTL(usrcx[0]), ZXTL(usrcx[1]),
 						ZXTL(uresx[0]), ZXTL(uresx[1]), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
@@ -4158,7 +4155,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Move %08X %08X to %08X %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Move %08X %08X to %08X %08X: %s\n", name().c_str(),
 						ZXTL(opReg[0]), ZXTL(opReg[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
 						stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
@@ -4181,7 +4178,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Move/Negate %08X %08X to %08X %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Move/Negate %08X %08X to %08X %08X: %s\n", name().c_str(),
 						ZXTL(opReg[0]), ZXTL(opReg[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
 						stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
@@ -4201,7 +4198,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Test %08X %08X (%08X %08X): %s\n", devName.c_str(),
+					dbg.log("%s: Test %08X %08X (%08X %08X): %s\n", name().c_str(),
 						ZXTL(srcx[0]), ZXTL(srcx[1]), ZXTL(opReg[0]), ZXTL(opReg[1]),
 						stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
@@ -4216,7 +4213,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::compare(usrcx, udstx, GFP_TYPE, &ccReg)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Compare %08X %08X with %08X %08X: %s\n", devName.c_str(),
+						dbg.log("%s: Compare %08X %08X with %08X %08X: %s\n", name().c_str(),
 								ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
 								ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
@@ -4225,7 +4222,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-					dbg.log("%s: Compare %08X %08X with %08X %08X: %s\n", devName.c_str(),
+					dbg.log("%s: Compare %08X %08X with %08X %08X: %s\n", name().c_str(),
 							ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
 							stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
@@ -4242,7 +4239,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::addg(usrcx, uidx, uresx)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: %08X %08X + %08X %08X: %s\n", devName.c_str(),
+						dbg.log("%s: %08X %08X + %08X %08X: %s\n", name().c_str(),
 							ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(uidx[0]), ZXTL(uidx[1]),
 							ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
@@ -4252,7 +4249,7 @@ void vax_cpuDevice::execute() noexcept(false)
 				if ((sts = vaxfp_t::compare(uresx, udstx, GFP_TYPE, &ccReg)) != VFP_OK) {
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Compare %08X %08X with %08X %08X: %s\n", devName.c_str(),
+						dbg.log("%s: Compare %08X %08X with %08X %08X: %s\n", name().c_str(),
 								ZXTL(uresx[0]), ZXTL(uresx[1]), ZXTL(udstx[0]), ZXTL(udstx[1]),
 								ferrCodes[sts]);
 #endif /* ENABLE_DEBUG */
@@ -4276,10 +4273,10 @@ void vax_cpuDevice::execute() noexcept(false)
 					else
 						jump = "Continue";
 
-					dbg.log("%s: %08X %08X + %08X %08X => %08X %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X %08X + %08X %08X => %08X %08X: %s\n", name().c_str(),
 						ZXTL(usrcx[0]), ZXTL(usrcx[1]), ZXTL(uidx[0]), ZXTL(uidx[1]),
 						ZXTL(uresx[0]), ZXTL(uresx[1]), stringCC(ccReg));
-					dbg.log("%s: %08X %08X %s %08X %08X: %s\n", devName.c_str(),
+					dbg.log("%s: %08X %08X %s %08X %08X: %s\n", name().c_str(),
 						ZXTL(udstx[0]), ZXTL(udstx[1]), (usrcx[0] & FP_SIGN) ? ">=" : "<=",
 						ZXTL(usrcx[0]), ZXTL(usrcx[1]), jump);
 				}
@@ -4347,7 +4344,7 @@ void vax_cpuDevice::execute() noexcept(false)
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
 					dbg.log("%s: Insert %08X to %08X with next %08X: %s\n",
-						devName.c_str(), ZXTL(entry), ZXTL(pred), ZXTL(succ),
+						name().c_str(), ZXTL(entry), ZXTL(pred), ZXTL(succ),
 						stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -4369,7 +4366,7 @@ void vax_cpuDevice::execute() noexcept(false)
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
 						dbg.log("%s: Queue %08X is busy (interlocked): %s\n",
-							devName.c_str(), queue, stringCC(ccReg));
+							name().c_str(), queue, stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				} else {
 					// Lock interlock on that queue
@@ -4392,7 +4389,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Enqueue %08X to queue %08X with first %08X: %s\n", devName.c_str(),
+						dbg.log("%s: Enqueue %08X to queue %08X with first %08X: %s\n", name().c_str(),
 							entry, queue, head, stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				}
@@ -4416,7 +4413,7 @@ void vax_cpuDevice::execute() noexcept(false)
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
 						dbg.log("%s: Queue %08X is busy (interlocked): %s\n",
-							devName.c_str(), queue, stringCC(ccReg));
+							name().c_str(), queue, stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				} else {
 					// Lock interlock om that queue.
@@ -4449,7 +4446,7 @@ void vax_cpuDevice::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-						dbg.log("%s: Enqueue %08X to queue %08X with last %08X: %s\n", devName.c_str(),
+						dbg.log("%s: Enqueue %08X to queue %08X with last %08X: %s\n", name().c_str(),
 							entry, queue, tail, stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				}
@@ -4484,7 +4481,7 @@ void vax_cpuDevice::execute() noexcept(false)
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
 					dbg.log("%s: Remove %08X from %08X with next %08X: %s\n",
-						devName.c_str(), ZXTL(entry), ZXTL(pred), ZXTL(succ),
+						name().c_str(), ZXTL(entry), ZXTL(pred), ZXTL(succ),
 						stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				break;
@@ -4508,7 +4505,7 @@ void vax_cpuDevice::execute() noexcept(false)
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
 						dbg.log("%s: Queue %08X is busy (interlocked): %s\n",
-							devName.c_str(), queue, stringCC(ccReg));
+							name().c_str(), queue, stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				} else if (head != 0) {
 					// Lock interlock on that queue.
@@ -4540,7 +4537,7 @@ void vax_cpuDevice::execute() noexcept(false)
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
 						dbg.log("%s: Dequeue %08X from queue %08X with first %08X: %s\n",
-							devName.c_str(), entry, queue, head, stringCC(ccReg));
+							name().c_str(), entry, queue, head, stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				} else {
 					// Put empty first entry.
@@ -4552,7 +4549,7 @@ void vax_cpuDevice::execute() noexcept(false)
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
 						dbg.log("%s: Queue %08X is already empty: %s\n",
-							devName.c_str(), queue, stringCC(ccReg));
+							name().c_str(), queue, stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				}
 				break;
@@ -4570,7 +4567,7 @@ void vax_cpuDevice::execute() noexcept(false)
 #ifdef ENABLE_DEBUG
 				if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
 					dbg.log("%s: Head of queue %08X => %08X\n",
-						devName.c_str(), queue, head);
+						name().c_str(), queue, head);
 #endif /* ENABLE_DEBUG */
 
 				if (head & 06)
@@ -4580,7 +4577,7 @@ void vax_cpuDevice::execute() noexcept(false)
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
 						dbg.log("%s: Queue %08X is busy (interlocked): %s\n",
-							devName.c_str(), queue, stringCC(ccReg));
+							name().c_str(), queue, stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				} else if (head != 0) {
 					// Lock interlock om that queue.
@@ -4591,7 +4588,7 @@ void vax_cpuDevice::execute() noexcept(false)
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
 						dbg.log("%s: Tail of queue %08X => %08X (%08X)\n",
-							devName.c_str(), queue, entry, queue + entry);
+							name().c_str(), queue, entry, queue + entry);
 #endif /* ENABLE_DEBUG */
 
 					if (entry == head) {
@@ -4611,7 +4608,7 @@ void vax_cpuDevice::execute() noexcept(false)
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
 						dbg.log("%s: Previous of node %08X => %08X (%08X)\n",
-							devName.c_str(), entry, prev - entry, prev);
+							name().c_str(), entry, prev - entry, prev);
 #endif /* ENABLE_DEBUG */
 
 					if (prev & ~ALIGN_QUAD) {
@@ -4637,7 +4634,7 @@ void vax_cpuDevice::execute() noexcept(false)
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
 						dbg.log("%s: Dequeue %08X from queue %08X with last %08X: %s\n",
-							devName.c_str(), entry, queue, head, stringCC(ccReg));
+							name().c_str(), entry, queue, head, stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				} else {
 					// Queue already is empty, so that can put
@@ -4650,7 +4647,7 @@ void vax_cpuDevice::execute() noexcept(false)
 #ifdef ENABLE_DEBUG
 					if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
 						dbg.log("%s: Queue %08X is already empty: %s\n",
-							devName.c_str(), queue, stringCC(ccReg));
+							name().c_str(), queue, stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 				}
 				break;
@@ -4769,27 +4766,27 @@ void vax_cpuDevice::execute() noexcept(false)
 				state = cpuStopped;
 				switch (exCode) {
 				case STOP_HALT:
-					printf("%s: %s at PC %08X\n", devName.c_str(), stopNames[~exCode], faultAddr);
+					printf("%s: %s at PC %08X\n", name().c_str(), stopNames[~exCode], faultAddr);
 					return;
 
 				case STOP_UOPC:
 					printf("%s: Opcode %s - Unimplemented opcode at PC %08X\n",
-							devName.c_str(), dopc->opCode->opName, faultAddr);
+							name().c_str(), dopc->opCode->opName, faultAddr);
 					return;
 
 				case STOP_INIE:
 					printf("%s: Exception during exception at PC %08X\n",
-							devName.c_str(), faultAddr);
+							name().c_str(), faultAddr);
 					return;
 
 				case STOP_ILLVEC:
 					printf("%s: Illegal vector at PC %08X\n",
-							devName.c_str(), faultAddr);
+							name().c_str(), faultAddr);
 					return;
 
 				case STOP_OPR:
 					printf("%s: Operator request at PC %08X\n",
-							devName.c_str(), faultAddr);
+							name().c_str(), faultAddr);
 					return;
 				}
 			}

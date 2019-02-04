@@ -8,9 +8,7 @@
  *
  */
 
-#include "emu/core.h"
-#include "emu/debug.h"
-#include "emu/devcpu-old.h"
+#include "emu/emucore.h"
 #include "dev/cpu/vax/mtpr.h"
 #include "dev/cpu/vax/vax.h"
 #include "dev/cpu/vax/fpu.h"
@@ -20,15 +18,16 @@
 
 
 
-ka780_cpuDevice::ka780_cpuDevice()
+ka780_cpu::ka780_cpu(tag_t *tag, const system_config &config, device_t *owner, uint64_t clock)
+: vax_cpu_base(tag, config, owner, clock)
 {
 }
 
-ka780_cpuDevice::~ka780_cpuDevice()
+ka780_cpu::~ka780_cpu()
 {
 }
 
-void ka780_cpuDevice::reset()
+void ka780_cpu::reset()
 {
 	// Initialize SID register
 	ipReg[IPR_nSID] = (SID_ID|SID_ECO|SID_PLANT);
@@ -36,14 +35,14 @@ void ka780_cpuDevice::reset()
 	ipReg[IPR_nSID] |= SID_SN;
 }
 
-void ka780_cpuDevice::mfpr()
+void ka780_cpu::mfpr()
 {
 }
 
-void ka780_cpuDevice::mtpr()
+void ka780_cpu::mtpr()
 {
 }
 
 //#define CPU_KA780
-//#define CPU_CLASS ka780_cpuDevice
+//#define CPU_CLASS ka780_cpu
 //#include "dev/cpu/vax/executes.h"

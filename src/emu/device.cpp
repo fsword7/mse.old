@@ -12,7 +12,7 @@
 
 device_t::device_t(const char *tag, const system_config &config, device_t *owner, uint64_t clock)
 : devOwner(owner), devNext(nullptr),
-  tagName(tag), drvName(""),
+  tagName(tag), devName(""),
   sysConfig(config),
   autodevList(nullptr)
 {

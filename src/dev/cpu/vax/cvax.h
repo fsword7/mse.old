@@ -10,6 +10,8 @@
 
 #pragma once
 
+#include "dev/cpu/vax/vax.h"
+
 // CVAX System ID register definition
 //
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -73,16 +75,16 @@
 
 
 
-class cvax_cpuDevice : public vax_cpuDevice
+class cvax_cpu : public vax_cpu_base
 {
 public:
-	cvax_cpuDevice();
-	~cvax_cpuDevice();
+	cvax_cpu(tag_t *tag, const system_config &config, device_t *owner, uint64_t clock);
+	~cvax_cpu();
 
 	void reset();
 //	int  boot();
 
-	static cvax_cpuDevice *create(sysDevice *sdev, std::string devName);
+//	static cvax_cpu *create(sysDevice *sdev, std::string devName);
 
 protected:
 	// Instructions

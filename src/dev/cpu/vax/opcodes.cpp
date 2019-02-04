@@ -8,9 +8,7 @@
  *
  */
 
-#include "emu/core.h"
-#include "emu/debug.h"
-#include "emu/devcpu-old.h"
+#include "emu/emucore.h"
 #include "dev/cpu/vax/vax.h"
 #include "dev/cpu/vax/opcodes.h"
 
@@ -490,7 +488,7 @@ const vaxOpcode vaxOpcodes[] = {
 	{ nullptr }
 };
 
-void vax_cpuDevice::buildOpcodes()
+void vax_cpu_base::buildOpcodes()
 {
 	const vaxOpcode *opc;
 	dopc_t    *dopc;

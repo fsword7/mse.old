@@ -8,38 +8,36 @@
  */
 
 
-#include "emu/core.h"
-#include "emu/debug.h"
-#include "emu/devcpu-old.h"
+#include "emu/emucore.h"
 #include "dev/cpu/vax/mtpr.h"
-#include "dev/cpu/vax/vax.h"
-#include "dev/cpu/vax/fpu.h"
 #include "dev/cpu/vax/v11.h"
+#include "dev/cpu/vax/fpu.h"
 #include "dev/cpu/vax/opcodes.h"
 
 
-v11_cpuDevice::v11_cpuDevice()
+v11_cpu::v11_cpu(tag_t *tag, const system_config &config, device_t *owner, uint64_t clock)
+: vax_cpu_base(tag, config, owner, clock)
 {
 }
 
-v11_cpuDevice::~v11_cpuDevice()
+v11_cpu::~v11_cpu()
 {
 }
 
-void v11_cpuDevice::reset()
+void v11_cpu::reset()
 {
 	// Initialize SID register
 	ipReg[IPR_nSID] = (SID_ID|SID_CPUREV|SID_PATREV|SID_MBO|SID_UCODE);
 }
 
-void v11_cpuDevice::mfpr()
+void v11_cpu::mfpr()
 {
 }
 
-void v11_cpuDevice::mtpr()
+void v11_cpu::mtpr()
 {
 }
 
 //#define CPU_V11
-//#define CPU_CLASS v11_cpuDevice
+//#define CPU_CLASS v11_cpu
 //#include "dev/cpu/vax/executes.h"

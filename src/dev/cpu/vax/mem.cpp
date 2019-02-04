@@ -7,9 +7,7 @@
  *  Memory access routines
  */
 
-#include "emu/core.h"
-#include "emu/debug.h"
-#include "emu/devcpu-old.h"
+#include "emu/emucore.h"
 #include "dev/cpu/vax/vax.h"
 #include "dev/cpu/vax/mtpr.h"
 #include "dev/cpu/vax/opcodes.h"
@@ -92,29 +90,30 @@ static const char *pftMessages[] =
 // ***********************************************************
 
 // Aligned longword read access with physical address
-uint32_t vax_cpuDevice::readpl(uint32_t pAddr)
+uint32_t vax_cpu_base::readpl(uint32_t pAddr)
 {
 	pAddr &= paMask;
 	if (pAddr < memSize)
 		return MEML(pAddr >> 2);
 	mchkAddr = pAddr;
 	mchkRef  = REF_P;
-	return sdev->readio(this, pAddr, LN_LONG);
+//	return sdev->readio(this, pAddr, LN_LONG);
+	return 0;
 }
 
 // Aligned longword read access with physical address
-void vax_cpuDevice::writepl(uint32_t pAddr, uint32_t data)
+void vax_cpu_base::writepl(uint32_t pAddr, uint32_t data)
 {
 	pAddr &= paMask;
 	if (pAddr < memSize)
 		MEML(pAddr >> 2) = data;
 	mchkAddr = pAddr;
 	mchkRef  = REF_P;
-	sdev->writeio(this, pAddr, data, LN_LONG);
+//	sdev->writeio(this, pAddr, data, LN_LONG);
 }
 
 // Aligned read access with physical address
-uint32_t vax_cpuDevice::readp(uint32_t pAddr, int size)
+uint32_t vax_cpu_base::readp(uint32_t pAddr, int size)
 {
 	pAddr &= paMask;
 	if (pAddr < memSize) {
@@ -125,11 +124,12 @@ uint32_t vax_cpuDevice::readp(uint32_t pAddr, int size)
 		return MEMB(pAddr);
 	}
 	mchkRef = REF_V;
-	return sdev->readio(this, pAddr, size);
+//	return sdev->readio(this, pAddr, size);
+	return 0;
 }
 
 // Aligned write access with physical address
-void vax_cpuDevice::writep(uint32_t pAddr, uint32_t data, int size)
+void vax_cpu_base::writep(uint32_t pAddr, uint32_t data, int size)
 {
 	pAddr &= paMask;
 	if (pAddr < memSize) {
@@ -141,10 +141,10 @@ void vax_cpuDevice::writep(uint32_t pAddr, uint32_t data, int size)
 			MEMB(pAddr) = data;
 	}
 	mchkRef = REF_V;
-	sdev->writeio(this, pAddr, data, size);
+//	sdev->writeio(this, pAddr, data, size);
 }
 
-void vax_cpuDevice::cleartlb(bool sysFlag)
+void vax_cpu_base::cleartlb(bool sysFlag)
 {
 	for (int idx = 0; idx < TLB_SIZE; idx++) {
 		// Clear all process TLB entries
@@ -158,7 +158,7 @@ void vax_cpuDevice::cleartlb(bool sysFlag)
 	}
 }
 
-void vax_cpuDevice::cleartlb(uint32_t vAddr)
+void vax_cpu_base::cleartlb(uint32_t vAddr)
 {
 	uint32_t vpn = VA_GETVPN(vAddr);
 	uint32_t tbi = VA_GETTBI(vpn);
@@ -172,7 +172,7 @@ void vax_cpuDevice::cleartlb(uint32_t vAddr)
 	}
 }
 
-bool vax_cpuDevice::checktlb(uint32_t vAddr)
+bool vax_cpu_base::checktlb(uint32_t vAddr)
 {
 	uint32_t vpn = VA_GETVPN(vAddr);
 	uint32_t tbi = VA_GETTBI(vpn);
@@ -183,11 +183,11 @@ bool vax_cpuDevice::checktlb(uint32_t vAddr)
 		return (tlbProcess[tbi].tag == vpn);
 }
 
-tlb_t vax_cpuDevice::pagefault(uint32_t errCode, uint32_t vAddr, uint32_t acc, uint32_t *sts) noexcept(false)
+tlb_t vax_cpu_base::pagefault(uint32_t errCode, uint32_t vAddr, uint32_t acc, uint32_t *sts) noexcept(false)
 {
 #ifdef ENABLE_DEBUG
 	if (dbg.checkFlags(DBG_EXCEPTION))
-		dbg.log("%s: (PFT) Page fault on %08X at PC %08X (%s)\n", devName.c_str(),
+		dbg.log("%s: (PFT) Page fault on %08X at PC %08X (%s)\n", name().c_str(),
 			vAddr, faultAddr, (errCode < 8) ? pftMessages[errCode] : "<Unknown>");
 #endif /* ENABLE_DEBUG */
 
@@ -211,7 +211,7 @@ tlb_t vax_cpuDevice::pagefault(uint32_t errCode, uint32_t vAddr, uint32_t acc, u
 	throw ((errCode & MM_TNV) ? PAGE_TNV : PAGE_ACV);
 }
 
-tlb_t vax_cpuDevice::translate(uint32_t vAddr, int size, uint32_t acc, uint32_t *sts)
+tlb_t vax_cpu_base::translate(uint32_t vAddr, int size, uint32_t acc, uint32_t *sts)
 {
 	uint32_t pteAddr;
 	uint32_t pteIndex = (vAddr & VA_VPN) >> 7;
@@ -219,7 +219,7 @@ tlb_t vax_cpuDevice::translate(uint32_t vAddr, int size, uint32_t acc, uint32_t 
 
 	if (vAddr & VA_ADDR_S0) {
 		// Virtual System Region Area
-//		printf("%s: System Space: Base %08X + (%08X < %08X) => %08X\n", devName.c_str(),
+//		printf("%s: System Space: Base %08X + (%08X < %08X) => %08X\n", name().c_str(),
 //			IPR_SBR, pteIndex, IPR_SLR << 2, (IPR_SBR + pteIndex));
 		if (pteIndex >= (IPR_SLR << 2))
 			return pagefault(MM_LNV, vAddr, acc, sts);
@@ -268,12 +268,12 @@ tlb_t vax_cpuDevice::translate(uint32_t vAddr, int size, uint32_t acc, uint32_t 
 	tlb = ((pte << PAG_WIDTH) & TLB_PFN) |
 		accTable[PTE_GETACC(pte)];
 
-//	printf("%s: PTE %08X (on %08X) => TLB %08X\n", devName.c_str(),
+//	printf("%s: PTE %08X (on %08X) => TLB %08X\n", name().c_str(),
 //		pte, pteAddr, tlb);
 
 	// Check legal access
 	if ((tlb & acc) == 0) {
-//		printf("%s: TLB %08X ACC %08X\n", devName.c_str(), tlb, acc);
+//		printf("%s: TLB %08X ACC %08X\n", name().c_str(), tlb, acc);
 		return pagefault(MM_ACV, vAddr, acc, sts);
 	}
 	if ((pte & PTE_V) == 0)
@@ -290,7 +290,7 @@ tlb_t vax_cpuDevice::translate(uint32_t vAddr, int size, uint32_t acc, uint32_t 
 	vpn = VA_GETVPN(vAddr);
 	tbi = VA_GETTBI(vpn);
 
-//	printf("%s: TLB %08X, Address %08X => %08X %08X\n", devName.c_str(),
+//	printf("%s: TLB %08X, Address %08X => %08X %08X\n", name().c_str(),
 //		tlb, vAddr, vpn, tbi);
 
 	// Update TLB cache and return TLB entry
@@ -305,7 +305,7 @@ tlb_t vax_cpuDevice::translate(uint32_t vAddr, int size, uint32_t acc, uint32_t 
 	}
 }
 
-uint32_t vax_cpuDevice::probev(uint32_t vAddr, uint32_t acc, uint32_t *sts)
+uint32_t vax_cpu_base::probev(uint32_t vAddr, uint32_t acc, uint32_t *sts)
 {
 	uint32_t vpn, off, tbi;
 	tlb_t    tlb;
@@ -326,13 +326,13 @@ uint32_t vax_cpuDevice::probev(uint32_t vAddr, uint32_t acc, uint32_t *sts)
 	if (((tlb.pte & acc) == 0) || (tlb.tag != vpn))
 		tlb = translate(vAddr, LN_BYTE, acc, sts);
 
-//	printf("%s: TLB (%08X) %08X %08X => V %08X P %08X\n", devName.c_str(),
+//	printf("%s: TLB (%08X) %08X %08X => V %08X P %08X\n", name().c_str(),
 //			tbi, tlb.tag, tlb.pte, vAddr, ((tlb.pte & TLB_PFN) | off));
 
 	return (*sts == MM_OK) ? ((tlb.pte & TLB_PFN) | off) : MM_FAIL;
 }
 
-uint32_t vax_cpuDevice::readv(uint32_t vAddr, uint32_t size, uint32_t acc)
+uint32_t vax_cpu_base::readv(uint32_t vAddr, uint32_t size, uint32_t acc)
 {
 	uint32_t pAddr, pAddr1;
 	uint32_t dl, dh;
@@ -399,7 +399,7 @@ uint32_t vax_cpuDevice::readv(uint32_t vAddr, uint32_t size, uint32_t acc)
 	return 0;
 }
 
-void vax_cpuDevice::writev(uint32_t vAddr, uint32_t data, uint32_t size, uint32_t acc)
+void vax_cpu_base::writev(uint32_t vAddr, uint32_t data, uint32_t size, uint32_t acc)
 {
 	uint32_t pAddr, pAddr1;
 	uint32_t dl, dh;
@@ -472,7 +472,7 @@ void vax_cpuDevice::writev(uint32_t vAddr, uint32_t data, uint32_t size, uint32_
 }
 
 // Flush instruction buffer
-void vax_cpuDevice::flushvi()
+void vax_cpu_base::flushvi()
 {
     ibpAddr   = ~0;
 	ibCount   = 0;
@@ -481,7 +481,7 @@ void vax_cpuDevice::flushvi()
 }
 
 // Instruction read access with current PC address (unaligned)
-uint32_t vax_cpuDevice::readvi(int size)
+uint32_t vax_cpu_base::readvi(int size)
 {
 	int      boff = REG_PC & 03;
 	int      sc   = boff << 3;
@@ -525,7 +525,7 @@ uint32_t vax_cpuDevice::readvi(int size)
 // Console read/write access routines
 
 // Console write access with physical address
-uint32_t vax_cpuDevice::readpc(uint32_t pAddr, int size)
+uint32_t vax_cpu_base::readpc(uint32_t pAddr, int size)
 {
 	pAddr &= paMask;
 	if (pAddr < memSize) {
@@ -536,11 +536,12 @@ uint32_t vax_cpuDevice::readpc(uint32_t pAddr, int size)
 		return MEMB(pAddr);
 	}
 	mchkRef |= REF_C;
-	return sdev->readio(this, pAddr, size);
+//	return sdev->readio(this, pAddr, size);
+	return 0;
 }
 
 // Console read access with physical address
-void vax_cpuDevice::writepc(uint32_t pAddr, uint32_t data, int size)
+void vax_cpu_base::writepc(uint32_t pAddr, uint32_t data, int size)
 {
 	pAddr &= paMask;
 	if (pAddr < memSize) {
@@ -552,11 +553,11 @@ void vax_cpuDevice::writepc(uint32_t pAddr, uint32_t data, int size)
 			MEMB(pAddr) = data;
 	}
 	mchkRef |= REF_C;
-	sdev->writeio(this, pAddr, data, size);
+//	sdev->writeio(this, pAddr, data, size);
 }
 
 // Console write access with virtual address
-uint32_t vax_cpuDevice::readc(uint32_t vAddr, int size, uint32_t *sts)
+uint32_t vax_cpu_base::readc(uint32_t vAddr, int size, uint32_t *sts)
 {
 	uint32_t pAddr, pAddr1;
 	uint32_t dl, dh;
@@ -596,7 +597,7 @@ uint32_t vax_cpuDevice::readc(uint32_t vAddr, int size, uint32_t *sts)
 }
 
 // Console write access with virtual address
-void vax_cpuDevice::writec(uint32_t vAddr, uint32_t data, int size, uint32_t *sts)
+void vax_cpu_base::writec(uint32_t vAddr, uint32_t data, int size, uint32_t *sts)
 {
 	uint32_t pAddr;
 

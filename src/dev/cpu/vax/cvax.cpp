@@ -8,14 +8,10 @@
  *
  */
 
-#include "emu/core.h"
-#include "emu/debug.h"
-#include "emu/devsys-old.h"
-#include "emu/devcpu-old.h"
+#include "emu/emucore.h"
 #include "dev/cpu/vax/mtpr.h"
-#include "dev/cpu/vax/vax.h"
-#include "dev/cpu/vax/fpu.h"
 #include "dev/cpu/vax/cvax.h"
+#include "dev/cpu/vax/fpu.h"
 #include "dev/cpu/vax/opcodes.h"
 
 static int   iprSize = 0x40;
@@ -87,39 +83,40 @@ static const char *iprName[] = {
 };
 
 
-cvax_cpuDevice::cvax_cpuDevice()
+cvax_cpu::cvax_cpu(tag_t *tag, const system_config &config, device_t *owner, uint64_t clock)
+: vax_cpu_base(tag, config, owner, clock)
 {
 }
 
-cvax_cpuDevice::~cvax_cpuDevice()
+cvax_cpu::~cvax_cpu()
 {
 }
 
-cvax_cpuDevice *cvax_cpuDevice::create(sysDevice *sdev, std::string devName)
-{
-	cvax_cpuDevice *cpu = new cvax_cpuDevice();
+//cvax_cpu *cvax_cpu::create(sysDevice *sdev, std::string name())
+//{
+//	cvax_cpu *cpu = new cvax_cpu();
+//
+//	if (cpu == nullptr)
+//		return nullptr;
+//
+//	cpu->name() = name();
+//	cpu->devType = "CVAX";
+////	cpu->devDesc = model->desc;
+////	cpu->driver  = model->driver;
+//
+//	// Assign system device for I/O access
+//	cpu->setSystemDevice(sdev);
+//
+//	// Initialize CPU processor
+//	cpu->reset();
+//
+//	// Add CPU device to system device
+//	sdev->addCPUDevice(cpu);
+//
+//	return cpu;
+//}
 
-	if (cpu == nullptr)
-		return nullptr;
-
-	cpu->devName = devName;
-	cpu->devType = "CVAX";
-//	cpu->devDesc = model->desc;
-//	cpu->driver  = model->driver;
-
-	// Assign system device for I/O access
-	cpu->setSystemDevice(sdev);
-
-	// Initialize CPU processor
-	cpu->reset();
-
-	// Add CPU device to system device
-	sdev->addCPUDevice(cpu);
-
-	return cpu;
-}
-
-void cvax_cpuDevice::reset()
+void cvax_cpu::reset()
 {
 	// Initialize all working registers
 	for (int idx = 0; idx < CPU_nGREGS; idx++)
@@ -157,12 +154,12 @@ void cvax_cpuDevice::reset()
 	cleartlb(true);
 }
 
-//int cvax_cpuDevice::boot()
+//int cvax_cpu::boot()
 //{
 //	return 0;
 //}
 
-void cvax_cpuDevice::halt(uint32_t code)
+void cvax_cpu::halt(uint32_t code)
 {
 	int mode = PSL_GETCUR(psReg);
 
@@ -190,13 +187,13 @@ void cvax_cpuDevice::halt(uint32_t code)
 #ifdef ENABLE_DEBUG
 	if (dbg.checkFlags(DBG_EXCEPTION))
 		dbg.log("%s: (HALT) Halt Action Code %08X - Jumped to %08X\n",
-			devName.c_str(), code, REG_PC);
+			name().c_str(), code, REG_PC);
 #endif /* ENABLE_DEBUG */
 
 	throw HALT_ACTION;
 }
 
-void cvax_cpuDevice::check(uint32_t code)
+void cvax_cpu::check(uint32_t code)
 {
 	uint32_t sirq;
 
@@ -217,7 +214,7 @@ void cvax_cpuDevice::check(uint32_t code)
 #ifdef ENABLE_DEBUG
 	if (dbg.checkFlags(DBG_EXCEPTION))
 		dbg.log("%s: (MCHK) Machine Check Exception Code %08X\n",
-			devName.c_str(), code);
+			name().c_str(), code);
 #endif /* ENABLE_DEBUG */
 
 	// Entering an exception routine.
@@ -225,10 +222,10 @@ void cvax_cpuDevice::check(uint32_t code)
 }
 
 //#define CPU_CVAX
-//#define CPU_CLASS cvax_cpuDevice
+//#define CPU_CLASS cvax_cpu
 //#include "dev/cpu/vax/executes.h"
 
-void cvax_cpuDevice::mfpr()
+void cvax_cpu::mfpr()
 {
 	uint32_t ipr = opReg[0];
 	uint32_t dst;
@@ -281,16 +278,16 @@ void cvax_cpuDevice::mfpr()
 
 #ifdef ENABLE_DEBUG
 	if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND) || dbg.checkFlags(DBG_IOREGS)) {
-		const char *name = "Undefined Register";
+		const char *regName = "Undefined Register";
 		if ((ipr < iprSize) && iprName[ipr])
-			name = iprName[ipr];
-		dbg.log("%s: (R) %s (%02X) => %08X: %s\n", devName.c_str(),
-				name, ipr, dst, stringCC(ccReg));
+			regName = iprName[ipr];
+		dbg.log("%s: (R) %s (%02X) => %08X: %s\n", name().c_str(),
+				regName, ipr, dst, stringCC(ccReg));
 	}
 #endif /* ENABLE_DEBUG */
 }
 
-void cvax_cpuDevice::mtpr()
+void cvax_cpu::mtpr()
 {
 	uint32_t src = opReg[0];
 	uint32_t ipr = opReg[1];
@@ -395,11 +392,11 @@ void cvax_cpuDevice::mtpr()
 
 #ifdef ENABLE_DEBUG
 	if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND) || dbg.checkFlags(DBG_IOREGS)) {
-		const char *name = "Undefined Register";
+		const char *regName = "Undefined Register";
 		if ((ipr < iprSize) && iprName[ipr])
-			name = iprName[ipr];
-		dbg.log("%s: (W) %s (%02X) <= %08X: %s\n", devName.c_str(),
-			name, ipr, src, stringCC(ccReg));
+			regName = iprName[ipr];
+		dbg.log("%s: (W) %s (%02X) <= %08X: %s\n", name().c_str(),
+			regName, ipr, src, stringCC(ccReg));
 	}
 #endif /* ENABLE_DEBUG */
 }

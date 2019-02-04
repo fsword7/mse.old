@@ -7,6 +7,9 @@
 
 #pragma once
 
+#include "emu/devcpu.h"
+#include "emu/debug.h"
+
 // Number of registers
 #define CPU_nGREGS		16
 #define CPU_nOREGS		20
@@ -476,11 +479,11 @@ struct tlb_t {
 	uint32_t pte; // Process table entry
 };
 
-class vax_cpuDevice : public cpuDevice
+class vax_cpu_base : public cpu_device
 {
 public:
-	vax_cpuDevice();
-	virtual ~vax_cpuDevice();
+	vax_cpu_base(tag_t *tag, const system_config &config, device_t *owner, uint64_t clock);
+	virtual ~vax_cpu_base();
 
 	void buildOpcodes();
 
@@ -490,11 +493,11 @@ public:
 //	virtual int  boot();
 	virtual void execute();
 
-	virtual void send(cpuSignal signal);
+//	virtual void send(cpuSignal signal);
 
-	int disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **str);
-	int disasm(Console *cty, uint32_t pcAddr);
-	int dump(Console *cty, uint32_t *sAddr, uint32_t eAddr);
+//	int disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **str);
+//	int disasm(Console *cty, uint32_t pcAddr);
+//	int dump(Console *cty, uint32_t *sAddr, uint32_t eAddr);
 
 	void assignMemory(uint8_t *mem, uint32_t memSize);
 	void setPCAddr(uint32_t pcAddr);
@@ -686,5 +689,7 @@ protected:
 
 	uint32_t  cfgFlag; // Configuration flags
 
-private:
+#ifdef ENABLE_DEBUG
+	Debug      dbg;
+#endif /* ENABLE_DEBUG */
 };

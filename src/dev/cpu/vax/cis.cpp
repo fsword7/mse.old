@@ -5,9 +5,7 @@
  *      Author: Timothy Stark
  */
 
-#include "emu/core.h"
-#include "emu/debug.h"
-#include "emu/devcpu-old.h"
+#include "emu/emucore.h"
 #include "dev/cpu/vax/mtpr.h"
 #include "dev/cpu/vax/vax.h"
 #include "dev/cpu/vax/opcodes.h"
@@ -15,7 +13,7 @@
 static const uint32_t mvcSize[] = { LN_BYTE, LN_LONG, LN_BYTE };
 
 // For MOVC3/MOVC5 instruction
-void vax_cpuDevice::movc(int c5flg)
+void vax_cpu_base::movc(int c5flg)
 {
 	uint32_t src, dst;
 	uint16_t slen, dlen;
@@ -63,7 +61,7 @@ void vax_cpuDevice::movc(int c5flg)
 #ifdef ENABLE_DEBUG
 		if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
 			dbg.log("%s: SRC %08X (%04X bytes) to DST %08X (%04X bytes) with fill %02X: %s\n",
-					devName.c_str(), src, slen, dst, dlen, fill, stringCC(ccReg));
+					name().c_str(), src, slen, dst, dlen, fill, stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 
 		dpc = REG_PC - faultAddr;
@@ -90,7 +88,7 @@ void vax_cpuDevice::movc(int c5flg)
 #ifdef ENABLE_DEBUG
 		if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
 			dbg.log("%s: (FPD) SRC %08X (%04X bytes) to DST %08X (%04X bytes) with fill %02X\n",
-					devName.c_str(), ZXTL(REG_R1), ZXTW(REG_R2), ZXTL(REG_R3), ZXTW(REG_R4), fill);
+					name().c_str(), ZXTL(REG_R1), ZXTW(REG_R2), ZXTL(REG_R3), ZXTW(REG_R4), fill);
 #endif /* ENABLE_DEBUG */
 
 		// Reset PC address and clear instruction look-ahead
@@ -179,7 +177,7 @@ void vax_cpuDevice::movc(int c5flg)
 }
 
 // For CMPC3/CMPC5 instruction
-void vax_cpuDevice::cmpc(int c5flg)
+void vax_cpu_base::cmpc(int c5flg)
 {
 	uint32_t src, dst;
 	uint16_t slen, dlen;
@@ -216,7 +214,7 @@ void vax_cpuDevice::cmpc(int c5flg)
 #ifdef ENABLE_DEBUG
 		if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
 			dbg.log("%s: Compare %08X (%04X bytes) with %08X (%04X bytes) with fill %02X\n",
-				devName.c_str(), src, slen, dst, dlen, fill);
+				name().c_str(), src, slen, dst, dlen, fill);
 #endif /* ENABLE_DEBUG */
 
 		dpc = REG_PC - faultAddr;
@@ -231,7 +229,7 @@ void vax_cpuDevice::cmpc(int c5flg)
 #ifdef ENABLE_DEBUG
 		if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
 			dbg.log("%s: Compare %08X (%04X bytes) with %08X (%04X bytes) with fill %02X\n",
-				devName.c_str(), ZXTL(REG_R1), ZXTW(REG_R0), ZXTL(REG_R3), ZXTW(REG_R2), fill);
+				name().c_str(), ZXTL(REG_R1), ZXTW(REG_R0), ZXTL(REG_R3), ZXTW(REG_R2), fill);
 #endif /* ENABLE_DEBUG */
 
 		// Reset PC address and clear instruction look-ahead
@@ -263,13 +261,13 @@ void vax_cpuDevice::cmpc(int c5flg)
 	SetC(ccReg, ZXTB(src1), ZXTB(src2));
 #ifdef ENABLE_DEBUG
 	if (dbg.checkFlags(DBG_TRACE|DBG_OPERAND))
-		dbg.log("%s: CC Status: %s\n", devName.c_str(), stringCC(ccReg));
+		dbg.log("%s: CC Status: %s\n", name().c_str(), stringCC(ccReg));
 #endif /* ENABLE_DEBUG */
 	// Reset R0 register
 	REG_R0 &= STR_M_LEN;
 }
 
-void vax_cpuDevice::locc(bool skpflg)
+void vax_cpu_base::locc(bool skpflg)
 {
 	uint8_t  ch, match;
 	uint32_t dpc;
@@ -309,7 +307,7 @@ void vax_cpuDevice::locc(bool skpflg)
 	ccReg = (REG_R0 > 0) ? 0 : CC_Z;
 }
 
-void vax_cpuDevice::scanc(bool spnflg)
+void vax_cpu_base::scanc(bool spnflg)
 {
 	uint8_t  ch, tch, mask;
 	uint32_t dpc;

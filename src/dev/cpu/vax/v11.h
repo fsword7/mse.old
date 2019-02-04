@@ -10,6 +10,8 @@
 
 #pragma once
 
+#include "dev/cpu/vax/vax.h"
+
 // System ID register definition
 //
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -32,11 +34,11 @@
 #define SID_SN      1
 #define SID_SN_MASK ((1u << 12) - 1)
 
-class v11_cpuDevice : public vax_cpuDevice
+class v11_cpu : public vax_cpu_base
 {
 public:
-	v11_cpuDevice();
-	~v11_cpuDevice();
+	v11_cpu(tag_t *tag, const system_config &config, device_t *owner, uint64_t clock);
+	~v11_cpu();
 
 	void reset();
 //	int  boot();

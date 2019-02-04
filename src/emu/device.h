@@ -67,7 +67,7 @@ public:
 //	const char *tag() { return tagName.c_str(); }
 	std::string &tag() { return tagName; }
 //	const char *name() { return drvName.c_str(); }
-	std::string &name() { return drvName; }
+	std::string &name() { return devName; }
 	device_t *owner() { return devOwner; }
 	device_t *next()  { return devNext; }
 
@@ -91,7 +91,7 @@ protected:
 
 private:
 	std::string		tagName;			// Tag name for linking named devices
-	std::string		drvName;			// Device name for command line access
+	std::string		devName;			// Device name for command line access
 
 	devauto_base	*autodevList;		// List of auto device configurations
 };

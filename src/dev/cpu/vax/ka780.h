@@ -30,11 +30,11 @@
 #define SID_SN      1
 #define SID_SN_MASK ((1u << 12) - 1)
 
-class ka780_cpuDevice : public vax_cpuDevice
+class ka780_cpu : public vax_cpu_base
 {
 public:
-	ka780_cpuDevice();
-	~ka780_cpuDevice();
+	ka780_cpu(tag_t *tag, const system_config &config, device_t *owner, uint64_t clock);
+	~ka780_cpu();
 
 	void reset();
 //	int  boot();
