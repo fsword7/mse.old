@@ -24,10 +24,8 @@ set(mse_cpp_SRCS
 	emu/core.cpp
 	emu/debug.cpp
 	emu/devauto.cpp
-#	emu/devcpu-old.cpp
 	emu/devcpu.cpp
 	emu/device.cpp
-#	emu/devsys-old.cpp
 	emu/devsys.cpp
 	emu/devtty.cpp
 	emu/emumap.cpp
@@ -42,17 +40,6 @@ set(mse_cpp_SRCS
 	emu/user.cpp
 	formats/dec/image.cpp
 	lib/util/delegate.cpp
-#	sys/drivers/alpha.cpp
-#	sys/drivers/hsc.cpp
-#	sys/drivers/ibm3x0.cpp
-#	sys/drivers/ibm700.cpp
-#	sys/drivers/pdp11.cpp
-#	sys/pdp10/pdp10.cpp
-#	sys/vax/ka640.cpp
-#	sys/vax/ka650-old.cpp
-#	sys/vax/ka780.cpp
-#	sys/vax/ka820.cpp
-#	sys/vax/vax.cpp
 	sys/vax/ka650.cpp
 	sys/vax/syslist.cpp
 )
@@ -84,10 +71,8 @@ set(mse_h_SRCS
 	emu/debug.h
 	emu/devauto.h
 	emu/devcore.h
-#	emu/devcpu-old.h
 	emu/devcpu.h
 	emu/device.h
-#	emu/devsys-old.h
 	emu/devsys.h
 	emu/emumap.h
 	emu/engine.h
@@ -99,9 +84,6 @@ set(mse_h_SRCS
 	emu/user.h
 	formats/dec/word10.h
 	lib/util/delegate.h
-#	sys/pdp10/pdp10.h
-#	sys/vax/ka650-old.h
-#	sys/vax/vax.h
 	sys/vax/ka650.h
 )
 

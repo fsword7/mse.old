@@ -1,8 +1,5 @@
 
-#include "../../old/devsys-old.h"
 #include "emu/emucore.h"
-#include "emu/debug.h"
-#include "emu/devcore.h"
 #include "emu/console.h"
 #include "emu/osd/socket.h"
 
