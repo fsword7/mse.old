@@ -35,13 +35,13 @@
 
 
 namespace dec {
-	class ctyDevice : public ttyDevice
+	class ctyDevice /* : public device_t */
 	{
 	public:
 		ctyDevice();
 		~ctyDevice();
 
-		static ctyDevice *create(sysDevice *sdev, std::string devName);
+//		static ctyDevice *create(sysDevice *sdev, std::string devName);
 
 		uint16_t read16(uint32_t ioAddr);
 		void     write16(uint32_t ioAddr, uint16_t data);

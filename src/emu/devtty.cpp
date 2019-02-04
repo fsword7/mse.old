@@ -5,21 +5,18 @@
  *      Author: Timothy Stark
  */
 
-#include "emu/core.h"
-#include "emu/debug.h"
-#include "emu/devsys-old.h"
-#include "emu/devcpu-old.h"
+#include "emu/emucore.h"
 #include "emu/devcore.h"
 #include "emu/console.h"
 
-ttyDevice::ttyDevice()
-: ioDevice(CLS_TTYDEV)
-{
-}
-
-ttyDevice::~ttyDevice()
-{
-	// Close all log files
-//	log.close(-1);
-}
-
+//ttyDevice::ttyDevice()
+//: ioDevice(CLS_TTYDEV)
+//{
+//}
+//
+//ttyDevice::~ttyDevice()
+//{
+//	// Close all log files
+////	log.close(-1);
+//}
+//

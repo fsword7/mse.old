@@ -1,5 +1,5 @@
 
-#include "emu/core.h"
+#include "emu/emucore.h"
 #include "emu/debug.h"
 #include "emu/devsys-old.h"
 #include "emu/devcore.h"
@@ -27,8 +27,9 @@ int main(int argc, char **argv)
 #endif
 
 	// Create root core device and console handler
-	Core    *app = new Core();
-	Console *con = new Console(app);
+//	Core    *app = new Core();
+//	Console *con = new Console(app);
+	Console *con = new Console();
 
 	printf("Welcome to Multi-System Emulator System\n\n");
 
@@ -37,7 +38,7 @@ int main(int argc, char **argv)
 	con->prompt();
 
 	delete con;
-	delete app;
+//	delete app;
 
 	osdExit("");
 	return 0;

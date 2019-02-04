@@ -5,16 +5,16 @@
  *      Author: Timothy Stark
  */
 
-class sysDevice;
-struct Driver;
-
-class Core : public Device
-{
-public:
-	Core();
-	~Core();
-
-	void release();
-
-private:
-};
+//class sysDevice;
+//struct Driver;
+//
+//class Core
+//{
+//public:
+//	Core();
+//	~Core();
+//
+//	void release();
+//
+//private:
+//};
