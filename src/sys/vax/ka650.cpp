@@ -14,7 +14,7 @@
 #include "emu/core.h"
 #include "emu/debug.h"
 #include "emu/devsys-old.h"
-#include "emu/devcpu.h"
+#include "emu/devcpu-old.h"
 #include "dev/cpu/vax/vax.h"
 #include "dev/cpu/vax/cvax.h"
 #include "dev/comm/dec/cty.h"

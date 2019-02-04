@@ -1,38 +1,18 @@
+/*
+ * devcpu2.h
+ *
+ *  Created on: Jan 10, 2019
+ *      Author: Tim Stark
+ */
 
 #pragma once
 
-#include "emu/devsys-old.h"
-
-class cpuDevice : public Device
+class cpu_device : public device_t
 {
-public:
-	cpuDevice();
-	virtual ~cpuDevice();
-
-	enum cpuSignal {
-		cpuStop,
-		cpuStart,
-		cpuInterrupt
-	};
-
-	enum cpuState {
-		cpuStopped = 0,
-		cpuStopping,
-		cpuRunning,
-		cpuIdle,
-		cpuWait
-	};
-
-	virtual void reset() = 0;
-	virtual void execute() = 0;
-	virtual int  boot();
-	virtual int  start();
-	virtual int  stop();
-
-	virtual void send(cpuSignal signal);
-
 protected:
-	cpuState state;
+	cpu_device(const char *tag, const system_config &config, device_t *owner, uint64_t clock);
 
-private:
+public:
+	virtual ~cpu_device();
+
 };

@@ -2,7 +2,7 @@
 #pragma once
 
 #include "emu/core.h"
-#include "emu/devcpu.h"
+#include "emu/devcpu-old.h"
 
 #define AXP_nGREGS  32
 #define AXP_nFPREGS 32
