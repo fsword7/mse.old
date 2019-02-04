@@ -7,6 +7,9 @@
 
 #pragma once
 
-class diExecution {
+#include "emu/device.h"
+
+class device_execute_interface : public device_interface
+{
 
 };
