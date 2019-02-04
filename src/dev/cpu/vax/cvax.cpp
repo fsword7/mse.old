@@ -10,12 +10,13 @@
 
 #include "emu/core.h"
 #include "emu/debug.h"
-#include "emu/devsys.h"
 #include "emu/devcpu.h"
 #include "dev/cpu/vax/mtpr.h"
 #include "dev/cpu/vax/vax.h"
 #include "dev/cpu/vax/fpu.h"
 #include "dev/cpu/vax/cvax.h"
+
+#include "emu/devsys-old.h"
 #include "dev/cpu/vax/opcodes.h"
 
 static int   iprSize = 0x40;

@@ -1,7 +1,7 @@
 #include "emu/core.h"
 #include "emu/debug.h"
-#include "emu/devsys.h"
 #include "emu/devcpu.h"
+#include "emu/devsys-old.h"
 
 cpuDevice::cpuDevice()
 : Device(CLS_CPU),

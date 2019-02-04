@@ -6,7 +6,7 @@
  */
 
 #include "emu/emucore.h"
-#include "emu/devsys2.h"
+#include "emu/devsys.h"
 #include "emu/driver.h"
 #include "sys/vax/ka650new.h"
 

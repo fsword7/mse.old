@@ -7,10 +7,10 @@
 
 #include "emu/emucore.h"
 #include "emu/device.h"
-#include "emu/devsys2.h"
 #include "emu/driver.h"
 #include "emu/syslist.h"
 #include "emu/engine.h"
+#include "emu/devsys.h"
 
 using namespace std;
 

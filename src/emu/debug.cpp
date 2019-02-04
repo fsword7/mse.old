@@ -8,7 +8,8 @@
 
 #include "emu/core.h"
 #include "emu/debug.h"
-#include "emu/devsys.h"
+
+#include "emu/devsys-old.h"
 
 logFile::logFile()
 : logFlags(0)

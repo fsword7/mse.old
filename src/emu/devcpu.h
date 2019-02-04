@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "emu/devsys.h"
+#include "emu/devsys-old.h"
 
 class cpuDevice : public Device
 {

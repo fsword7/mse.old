@@ -27,8 +27,8 @@ set(mse_cpp_SRCS
 	emu/devcpu.cpp
 	emu/devcpu2.cpp
 	emu/device.cpp
+	emu/devsys-old.cpp
 	emu/devsys.cpp
-	emu/devsys2.cpp
 	emu/devtty.cpp
 	emu/emumap.cpp
 	emu/engine.cpp
@@ -88,8 +88,8 @@ set(mse_h_SRCS
 	emu/devcpu.h
 	emu/devcpu2.h
 	emu/device.h
+	emu/devsys-old.h
 	emu/devsys.h
-	emu/devsys2.h
 	emu/emumap.h
 	emu/engine.h
 	emu/osd/ether.h

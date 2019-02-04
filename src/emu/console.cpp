@@ -1,9 +1,9 @@
 
 #include "emu/emucore.h"
 #include "emu/debug.h"
-#include "emu/devsys.h"
 #include "emu/commands.h"
 #include "emu/console.h"
+#include "emu/devsys-old.h"
 
 std::vector<std::string> split(std::string const &line)
 {

@@ -7,7 +7,7 @@
 
 #include "emu/core.h"
 #include "emu/debug.h"
-#include "emu/devsys.h"
+#include "emu/devsys-old.h"
 #include "emu/devcpu.h"
 #include "emu/console.h"
 #include "dev/cpu/vax/vax.h"
