@@ -8,7 +8,7 @@
  *
  */
 
-#include "emu/core.h"
+#include "emu/emucore.h"
 #include "emu/osd/socket.h"
 #include "emu/osd/ether.h"
 

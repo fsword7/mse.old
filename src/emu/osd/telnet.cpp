@@ -5,7 +5,7 @@
  *      Author: Timothy Stark
  */
 
-#include "emu/core.h"
+#include "emu/emucore.h"
 #include "emu/osd/telnet.h"
 
 // Telnet Code Initialization

@@ -5,7 +5,7 @@
  *      Author: fswor
  */
 
-#include "emu/core.h"
+#include "emu/emucore.h"
 
 // Generate parity bit
 uint32_t getParity(uint32_t data, uint32_t odd)

@@ -5,7 +5,7 @@
  *      Author: Tim Stark
  */
 
-#include "emu/core.h"
+#include "emu/emucore.h"
 #include "lib/util/delegate.h"
 
 

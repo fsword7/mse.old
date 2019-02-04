@@ -6,10 +6,9 @@
  */
 
 
-#include "emu/core.h"
+#include "emu/emucore.h"
+#include "emu/commands.h"
 #include "emu/debug.h"
-
-#include "emu/devsys-old.h"
 
 logFile::logFile()
 : logFlags(0)
@@ -81,7 +80,7 @@ static const dbgOption dbgList[7] =
 };
 
 Debug::Debug()
-: dbgFlags(DBG_NONE), logFlags(0), sdev(nullptr)
+: dbgFlags(DBG_NONE), logFlags(0) /* , sdev(nullptr) */
 {
 }
 
@@ -105,54 +104,54 @@ void Debug::clearFlags(uint32_t flags)
 	dbgFlags &= ~flags;
 }
 
-int Debug::enableFlag(const std::string &name)
-{
-	for (auto &&dbg : dbgList)
-		if (boost::iequals(name, dbg.dbgName)) {
-			dbgFlags |= dbg.dbgFlag;
-			return CMD_OK;
-		}
-	return CMD_NOTFOUND;
-}
-
-int Debug::disableFlag(const std::string &name)
-{
-	for (auto &&dbg : dbgList)
-		if (boost::iequals(name, dbg.dbgName)) {
-			dbgFlags &= ~dbg.dbgFlag;
-			return CMD_OK;
-		}
-	return CMD_NOTFOUND;
-}
-
-int Debug::enableLog(const int slot)
-{
-	if (slot >= 0 && slot < LOG_NFILES)
-		logFlags |= (1u << slot);
-	else if (slot == LOG_CTYSLOT)
-		logFlags |= LOG_CONSOLE;
-	else if (slot == LOG_ALLSLOTS) {
-		for (int idx = 0; idx < LOG_NFILES; idx++)
-			logFlags |= (1u << idx);
-	}
-	else
-		return CMD_ERROR;
-	return CMD_OK;
-}
-
-int Debug::disableLog(const int slot)
-{
-	if (slot >= 0 && slot < LOG_NFILES)
-		logFlags &= ~(1u << slot);
-	else if (slot == LOG_CTYSLOT)
-		logFlags &= ~LOG_CONSOLE;
-	else if (slot == LOG_ALLSLOTS) {
-		for (int idx = 0; idx < LOG_NFILES; idx++)
-			logFlags &= ~(1u << idx);
-	} else
-		return CMD_ERROR;
-	return CMD_OK;
-}
+//cmdStatus Debug::enableFlag(const std::string &name)
+//{
+//	for (auto &&dbg : dbgList)
+//		if (boost::iequals(name, dbg.dbgName)) {
+//			dbgFlags |= dbg.dbgFlag;
+//			return cmdStatus::cmdOk;
+//		}
+//	return cmdStatus::cmdInvalid;
+//}
+//
+//cmdStatus Debug::disableFlag(const std::string &name)
+//{
+//	for (auto &&dbg : dbgList)
+//		if (boost::iequals(name, dbg.dbgName)) {
+//			dbgFlags &= ~dbg.dbgFlag;
+//			return cmdStatus::cmdOk;
+//		}
+//	return cmdStatus::cmdInvalid;
+//}
+//
+//int Debug::enableLog(const int slot)
+//{
+//	if (slot >= 0 && slot < LOG_NFILES)
+//		logFlags |= (1u << slot);
+//	else if (slot == LOG_CTYSLOT)
+//		logFlags |= LOG_CONSOLE;
+//	else if (slot == LOG_ALLSLOTS) {
+//		for (int idx = 0; idx < LOG_NFILES; idx++)
+//			logFlags |= (1u << idx);
+//	}
+//	else
+//		return CMD_ERROR;
+//	return CMD_OK;
+//}
+//
+//int Debug::disableLog(const int slot)
+//{
+//	if (slot >= 0 && slot < LOG_NFILES)
+//		logFlags &= ~(1u << slot);
+//	else if (slot == LOG_CTYSLOT)
+//		logFlags &= ~LOG_CONSOLE;
+//	else if (slot == LOG_ALLSLOTS) {
+//		for (int idx = 0; idx < LOG_NFILES; idx++)
+//			logFlags &= ~(1u << idx);
+//	} else
+//		return CMD_ERROR;
+//	return CMD_OK;
+//}
 
 void Debug::log(const char *fmt, ...)
 {
@@ -166,10 +165,10 @@ void Debug::log(const char *fmt, ...)
 
 	if (logFlags & LOG_CONSOLE)
 		std::cout << out;
-	if (sdev != nullptr) {
-		logFile = sdev->getLogFile();
-		logFile->log(logFlags, out);
-	}
+//	if (sdev != nullptr) {
+//		logFile = sdev->getLogFile();
+//		logFile->log(logFlags, out);
+//	}
 
 	// All done, release arguments.
 	va_end(args);

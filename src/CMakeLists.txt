@@ -81,7 +81,6 @@ set(mse_h_SRCS
 	emu/addrmap.h
 	emu/commands.h
 	emu/console.h
-	emu/core.h
 	emu/debug.h
 	emu/devauto.h
 	emu/devcore.h

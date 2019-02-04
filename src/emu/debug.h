@@ -70,19 +70,19 @@ public:
 	void setFlags(uint32_t flags);
 	void clearFlags(uint32_t flags);
 
-	int enableFlag(const std::string &name);
-	int disableFlag(const std::string &name);
-	int enableLog(const int slot);
-	int disableLog(const int slot);
+//	int enableFlag(const std::string &name);
+//	int disableFlag(const std::string &name);
+//	int enableLog(const int slot);
+//	int disableLog(const int slot);
 
 	inline bool checkFlags(uint32_t flags) { return (dbgFlags & flags) == flags; }
 
-	void setDevice(sysDevice *dev) { sdev = dev; }
+//	void setDevice(device_t *dev) { sdev = dev; }
 
 	void log(const char *fmt, ...);
 
 private:
-	sysDevice    *sdev;
-	uint32_t      dbgFlags;
-	uint32_t      logFlags;
+//	device_t    *sdev;
+	uint32_t     dbgFlags;
+	uint32_t     logFlags;
 };
