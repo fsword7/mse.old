@@ -9,9 +9,9 @@
 
 #include "dev/cpu/pdp10/pdp10.h"
 
-class ks10_cpuDevice : public pdp10_cpuDevice
+class ks10_cpu : public pdp10_cpu_base
 {
 public:
-	ks10_cpuDevice() {}
-	~ks10_cpuDevice() {}
+	ks10_cpu() {}
+	~ks10_cpu() {}
 };

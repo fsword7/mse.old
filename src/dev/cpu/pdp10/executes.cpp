@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "emu/emucore.h"
 #include "dev/cpu/pdp10/pdp10.h"
 #include "dev/cpu/pdp10/opcodes.h"
 
@@ -37,11 +38,7 @@ uint32_t oprFlags[01000] =
 };
 #endif
 
-#ifndef CPU_CLASS
-#define CPU_CLASS pdp10_cpuDevice
-#endif
-
-void CPU_CLASS::execute()
+void pdp10_cpu_base::execute()
 {
 	uint64_t	irCode;
 	int 		opCode;
