@@ -10,18 +10,18 @@
 #include "emu/devsys.h"
 #include "emu/devcore.h"
 
-extern Driver mseDriver;
+//extern Driver mseDriver;
 
 Core::Core()
 : Device(CLS_ROOT)
 {
-	setSystemDrivers(this);
-	setDriver(&mseDriver);
+//	setSystemDrivers(this);
+//	setDriver(&mseDriver);
 
 	// Set device name and description
-	devName = mseDriver.drvName;
-	devType = mseDriver.drvName;
-	devDesc = mseDriver.drvDesc;
+//	devName = mseDriver.drvName;
+//	devType = mseDriver.drvName;
+//	devDesc = mseDriver.drvDesc;
 }
 
 Core::~Core()

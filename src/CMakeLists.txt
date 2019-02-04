@@ -18,8 +18,8 @@ set(mse_cpp_SRCS
 	dev/cpu/vax/v11.cpp
 	dev/cpu/vax/vax.cpp
 	emu/addrmap.cpp
+	emu/cmdhandler.cpp
 	emu/commands.cpp
-	emu/commands2.cpp
 	emu/console.cpp
 	emu/core.cpp
 	emu/debug.cpp

@@ -224,61 +224,61 @@ void ioDevice::write64(uint32_t, uint64_t)
 
 // ******************************************************************************
 
-extern Driver axp_sysDriver;
-extern Driver hsc_sysDriver;
-extern Driver ibm3x0_sysDriver;
-extern Driver ibm700_sysDriver;
-extern Driver pdp10_sysDriver;
-extern Driver pdp11_sysDriver;
-extern Driver vax_sysDriver;
-
-Driver *sysDrivers[] = {
-	&axp_sysDriver,
-	&hsc_sysDriver,
-	&ibm3x0_sysDriver,
-	&ibm700_sysDriver,
-	&pdp10_sysDriver,
-	&pdp11_sysDriver,
-	&vax_sysDriver,
-	// end of system driver table
-	nullptr
-};
-
-extern sysModel vax_sysModels[];
-
-sysModel *sysModels[] = {
-	vax_sysModels,
-
-	// null terminator
-	nullptr
-};
-
-extern Command mseCommands[];
-extern Command mseSetCommands[];
-extern Command mseShowCommands[];
-extern Command mseListCommands[];
-
-Driver mseDriver = {
-		"mse",
-		"Multi-System Emulator",
-		__FILE__,
-		nullptr,
-
-		// Configurations
-		nullptr,
-
-		// Command handlers
-		mseCommands,
-		mseSetCommands,
-		mseShowCommands,
-		mseListCommands,
-
-		// Function Calls
-		nullptr
-};
-
-void setSystemDrivers(Device *dev)
-{
-	dev->setDrivers(sysDrivers);
-	dev->setModels(sysModels);
-}
+//extern Driver axp_sysDriver;
+//extern Driver hsc_sysDriver;
+//extern Driver ibm3x0_sysDriver;
+//extern Driver ibm700_sysDriver;
+//extern Driver pdp10_sysDriver;
+//extern Driver pdp11_sysDriver;
+//extern Driver vax_sysDriver;
+//
+//Driver *sysDrivers[] = {
+//	&axp_sysDriver,
+//	&hsc_sysDriver,
+//	&ibm3x0_sysDriver,
+//	&ibm700_sysDriver,
+//	&pdp10_sysDriver,
+//	&pdp11_sysDriver,
+//	&vax_sysDriver,
+//	// end of system driver table
+//	nullptr
+//};
+//
+//extern sysModel vax_sysModels[];
+//
+//sysModel *sysModels[] = {
+//	vax_sysModels,
+//
+//	// null terminator
+//	nullptr
+//};
+//
+//extern Command mseCommands[];
+//extern Command mseSetCommands[];
+//extern Command mseShowCommands[];
+//extern Command mseListCommands[];
+//
+//Driver mseDriver = {
+//		"mse",
+//		"Multi-System Emulator",
+//		__FILE__,
+//		nullptr,
+//
+//		// Configurations
+//		nullptr,
+//
+//		// Command handlers
+//		mseCommands,
+//		mseSetCommands,
+//		mseShowCommands,
+//		mseListCommands,
+//
+//		// Function Calls
+//		nullptr
+//};
+//
+//void setSystemDrivers(Device *dev)
+//{
+//	dev->setDrivers(sysDrivers);
+//	dev->setModels(sysModels);
+//}
