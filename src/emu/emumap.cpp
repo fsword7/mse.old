@@ -17,7 +17,7 @@ mapManager::~mapManager()
 {
 }
 
-mapAddressSpaceConfig::mapAddressSpaceConfig()
+mapAddressConfig::mapAddressConfig()
 : name(nullptr), dataWidth(0), addrWidth(0),
   addrShift(0), pageShift(0)
 {

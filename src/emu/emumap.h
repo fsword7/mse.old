@@ -39,10 +39,10 @@ public:
 private:
 };
 
-class mapAddressSpaceConfig
+class mapAddressConfig
 {
 public:
-	mapAddressSpaceConfig();
+	mapAddressConfig();
 
 private:
 	const char *name;
