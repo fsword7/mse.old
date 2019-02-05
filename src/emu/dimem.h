@@ -17,6 +17,13 @@ public:
 	di_memory(device_t *dev);
 	~di_memory();
 
+	mapConstructor getAddressMap(int space = 0);
+	const mapAddressConfig *getAddressConfig(int space) const;
+
+	int mapConfigCount() { return mapConfig.size(); }
+
+	void setAddressMap(int space, mapConstructor map);
+
 protected:
 	std::vector<mapConstructor>		mapAddress;
 

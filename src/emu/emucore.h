@@ -30,6 +30,17 @@
 
 typedef const char tag_t;
 
+enum endian_t {
+	endianLittle,
+	endianBig
+};
+
+//#if LSB_FIRST
+//const endian_t endianNative = endianLittle;
+//#else
+//const endian_t endianNative = endianBig;
+//#endif
+
 // named function call parameters
 #define FUNC(func) func, #func
 

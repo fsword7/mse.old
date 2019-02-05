@@ -668,6 +668,9 @@ protected:
 	uint32_t  memSize;
 	uint8_t  *mem;
 
+	// Mapping address space configuration
+	mapAddressConfig mapProgram;
+
 	// Instruction buffer (look-ahead buffer)
 	uint32_t  ibData[2]; // IB Aligned data buffer
 	uint32_t  ibpAddr;   // IB physical Address

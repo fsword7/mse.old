@@ -43,13 +43,19 @@ class mapAddressConfig
 {
 public:
 	mapAddressConfig();
+	mapAddressConfig(tag_t *name, endian_t endian,
+			uint8_t dWidth, uint8_t aWidth,
+			int8_t aShift = 0,
+			mapConstructor intmap = mapConstructor(),
+			mapConstructor defmap = mapConstructor());
 
 private:
-	const char *name;
+	tag_t		*name;
+	endian_t	endianness;
 	uint8_t		dataWidth;
 	uint8_t		addrWidth;
-	uint8_t		addrShift;
-	uint8_t		pageShift;
+	int8_t		addrShift;
+	int8_t		pageShift;
 
 	mapConstructor internalMap;
 	mapConstructor defaultMap;
