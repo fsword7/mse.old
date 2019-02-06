@@ -8,6 +8,9 @@
 #pragma once
 
 #include <functional>
+#include <typeinfo>
+#include <exception>
+#include <cstdint>
 
 using delegate_generic_func = void(*)();
 
@@ -20,6 +23,16 @@ public:
 	virtual ~delegate_bind() {}
 };
 
+class binding_type_exception : public std::exception
+{
+public:
+	binding_type_exception(const std::type_info &target, const std::type_info &actual)
+		: target_type(target), actual_type(actual) {}
+
+	const std::type_info &target_type;
+	const std::type_info &actual_type;
+};
+
 template<typename Class, typename Return, typename... Params>
 struct delegate_traits
 {
@@ -29,23 +42,31 @@ struct delegate_traits
 	using const_member_ptr_func = Return (Class::*)(Params...) const;
 };
 
-//class delegate_mfp
-//{
-//public:
-//	delegate_mfp() : func(0), thisDelta(0) {}
-//
-//	template<typename MemberReturn, class MemberClass, typename Return, typename StaticFunc>
-//	delegate_mfp(MemberFunc mfp, MemberClass *, Return *, StaticFunc)
-//	{
-//		*reinterpret_cast<MemberFunc *>(this) = mfp;
-//	}
-//
-//	bool isnull() const { return (func == nullptr && thisDelta = 0); }
-//
-//private:
-//	uintptr_t 	func;
-//	int			thisDelta;
-//};
+class delegate_mfp
+{
+public:
+	delegate_mfp() : func(0), thisDelta(0) {}
+
+	template<typename MemberFunctionType, class MemberFunctionClass, typename ReturnType, typename StaticFunctionType>
+	delegate_mfp(MemberFunctionType mfp, MemberFunctionClass *, ReturnType *, StaticFunctionType)
+	{
+		*reinterpret_cast<MemberFunctionType *>(this) = mfp;
+	}
+
+	bool isnull() const { return (func == 0 && thisDelta == 0); }
+
+	template <typename FunctionType>
+	void update_after_bind(FunctionType &func, delegate_generic_class *&obj)
+	{
+		func = reinterpret_cast<FunctionType>(convert_to_generic(obj));
+	}
+
+private:
+	delegate_generic_func convert_to_generic(delegate_generic_class *&obj) const;
+
+	uintptr_t 	func;
+	int			thisDelta;
+};
 
 template<typename Return, typename... Params>
 class delegate_base
@@ -61,33 +82,78 @@ public:
 	delegate_base()
 		: function(nullptr),
 		  object(nullptr),
-		  stdfunc(nullptr)
+		  stdfunc(nullptr),
+		  binder(nullptr)
 	{
 	}
 
 	delegate_base(functype func)
 		: function(nullptr),
 		  object(nullptr),
-		  stdfunc(func)
+		  stdfunc(func),
+		  binder(nullptr)
 	{
 	}
 
-//	template<class FunctionClass>
-//	delegate_base(typename traits<FunctionClass>::member_ptr_func func, FunctionClass *obj)
-//		:
+	template <class FunctionClass>
+	delegate_base(typename traits<FunctionClass>::member_ptr_func func, FunctionClass *obj)
+		: function(reinterpret_cast<generic_static_func>(func)),
+		  object(nullptr),
+		  stdfunc(nullptr),
+		  binder(&bind_helper<FunctionClass>)
+	{
+		bind(reinterpret_cast<delegate_generic_class *>(obj));
+	}
 
-//	template <class FunctionClass>
-//	delegate_base(typename traits<FunctionClass>::static_ref_func func, FunctionClass *obj)
-//		: function(reinterpret_cast<generic_static_func>(func)),
-//		  object(nullptr),
-//		  stdfunc(nullptr)
-//	{
-//	}
+	template <class FunctionClass>
+	delegate_base(typename traits<FunctionClass>::const_member_ptr_func func, FunctionClass *obj)
+		: function(reinterpret_cast<generic_static_func>(func)),
+		  object(nullptr),
+		  stdfunc(nullptr),
+		  binder(&bind_helper<FunctionClass>)
+	{
+		bind(reinterpret_cast<delegate_generic_class *>(obj));
+	}
+
+	template <class FunctionClass>
+	delegate_base(typename traits<FunctionClass>::static_ref_func func, FunctionClass *obj)
+		: function(reinterpret_cast<generic_static_func>(func)),
+		  object(nullptr),
+		  stdfunc(nullptr),
+		  binder(&bind_helper<FunctionClass>)
+	{
+		bind(reinterpret_cast<delegate_generic_class *>(obj));
+	}
+
+
+	bool is_mfp() { return !mfp.isnull(); }
 
 protected:
+	using bind_func = delegate_generic_class*(*)(delegate_bind &obj);
+
+	template <class FunctionClass>
+	static delegate_generic_class *bind_helper(delegate_bind &obj)
+	{
+		FunctionClass *result = dynamic_cast<FunctionClass *>(&obj);
+		if (result == nullptr)
+			throw binding_type_exception(typeid(FunctionClass), typeid(obj));
+
+		return reinterpret_cast<delegate_generic_class *>(result);
+	}
+
+	void bind(delegate_generic_class *obj)
+	{
+		object = obj;
+
+		if (object != nullptr && is_mfp())
+			mfp.update_after_bind(function, object);
+	}
+
 	delegate_generic_func	*object;
 	generic_static_func		function;
 	functype 				stdfunc;	// std::funcion pointer
+	bind_func				binder;
+	delegate_mfp			mfp;
 };
 
 template<typename Signature>

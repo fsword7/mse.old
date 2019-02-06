@@ -15,11 +15,32 @@ class named_delegate : delegate<Signature>
 private:
 	using base = delegate<Signature>;
 
+protected:
+	template<class FunctionClass> using member_ptr_func =
+			typename base::template member_ptr_func<FunctionClass>;
+	template<class FunctionClass> using const_member_ptr_func =
+			typename base::template const_member_ptr_func<FunctionClass>;
+	template<class FunctionClass> using static_ref_func =
+			typename base::template static_ref_func<FunctionClass>;
+
 public:
 	named_delegate() : base(), delegateName(nullptr) {}
 
 	named_delegate(const base &src)
 		: base(src), delegateName(src.name()) {}
+	template<class FunctionClass> named_delegate(member_ptr_func<FunctionClass> func, tag_t *name, FunctionClass *obj)
+		: base(func, obj), delegateName(name) {}
+	template<class FunctionClass> named_delegate(const_member_ptr_func<FunctionClass> func, tag_t *name, FunctionClass *obj)
+		: base(func, obj), delegateName(name) {}
+	template<class FunctionClass> named_delegate(static_ref_func<FunctionClass> func, tag_t *name, FunctionClass *obj)
+		: base(func, obj), delegateName(name) {}
+
+//	named_delegate &operator = (const base &src)
+//	{
+//		base::operator = (src);
+//		delegateName = src.delegateName;
+//		return *this;
+//	}
 
 	const char *name() const { return delegateName; }
 
