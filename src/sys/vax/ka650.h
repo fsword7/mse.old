@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "dev/cpu/vax/cvax.h"
+
 class ka650_device : public system_device
 {
 public:
@@ -16,8 +18,12 @@ public:
 	}
 
 	// System creator routines
-	static void mv3900();
-	static void mv3900x();
+	void mv3900();
+	void mv3900x();
+
+	// Address space mapping
+	void mv3900_mem(mapAddress &map);
+	void mv3900x_mem(mapAddress &map);
 
 	// Model-specific system initialize routines
 	static void mv3900_init();

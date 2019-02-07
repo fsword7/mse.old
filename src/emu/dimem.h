@@ -11,6 +11,14 @@
 #include "emu/addrmap.h"
 #include "emu/emumap.h"
 
+#define cfgSetAddressMap(_cpu, _space, _map) \
+	dynamic_cast<di_memory *>(_cpu)->setAddressMap(_space, \
+		mapConstructor(&std::remove_pointer_t<decltype(this)>::_map, tag().c_str(), this))
+
+//#define cfgSetAddressMap(_cpu, _space, _map) \
+//	dynamic_cast<di_memory *>(_cpu)->setAddressMap(_space, \
+//		mapConstructor(&_map, tag().c_str(), this))
+
 class di_memory : public device_interface
 {
 public:

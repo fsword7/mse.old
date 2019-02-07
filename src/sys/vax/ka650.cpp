@@ -16,12 +16,29 @@ using namespace std;
 // Create system routines
 void ka650_device::mv3900()
 {
+	cvax_cpu *cpu;
+
+	cfgSetAddressMap(cpu, AS_PROGRAM, mv3900_mem);
+
 	cout << "This is MicroVAX 3900 system" << endl;
+
 }
 
 void ka650_device::mv3900x()
 {
+	cvax_cpu *cpu;
+
+//	cfgSetAddressMap(cpu, AS_PROGRAM, mv3900x_mem);
+
 	cout << "This is MicroVAX 3800x system" << endl;
+}
+
+void ka650_device::mv3900_mem(mapAddress &map)
+{
+}
+
+void ka650_device::mv3900x_mem(mapAddress &map)
+{
 }
 
 // Initialize system routines

@@ -19,7 +19,7 @@ class mapAddressSpace;
 
 using offs_t = std::size_t;
 
-using mapConstructor = named_delegate<void (mapAddressSpace &)>;
+using mapConstructor = named_delegate<void (mapAddress &)>;
 
 using read8_delegate = device_delegate<uint8_t(mapAddress &, offs_t, uint8_t)>;
 using read16_delegate = device_delegate<uint16_t(mapAddress &, offs_t, uint16_t)>;

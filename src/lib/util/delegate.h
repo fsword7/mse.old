@@ -97,20 +97,22 @@ public:
 
 	template <class FunctionClass>
 	delegate_base(typename traits<FunctionClass>::member_ptr_func func, FunctionClass *obj)
-		: function(reinterpret_cast<generic_static_func>(func)),
+		: function(nullptr),
 		  object(nullptr),
 		  stdfunc(nullptr),
-		  binder(&bind_helper<FunctionClass>)
+		  binder(&bind_helper<FunctionClass>),
+		  mfp(func, obj, static_cast<Return *>(nullptr), static_cast<generic_static_func>(nullptr))
 	{
 		bind(reinterpret_cast<delegate_generic_class *>(obj));
 	}
 
 	template <class FunctionClass>
 	delegate_base(typename traits<FunctionClass>::const_member_ptr_func func, FunctionClass *obj)
-		: function(reinterpret_cast<generic_static_func>(func)),
+		: function(nullptr),
 		  object(nullptr),
 		  stdfunc(nullptr),
-		  binder(&bind_helper<FunctionClass>)
+		  binder(&bind_helper<FunctionClass>),
+		  mfp(func, obj, static_cast<Return *>(nullptr), static_cast<generic_static_func>(nullptr))
 	{
 		bind(reinterpret_cast<delegate_generic_class *>(obj));
 	}
@@ -149,7 +151,7 @@ protected:
 			mfp.update_after_bind(function, object);
 	}
 
-	delegate_generic_func	*object;
+	delegate_generic_class	*object;
 	generic_static_func		function;
 	functype 				stdfunc;	// std::funcion pointer
 	bind_func				binder;
@@ -179,17 +181,17 @@ public:
 
 	explicit delegate(std::function<Return (Params...)> func) : base(func) {}
 
-//	template<class FunctionClass>
-//	delegate(member_ptr_func<FunctionClass> func, FunctionClass *obj)
-//		: base(func, obj) {}
-//
-//	template<class FunctionClass>
-//	delegate(const_member_ptr_func<FunctionClass> func, FunctionClass *obj)
-//		: base(func, obj) {}
-//
-//	template<class FunctionClass>
-//	delegate(static_ref_func<FunctionClass> func, FunctionClass *obj)
-//		: base(func, obj) {}
+	template<class FunctionClass>
+	delegate(member_ptr_func<FunctionClass> func, FunctionClass *obj)
+		: base(func, obj) {}
+
+	template<class FunctionClass>
+	delegate(const_member_ptr_func<FunctionClass> func, FunctionClass *obj)
+		: base(func, obj) {}
+
+	template<class FunctionClass>
+	delegate(static_ref_func<FunctionClass> func, FunctionClass *obj)
+		: base(func, obj) {}
 
 
 };
