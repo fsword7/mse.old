@@ -6,16 +6,25 @@
  */
 
 #include "emu/emucore.h"
-#include "addrmap.h"
+#include "emu/addrmap.h"
+#include "emu/machine.h"
 
 
-mapManager::mapManager(device_t *dev)
+mapManager::mapManager(machine *sys)
+: system(sys)
 {
 }
 
 mapManager::~mapManager()
 {
 }
+
+void mapManager::init()
+{
+
+}
+
+// ***********************************************************
 
 mapAddressConfig::mapAddressConfig()
 : name(nullptr), endianness(endianLittle),
@@ -37,4 +46,22 @@ mapAddressConfig::mapAddressConfig(tag_t *tag, endian_t endian,
   defaultMap(defmap)
 {
 
+}
+
+// ***********************************************************
+
+void mapAddressSpace::prepare()
+{
+}
+
+void mapAddressSpace::populate(mapAddress *map)
+{
+}
+
+void mapAddressSpace::allocate()
+{
+}
+
+void mapAddressSpace::locate()
+{
 }

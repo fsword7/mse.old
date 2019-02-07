@@ -11,6 +11,7 @@
 
 class mapAddress;
 class mapAddressSpace;
+class machine;
 
 // Address space type
 #define AS_PROGRAM		0
@@ -33,10 +34,13 @@ using write64_delegate = device_delegate<uint64_t(mapAddress &, offs_t, uint64_t
 
 class mapManager {
 public:
-	mapManager(device_t *sys);
+	mapManager(machine *sys);
 	~mapManager();
 
+	void init();
+
 private:
+	machine *system;
 };
 
 class mapAddressConfig
@@ -63,6 +67,12 @@ private:
 
 class mapAddressSpace
 {
+
+	// Setup initialization routines
+	void prepare();
+	void populate(mapAddress *map = nullptr);
+	void allocate();
+	void locate();
 
 protected:
 	const char	*name;		// Name of the address space

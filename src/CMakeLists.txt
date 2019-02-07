@@ -32,6 +32,7 @@ set(mse_cpp_SRCS
 	emu/dimem.cpp
 	emu/emumap.cpp
 	emu/engine.cpp
+	emu/machine.cpp
 	emu/misc.cpp
 	emu/sysconfig.cpp
 	emu/syslist.cpp
@@ -80,6 +81,7 @@ set(mse_h_SRCS
 	emu/dimem.h
 	emu/emumap.h
 	emu/engine.h
+	emu/machine.h
 	emu/osd/ether.h
 	emu/osd/socket.h
 	emu/osd/telnet.h

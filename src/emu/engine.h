@@ -2,7 +2,7 @@
  * engine.h
  *
  *  Created on: Jan 13, 2019
- *      Author: fswor
+ *      Author: Tim Stark
  */
 
 #pragma once
