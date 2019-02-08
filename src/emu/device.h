@@ -45,6 +45,9 @@ private:
 			list.push_back(dev);
 		}
 
+		device_t *first() { return list[0]; }
+		device_t *last()  { return list[size()]; }
+
 		int size()   { return list.size(); }
 		bool empty() { return list.empty(); }
 
@@ -66,6 +69,9 @@ private:
 
 	public:
 		interface_list() {}
+
+		device_interface *first() { return list[0]; }
+		device_interface *last()  { return list[size()]; }
 
 		int size()   { return list.size(); }
 		bool empty() { return list.empty(); }
@@ -172,48 +178,69 @@ public:
 	device_iterator(device_t &dev, int depth = 255)
 	: devRoot(dev), maxDepth(depth) {}
 
-//	class auto_iterator
-//	{
-//
-//		auto_iterator(device_t *dev, int depth, int mdepth)
-//		: cdev(dev), curDepth(depth), maxDepth(mdepth) {}
-//
-//		device_t *current() { return cdev; }
-//		int depth() { return curDepth; }
-//
-//	protected:
-//		void advance()
-//		{
-//			if (cdev != nullptr) {
-//				device_t *start = cdev;
-//
-//				if (curDepth < maxDepth)
-//				{
-//					cdev = start->devices().first();
-//					if (cdev != nullptr) {
-//						curDepth++;
-//						return;
-//					}
-//				}
-//
-//				while(curDepth > 0 && start)
-//				{
-//					cdev = start->next();
-//					if (cdev != nullptr)
-//						return;
-//
-//					start = start->owner();
-//					curDepth--;
-//				}
-//
-//				cdev = nullptr;
-//			}
-//		}
-//
-//		device_t	*cdev;
-//		int			curDepth;
-//		const int	maxDepth;
-//	};
+	class iterator
+	{
+	public:
+		iterator(device_t *dev, int depth, int mdepth)
+		: cdev(dev), curDepth(depth), maxDepth(mdepth) {}
+
+		device_t *current() { return cdev; }
+		int depth() { return curDepth; }
+
+		// Required operator function calls
+		bool operator == (iterator const &iter) { return cdev == iter.cdev; }
+		bool operator != (iterator const &iter) { return cdev != iter.cdev; }
+		iterator &operator ++ () { advance(); return *this; }
+		iterator operator ++ (int) { iterator const result(*this); ++*this; return result; }
+		device_t &operator * ()  { assert(cdev); return *cdev; }
+		device_t *operator -> () { return cdev; }
+
+	protected:
+		void advance()
+		{
+			if (cdev != nullptr) {
+				device_t *start = cdev;
+
+				if (curDepth < maxDepth)
+				{
+					cdev = start->devices().first();
+					if (cdev != nullptr) {
+						curDepth++;
+						return;
+					}
+				}
+
+				while(curDepth > 0 && start)
+				{
+					cdev = start->next();
+					if (cdev != nullptr)
+						return;
+
+					start = start->owner();
+					curDepth--;
+				}
+
+				cdev = nullptr;
+			}
+		}
+
+		device_t	*cdev;
+		int			curDepth;
+		const int	maxDepth;
+	};
+
+	iterator begin() const { return iterator(&devRoot, 0, maxDepth); }
+	iterator end() const   { return iterator(nullptr, 0, maxDepth); }
+
+	device_t *first() const { return begin().current(); }
+
+	int count()
+	{
+		int result = 0;
+		for (device_t &dev : *this)
+			result++;
+		return result;
+	}
 
 private:
 	device_t	&devRoot;
@@ -226,6 +253,49 @@ class device_interface_iterator
 public:
 	device_interface_iterator(device_t &dev, int depth = 255)
 	: devRoot(dev), maxDepth(depth) {}
+
+	class iterator : public device_iterator::iterator
+	{
+	public:
+		iterator(device_t *dev, int depth, int mdepth)
+		: device_iterator::iterator(dev, depth, mdepth)
+		{
+			findInterface();
+		}
+
+		InterfaceClass *current() const { return interface; }
+
+		// Required operator function calls
+		bool operator == (iterator const &iter) { return interface == iter.interface; }
+		bool operator != (iterator const &iter) { return interface != iter.interface; }
+		iterator &operator ++ () { advance(); findInterface(); return *this; }
+		iterator operator ++ (int) { iterator const result(*this); ++*this; return result; }
+		InterfaceClass &operator * ()  { assert(interface != nullptr); return *interface; }
+		InterfaceClass *operator -> () { return interface; }
+
+	private:
+		void findInterface()
+		{
+			for (; cdev != nullptr; advance())
+				if (cdev->hasInterface(interface))
+					return;
+		}
+
+		InterfaceClass *interface;
+	};
+
+	iterator begin() const { return iterator(&devRoot, 0, maxDepth); }
+	iterator end() const   { return iterator(nullptr, 0, maxDepth); }
+
+	InterfaceClass *first() const { return begin().current(); }
+
+	int count()
+	{
+		int result = 0;
+		for (InterfaceClass &intf : *this)
+			result++;
+		return result;
+	}
 
 private:
 	device_t	&devRoot;
