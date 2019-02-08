@@ -10,6 +10,7 @@
 #include "emu/device.h"
 #include "emu/devauto.h"
 #include "emu/machine.h"
+#include "emu/validity.h"
 
 device_t::device_t(const char *tag, const system_config &config, device_t *owner, uint64_t clock)
 : devOwner(owner), devNext(nullptr),
@@ -43,10 +44,17 @@ void device_t::resolvePostMap()
 {
 }
 
-void device_t::validate() const
+void device_t::validate(validity_checker &valid) const
 {
-//	for (device_interface &intf : interfaces())
-//		intf.validate();
+	for (device_interface *intf : interfaces())
+		intf->validate(valid);
+
+	validateDevice(valid);
+}
+
+void device_t::validateDevice(validity_checker &valid) const
+{
+	// Do nothing by default
 }
 
 // ********************************************************
@@ -54,13 +62,15 @@ void device_t::validate() const
 device_interface::device_interface(device_t *dev, tag_t *name)
 : next(nullptr), device(dev), typeName(name)
 {
-
+	// Add interface into device's interface list.
+	dev->interfaces().add(this);
 }
 
 device_interface::~device_interface()
 {
 }
 
-void device_interface::validate() const
+void device_interface::validate(validity_checker &valid) const
 {
+	// Do nothing by default
 }

@@ -11,11 +11,13 @@
 
 class system_config;
 class device_list;
+class device_interface;
 class device_t;
 class devauto_base;
 class machine;
 class di_memory;
 class di_execute;
+class validity_checker;
 
 //#define DEFINE_DEVICE_TYPE(Type, Class)
 //#define DEFINE_DEVICE_TYPE(Type, Class, ShortName, FullName)
@@ -43,6 +45,14 @@ private:
 			list.push_back(dev);
 		}
 
+		int size()   { return list.size(); }
+		bool empty() { return list.empty(); }
+
+		std::vector<device_t *>::iterator begin() { return list.begin(); }
+		std::vector<device_t *>::iterator end() { return list.end(); }
+		std::vector<device_t *>::const_iterator begin() const { return list.cbegin(); }
+		std::vector<device_t *>::const_iterator end() const { return list.cend(); }
+
 	private:
 		std::vector<device_t *> list;
 	};
@@ -57,8 +67,21 @@ private:
 	public:
 		interface_list() {}
 
+		int size()   { return list.size(); }
+		bool empty() { return list.empty(); }
+
+		void add(device_interface *intf) {
+			list.push_back(intf);
+		}
+
+		std::vector<device_interface *>::iterator begin() { return list.begin(); }
+		std::vector<device_interface *>::iterator end() { return list.end(); }
+		std::vector<device_interface *>::const_iterator begin() const { return list.cbegin(); }
+		std::vector<device_interface *>::const_iterator end() const { return list.cend(); }
+
 	private:
-		interface_list	*head;
+		std::vector<device_interface *> list;
+
 		di_execute		*execute;
 		di_memory 		*memory;
 	};
@@ -88,6 +111,7 @@ public:
 	const device_list &devices() const { return deviceList; }
 
 	interface_list &interfaces() { return interfaceList; }
+	const interface_list &interfaces() const { return interfaceList; }
 
 	bool hasInterface(di_memory *&intf)  { return ((intf = interfaceList.memory) != nullptr); }
 	bool hasInterface(di_execute *&intf) { return ((intf = interfaceList.execute) != nullptr); }
@@ -95,7 +119,9 @@ public:
 	bool hasInterface(di_memory *&intf) const  { return ((intf = interfaceList.memory) != nullptr); }
 	bool hasInterface(di_execute *&intf) const { return ((intf = interfaceList.execute) != nullptr); }
 
-	void validate() const;
+	void validate(validity_checker &valid) const;
+
+	virtual void validateDevice(validity_checker &valid) const;
 
 protected:
 	devauto_base *register_device(devauto_base *autodev);
@@ -131,7 +157,7 @@ protected:
 public:
 	tag_t *type() { return typeName; }
 
-	virtual void validate() const;
+	virtual void validate(validity_checker &valid) const;
 
 protected:
 	device_interface	*next;

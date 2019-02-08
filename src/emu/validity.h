@@ -18,6 +18,14 @@ public:
 	void validate_system();
 	void validate_devices();
 
+	void begin();
+	void end();
+	void check(device_t *system);
+
 	void validate();
 
+private:
+	int		errors;
+	int		warnings;
+	bool	validate_all;
 };
