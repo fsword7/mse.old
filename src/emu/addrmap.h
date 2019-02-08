@@ -99,6 +99,8 @@ public:
 
 	void setGlobalMask(offs_t mask) { gmask = mask; }
 
+	void validate(int space) const;
+
 	offs_t	gmask;	// Global bit mask
 
 private:

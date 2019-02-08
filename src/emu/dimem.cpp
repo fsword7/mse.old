@@ -46,3 +46,17 @@ void di_memory::setAddressMap(int space, mapConstructor map)
 		mapAddress.resize(space+1);
 	mapAddress[space] = map;
 }
+
+void di_memory::validate() const
+{
+	const int maxSpaces = std::max(mapAddress.size(), mapConfig.size());
+
+	for (int space = 0; space < maxSpaces; space++) {
+		if (getAddressSpaceConfig(space)) {
+			// Construct the address space mapping
+//			::mapAddress addrmap(const_cast<device_t &>(device()), space);
+//
+//			addrmap.validate(space);
+		}
+	}
+}

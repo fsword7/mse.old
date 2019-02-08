@@ -17,6 +17,9 @@ class machine;
 class di_memory;
 class di_execute;
 
+//#define DEFINE_DEVICE_TYPE(Type, Class)
+//#define DEFINE_DEVICE_TYPE(Type, Class, ShortName, FullName)
+
 class device_t : public delegate_bind
 {
 	friend class devauto_base;
@@ -92,6 +95,8 @@ public:
 	bool hasInterface(di_memory *&intf) const  { return ((intf = interfaceList.memory) != nullptr); }
 	bool hasInterface(di_execute *&intf) const { return ((intf = interfaceList.execute) != nullptr); }
 
+	void validate() const;
+
 protected:
 	devauto_base *register_device(devauto_base *autodev);
 
@@ -125,6 +130,8 @@ protected:
 
 public:
 	tag_t *type() { return typeName; }
+
+	virtual void validate() const;
 
 protected:
 	device_interface	*next;

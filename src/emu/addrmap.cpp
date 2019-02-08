@@ -78,3 +78,7 @@ mapAddressEntry &mapAddress::operator()(offs_t start, offs_t end)
 
 	return *entry;
 }
+
+void mapAddress::validate(int space) const
+{
+}

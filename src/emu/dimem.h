@@ -29,6 +29,8 @@ public:
 
 	void setAddressMap(int space, mapConstructor map);
 
+	void validate() const;
+
 protected:
 	std::vector<mapConstructor>		mapAddress;
 

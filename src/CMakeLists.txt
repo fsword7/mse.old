@@ -38,6 +38,7 @@ set(mse_cpp_SRCS
 	emu/sysconfig.cpp
 	emu/syslist.cpp
 	emu/systems.cpp
+	emu/validity.cpp
 	emu/osd/ether.cpp
 	emu/osd/main.cpp
 	emu/osd/telnet.cpp
@@ -90,6 +91,7 @@ set(mse_h_SRCS
 	emu/sysconfig.h
 	emu/syslist.h
 	emu/user.h
+	emu/validity.h
 	formats/dec/word10.h
 	lib/util/delegate.h
 	sys/vax/ka650.h

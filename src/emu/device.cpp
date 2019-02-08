@@ -43,6 +43,12 @@ void device_t::resolvePostMap()
 {
 }
 
+void device_t::validate() const
+{
+//	for (device_interface &intf : interfaces())
+//		intf.validate();
+}
+
 // ********************************************************
 
 device_interface::device_interface(device_t *dev, tag_t *name)
@@ -52,5 +58,9 @@ device_interface::device_interface(device_t *dev, tag_t *name)
 }
 
 device_interface::~device_interface()
+{
+}
+
+void device_interface::validate() const
 {
 }
