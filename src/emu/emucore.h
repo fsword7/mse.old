@@ -18,6 +18,7 @@
 #include <chrono>
 #include <memory>
 #include <utility>
+#include <exception>
 
 #include <cstdio>
 #include <cstddef>

@@ -12,7 +12,7 @@ public:
 	machine(const system_config &config);
 	~machine();
 
-	void start();
+	void init();
 	void execute();
 
 private:

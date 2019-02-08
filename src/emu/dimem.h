@@ -15,10 +15,6 @@
 	dynamic_cast<di_memory *>(_cpu)->setAddressMap(_space, \
 		mapConstructor(&std::remove_pointer_t<decltype(this)>::_map, tag().c_str(), this))
 
-//#define cfgSetAddressMap(_cpu, _space, _map) \
-//	dynamic_cast<di_memory *>(_cpu)->setAddressMap(_space, \
-//		mapConstructor(&_map, tag().c_str(), this))
-
 class di_memory : public device_interface
 {
 public:
@@ -26,7 +22,8 @@ public:
 	~di_memory();
 
 	mapConstructor getAddressMap(int space = 0);
-	const mapAddressConfig *getAddressConfig(int space) const;
+	const mapAddressConfig *getAddressSpaceConfig(int space) const;
+	mapAddressConfig *getAddressSpaceConfig(int space);
 
 	int mapConfigCount() { return mapConfig.size(); }
 

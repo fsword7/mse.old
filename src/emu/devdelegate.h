@@ -10,7 +10,7 @@
 #include "lib/util/delegate.h"
 
 template<typename Signature>
-class named_delegate : delegate<Signature>
+class named_delegate : public delegate<Signature>
 {
 private:
 	using base = delegate<Signature>;

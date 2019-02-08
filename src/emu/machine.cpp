@@ -21,9 +21,11 @@ machine::~machine()
 {
 }
 
-// Start - Running machine initialization
-void machine::start()
+// Running machine initialization
+void machine::init()
 {
+	// Initialize memory on all devices.
+	memory.init();
 }
 
 void machine::execute()

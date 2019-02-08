@@ -45,6 +45,8 @@ private:
 
 class mapAddressConfig
 {
+	friend class mapAddress;
+
 public:
 	mapAddressConfig();
 	mapAddressConfig(tag_t *name, endian_t endian,

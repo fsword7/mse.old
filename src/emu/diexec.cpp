@@ -11,6 +11,7 @@
 di_execute::di_execute(device_t *dev)
 : device_interface(dev, "execute")
 {
+	dev->interfaces().execute = this;
 }
 
 di_execute::~di_execute()

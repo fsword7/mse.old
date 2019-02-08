@@ -13,6 +13,9 @@ class system_config;
 class device_list;
 class device_t;
 class devauto_base;
+class machine;
+class di_memory;
+class di_execute;
 
 class device_t : public delegate_bind
 {
@@ -43,13 +46,18 @@ private:
 
 	class interface_list
 	{
+		friend class device_t;
+		friend class device_interface;
+		friend class di_memory;
+		friend class di_execute;
+
 	public:
 		interface_list() {}
 
 	private:
 		interface_list	*head;
-//		di_execute		*execute;
-//		di_memory 		*memory;
+		di_execute		*execute;
+		di_memory 		*memory;
 	};
 
 protected:
@@ -78,8 +86,18 @@ public:
 
 	interface_list &interfaces() { return interfaceList; }
 
+	bool hasInterface(di_memory *&intf)  { return ((intf = interfaceList.memory) != nullptr); }
+	bool hasInterface(di_execute *&intf) { return ((intf = interfaceList.execute) != nullptr); }
+
+	bool hasInterface(di_memory *&intf) const  { return ((intf = interfaceList.memory) != nullptr); }
+	bool hasInterface(di_execute *&intf) const { return ((intf = interfaceList.execute) != nullptr); }
+
 protected:
 	devauto_base *register_device(devauto_base *autodev);
+
+	void setMachine(machine *sys) { system = sys; }
+	void resolvePreMap();
+	void resolvePostMap();
 
 protected:
 	device_t 		*devOwner;			// Parent device owner
@@ -87,7 +105,10 @@ protected:
 	device_list 	deviceList;			// List of child devices - container
 	interface_list	interfaceList;		// List of interfaces - container
 
+
 	const system_config &sysConfig;
+
+	machine  *system;
 
 private:
 	std::string		tagName;			// Tag name for linking named devices
@@ -109,4 +130,71 @@ protected:
 	device_interface	*next;
 	device_t			*device;
 	tag_t				*typeName;
+};
+
+
+class device_iterator
+{
+public:
+	device_iterator(device_t &dev, int depth = 255)
+	: devRoot(dev), maxDepth(depth) {}
+
+//	class auto_iterator
+//	{
+//
+//		auto_iterator(device_t *dev, int depth, int mdepth)
+//		: cdev(dev), curDepth(depth), maxDepth(mdepth) {}
+//
+//		device_t *current() { return cdev; }
+//		int depth() { return curDepth; }
+//
+//	protected:
+//		void advance()
+//		{
+//			if (cdev != nullptr) {
+//				device_t *start = cdev;
+//
+//				if (curDepth < maxDepth)
+//				{
+//					cdev = start->devices().first();
+//					if (cdev != nullptr) {
+//						curDepth++;
+//						return;
+//					}
+//				}
+//
+//				while(curDepth > 0 && start)
+//				{
+//					cdev = start->next();
+//					if (cdev != nullptr)
+//						return;
+//
+//					start = start->owner();
+//					curDepth--;
+//				}
+//
+//				cdev = nullptr;
+//			}
+//		}
+//
+//		device_t	*cdev;
+//		int			curDepth;
+//		const int	maxDepth;
+//	};
+
+private:
+	device_t	&devRoot;
+	int			maxDepth;
+};
+
+template <class InterfaceClass>
+class device_interface_iterator
+{
+public:
+	device_interface_iterator(device_t &dev, int depth = 255)
+	: devRoot(dev), maxDepth(depth) {}
+
+private:
+	device_t	&devRoot;
+	int			maxDepth;
 };

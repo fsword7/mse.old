@@ -73,6 +73,9 @@ public:
 	mapHandler  read, write;	// Memory map handler for read and write access
 	const char	*tagShare;		// Tag of shared map block
 
+	device_t		*submapDevice;
+	mapConstructor	submapDelegate;
+
 	// access handlers
 	read8_delegate		read8;
 	read16_delegate		read16;
@@ -88,7 +91,8 @@ public:
 
 class mapAddress {
 public:
-	mapAddress(device_t &device);
+	mapAddress(device_t &device, int space);
+	mapAddress(device_t &device, mapAddressEntry *entry);
 	~mapAddress();
 
 	mapAddressEntry &operator()(offs_t start, offs_t end);
@@ -99,6 +103,7 @@ public:
 
 private:
 	device_t &device;
+	int       adrSpace;
 	std::vector<mapAddressEntry> list;
 };
 

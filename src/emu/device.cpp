@@ -9,12 +9,14 @@
 #include "emu/sysconfig.h"
 #include "emu/device.h"
 #include "emu/devauto.h"
+#include "emu/machine.h"
 
 device_t::device_t(const char *tag, const system_config &config, device_t *owner, uint64_t clock)
 : devOwner(owner), devNext(nullptr),
   tagName(tag), devName(""),
   sysConfig(config),
-  autodevList(nullptr)
+  autodevList(nullptr),
+  system(nullptr)
 {
 }
 
@@ -33,6 +35,13 @@ devauto_base *device_t::register_device(devauto_base *autodev)
 	return old;
 }
 
+void device_t::resolvePreMap()
+{
+}
+
+void device_t::resolvePostMap()
+{
+}
 
 // ********************************************************
 

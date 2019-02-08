@@ -128,7 +128,20 @@ public:
 	}
 
 
-	bool is_mfp() { return !mfp.isnull(); }
+	bool is_mfp() const { return !mfp.isnull(); }
+	bool isnull() const { return (function != nullptr && stdfunc != nullptr && mfp.isnull()); }
+
+	void bind(delegate_bind &obj) { if (binder != nullptr) bind((*binder)(obj)); }
+
+	Return operator()(Params... args) const
+	{
+//		if (is_mfp())
+//			return (*reinterpret_cast<generic_member_func>(function))(object, std::forward<Params>(args)...);
+		if (stdfunc != nullptr)
+			return stdfunc(std::forward<Params>(args)...);
+		else
+			return (*function)(object, std::forward<Params>(args)...);
+	}
 
 protected:
 	using bind_func = delegate_generic_class*(*)(delegate_bind &obj);

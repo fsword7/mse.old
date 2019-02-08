@@ -7,6 +7,7 @@
 
 #include "emu/emucore.h"
 #include "emu/addrmap.h"
+#include "emu/dimem.h"
 #include "emu/machine.h"
 
 
@@ -21,6 +22,7 @@ mapManager::~mapManager()
 
 void mapManager::init()
 {
+//	std::vector<di_memory *> memories;
 
 }
 
