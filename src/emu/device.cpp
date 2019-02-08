@@ -62,8 +62,12 @@ void device_t::validateDevice(validity_checker &valid) const
 device_interface::device_interface(device_t *dev, tag_t *name)
 : next(nullptr), device(dev), typeName(name)
 {
+	device_t::interface_list &list = dev->interfaces();
+
 	// Add interface into device's interface list.
-	dev->interfaces().add(this);
+	if (list.size() > 0)
+		list.last()->next = this;
+	list.add(this);
 }
 
 device_interface::~device_interface()

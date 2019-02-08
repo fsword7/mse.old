@@ -11,7 +11,6 @@
 
 class system_config;
 class device_list;
-class device_interface;
 class device_t;
 class devauto_base;
 class machine;
@@ -20,13 +19,142 @@ class di_execute;
 class validity_checker;
 
 //#define DEFINE_DEVICE_TYPE(Type, Class)
-//#define DEFINE_DEVICE_TYPE(Type, Class, ShortName, FullName)
+
+#define DEFINE_DEVICE_TYPE(Type, Class, ShortName, FullName)	\
+	struct Class##_device_traits {								\
+		static constexpr char const shortName[] = ShortName;	\
+		static constexpr char const fullName[] = FullName;		\
+		static constexpr char const source[] = __FILE__;		\
+	};															\
+	constexpr char char Class##_device_traits::shortName[],		\
+						Class##_device_traits::fullName[],		\
+						Class##_device_traits::source[];		\
+	device_type<Class> const &Type = device_creator<Class,		\
+		(Class##_device_traits::shortName),						\
+		(Class##_device_traits::fulltName),						\
+		(Class##_device_traits::source)>;						\
+
+
+template <class DeviceClass, char const *ShortName, char const *FullName, char const *Source>
+struct device_tag_struct { typedef DeviceClass type; };
+template <class SystemClass, char const *ShortName, char const *FullName, char const *Source>
+struct system_tag_struct { typedef SystemClass type; };
+
+template <class DeviceClass, char const *ShortName, char const *FullName, char const *Source>
+auto device_tag_func() { return device_tag_struct<DeviceClass, ShortName, FullName, Source>{}; }
+template <class SystemClass, char const *ShortName, char const *FullName, char const *Source>
+auto system_tag_func() { return system_tag_struct<SystemClass, ShortName, FullName, Source>{}; }
+
+class device_type_base
+{
+public:
+	device_type_base(std::nullptr_t)
+	: next(nullptr),
+	  idType(typeid(std::nullptr_t)),
+	  sName(nullptr),
+	  fName(nullptr),
+	  srcName(nullptr),
+	  creator(nullptr)
+	{
+	}
+
+	template <class DeviceClass, char const *ShortName, char const *FullName, char const *Source>
+	device_type_base(device_tag_struct<DeviceClass, ShortName, FullName, Source> (*)())
+	: next(nullptr),
+	  idType(typeid(DeviceClass)),
+	  sName(ShortName),
+	  fName(FullName),
+	  srcName(Source),
+	  creator(&createDevice<DeviceClass>)
+	{
+	}
+
+	template <class SystemClass, char const *ShortName, char const *FullName, char const *Source>
+	device_type_base(system_tag_struct<SystemClass, ShortName, FullName, Source> (*)())
+	: next(nullptr),
+	  idType(typeid(SystemClass)),
+	  sName(ShortName),
+	  fName(FullName),
+	  srcName(Source),
+	  creator(&createSystem<SystemClass>)
+	{
+	}
+
+	std::type_info const &type() const { return idType; }
+	char const *shortName() const { return sName; }
+	char const *fullName() const { return fName; }
+	char const *source() const { return srcName; }
+
+	device_t *create(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock) const
+	{
+		return creator(*this, config, tag, owner, clock);
+	}
+
+private:
+	typedef device_t *(*creator_func)(device_type_base const &type,
+			const system_config &config, tag_t *tag, device_t *owner, uint64_t clock);
+
+	template <typename DeviceClass>
+	static device_t *createDevice(device_type_base const &type,
+		system_config const &config, tag_t *tag, device_t *owner, uint64_t clock)
+	{
+		return new DeviceClass(config, tag, owner, clock);
+	}
+
+	template <typename SystemClass>
+	static device_t *createSystem(device_type_base const &type,
+		system_config const &config, tag_t *tag, device_t *owner, uint64_t clock)
+	{
+		assert(owner != nullptr);
+		assert(clock != 0);
+
+		return new SystemClass(config, tag, owner, clock);
+	}
+
+	device_type_base		*next;
+
+	std::type_info const	&idType;
+	const char *const		sName;
+	const char *const		fName;
+	const char *const		srcName;
+	creator_func			creator;
+};
+
+template <class DeviceClass>
+class device_type : public device_type_base
+{
+public:
+	template <typename... Params>
+	DeviceClass *create(system_config &config, tag_t *tag, device_t *owner, Params &&... args) const
+	{
+		return new DeviceClass(config, tag, owner, std::forward<Params>(args)...);
+	}
+};
+
+class device_interface
+{
+	friend class interface_list;
+
+protected:
+	device_interface(device_t *dev, tag_t *name);
+	virtual ~device_interface();
+
+public:
+	tag_t *type() { return typeName; }
+
+	virtual void validate(validity_checker &valid) const;
+
+protected:
+	device_interface	*next;
+	device_t			*device;
+	tag_t				*typeName;
+};
 
 class device_t : public delegate_bind
 {
 	friend class devauto_base;
 
-private:
+public:
 	class device_list
 	{
 	public:
@@ -70,8 +198,8 @@ private:
 	public:
 		interface_list() {}
 
-		device_interface *first() { return list[0]; }
-		device_interface *last()  { return list[size()]; }
+		device_interface *first() { return list.front(); }
+		device_interface *last()  { return list.back(); }
 
 		int size()   { return list.size(); }
 		bool empty() { return list.empty(); }
@@ -152,23 +280,6 @@ private:
 	std::string		devName;			// Device name for command line access
 
 	devauto_base	*autodevList;		// List of auto device configurations
-};
-
-class device_interface
-{
-protected:
-	device_interface(device_t *dev, tag_t *name);
-	virtual ~device_interface();
-
-public:
-	tag_t *type() { return typeName; }
-
-	virtual void validate(validity_checker &valid) const;
-
-protected:
-	device_interface	*next;
-	device_t			*device;
-	tag_t				*typeName;
 };
 
 
