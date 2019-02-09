@@ -33,8 +33,11 @@ device_t *system_config::addDevice(device_t *dev, device_t *owner)
 {
 	if (owner != nullptr) {
 		owner->devices().add(dev);
+		dev->addSystemConfig(*this);
 	} else {
+		assert(sysDevice == nullptr);
 		sysDevice = dev;
+		sysDevice->addSystemConfig(*this);
 	}
 
 	return dev;

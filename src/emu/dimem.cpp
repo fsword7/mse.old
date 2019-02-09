@@ -11,6 +11,10 @@
 di_memory::di_memory(device_t *dev)
 : device_interface(dev, "memory")
 {
+	mapAddress.clear();
+	mapConfig.clear();
+	mapSpace.clear();
+
 	dev->interfaces().memory = this;
 }
 

@@ -28,6 +28,8 @@ void ka650_device::mv3900x()
 {
 	cvax_cpu *cpu;
 
+	cpu = new cvax_cpu("cvax", sysConfig, nullptr, 0);
+
 	cfgSetAddressMap(cpu, AS_PROGRAM, mv3900x_mem);
 
 	cout << "This is MicroVAX 3800x system" << endl;

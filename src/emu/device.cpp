@@ -16,24 +16,33 @@ device_t::device_t(const char *tag, const system_config &config, device_t *owner
 : devOwner(owner), devNext(nullptr),
   tagName(tag), devName(""),
   sysConfig(config),
-  autodevList(nullptr),
   system(nullptr)
 {
+	acList.clear();
 }
 
 device_t::~device_t()
 {
 }
 
+void device_t::addSystemConfig(const system_config &config)
+{
+	assert(&sysConfig == &config);
+
+	for(devauto_base *autodev : acList)
+		autodev->endConfig();
+}
+
 devauto_base *device_t::register_device(devauto_base *autodev)
 {
-	devauto_base *old;
+	devauto_base *last = nullptr;
 
 	// add device to auto device list
-	old = autodevList;
-	autodevList = autodev;
+	if (acList.size() > 0)
+		last = acList.back();
+	acList.push_back(autodev);
 
-	return old;
+	return last;
 }
 
 void device_t::resolvePreMap()

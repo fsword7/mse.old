@@ -82,6 +82,7 @@ static const char *iprName[] = {
 	"TBCHK",   // (W)   3F Translation Buffer Check
 };
 
+//DEFINE_DEVICE_TYPE(CVAX, cvax_cpu, "CVAX", "CVAX");
 
 cvax_cpu::cvax_cpu(tag_t *tag, const system_config &config, device_t *owner, uint64_t clock)
 : vax_cpu_base(tag, config, owner, clock)

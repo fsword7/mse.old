@@ -13,6 +13,8 @@ public:
 	devauto_base(device_t &base, tag_t *tag);
 	virtual ~devauto_base();
 
+	virtual void endConfig() = 0;
+
 private:
 	devauto_base	*next;
 	device_t		&base;
@@ -23,12 +25,17 @@ private:
 template <class ObjectClass, bool required>
 class object_autodev_base : public devauto_base
 {
+public:
+	void endConfig() { assert(!resolved); objTarget = nullptr; }
+
+	ObjectClass *target() { return objTarget; }
+
 protected:
 	object_autodev_base(device_t &base, tag_t *name)
 		: devauto_base(base, tag) { }
 
 private:
-	ObjectClass *target = nullptr;
+	ObjectClass *objTarget = nullptr;
 };
 
 template <class ObjectClass>

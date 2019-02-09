@@ -7,6 +7,12 @@
 
 #pragma once
 
+template <typename Tag, typename Creator, typename... Params>
+inline device_t *cfgAddDevice(system_config &config, Tag *tag, Creator &&type, Params &&... args)
+{
+	return &type(config, std::forward<Tag>(tag), std::forward<Params>(args)...);
+}
+
 class system_config
 {
 public:
