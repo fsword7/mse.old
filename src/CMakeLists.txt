@@ -46,7 +46,6 @@ set(mse_cpp_SRCS
 	formats/dec/image.cpp
 	lib/util/delegate.cpp
 	sys/vax/ka650.cpp
-	sys/vax/syslist.cpp
 )
 
 set(mse_h_SRCS
@@ -95,6 +94,7 @@ set(mse_h_SRCS
 	formats/dec/word10.h
 	lib/util/delegate.h
 	sys/vax/ka650.h
+	sys/vax/extern.h
 )
 
 set(tools_SRCS

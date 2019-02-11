@@ -8,8 +8,9 @@
 #pragma once
 
 #define ROM_TYPE_MASK		0x0000000F
-#define ROM_TYPE_END		0
+#define ROM_TYPE_IMAGE		0
 #define ROM_TYPE_REGION		1
+#define ROM_TYPE_END		0xF
 
 #define ROM_REGION_WIDTH	0x00000030
 #define ROM_REGION_8BIT		0x00000000
@@ -29,6 +30,7 @@
 #define ROM_REGION64_BE(tag, length, flags)		ROM_REGION(tag, length, (flags) | ROM_REGION_64BIT | ROM_REGION_BE)
 #define ROM_REGION64_LE(tag, length, flags)		ROM_REGION(tag, length, (flags) | ROM_REGION_64BIT | ROM_REGION_LE)
 
+#define ROM_LOAD(name, offset, length, hash, flags)	{ name, hash, offset, length, ROM_TYPE_IMAGE | (flags) }
 
 #define ROM_NAME(Name)		rom_##Name
 #define ROM_END				{ nullptr, nullptr, 0, 0, ROM_TYPE_END }

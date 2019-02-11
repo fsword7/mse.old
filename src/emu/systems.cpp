@@ -9,25 +9,14 @@
 #include "emu/driver.h"
 #include "emu/syslist.h"
 
-extern const system_driver vax_syslist;
-
-//SYSTEM_EXTERN(mv3900);
-//SYSTEM_EXTERN(mv3900x);
-//
-//const system_driver *system_list::syslist[] =
-//{
-////	&vax_syslist,
-//
-//	&driver_mv3900,
-//	&driver_mv3900x,
-//
-//	// null terminator
-//	nullptr
-//};
+#include "sys/vax/extern.h"
 
 const system_driver *system_list::syslist[] =
 {
-	&vax_syslist,
+
+	// Digital Electric Corporation (DEC)
+	&SYSTEM_NAME(mv3900),
+	&SYSTEM_NAME(mv3900x),
 
 	// null terminator
 	nullptr
