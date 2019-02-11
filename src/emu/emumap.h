@@ -83,3 +83,36 @@ protected:
 	mapAddress	*map;		// Original address map database
 };
 
+class mapMemoryBlock
+{
+public:
+	mapMemoryBlock(mapAddressSpace &space, offs_t start, offs_t end, uint8_t *memory = nullptr)
+	: space(space), start(start), end(end), data(memory)
+	{ }
+
+private:
+	mapAddressSpace &space;
+	offs_t			start, end;
+	uint8_t			*data;
+};
+
+class mapMemoryBank
+{
+public:
+	mapMemoryBank(mapAddressSpace &space, offs_t start, offs_t end, tag_t *tag = nullptr)
+	: space(space), start(start), end(end), tag(tag)
+	{ }
+
+private:
+	mapAddressSpace &space;
+	offs_t			start, end;
+	std::string		tag;
+};
+
+class mapMemoryShare
+{
+};
+
+class mapMemoryRegion
+{
+};
