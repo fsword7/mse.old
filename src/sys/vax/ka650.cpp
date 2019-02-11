@@ -7,6 +7,7 @@
 
 #include "emu/emucore.h"
 #include "emu/devsys.h"
+#include "emu/maprom.h"
 #include "emu/driver.h"
 #include "sys/vax/ka650.h"
 
@@ -57,6 +58,11 @@ void ka650_device::mv3900x_init()
 
 }
 
+ROM_START(mv3900)
+ROM_END
+
+ROM_START(mv3900x)
+ROM_END
+
 //COMPX(mv3900,  nullptr, KA650, ka650_device, mv3900,  mv3900_init,  "MicroVAX 3900")
 //COMPX(mv3900x, nullptr, KA650, ka650_device, mv3900x, mv3900x_init, "MicroVAX 3900x")
-
