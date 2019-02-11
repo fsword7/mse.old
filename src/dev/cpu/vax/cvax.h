@@ -73,8 +73,6 @@
 #define MCHK_READ    0x80 // Read Reference Check
 #define MCHK_WRITE   0x82 // Write Reference Check
 
-DECLARE_DEVICE_TYPE(CVAX, cvax_cpu)
-
 class cvax_cpu : public vax_cpu_base
 {
 public:
@@ -94,3 +92,5 @@ protected:
 	void halt(uint32_t code);
 	void check(uint32_t code);
 };
+
+DECLARE_DEVICE_TYPE(CVAX, cvax_cpu)

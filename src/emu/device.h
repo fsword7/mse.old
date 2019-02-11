@@ -20,45 +20,56 @@ class validity_checker;
 
 
 #define DECLARE_DEVICE_TYPE(Type, Class)
+#define DEFINE_DEVICE_TYPE(Type, Class, ShortName, FullName)
 
-#define DEFINE_DEVICE_TYPE(Type, Class, ShortName, FullName) \
-	device_type<Class> const &devType = device_type<Class>(ShortName, FullName, __FILE__);
+//#define DECLARE_DEVICE_TYPE(Type, Class) \
+//	extern device_type const &Type;
+//
+//#define DEFINE_DEVICE_TYPE(Type, Class, ShortName, FullName) \
+//	device_type const &Type = device_type<Class>(ShortName, FullName, __FILE__);
 
-template <class DeviceClass>
-class device_type
-{
-public:
-	device_type()
-	: idType(typeid(std::nullptr_t)),
-	  shortName(nullptr),
-	  fullName(nullptr),
-	  srcName(nullptr)
-	{}
+//class device_type
+//{
+//public:
+//	device_type()
+//	: idType(typeid(std::nullptr_t)),
+//	  shortName(nullptr),
+//	  fullName(nullptr),
+//	  srcName(nullptr)
+//	{}
+//
+//	template <class DeviceClass>
+//	device_type(const char *_sname, const char *_fname, const char *_srcname)
+//	: idType(typeid(DeviceClass)),
+//	  shortName(_sname),
+//	  fullName(_fname),
+//	  srcName(_srcname)
+//	{
+//	}
+//
+//	template <class DeviceClass>
+//	static DeviceClass *create(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock)
+//	{
+//		return new DeviceClass(config, tag, owner, clock);
+//	}
+//
+//	const std::type_info &type()	{ return idType; }
+//	const char *sname()				{ return shortName; }
+//	const char *fname()				{ return fullName; }
+//	const char *source()			{ return srcName; }
+//
+//private:
+//	const std::type_info	&idType;		// device type identification
+//	const char				*shortName;		// short name
+//	const char				*fullName;		// full name/description
+//	const char				*srcName;		// Name of source file
+//};
 
-	device_type(const char *_sname, const char *_fname, const char *_srcname)
-	: idType(typeid(DeviceClass)),
-	  shortName(_sname),
-	  fullName(_fname),
-	  srcName(_srcname)
-	{
-	}
-
-	static DeviceClass *create(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock)
-	{
-		return new DeviceClass(config, tag, owner, clock);
-	}
-
-	const std::type_info &type()	{ return idType; }
-	const char *sname()				{ return shortName; }
-	const char *fname()				{ return fullName; }
-	const char *source()			{ return srcName; }
-
-private:
-	const std::type_info	&idType;		// device type identification
-	const char				*shortName;		// short name
-	const char				*fullName;		// full name/description
-	const char				*srcName;		// Name of source file
-};
+//template <class DeviceClass>
+//class device_type : public device_type_base
+//{
+//
+//};
 
 class device_interface
 {

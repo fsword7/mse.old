@@ -29,3 +29,5 @@ public:
 	static void mv3900_init();
 	static void mv3900x_init();
 };
+
+DECLARE_DEVICE_TYPE(KA650, ka650_device)

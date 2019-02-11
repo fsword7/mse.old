@@ -10,8 +10,9 @@
 #include "emu/driver.h"
 #include "sys/vax/ka650.h"
 
-
 using namespace std;
+
+DEFINE_DEVICE_TYPE(KA650, ka650_device, "KA650", "KA650")
 
 // Create system routines
 void ka650_device::mv3900()
@@ -55,3 +56,7 @@ void ka650_device::mv3900x_init()
 {
 
 }
+
+//COMPX(mv3900,  nullptr, KA650, ka650_device, mv3900,  mv3900_init,  "MicroVAX 3900")
+//COMPX(mv3900x, nullptr, KA650, ka650_device, mv3900x, mv3900x_init, "MicroVAX 3900x")
+
