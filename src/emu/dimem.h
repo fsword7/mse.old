@@ -15,6 +15,8 @@
 	dynamic_cast<di_memory *>(_cpu)->setAddressMap(_space, \
 		mapConstructor(&std::remove_pointer_t<decltype(this)>::_map, tag().c_str(), this))
 
+typedef device_interface_iterator<di_memory> dimem_iterator;
+
 class di_memory : public device_interface
 {
 public:

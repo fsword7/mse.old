@@ -20,10 +20,25 @@ mapManager::~mapManager()
 {
 }
 
+void mapManager::allocate(di_memory &memory)
+{
+	for (int space = 0; memory.mapConfigCount(); space++) {
+		mapAddressConfig *config = memory.getAddressSpaceConfig(space);
+		if (config != nullptr) {
+
+		}
+	}
+}
+
 void mapManager::init()
 {
-//	std::vector<di_memory *> memories;
+	dimem_iterator iter(*system->sysDevice());
+	std::vector<di_memory *> memories;
 
+	for (di_memory &memory : iter) {
+		memories.push_back(&memory);
+		allocate(memory);
+	}
 }
 
 // ***********************************************************

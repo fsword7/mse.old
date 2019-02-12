@@ -37,6 +37,7 @@ public:
 	mapManager(machine *sys);
 	~mapManager();
 
+	void allocate(di_memory &memory);
 	void init();
 
 private:
