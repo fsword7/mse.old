@@ -56,6 +56,8 @@ public:
 			mapConstructor intmap = mapConstructor(),
 			mapConstructor defmap = mapConstructor());
 
+	tag_t *getName() { return name; }
+
 private:
 	tag_t		*name;
 	endian_t	endianness;
@@ -70,6 +72,11 @@ private:
 
 class mapAddressSpace
 {
+protected:
+	mapAddressSpace(mapManager &manager, di_memory &memeory, int space);
+
+public:
+	virtual ~mapAddressSpace();
 
 	// Setup initialization routines
 	void prepare();
@@ -79,10 +86,21 @@ class mapAddressSpace
 
 protected:
 	const char	*name;		// Name of the address space
+	int			space;		// Address space index
 	device_t	&device;	// Reference to the owning device
 	mapManager	&manager;	// Reference to the owning map manager
 	mapAddress	*map;		// Original address map database
 };
+
+//template <int DataWidth, int AddrShift, endian_t endian>
+class mapAddressSpaceArea : public mapAddressSpace
+{
+//	using type = mapAddressSpaceArea<DataWidth, AddrShift, endian>;
+
+public:
+	mapAddressSpaceArea(mapManager &manager, di_memory &memory, int space, int addrWidth);
+};
+
 
 class mapMemoryBlock
 {

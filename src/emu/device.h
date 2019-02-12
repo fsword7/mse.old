@@ -81,6 +81,7 @@ protected:
 
 public:
 	tag_t *type() { return typeName; }
+	device_t *getDevice() { return device; }
 
 	virtual void validate(validity_checker &valid) const;
 

@@ -67,6 +67,19 @@ mapAddressConfig::mapAddressConfig(tag_t *tag, endian_t endian,
 
 // ***********************************************************
 
+mapAddressSpace::mapAddressSpace(mapManager &manager, di_memory &memory, int space)
+: name(memory.getAddressSpaceConfig(space)->getName()),
+  space(space),
+  device(*memory.getDevice()),
+  manager(manager),
+  map(nullptr)
+{
+}
+
+mapAddressSpace::~mapAddressSpace()
+{
+}
+
 void mapAddressSpace::prepare()
 {
 }
@@ -81,4 +94,12 @@ void mapAddressSpace::allocate()
 
 void mapAddressSpace::locate()
 {
+}
+
+// ***********************************************************
+
+mapAddressSpaceArea::mapAddressSpaceArea(mapManager &manager, di_memory &memory, int space, int addrWidth)
+: mapAddressSpace(manager, memory, space)
+{
+
 }
