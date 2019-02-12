@@ -11,6 +11,7 @@
 
 class mapAddress;
 class mapAddressSpace;
+class mapMemoryBank;
 class machine;
 
 // Address space type
@@ -85,21 +86,179 @@ public:
 	void allocate();
 	void locate();
 
+	// read accessors
+	virtual uint8_t read8(offs_t address) = 0;
+	virtual uint16_t read16(offs_t address) = 0;
+	virtual uint16_t read16(offs_t address, uint16_t mask) = 0;
+	virtual uint16_t read16u(offs_t address) = 0;
+	virtual uint16_t read16u(offs_t address, uint16_t mask) = 0;
+	virtual uint32_t read32(offs_t address) = 0;
+	virtual uint32_t read32(offs_t address, uint32_t mask) = 0;
+	virtual uint32_t read32u(offs_t address) = 0;
+	virtual uint32_t read32u(offs_t address, uint32_t mask) = 0;
+	virtual uint64_t read64(offs_t address) = 0;
+	virtual uint64_t read64(offs_t address, uint64_t mask) = 0;
+	virtual uint64_t read64u(offs_t address) = 0;
+	virtual uint64_t read64u(offs_t address, uint64_t mask) = 0;
+
+	// write accessors
+	virtual void write8(offs_t address, uint8_t data) = 0;
+	virtual void write16(offs_t address, uint16_t data) = 0;
+	virtual void write16(offs_t address, uint16_t data, uint16_t mask) = 0;
+	virtual void write16u(offs_t address, uint16_t data) = 0;
+	virtual void write16u(offs_t address, uint16_t data, uint16_t mask) = 0;
+	virtual void write32(offs_t address, uint32_t data) = 0;
+	virtual void write32(offs_t address, uint32_t data, uint32_t mask) = 0;
+	virtual void write32u(offs_t address, uint32_t data) = 0;
+	virtual void write32u(offs_t address, uint32_t data, uint32_t mask) = 0;
+	virtual void write64(offs_t address, uint64_t data) = 0;
+	virtual void write64(offs_t address, uint64_t data, uint64_t mask) = 0;
+	virtual void write64u(offs_t address, uint64_t data) = 0;
+	virtual void write64u(offs_t address, uint64_t data, uint64_t mask) = 0;
+
+//	// set ports, banks and RAM access
+//	void setRAM(offs_t start, offs_t end, void *base = nullptr);
+//	void setROM(offs_t start, offs_t end, void *base = nullptr);
+//	void setWriteOnly(offs_t start, offs_t end, void *base = nullptr);
+//
+//	void setPortR(offs_t start, offs_t end, tag_t *tag);
+//	void setPortW(offs_t start, offs_t end, tag_t *tag);
+//	void setPortRW(offs_t start, offs_t end, tag_t *tag);
+//
+//	void setBankR(offs_t start, offs_t end, tag_t *tag);
+//	void setBankW(offs_t start, offs_t end, tag_t *tag);
+//	void setBankRW(offs_t start, offs_t end, tag_t *tag);
+//
+//	void setBankR(offs_t start, offs_t end, mapMemoryBank *bank);
+//	void setBankW(offs_t start, offs_t end, mapMemoryBank *bank);
+//	void setBankRW(offs_t start, offs_t end, mapMemoryBank *bank);
+//
+//	// set ports, banks and RAM access (with mirror/mask)
+//	void setRAM(offs_t start, offs_t end, offs_t mirror, void *base = nullptr);
+//	void setROM(offs_t start, offs_t end, offs_t mirror, void *base = nullptr);
+//	void setWriteOnly(offs_t start, offs_t end, offs_t mirror, void *base = nullptr);
+//
+//	void setPortR(offs_t start, offs_t end, offs_t mirror, tag_t *tag);
+//	void setPortW(offs_t start, offs_t end, offs_t mirror, tag_t *tag);
+//	void setPortRW(offs_t start, offs_t end, offs_t mirror, tag_t *tag);
+//
+//	void setBankR(offs_t start, offs_t end, offs_t mirror, tag_t *tag);
+//	void setBankW(offs_t start, offs_t end, offs_t mirror, tag_t *tag);
+//	void setBankRW(offs_t start, offs_t end, offs_t mirror, tag_t *tag);
+//
+//	void setBankR(offs_t start, offs_t end, offs_t mirror, mapMemoryBank *bank);
+//	void setBankW(offs_t start, offs_t end, offs_t mirror, mapMemoryBank *bank);
+//	void setBankRW(offs_t start, offs_t end, offs_t mirror, mapMemoryBank *bank);
+
 protected:
 	const char	*name;		// Name of the address space
 	int			space;		// Address space index
 	device_t	&device;	// Reference to the owning device
 	mapManager	&manager;	// Reference to the owning map manager
 	mapAddress	*map;		// Original address map database
+
+	offs_t		addrMask;	// Address mask
 };
 
 //template <int DataWidth, int AddrShift, endian_t endian>
-class mapAddressSpaceArea : public mapAddressSpace
+class mapAddressSpaceAccess : public mapAddressSpace
 {
-//	using type = mapAddressSpaceArea<DataWidth, AddrShift, endian>;
+//	using type = mapAddressSpaceAccess<DataWidth, AddrShift, endian>;
 
 public:
-	mapAddressSpaceArea(mapManager &manager, di_memory &memory, int space, int addrWidth);
+	mapAddressSpaceAccess(mapManager &manager, di_memory &memory, int space, int addrWidth);
+
+	// read accessors
+	uint8_t read8(offs_t address) override
+		{ address &= addrMask; return 0; }
+	uint16_t read16(offs_t address) override
+		{ address &= addrMask; return 0; }
+	uint16_t read16(offs_t address, uint16_t mask) override
+		{ address &= addrMask; return 0; }
+	uint16_t read16u(offs_t address) override
+		{ address &= addrMask; return 0; }
+	uint16_t read16u(offs_t address, uint16_t mask) override
+		{ address &= addrMask; return 0; }
+	uint32_t read32(offs_t address) override
+		{ address &= addrMask; return 0; }
+	uint32_t read32(offs_t address, uint32_t mask) override
+		{ address &= addrMask; return 0; }
+	uint32_t read32u(offs_t address) override
+		{ address &= addrMask; return 0; }
+	uint32_t read32u(offs_t address, uint32_t mask) override
+		{ address &= addrMask; return 0; }
+	uint64_t read64(offs_t address) override
+		{ address &= addrMask; return 0; }
+	uint64_t read64(offs_t address, uint64_t mask) override
+		{ address &= addrMask; return 0; }
+	uint64_t read64u(offs_t address) override
+		{ address &= addrMask; return 0; }
+	uint64_t read64u(offs_t address, uint64_t mask) override
+		{ address &= addrMask; return 0; }
+
+	// write accessors
+	void write8(offs_t address, uint8_t data) override
+		{ address &= addrMask;  }
+	void write16(offs_t address, uint16_t data) override
+		{ address &= addrMask;  }
+	void write16(offs_t address, uint16_t data, uint16_t mask) override
+		{ address &= addrMask;  }
+	void write16u(offs_t address, uint16_t data) override
+		{ address &= addrMask;  }
+	void write16u(offs_t address, uint16_t data, uint16_t mask) override
+		{ address &= addrMask;  }
+	void write32(offs_t address, uint32_t data) override
+		{ address &= addrMask;  }
+	void write32(offs_t address, uint32_t data, uint32_t mask) override
+		{ address &= addrMask;  }
+	void write32u(offs_t address, uint32_t data) override
+		{ address &= addrMask;  }
+	void write32u(offs_t address, uint32_t data, uint32_t mask) override
+		{ address &= addrMask;  }
+	void write64(offs_t address, uint64_t data) override
+		{ address &= addrMask;  }
+	void write64(offs_t address, uint64_t data, uint64_t mask) override
+		{ address &= addrMask;  }
+	void write64u(offs_t address, uint64_t data) override
+		{ address &= addrMask;  }
+	void write64u(offs_t address, uint64_t data, uint64_t mask) override
+		{ address &= addrMask;  }
+
+
+//	// static access to functions
+//	static uint8_t read8s(type &space, offs_t address)
+//	{ address &= space.addrMask; return 0; }
+//	static uint16_t read16s(type &space, offs_t address)
+//	{ address &= space.addrMask; return 0; }
+//	static uint16_t read16ms(type &space, offs_t address, offs_t mask)
+//	{ address &= space.addrMask; return 0; }
+//	static uint32_t read32s(type &space, offs_t address)
+//	{ address &= space.addrMask; return 0; }
+//	static uint32_t read32ms(type &space, offs_t address, offs_t mask)
+//	{ address &= space.addrMask; return 0; }
+//	static uint64_t read64s(type &space, offs_t address)
+//	{ address &= space.addrMask; return 0; }
+//	static uint64_t read64ms(type &space, offs_t address, offs_t mask)
+//	{ address &= space.addrMask; return 0; }
+//
+//	static void write8s(type &space, offs_t address, uint8_t data)
+//	{ address &= space.addrMask;  }
+//	static void write16s(type &space, offs_t address, uint16_t data)
+//	{ address &= space.addrMask;  }
+//	static void write16ms(type &space, offs_t address, uint16_t data, offs_t mask)
+//	{ address &= space.addrMask;  }
+//	static void write32s(type &space, offs_t address, uint32_t data)
+//	{ address &= space.addrMask;  }
+//	static void write32ms(type &space, offs_t address, uint32_t data, offs_t mask)
+//	{ address &= space.addrMask;  }
+//	static void write64s(type &space, offs_t address, uint64_t data)
+//	{ address &= space.addrMask;  }
+//	static void write64ms(type &space, offs_t address, uint64_t data, offs_t mask)
+//	{ address &= space.addrMask;  }
+
+
+//	mapReadHandlerEntry<DataWidth, AddrShift, Endian>  *rootRead;
+//	mapWriteHandlerEntry<DataWidth, AddrShift, Endian> *rootWrite;
 };
 
 

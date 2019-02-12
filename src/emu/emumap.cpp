@@ -98,7 +98,7 @@ void mapAddressSpace::locate()
 
 // ***********************************************************
 
-mapAddressSpaceArea::mapAddressSpaceArea(mapManager &manager, di_memory &memory, int space, int addrWidth)
+mapAddressSpaceAccess::mapAddressSpaceAccess(mapManager &manager, di_memory &memory, int space, int addrWidth)
 : mapAddressSpace(manager, memory, space)
 {
 
