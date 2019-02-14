@@ -9,7 +9,7 @@
 #include "emu/devsys.h"
 #include "emu/maprom.h"
 #include "emu/driver.h"
-#include "sys/vax/ka650.h"
+#include "sys/dec/vax/ka650.h"
 
 using namespace std;
 

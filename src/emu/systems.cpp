@@ -9,7 +9,10 @@
 #include "emu/driver.h"
 #include "emu/syslist.h"
 
-#include "sys/vax/extern.h"
+#include "sys/dec/alpha/externs.h"
+#include "sys/dec/pdp10/externs.h"
+#include "sys/dec/pdp11/externs.h"
+#include "sys/dec/vax/externs.h"
 
 const system_driver *system_list::syslist[] =
 {
