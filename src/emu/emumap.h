@@ -19,7 +19,8 @@ class machine;
 #define AS_DATA			1
 #define AS_IO			2
 
-using offs_t = std::size_t;
+//using offs_t = std::size_t;
+using offs_t = uint32_t;
 
 using mapConstructor = named_delegate<void (mapAddress &)>;
 
@@ -34,7 +35,8 @@ using write32_delegate = device_delegate<uint32_t(mapAddress &, offs_t, uint32_t
 using write64_delegate = device_delegate<uint64_t(mapAddress &, offs_t, uint64_t)>;
 
 #include "emu/emumap_he.h"
-#include "emu/emumap_hed.h"
+#include "emu/emumap_hedr.h"
+#include "emu/emumap_hedw.h"
 
 class mapManager {
 public:

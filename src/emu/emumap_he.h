@@ -8,6 +8,14 @@
 #pragma once
 
 template <typename T>
+constexpr T makeBitMask(unsigned int N)
+{
+	return T((N < (8 * sizeof(T))
+		? (std::make_unsigned_t<T>(1) << N)
+		: std::make_unsigned_t<T>(0)) - 1);
+}
+
+template <typename T>
 constexpr std::enable_if_t<std::is_signed<T>::value, T> labs(T v) noexcept
 {
 	return (v < T(0)) ? -v : v;
@@ -19,6 +27,14 @@ template<> struct mapHandlerSize<0> { using uintx_t = uint8_t; };
 template<> struct mapHandlerSize<1> { using uintx_t = uint16_t; };
 template<> struct mapHandlerSize<2> { using uintx_t = uint32_t; };
 template<> struct mapHandlerSize<3> { using uintx_t = uint64_t; };
+
+constexpr int mapHandlerDispatchLowBits(int highBits, int dWidth, int aShift)
+{
+	return	(highBits > 48) ? 48 :
+			(highBits > 24) ? 24 :
+			(highBits > 14) ? 14:
+			dWidth + aShift;
+}
 
 // Generic read access
 template<int dWidth, int aShift, int Endian, int tWidth, bool Aligned, typename T>
@@ -65,11 +81,31 @@ typename mapHandlerSize<tWidth>::uintx_t mapReadGeneric(T wop, offs_t address,
 
 class mapHandlerEntry {
 public:
+
+	static constexpr uint32_t heDispatch	= 0x00000001;
+	static constexpr uint32_t heUnits		= 0x00000002;
+	static constexpr uint32_t hePassthrough	= 0x00000004;
+
+	static constexpr uint8_t heStart = 1;
+	static constexpr uint8_t heEnd   = 2;
+
 	mapHandlerEntry(mapAddressSpace *space, uint32_t flags)
 	: space(space), flags(flags), refCount(1)
 	{ }
 
-	virtual ~mapHandlerEntry();
+	virtual ~mapHandlerEntry() {}
+
+	inline void ref(int count = 1)
+	{
+		refCount += count;
+	}
+
+	inline void unref(int count = 1)
+	{
+		refCount -= count;
+		if (refCount == 0)
+			delete this;
+	}
 
 protected:
 	mapAddressSpace		*space;
@@ -104,7 +140,7 @@ public:
 
 	mapReadHandlerEntry(mapAddressSpace *space, uint32_t flags)
 	: mapHandlerEntry(space, flags) {}
-	virtual ~mapReadHandlerEntry();
+	virtual ~mapReadHandlerEntry() {}
 
 	virtual uintx_t read(offs_t address, uintx_t mask) = 0;
 };
@@ -117,7 +153,7 @@ public:
 
 	mapWriteHandlerEntry(mapAddressSpace *space, uint32_t flags)
 	: mapHandlerEntry(space, flags) {}
-	virtual ~mapWriteHandlerEntry();
+	virtual ~mapWriteHandlerEntry() {}
 
 	virtual uintx_t write(offs_t address, uintx_t data, uintx_t mask) = 0;
 };

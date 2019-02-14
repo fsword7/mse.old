@@ -31,7 +31,8 @@ set(mse_cpp_SRCS
 	emu/diexec.cpp
 	emu/dimem.cpp
 	emu/emumap.cpp
-	emu/emumap_hed.cpp
+	emu/emumap_hedr0.cpp
+	emu/emumap_hedr1.cpp
 	emu/engine.cpp
 	emu/exception.cpp
 	emu/machine.cpp
@@ -83,7 +84,8 @@ set(mse_h_SRCS
 	emu/dimem.h
 	emu/emumap.h
 	emu/emumap_he.h
-	emu/emumap_hed.h
+	emu/emumap_hedr.h
+	emu/emumap_hedw.h
 	emu/engine.h
 	emu/exception.h
 	emu/machine.h
