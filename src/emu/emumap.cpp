@@ -72,8 +72,12 @@ mapAddressSpace::mapAddressSpace(mapManager &manager, di_memory &memory, int spa
   space(space),
   device(*memory.getDevice()),
   manager(manager),
-  map(nullptr)
+  map(nullptr),
+  unmapValue(0),
+  readUnmap(nullptr), writeUnmap(nullptr),
+  readNop(nullptr), writeNop(nullptr)
 {
+
 }
 
 mapAddressSpace::~mapAddressSpace()

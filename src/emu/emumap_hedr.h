@@ -18,9 +18,9 @@ public:
 			mapReadHandlerEntry<dWidth, aShift, Endian> *handler)
 	: mapReadHandlerEntry<dWidth, aShift, Endian>(space, mapHandlerEntry::heDispatch)
 	{
-		//	if (handler != nullptr)
-		//		handler = space->getUnmapRead<dWidth, aShift, Endian>();
-		//	handler->unref(count);
+//		if (handler == nullptr)
+//			handler = space->getReadUnmap<dWidth, aShift, Endian>();
+
 		for (unsigned int idx = 0; idx != count; idx++) {
 			dispatch[idx] = handler;
 			ranges[idx] = init;

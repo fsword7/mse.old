@@ -33,6 +33,7 @@ set(mse_cpp_SRCS
 	emu/emumap.cpp
 	emu/emumap_hedr0.cpp
 	emu/emumap_hedr1.cpp
+	emu/emumap_heun.cpp
 	emu/engine.cpp
 	emu/exception.cpp
 	emu/machine.cpp
@@ -86,6 +87,7 @@ set(mse_h_SRCS
 	emu/emumap_he.h
 	emu/emumap_hedr.h
 	emu/emumap_hedw.h
+	emu/emumap_heun.h
 	emu/engine.h
 	emu/exception.h
 	emu/machine.h
