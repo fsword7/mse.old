@@ -15,10 +15,28 @@ public:
 	using whe = mapWriteHandlerEntry<dWidth, aShift, Endian>;
 
 	mapWriteHandlerDispatch(mapAddressSpace *space, const mapHandlerEntry::range &init,
-			mapReadHandlerEntry<dWidth, aShift, Endian> *handler);
-	~mapWriteHandlerDispatch();
+			mapWriteHandlerEntry<dWidth, aShift, Endian> *handler)
+	: mapWriteHandlerEntry<dWidth, aShift, Endian>(space, mapHandlerEntry::heDispatch)
+	{
+		if (handler == nullptr)
+			handler = space->getWriteUnmap<dWidth, aShift, Endian>();
 
-	void write(offs_t address, uintx_t data, uintx_t mask) override;
+		for (unsigned int idx = 0; idx != count; idx++) {
+			dispatch[idx] = handler;
+			ranges[idx] = init;
+		}
+	}
+
+	~mapWriteHandlerDispatch()
+	{
+		for (unsigned int idx = 0; idx != count; idx++)
+			dispatch[idx]->unref();
+	}
+
+	void write(offs_t offset, uintx_t data, uintx_t mask) override
+	{
+		dispatch[(offset >> lowBits) & bitMask]->write(offset, data, mask);
+	}
 
 protected:
 	static constexpr uint32_t lowBits = mapHandlerDispatchLowBits(highBits, dWidth, aShift);
@@ -33,6 +51,5 @@ protected:
 	mapHandlerEntry::range ranges[count];
 
 private:
-
 
 };

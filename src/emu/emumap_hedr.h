@@ -1,5 +1,5 @@
 /*
- * emumap_hed.h
+ * emumap_hedr.h
  *
  *  Created on: Feb 14, 2019
  *      Author: Tim Stark
@@ -7,7 +7,7 @@
 
 #pragma once
 
-template <int hBits, int dWidth, int aShift, endian_t Endian>
+template <int highBits, int dWidth, int aShift, endian_t Endian>
 class mapReadHandlerDispatch : public mapReadHandlerEntry<dWidth, aShift, Endian>
 {
 public:
@@ -18,8 +18,8 @@ public:
 			mapReadHandlerEntry<dWidth, aShift, Endian> *handler)
 	: mapReadHandlerEntry<dWidth, aShift, Endian>(space, mapHandlerEntry::heDispatch)
 	{
-//		if (handler == nullptr)
-//			handler = space->getReadUnmap<dWidth, aShift, Endian>();
+		if (handler == nullptr)
+			handler = space->getReadUnmap<dWidth, aShift, Endian>();
 
 		for (unsigned int idx = 0; idx != count; idx++) {
 			dispatch[idx] = handler;
@@ -39,13 +39,13 @@ public:
 	}
 
 protected:
-	static constexpr uint32_t lowBits = mapHandlerDispatchLowBits(hBits, dWidth, aShift);
-	static constexpr uint32_t bitCount = hBits > lowBits ? hBits - lowBits : 0;
+	static constexpr uint32_t lowBits = mapHandlerDispatchLowBits(highBits, dWidth, aShift);
+	static constexpr uint32_t bitCount = highBits > lowBits ? highBits - lowBits : 0;
 	static constexpr uint32_t count = 1 << bitCount;
 	static constexpr offs_t   bitMask = makeBitMask<offs_t>(bitCount);
 	static constexpr offs_t   lowMask = makeBitMask<offs_t>(lowBits);
-	static constexpr offs_t   highMask = makeBitMask<offs_t>(hBits) - lowMask;
-	static constexpr offs_t   upMask = makeBitMask<offs_t>(hBits);
+	static constexpr offs_t   highMask = makeBitMask<offs_t>(highBits) - lowMask;
+	static constexpr offs_t   upMask = makeBitMask<offs_t>(highBits);
 
 	mapReadHandlerEntry<dWidth, aShift, Endian> *dispatch[count];
 	mapHandlerEntry::range ranges[count];

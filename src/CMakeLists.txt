@@ -31,8 +31,10 @@ set(mse_cpp_SRCS
 	emu/diexec.cpp
 	emu/dimem.cpp
 	emu/emumap.cpp
+	emu/emumap_hedr.cpp
 	emu/emumap_hedr0.cpp
 	emu/emumap_hedr1.cpp
+	emu/emumap_hedw0.cpp
 	emu/emumap_heun.cpp
 	emu/engine.cpp
 	emu/exception.cpp

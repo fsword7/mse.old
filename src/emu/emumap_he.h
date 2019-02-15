@@ -83,6 +83,8 @@ public:
 
 	virtual ~mapHandlerEntry() {}
 
+	virtual std::string name() const = 0;
+
 	inline void ref(int count = 1)
 	{
 		refCount += count;
@@ -143,5 +145,5 @@ public:
 	: mapHandlerEntry(space, flags) {}
 	virtual ~mapWriteHandlerEntry() {}
 
-	virtual uintx_t write(offs_t address, uintx_t data, uintx_t mask) = 0;
+	virtual void write(offs_t address, uintx_t data, uintx_t mask) = 0;
 };

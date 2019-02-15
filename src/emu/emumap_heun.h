@@ -20,7 +20,7 @@ public:
 
 	~mapReadHandlerUnmapped() = default;
 
-	std::string name() override;
+	std::string name() const override;
 
 	uintx_t read(offs_t offset, uintx_t mask) override;
 };
@@ -38,9 +38,9 @@ public:
 
 	~mapWriteHandlerUnmapped() = default;
 
-	std::string name() override;
+	std::string name() const override;
 
-	uintx_t write(offs_t offset, uintx_t data, uintx_t mask) override;
+	void write(offs_t offset, uintx_t data, uintx_t mask) override;
 };
 
 
@@ -57,7 +57,7 @@ public:
 
 	~mapReadHandlerNop() = default;
 
-	std::string name() override;
+	std::string name() const override;
 
 	uintx_t read(offs_t offset, uintx_t mask) override;
 };
@@ -75,7 +75,7 @@ public:
 
 	~mapWriteHandlerNop() = default;
 
-	std::string name() override;
+	std::string name() const override;
 
-	uintx_t write(offs_t offset, uintx_t data, uintx_t mask) override;
+	void write(offs_t offset, uintx_t data, uintx_t mask) override;
 };

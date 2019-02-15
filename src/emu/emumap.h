@@ -35,8 +35,6 @@ using write32_delegate = device_delegate<uint32_t(mapAddress &, offs_t, uint32_t
 using write64_delegate = device_delegate<uint64_t(mapAddress &, offs_t, uint64_t)>;
 
 #include "emu/emumap_he.h"
-#include "emu/emumap_hedr.h"
-#include "emu/emumap_hedw.h"
 #include "emu/emumap_heun.h"
 
 class mapManager {
@@ -93,13 +91,13 @@ public:
 
 	uint64_t unmap() const { return unmapValue; }
 
-//	template<int dWidth, int aShift, endian_t Endian>
-//	mapReadHandlerUnmapped<dWidth, aShift, Endian> *getReadUnmap() const
-//	{ return static_cast<mapReadHandlerUnmapped<dWidth, aShift, Endian>> readUnmap; }
-//
-//	template<int dWidth, int aShift, endian_t Endian>
-//	mapWriteHandlerUnmapped<dWidth, aShift, Endian> *getWriteUnmap() const
-//	{ return static_cast<mapWriteHandlerUnmapped<dWidth, aShift, Endian>> writeUnmap; }
+	template<int dWidth, int aShift, endian_t Endian>
+	mapReadHandlerUnmapped<dWidth, aShift, Endian> *getReadUnmap() const
+	{ return nullptr; /* static_cast<mapReadHandlerUnmapped<dWidth, aShift, Endian>> readUnmap; */ }
+
+	template<int dWidth, int aShift, endian_t Endian>
+	mapWriteHandlerUnmapped<dWidth, aShift, Endian> *getWriteUnmap() const
+	{ return nullptr; /* static_cast<mapWriteHandlerUnmapped<dWidth, aShift, Endian>> writeUnmap; */ }
 
 	// read accessors
 	virtual uint8_t read8(offs_t address) = 0;
