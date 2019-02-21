@@ -29,6 +29,8 @@
 
 #include <boost/algorithm/string.hpp>
 
+#define LSB_FIRST 1
+
 typedef const char tag_t;
 
 enum endian_t {
@@ -51,6 +53,8 @@ enum endian_t {
 #include "emu/driver.h"
 #include "emu/sysconfig.h"
 #include "emu/emumap.h"
+
+#include "emu/devicei.h"
 
 // Data length
 #define LN_BYTE  1
@@ -95,6 +99,56 @@ enum endian_t {
 #define ZXTW(d) uint16_t(d)
 #define ZXTL(d) uint32_t(d)
 #define ZXTQ(d) uint64_t(d)
+
+
+
+union pair16_t {
+#if LSB_FIRST
+	struct { int8_t l, h; }  sb;
+	struct { uint8_t l, h; } ub;
+#else
+	struct { int8_t h, l; }  sb;
+	struct { uint8_t h, l; } ub;
+#endif
+	int16_t  sw;
+	uint16_t uw;
+};
+
+union pair32_t {
+#if LSB_FIRST
+	struct { int8_t l, h, h2, h3; }  sb;
+	struct { uint8_t l, h, h2, h3; } ub;
+	struct { int16_t l, h; }  sw;
+	struct { uint16_t l, h; } uw;
+#else
+	struct { int8_t h3, h2, h, l; }  sb;
+	struct { uint8_t h3, h2, h, l; } ub;
+	struct { int16_t h, l; }  sw;
+	struct { uint16_t h, l; } uw;
+#endif
+	int32_t  sd;
+	uint32_t ud;
+};
+
+union pair64_t {
+#if LSB_FIRST
+	struct { int8_t l, h, h2, h3, h4, h5, h6, h7; }  sb;
+	struct { uint8_t l, h, h2, h3, h4, h5, h6, h7; } ub;
+	struct { int16_t l, h, h2, h3; }  sw;
+	struct { uint16_t l, h, h2, h3; } uw;
+	struct { int32_t l, h; }  sd;
+	struct { uint32_t l, h; } ud;
+#else
+	struct { int8_t h7, h6, h5. h4, h3, h2, h, l; }  sb;
+	struct { uint8_t h7, h6. h5, h4, h3, h2, h, l; } ub;
+	struct { int16_t h3, h2, h, l; }  sw;
+	struct { uint16_t h3, h2, h, l; } uw;
+	struct { int32_t h, l; }  sd;
+	struct { uint32_t h, l; } ud;
+#endif
+	int64_t  sq;
+	uint64_t uq;
+};
 
 // Varying scale unsigned integer
 struct scale16_t {

@@ -65,11 +65,15 @@ class validity_checker;
 //	const char				*srcName;		// Name of source file
 //};
 
-//template <class DeviceClass>
-//class device_type : public device_type_base
-//{
-//
-//};
+template <class DeviceClass>
+class device_type
+{
+public:
+
+	template <typename... Params>
+	DeviceClass &operator() (system_config &config, tag_t *tag, Params&&... args) const;
+
+};
 
 class device_interface
 {
@@ -172,6 +176,8 @@ public:
 	template <class DeviceClass>
 	static device_t *create(const char *tag, const system_config &config, device_t *owner, uint64_t clock)
 	{
+//		DeviceClass *device = new DeviceClass(tag, config, clock);
+//		return config.addDevice(device, owner);
 		return new DeviceClass(tag, config, clock);
 	}
 
@@ -181,6 +187,9 @@ public:
 	std::string &name() { return devName; }
 	device_t *owner() { return devOwner; }
 	device_t *next()  { return devNext; }
+
+//	system_config &config() { return sysConfig; }
+//	const system_config &config() const { return sysConfig; }
 
 //	void setSystemConfig(const system_config &config) { sysConfig = config; }
 

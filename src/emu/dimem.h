@@ -19,6 +19,11 @@ typedef device_interface_iterator<di_memory> dimem_iterator;
 
 class di_memory : public device_interface
 {
+	template <typename T, typename U>
+	struct is_related_class {
+		static constexpr bool value = std::is_convertible<std::add_pointer<T>, std::add_pointer<U>>::value;
+	};
+
 public:
 	di_memory(device_t *dev);
 	~di_memory();
@@ -28,6 +33,15 @@ public:
 	mapAddressConfig *getAddressSpaceConfig(int space);
 
 	int mapConfigCount() { return mapConfig.size(); }
+
+
+	template <typename T, typename Ret, typename... Params>
+	std::enable_if_t<is_related_class<device_t, T>::value>
+		setAddressMap(int space, Ret (T::*func)(Params...));
+
+	template <typename T, typename Ret, typename... Params>
+	std::enable_if_t<!is_related_class<device_t, T>::value>
+		setAddressMap(int space, Ret (T::*func)(Params...));
 
 	void setAddressMap(int space, mapConstructor map);
 
@@ -40,3 +54,19 @@ private:
 	std::vector<mapAddressConfig *>	mapConfig;
 	std::vector<mapAddressSpace>	mapSpace;
 };
+
+template <typename T, typename Ret, typename... Params>
+inline std::enable_if_t<di_memory::is_related_class<device_t, T>::value>
+	di_memory::setAddressMap(int space, Ret (T::*func)(Params... args))
+{
+//	device_t &dev(getDevice()->config().current_device());
+//	setAddressMap(space, mapConstructor(func, dev.tag().c_str(), &dynamic_cast<T &>(dev)));
+}
+
+template <typename T, typename Ret, typename... Params>
+inline std::enable_if_t<!di_memory::is_related_class<device_t, T>::value>
+	di_memory::setAddressMap(int space, Ret (T::*func)(Params... args))
+{
+//	device_t &dev(getDevice()->config().current_device());
+//	setAddressMap(space, mapConstructor(func, dev.tag().c_str(), &dynamic_cast<T &>(dev)));
+}

@@ -18,8 +18,8 @@ public:
 	}
 
 	// System creator routines
-	void mv3900();
-	void mv3900x();
+	void mv3900(system_config &config);
+	void mv3900x(system_config &config);
 
 	// Address space mapping
 	void mv3900_mem(mapAddress &map);

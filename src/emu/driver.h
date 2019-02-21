@@ -12,7 +12,7 @@ class romEntry;
 struct system_driver
 {
 	typedef device_t *(*creator_t)(const char *, const system_config &, device_t *, uint64_t);
-	typedef void (*system_creator)(device_t &);
+	typedef void (*system_creator)(system_config &, device_t &);
 	typedef void (*driver_init)(device_t &);
 
 	const char		*name;			// machine name
@@ -31,7 +31,7 @@ extern const system_driver SYSTEM_NAME(Name) =		\
 	#Name,											\
 	#Parent,										\
 	device_t::create<Class>,						\
-	[] (device_t &owner) { static_cast<Class &>(owner).Create(); }, \
+	[] (system_config &config, device_t &owner) { static_cast<Class &>(owner).Create(config); }, \
 	[] (device_t &owner) { static_cast<Class &>(owner).Init(); },	\
 	ROM_NAME(Name),		\
 	Description,		\

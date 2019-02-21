@@ -16,7 +16,7 @@ system_config::system_config(const system_driver &model)
 	// Create root of system device
 	sysDevice = model.creator(model.name, *this, nullptr, 0);
 
-	model.create(*sysDevice);
+	model.create(*this, *sysDevice);
 
 }
 
