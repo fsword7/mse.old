@@ -71,7 +71,7 @@ class device_type
 public:
 
 	template <typename... Params>
-	DeviceClass &operator() (system_config &config, tag_t *tag, Params&&... args) const;
+	DeviceClass *operator() (system_config &config, tag_t *tag, Params&&... args) const;
 
 };
 

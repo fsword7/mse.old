@@ -55,7 +55,7 @@ constexpr const endian_t endianNative = endianBig;
 #include "emu/sysconfig.h"
 #include "emu/emumap.h"
 
-#include "emu/devicei.h"
+#include "emu/templates.h"
 
 // Data length
 #define LN_BYTE  1
