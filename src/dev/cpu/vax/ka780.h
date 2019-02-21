@@ -33,7 +33,7 @@
 class ka780_cpu : public vax_cpu_base
 {
 public:
-	ka780_cpu(tag_t *tag, const system_config &config, device_t *owner, uint64_t clock);
+	ka780_cpu(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock);
 	~ka780_cpu();
 
 	void reset();

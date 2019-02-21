@@ -84,8 +84,8 @@ static const char *iprName[] = {
 
 DEFINE_DEVICE_TYPE(CVAX, cvax_cpu, "CVAX", "CVAX")
 
-cvax_cpu::cvax_cpu(tag_t *tag, const system_config &config, device_t *owner, uint64_t clock)
-: vax_cpu_base(tag, config, owner, clock)
+cvax_cpu::cvax_cpu(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock)
+: vax_cpu_base(config, tag, owner, clock)
 {
 }
 

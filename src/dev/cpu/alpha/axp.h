@@ -202,7 +202,7 @@ enum opCodes {
 class axp_cpu_base : public cpu_device
 {
 public:
-	axp_cpu_base(tag_t *tag, const system_config &config, device_t *owner, uint64_t clock);
+	axp_cpu_base(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock);
 	~axp_cpu_base();
 
 private:

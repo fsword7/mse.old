@@ -76,7 +76,7 @@
 class cvax_cpu : public vax_cpu_base
 {
 public:
-	cvax_cpu(tag_t *tag, const system_config &config, device_t *owner, uint64_t clock);
+	cvax_cpu(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock);
 	~cvax_cpu();
 
 	void reset();

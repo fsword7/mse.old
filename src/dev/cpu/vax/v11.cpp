@@ -15,8 +15,8 @@
 #include "dev/cpu/vax/opcodes.h"
 
 
-v11_cpu::v11_cpu(tag_t *tag, const system_config &config, device_t *owner, uint64_t clock)
-: vax_cpu_base(tag, config, owner, clock)
+v11_cpu::v11_cpu(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock)
+: vax_cpu_base(config, tag, owner, clock)
 {
 }
 

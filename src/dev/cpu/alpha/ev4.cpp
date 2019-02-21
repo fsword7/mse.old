@@ -2,8 +2,8 @@
 #include "emu/emucore.h"
 #include "dev/cpu/alpha/ev4.h"
 
-ev4_cpu::ev4_cpu(tag_t *tag, const system_config &config, device_t *owner, uint64_t clock)
-: axp_cpu_base(tag, config, owner, clock)
+ev4_cpu::ev4_cpu(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock)
+: axp_cpu_base(config, tag, owner, clock)
 {
 }
 

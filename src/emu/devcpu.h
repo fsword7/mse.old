@@ -32,7 +32,7 @@ public:
 	};
 
 protected:
-	cpu_device(const char *tag, const system_config &config, device_t *owner, uint64_t clock);
+	cpu_device(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock);
 
 public:
 	virtual ~cpu_device();

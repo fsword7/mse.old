@@ -12,7 +12,7 @@
 class ev4_cpu : public axp_cpu_base
 {
 public:
-	ev4_cpu(tag_t *tag, const system_config &config, device_t *owner, uint64_t clock);
+	ev4_cpu(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock);
 	~ev4_cpu();
 
 	void execute();

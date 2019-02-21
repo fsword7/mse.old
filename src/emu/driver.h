@@ -11,7 +11,7 @@ class romEntry;
 
 struct system_driver
 {
-	typedef device_t *(*creator_t)(const char *, const system_config &, device_t *, uint64_t);
+	typedef device_t *(*creator_t)(const system_config &, tag_t *, device_t *, uint64_t);
 	typedef void (*system_creator)(system_config &, device_t &);
 	typedef void (*driver_init)(device_t &);
 
@@ -40,7 +40,7 @@ extern const system_driver SYSTEM_NAME(Name) =		\
 
 //struct system_driver
 //{
-//	typedef device_t *(*creator_t)(const char *, const system_config &, device_t *, uint64_t);
+//	typedef device_t *(*creator_t)(const system_config &, tag_t *, device_t *, uint64_t);
 //	typedef void (*system_creator)(device_t &);
 //	typedef void (*driver_init)(device_t &);
 //
@@ -58,7 +58,7 @@ extern const system_driver SYSTEM_NAME(Name) =		\
 
 //class system_driver
 //{
-//	typedef device_t *(*creator_t)(const char *, const system_config &, device_t *, uint64_t);
+//	typedef device_t *(*creator_t)(const system_config &, tag_t *, device_t *, uint64_t);
 //	typedef void (*system_creator)(device_t &);
 //	typedef void (*driver_init)(device_t &);
 //
