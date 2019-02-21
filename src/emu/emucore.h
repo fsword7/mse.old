@@ -29,6 +29,7 @@
 
 #include <boost/algorithm/string.hpp>
 
+// LSB_FIRST endianness (1 = little endianess, 0 = big endianess)
 #define LSB_FIRST 1
 
 typedef const char tag_t;
@@ -38,11 +39,11 @@ enum endian_t {
 	endianBig
 };
 
-//#if LSB_FIRST
-//const endian_t endianNative = endianLittle;
-//#else
-//const endian_t endianNative = endianBig;
-//#endif
+#if LSB_FIRST
+constexpr const endian_t endianNative = endianLittle;
+#else
+constexpr const endian_t endianNative = endianBig;
+#endif
 
 // named function call parameters
 #define FUNC(func) func, #func
@@ -101,7 +102,7 @@ enum endian_t {
 #define ZXTQ(d) uint64_t(d)
 
 
-
+// Varying pair/scale 16-bit integer
 union pair16_t {
 #if LSB_FIRST
 	struct { int8_t l, h; }  sb;
@@ -114,6 +115,7 @@ union pair16_t {
 	uint16_t uw;
 };
 
+// Varying pair/scale 32-bit integer
 union pair32_t {
 #if LSB_FIRST
 	struct { int8_t l, h, h2, h3; }  sb;
@@ -130,6 +132,7 @@ union pair32_t {
 	uint32_t ud;
 };
 
+// Varying pair/scale 64-bit integer
 union pair64_t {
 #if LSB_FIRST
 	struct { int8_t l, h, h2, h3, h4, h5, h6, h7; }  sb;
