@@ -19,7 +19,7 @@ public:
 		sysCallbackCount
 	};
 
-	system_device(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock);
+	system_device(const system_config &config, tag_t *tag, uint64_t clock);
 
 	virtual ~system_device();
 

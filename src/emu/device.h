@@ -37,44 +37,76 @@ struct device_tag_struct { typedef DeviceClass type; };
 template <class DeviceClass>
 auto device_tag_func() { return device_tag_struct<DeviceClass>{}; };
 
+template <class SystemClass>
+struct system_tag_struct { typedef SystemClass type; };
+template <class SystemClass>
+auto system_tag_func() { return system_tag_struct<SystemClass>{}; };
+
 class device_type_base
 {
+	typedef device_t *(*create_func)(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock);
+
+	template <typename DeviceClass>
+	static device_t *createDevice(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock)
+	{
+		return new DeviceClass(config, tag, owner, clock);
+	}
+
+	template <typename SystemClass>
+	static device_t *createSystem(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock)
+	{
+		return new SystemClass(config, tag, clock);
+	}
+
 public:
 	device_type_base()
 	: idType(typeid(std::nullptr_t)),
 	  shortName(nullptr),
 	  fullName(nullptr),
-	  srcName(nullptr)
-	{}
-
-	template <class DeviceClass>
-	device_type_base()
-	: idType(typeid(DeviceClass)),
-	  shortName(nullptr),
-	  fullName(nullptr),
-	  srcName(nullptr)
+	  srcName(nullptr),
+	  creator(nullptr)
 	{}
 
 //	template <class DeviceClass>
-//	device_type_base(device_tag_struct<DeviceClass>(*)())
+//	device_type_base()
 //	: idType(typeid(DeviceClass)),
 //	  shortName(nullptr),
 //	  fullName(nullptr),
-//	  srcName(nullptr)
+//	  srcName(nullptr),
+//	  creator(&createDevice<DeviceClass>)
 //	{}
+
+	template <class SystemClass>
+	device_type_base(system_tag_struct<SystemClass>(*)())
+	: idType(typeid(SystemClass)),
+	  shortName(nullptr),
+	  fullName(nullptr),
+	  srcName(nullptr),
+	  creator(&createSystem<SystemClass>)
+	{}
+
+	template <class DeviceClass>
+	device_type_base(device_tag_struct<DeviceClass>(*)())
+	: idType(typeid(DeviceClass)),
+	  shortName(nullptr),
+	  fullName(nullptr),
+	  srcName(nullptr),
+	  creator(&createDevice<DeviceClass>)
+	{}
 
 //	template <class DeviceClass>
 //	device_type_base(const char *sname, const char *fname, const char *srcname)
 //	: idType(typeid(DeviceClass)),
 //	  shortName(sname),
 //	  fullName(fname),
-//	  srcName(srcname)
+//	  srcName(srcname),
+//	  creator(&createDevice<DeviceClass>)
 //	{}
 
-	template <class DeviceClass>
-	static DeviceClass *create(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock)
+	device_t *create(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock) const
 	{
-		return new DeviceClass(config, tag, owner, clock);
+		assert(creator != nullptr);
+		return creator(config, tag, owner, clock);
 	}
 
 	const std::type_info &type()	{ return idType; }
@@ -87,23 +119,29 @@ private:
 	const char				*shortName;		// short name
 	const char				*fullName;		// full name/description
 	const char				*srcName;		// Name of source file
+	const create_func		creator;
 };
 
 template <class DeviceClass>
 class device_type : public device_type_base
 {
 public:
-//	device_type(const char *sname, const char *fname, const char *srcname)
-//	: device_type_base<DeviceClass>(sname, fname, srcname)
-//	{}
+	using device_type_base::device_type_base;
+	using device_type_base::create;
+
+//	template <typename... Params>
+//	DeviceClass *create(const system_config &config, tag_t *tag, device_t *owner, Params &&... args) const
+//	{
+//		return new DeviceClass(config, tag, owner, std::forward<Params>(args)...);
+//	}
 
 	template <typename... Params>
 	DeviceClass *operator() (system_config &config, tag_t *tag, Params&&... args) const;
 
 };
 
-//template <class DeviceClass>
-//constexpr auto deviceCreator = &device_tag_func<DeviceClass>;
+template <class SystemClass>
+constexpr auto systemCreator = &system_tag_func<SystemClass>;
 
 class device_interface
 {

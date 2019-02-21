@@ -8,8 +8,8 @@
 #include "emu/emucore.h"
 #include "emu/devsys.h"
 
-system_device::system_device(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock)
-: device_t(config, tag, owner, clock)
+system_device::system_device(const system_config &config, tag_t *tag, uint64_t clock)
+: device_t(config, tag, nullptr, clock)
 {
 
 }
