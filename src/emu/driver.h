@@ -17,6 +17,7 @@ struct system_driver
 
 	const char		*name;			// machine name
 	const char 		*parent;		// parent of machine name
+	const device_type_base	&type;
 	creator_t		creator;		// system device creator
 	system_creator	create;			// system create callback
 	driver_init		init;			// system initialize callback
@@ -25,11 +26,14 @@ struct system_driver
 	const char		*source;		// source file name
 };
 
+#define SYSTEM_TYPE(Name, Class) device_type<Class>()
+
 #define COMP(Name, Parent, Type, Class, Create, Init, Company, Description)	\
 extern const system_driver SYSTEM_NAME(Name) =		\
 {													\
 	#Name,											\
 	#Parent,										\
+	SYSTEM_TYPE(Name, Class),						\
 	device_t::create<Class>,						\
 	[] (system_config &config, device_t &owner) { static_cast<Class &>(owner).Create(config); }, \
 	[] (device_t &owner) { static_cast<Class &>(owner).Init(); },	\

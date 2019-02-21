@@ -19,14 +19,18 @@ class di_execute;
 class validity_checker;
 
 
-#define DECLARE_DEVICE_TYPE(Type, Class)
-#define DEFINE_DEVICE_TYPE(Type, Class, ShortName, FullName)
+//#define DECLARE_DEVICE_TYPE(Type, Class)
+//#define DEFINE_DEVICE_TYPE(Type, Class, ShortName, FullName)
 
-//#define DECLARE_DEVICE_TYPE(Type, Class) \
-//	extern device_type<Class> const &Type;
-//
+#define DECLARE_DEVICE_TYPE(Type, Class) \
+	extern device_type<Class> const &Type;
+
 //#define DEFINE_DEVICE_TYPE(Type, Class, ShortName, FullName) \
 //	device_type<Class> const &Type = deviceCreator<Class>;
+//#define DEFINE_DEVICE_TYPE(Type, Class, ShortName, FullName) \
+//	device_type<Class> const &Type = device_type<Class>(ShortName, FullName, __FILE__);
+#define DEFINE_DEVICE_TYPE(Type, Class, ShortName, FullName) \
+	device_type<Class> const &Type = device_type<Class>();
 
 template <class DeviceClass>
 struct device_tag_struct { typedef DeviceClass type; };
@@ -44,13 +48,28 @@ public:
 	{}
 
 	template <class DeviceClass>
-	device_type_base(device_tag_struct<DeviceClass>(*)())
+	device_type_base()
 	: idType(typeid(DeviceClass)),
 	  shortName(nullptr),
 	  fullName(nullptr),
 	  srcName(nullptr)
 	{}
 
+//	template <class DeviceClass>
+//	device_type_base(device_tag_struct<DeviceClass>(*)())
+//	: idType(typeid(DeviceClass)),
+//	  shortName(nullptr),
+//	  fullName(nullptr),
+//	  srcName(nullptr)
+//	{}
+
+//	template <class DeviceClass>
+//	device_type_base(const char *sname, const char *fname, const char *srcname)
+//	: idType(typeid(DeviceClass)),
+//	  shortName(sname),
+//	  fullName(fname),
+//	  srcName(srcname)
+//	{}
 
 	template <class DeviceClass>
 	static DeviceClass *create(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock)
@@ -74,14 +93,17 @@ template <class DeviceClass>
 class device_type : public device_type_base
 {
 public:
+//	device_type(const char *sname, const char *fname, const char *srcname)
+//	: device_type_base<DeviceClass>(sname, fname, srcname)
+//	{}
 
 	template <typename... Params>
 	DeviceClass *operator() (system_config &config, tag_t *tag, Params&&... args) const;
 
 };
 
-template <class DeviceClass>
-constexpr auto deviceCreator = &device_tag_func<DeviceClass>;
+//template <class DeviceClass>
+//constexpr auto deviceCreator = &device_tag_func<DeviceClass>;
 
 class device_interface
 {
