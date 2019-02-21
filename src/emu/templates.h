@@ -18,14 +18,14 @@ template <typename T, typename Ret, typename... Params>
 inline std::enable_if_t<di_memory::is_related_class<device_t, T>::value>
 	di_memory::setAddressMap(int space, Ret (T::*func)(Params... args))
 {
-//	device_t &dev(getDevice()->config().current_device());
-//	setAddressMap(space, mapConstructor(func, dev.tag().c_str(), &dynamic_cast<T &>(dev)));
+	device_t &dev = *getDevice()->config().getCurrentDevice();
+	setAddressMap(space, mapConstructor(func, dev.tag().c_str(), &dynamic_cast<T &>(dev)));
 }
 
 template <typename T, typename Ret, typename... Params>
 inline std::enable_if_t<!di_memory::is_related_class<device_t, T>::value>
 	di_memory::setAddressMap(int space, Ret (T::*func)(Params... args))
 {
-//	device_t &dev(getDevice()->config().current_device());
-//	setAddressMap(space, mapConstructor(func, dev.tag().c_str(), &dynamic_cast<T &>(dev)));
+	device_t &dev = *getDevice()->config().getCurrentDevice();
+	setAddressMap(space, mapConstructor(func, dev.tag().c_str(), &dynamic_cast<T &>(dev)));
 }

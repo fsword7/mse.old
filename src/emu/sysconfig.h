@@ -34,7 +34,8 @@ public:
 //		return &result;
 	}
 
-	device_t &current_device() { return *curDevice; }
+	device_t *getCurrentDevice() { return curDevice; }
+	device_t *getCurrentDevice() const { return curDevice; }
 
 private:
 	const system_driver	&sysDriver;		// system driver

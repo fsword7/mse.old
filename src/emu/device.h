@@ -188,8 +188,7 @@ public:
 	device_t *owner() { return devOwner; }
 	device_t *next()  { return devNext; }
 
-//	system_config &config() { return sysConfig; }
-//	const system_config &config() const { return sysConfig; }
+	const system_config &config() const { return sysConfig; }
 
 //	void setSystemConfig(const system_config &config) { sysConfig = config; }
 
