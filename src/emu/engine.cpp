@@ -17,16 +17,16 @@ using namespace std;
 
 vector<machine> system_engine::machines;
 
-//device_t *system_engine::find(string drvName)
-//{
-//	if (machine.empty())
-//		return nullptr;
-//	for (auto &sys : machine) {
-//		if (sys.name() == drvName)
-//			return &sys;
-//	}
-//	return nullptr;
-//}
+machine *system_engine::find(string drvName)
+{
+	if (machines.empty())
+		return nullptr;
+	for (auto &sys : machines) {
+		if (sys.getDeviceName() == drvName)
+			return &sys;
+	}
+	return nullptr;
+}
 
 void system_engine::create(string devName, string sysName)
 {
@@ -36,8 +36,10 @@ void system_engine::create(string devName, string sysName)
 	machine *sys = nullptr;
 
 	// Named system must be non-existent first
-//	if (find(devName) != nullptr)
-//		return nullptr;
+	if (find(devName) != nullptr) {
+		std::cout << devName << ": System already created" << std::endl;
+		return;
+	}
 
 	// Find system from system list database
 	driver = syslist.find(sysName);
@@ -48,6 +50,7 @@ void system_engine::create(string devName, string sysName)
 
 	config = new system_config(*driver);
 	sys = new machine(config);
+	sys->setDeviceName(devName);
 
 	if (sys != nullptr)
 		machines.push_back(*sys);

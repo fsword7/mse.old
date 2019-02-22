@@ -12,7 +12,7 @@ class system_engine
 public:
 	system_engine() {}
 
-//	static device_t *find(std::string drvName);
+	static machine *find(std::string drvName);
 
 	static void create(std::string drvName, std::string tagName);
 

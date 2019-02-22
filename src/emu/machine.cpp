@@ -22,6 +22,16 @@ machine::~machine()
 {
 }
 
+void machine::setDeviceName(std::string name)
+{
+	config.getSystemDevice()->setDeviceName(name);
+}
+
+std::string machine::getDeviceName()
+{
+	return config.getSystemDevice()->getDeviceName();
+}
+
 // Running machine initialization
 void machine::init()
 {

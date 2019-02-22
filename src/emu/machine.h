@@ -15,6 +15,9 @@ public:
 	device_t *getSystemDevice() { return sysDevice; }
 	const device_t *getSystemsDevice() const { return sysDevice; }
 
+	void setDeviceName(std::string name);
+	std::string getDeviceName();
+
 	void init();
 	void execute();
 
