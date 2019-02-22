@@ -14,9 +14,7 @@ system_config::system_config(const system_driver &model)
 : sysDriver(model), sysDevice(nullptr), curDevice(nullptr)
 {
 	// Create root of system device
-//	sysDevice = model.creator(*this, model.name, nullptr, 0);
 	addDeviceType(model.name, model.type, 0);
-	curDevice = sysDevice;
 
 	model.create(*this, *sysDevice);
 }
@@ -24,6 +22,8 @@ system_config::system_config(const system_driver &model)
 device_t *system_config::addDeviceType(tag_t *tag, const device_type_base &type, uint64_t clock)
 {
 	std::pair<tag_t *, device_t *> const owner = resolveOwner(tag);
+
+	std::cout << "Creating " << type.sname() << ": tag " << tag << " -> " << owner.first << std::endl;
 
 	device_t *dev = type.create(*this, owner.first, owner.second, clock);
 	return addDevice(dev, owner.second);
@@ -33,14 +33,22 @@ device_t *system_config::addDevice(device_t *dev, device_t *owner)
 {
 	if (owner != nullptr) {
 		owner->devices().add(dev);
-		dev->addSystemConfig(*this);
 	} else {
 		assert(sysDevice == nullptr);
 		sysDevice = dev;
-		sysDevice->addSystemConfig(*this);
 	}
 
+	// Begin system/device configuration process
+	dev->beginConfig(this);
+
 	return dev;
+}
+
+void system_config::beginConfig(device_t *device)
+{
+	// Assign device/system for configuration process
+	assert(device != nullptr);
+	curDevice = device;
 }
 
 std::pair<const char *, device_t *> system_config::resolveOwner(const char *tag)

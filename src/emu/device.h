@@ -83,10 +83,10 @@ public:
 		return creator(config, *this, tag, owner, clock);
 	}
 
-	const std::type_info &type()	{ return idType; }
-	const char *sname()				{ return shortName; }
-	const char *fname()				{ return fullName; }
-	const char *source()			{ return srcName; }
+	const std::type_info &type() const	{ return idType; }
+	const char *sname()	const			{ return shortName; }
+	const char *fname()	const			{ return fullName; }
+	const char *source() const			{ return srcName; }
 
 private:
 	const std::type_info	&idType;		// device type identification
@@ -254,9 +254,7 @@ public:
 
 	const system_config &config() const { return sysConfig; }
 
-//	void setSystemConfig(const system_config &config) { sysConfig = config; }
-
-	void addSystemConfig(const system_config &config);
+	void beginConfig(system_config *config);
 
 	device_list &devices() { return deviceList; }
 	const device_list &devices() const { return deviceList; }

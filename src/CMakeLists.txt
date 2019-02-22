@@ -41,6 +41,7 @@ set(mse_cpp_SRCS
 	emu/exception.cpp
 	emu/machine.cpp
 	emu/misc.cpp
+	emu/romloader.cpp
 	emu/sysconfig.cpp
 	emu/syslist.cpp
 	emu/systems.cpp
@@ -95,6 +96,7 @@ set(mse_h_SRCS
 	emu/engine.h
 	emu/exception.h
 	emu/machine.h
+	emu/romloader.h
 	emu/osd/ether.h
 	emu/osd/socket.h
 	emu/osd/telnet.h

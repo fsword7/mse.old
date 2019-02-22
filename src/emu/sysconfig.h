@@ -28,12 +28,17 @@ public:
 	auto addDeviceType(tag_t *tag, Creator &&type, Params &&... args)
 	{
 		std::pair<tag_t *, device_t *> const owner(resolveOwner(tag));
+
+		std::cout << "Creating " << type.sname() << ": tag " << tag << " -> " << owner.first << std::endl;
+
 		auto device = type.create(*this, owner.first, owner.second, std::forward<Params>(args)...);
 		return addDevice(device, owner.second);
 	}
 
 	device_t *getCurrentDevice() { return curDevice; }
 	device_t *getCurrentDevice() const { return curDevice; }
+
+	void beginConfig(device_t *device);
 
 private:
 	const system_driver	&sysDriver;		// system driver

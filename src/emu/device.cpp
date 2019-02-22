@@ -25,12 +25,13 @@ device_t::~device_t()
 {
 }
 
-void device_t::addSystemConfig(const system_config &config)
+void device_t::beginConfig(system_config *config)
 {
-	assert(&sysConfig == &config);
+	assert(&sysConfig == config);
+	config->beginConfig(this);
 
-	for(devauto_base *autodev : acList)
-		autodev->endConfig();
+//	for(devauto_base *autodev : acList)
+//		autodev->endConfig();
 }
 
 devauto_base *device_t::register_device(devauto_base *autodev)
