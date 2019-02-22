@@ -252,6 +252,8 @@ public:
 	device_t *owner() { return devOwner; }
 	device_t *next()  { return devNext; }
 
+	const device_type_base &getType() const { return type; }
+
 	const system_config &config() const { return sysConfig; }
 
 	void beginConfig(system_config *config);
