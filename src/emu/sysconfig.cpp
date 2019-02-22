@@ -7,16 +7,16 @@
 
 #include "emu/emucore.h"
 #include "emu/driver.h"
+#include "emu/devsys.h"
 #include "emu/sysconfig.h"
 
 
 system_config::system_config(const system_driver &model)
-: sysDriver(model), sysDevice(nullptr), curDevice(nullptr)
+: sysDriver(&model), sysDevice(nullptr), curDevice(nullptr)
 {
 	// Create root of system device
 	addDeviceType(model.name, model.type, 0);
 
-	model.create(*this, *sysDevice);
 }
 
 device_t *system_config::addDeviceType(tag_t *tag, const device_type_base &type, uint64_t clock)
@@ -36,6 +36,9 @@ device_t *system_config::addDevice(device_t *dev, device_t *owner)
 	} else {
 		assert(sysDevice == nullptr);
 		sysDevice = dev;
+		system_device *driver = dynamic_cast<system_device *>(dev);
+		if (driver != nullptr)
+			driver->setSystemDriver(sysDriver);
 	}
 
 	// Begin system/device configuration process

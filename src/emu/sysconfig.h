@@ -43,7 +43,7 @@ public:
 	void beginConfig(device_t *device);
 
 private:
-	const system_driver	&sysDriver;		// system driver
+	const system_driver	*sysDriver;		// system driver
 	device_t			*sysDevice;		// root system device
 	device_t			*curDevice;		// current device
 };

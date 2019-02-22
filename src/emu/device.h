@@ -272,6 +272,7 @@ public:
 
 	void validate(validity_checker &valid) const;
 
+	virtual void processConfig(system_config &config);
 	virtual void validateDevice(validity_checker &valid) const;
 
 protected:

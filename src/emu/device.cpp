@@ -29,6 +29,7 @@ void device_t::beginConfig(system_config *config)
 {
 	assert(&sysConfig == config);
 	config->beginConfig(this);
+	processConfig(*config);
 
 //	for(devauto_base *autodev : acList)
 //		autodev->endConfig();
@@ -60,6 +61,11 @@ void device_t::validate(validity_checker &valid) const
 		intf->validate(valid);
 
 	validateDevice(valid);
+}
+
+void device_t::processConfig(system_config &config)
+{
+	// Do nothing by default
 }
 
 void device_t::validateDevice(validity_checker &valid) const

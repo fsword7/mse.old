@@ -32,7 +32,7 @@ void mapManager::allocate(di_memory &memory)
 
 void mapManager::init()
 {
-	dimem_iterator iter(*system->sysDevice());
+	dimem_iterator iter(*system->getSystemDevice());
 	std::vector<di_memory *> memories;
 
 	for (di_memory &memory : iter) {

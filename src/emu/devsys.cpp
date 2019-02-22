@@ -10,13 +10,28 @@
 
 system_device::system_device(const system_config &config, const device_type_base &type,
 		tag_t *tag, uint64_t clock)
-: device_t(config, type, tag, nullptr, clock)
+: device_t(config, type, tag, nullptr, clock),
+  sysDriver(nullptr)
 {
 
 }
 
 system_device::~system_device()
 {
+}
+
+void system_device::setSystemDriver(const system_driver *driver)
+{
+	assert(sysDriver == nullptr);
+
+	sysDriver = driver;
+
+}
+
+void system_device::processConfig(system_config &config)
+{
+	assert(sysDriver != nullptr);
+	sysDriver->configure(config, *this);
 }
 
 // init - default implementation does nothing

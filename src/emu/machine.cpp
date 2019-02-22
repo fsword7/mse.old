@@ -13,6 +13,7 @@
 
 machine::machine(const system_config *_config)
 : config(*_config),
+  sysDevice(config.getSystemDevice()),
   memory(this)
 {
 }

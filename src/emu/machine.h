@@ -12,8 +12,8 @@ public:
 	machine(const system_config *config);
 	~machine();
 
-	device_t *sysDevice() { return device; }
-	const device_t *sysDevice() const { return device; }
+	device_t *getSystemDevice() { return sysDevice; }
+	const device_t *getSystemsDevice() const { return sysDevice; }
 
 	void init();
 	void execute();
@@ -21,7 +21,7 @@ public:
 private:
 
 	const system_config &config;
-	device_t *device;
+	device_t *sysDevice;
 
 	// embedded managers
 	mapManager		memory;

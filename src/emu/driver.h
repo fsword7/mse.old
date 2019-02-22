@@ -13,15 +13,13 @@ class romEntry;
 class system_driver
 {
 public:
-//	typedef device_t *(*creator_t)(const system_config &, tag_t *, device_t *, uint64_t);
 	typedef void (*system_creator)(system_config &, device_t &);
 	typedef void (*driver_init)(device_t &);
 
 	const char		*name;			// machine name
 	const char 		*parent;		// parent of machine name
 	const device_type_base	&type;
-//	creator_t		creator;		// system device creator
-	system_creator	create;			// system create callback
+	system_creator	configure;		// system creator/configuration callback
 	driver_init		init;			// system initialize callback
 	romEntry		*rom;			// ROM entries for firmware
 	const char		*description;	//Description/full name
