@@ -30,17 +30,34 @@ public:
 
 #define SYSTEM_NAME(Name) Name##_driver
 #define SYSTEM_EXTERN(Name) extern const system_driver SYSTEM_NAME(Name)
-#define SYSTEM_TYPE(Name, Class) systemCreator<Class>
+#define SYSTEM_TRAITS_NAME(Name) Name##_system_traits
+
+#define SYSTEM_TRAITS(Name, FullName)							\
+	struct SYSTEM_TRAITS_NAME(Name) {							\
+		static constexpr tag_t shortName[]  = #Name;			\
+		static constexpr tag_t fullName[]   = FullName;			\
+		static constexpr tag_t sourceName[] = __FILE__;			\
+	};															\
+	constexpr tag_t SYSTEM_TRAITS_NAME(Name)::shortName[];		\
+	constexpr tag_t SYSTEM_TRAITS_NAME(Name)::fullName[];		\
+	constexpr tag_t SYSTEM_TRAITS_NAME(Name)::sourceName[];
+
+#define SYSTEM_TYPE(Name, Class)					\
+	systemCreator<Class,							\
+		(SYSTEM_TRAITS_NAME(Name)::shortName),		\
+		(SYSTEM_TRAITS_NAME(Name)::fullName),		\
+		(SYSTEM_TRAITS_NAME(Name)::sourceName)>
 
 #define COMP(Name, Parent, Type, Class, Create, Init, Company, Description)	\
-extern const system_driver SYSTEM_NAME(Name) =		\
-{													\
-	#Name,											\
-	#Parent,										\
-	SYSTEM_TYPE(Name, Class),						\
-	[] (system_config &config, device_t &owner) { static_cast<Class &>(owner).Create(config); }, \
-	[] (device_t &owner) { static_cast<Class &>(owner).Init(); },	\
-	ROM_NAME(Name),		\
-	Description,		\
-	__FILE__			\
-};
+	SYSTEM_TRAITS(Name, Description)					\
+	extern const system_driver SYSTEM_NAME(Name) =		\
+	{													\
+		#Name,											\
+		#Parent,										\
+		SYSTEM_TYPE(Name, Class),						\
+		[] (system_config &config, device_t &owner) { static_cast<Class &>(owner).Create(config); }, \
+		[] (device_t &owner) { static_cast<Class &>(owner).Init(); },	\
+		ROM_NAME(Name),									\
+		Description,									\
+		__FILE__										\
+	};

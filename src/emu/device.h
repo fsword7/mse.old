@@ -20,15 +20,15 @@ class di_debug;
 class validity_checker;
 
 
-template <class DeviceClass>
+template <class DeviceClass, tag_t *ShortName, tag_t *FullName, tag_t *Source>
 struct device_tag_struct { typedef DeviceClass type; };
-template <class DeviceClass>
-auto device_tag_func() { return device_tag_struct<DeviceClass>{}; };
+template <class DeviceClass, tag_t *ShortName, tag_t *FullName, tag_t *Source>
+auto device_tag_func() { return device_tag_struct<DeviceClass, ShortName, FullName, Source>{}; };
 
-template <class SystemClass>
+template <class SystemClass, tag_t *ShortName, tag_t *FullName, tag_t *Source>
 struct system_tag_struct { typedef SystemClass type; };
-template <class SystemClass>
-auto system_tag_func() { return system_tag_struct<SystemClass>{}; };
+template <class SystemClass, tag_t *ShortName, tag_t *FullName, tag_t *Source>
+auto system_tag_func() { return system_tag_struct<SystemClass, ShortName, FullName, Source>{}; };
 
 class device_type_base
 {
@@ -55,21 +55,21 @@ public:
 	  creator(nullptr)
 	{}
 
-	template <class SystemClass>
-	device_type_base(system_tag_struct<SystemClass>(*)())
+	template <class SystemClass, tag_t *ShortName, tag_t *FullName, tag_t *Source>
+	device_type_base(system_tag_struct<SystemClass, ShortName, FullName, Source>(*)())
 	: idType(typeid(SystemClass)),
-	  shortName(nullptr),
-	  fullName(nullptr),
-	  srcName(nullptr),
+	  shortName(ShortName),
+	  fullName(FullName),
+	  srcName(Source),
 	  creator(&createSystem<SystemClass>)
 	{}
 
-	template <class DeviceClass>
-	device_type_base(device_tag_struct<DeviceClass>(*)())
+	template <class DeviceClass, tag_t *ShortName, tag_t *FullName, tag_t *Source>
+	device_type_base(device_tag_struct<DeviceClass, ShortName, FullName, Source>(*)())
 	: idType(typeid(DeviceClass)),
-	  shortName(nullptr),
-	  fullName(nullptr),
-	  srcName(nullptr),
+	  shortName(ShortName),
+	  fullName(FullName),
+	  srcName(Source),
 	  creator(&createDevice<DeviceClass>)
 	{}
 
@@ -110,17 +110,26 @@ public:
 
 };
 
-template <class SystemClass>
-constexpr auto systemCreator = &system_tag_func<SystemClass>;
+template <class SystemClass, tag_t *ShortName, tag_t *FullName, tag_t *Source>
+constexpr auto systemCreator = &system_tag_func<SystemClass, ShortName, FullName, Source>;
 
-template <class DeviceClass>
-constexpr auto deviceCreator = &device_tag_func<DeviceClass>;
+template <class DeviceClass, tag_t *ShortName, tag_t *FullName, tag_t *Source>
+constexpr auto deviceCreator = &device_tag_func<DeviceClass, ShortName, FullName, Source>;
 
 #define DECLARE_DEVICE_TYPE(Type, Class) \
 	extern device_type<Class> const &Type;
 
-#define DEFINE_DEVICE_TYPE(Type, Class, ShortName, FullName) \
-	device_type<Class> const &Type = deviceCreator<Class>;
+#define DEFINE_DEVICE_TYPE(Type, Class, ShortName, FullName)	\
+	struct Class##_device_traits {								\
+		static constexpr tag_t shortName[]  = ShortName;		\
+		static constexpr tag_t fullName[]   = FullName;			\
+		static constexpr tag_t sourceName[] = __FILE__;			\
+	};															\
+	constexpr tag_t Class##_device_traits::shortName[];			\
+	constexpr tag_t Class##_device_traits::fullName[];			\
+	constexpr tag_t Class##_device_traits::sourceName[];		\
+	device_type<Class> const &Type = deviceCreator<Class, (Class##_device_traits::shortName), \
+		(Class##_device_traits::fullName), (Class##_device_traits::sourceName)>;
 
 // *************************************************************************
 
