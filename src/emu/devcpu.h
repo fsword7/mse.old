@@ -10,11 +10,13 @@
 #include "emu/device.h"
 #include "emu/diexec.h"
 #include "emu/dimem.h"
+#include "emu/didebug.h"
 
 class cpu_device
 : public device_t,
   public di_execute,
-  public di_memory
+  public di_memory,
+  public di_debug
 {
 public:
 	enum cpuSignal {

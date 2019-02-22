@@ -16,6 +16,7 @@ class devauto_base;
 class machine;
 class di_memory;
 class di_execute;
+class di_debug;
 class validity_checker;
 
 
@@ -189,6 +190,7 @@ public:
 		friend class device_interface;
 		friend class di_memory;
 		friend class di_execute;
+		friend class di_debug;
 
 	public:
 		interface_list()
@@ -215,6 +217,7 @@ public:
 
 		di_execute		*execute;
 		di_memory 		*memory;
+		di_debug		*debug;
 	};
 
 protected:

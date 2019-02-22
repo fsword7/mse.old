@@ -29,6 +29,7 @@ set(mse_cpp_SRCS
 	emu/devsys.cpp
 	emu/devtty.cpp
 	emu/diexec.cpp
+	emu/didebug.cpp
 	emu/dimem.cpp
 	emu/emumap.cpp
 	emu/emumap_hedr.cpp
@@ -84,6 +85,7 @@ set(mse_h_SRCS
 	emu/device.h
 	emu/devsys.h
 	emu/diexec.h
+	emu/didebug.h
 	emu/dimem.h
 	emu/emumap.h
 	emu/emumap_he.h
