@@ -37,6 +37,8 @@ public:
 
 	device_t *getCurrentDevice() { return curDevice; }
 	device_t *getCurrentDevice() const { return curDevice; }
+	device_t *getSystemDevice() { return sysDevice; }
+	device_t *getSystemDevice() const { return sysDevice; }
 
 	void beginConfig(device_t *device);
 

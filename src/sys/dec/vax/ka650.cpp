@@ -19,7 +19,7 @@ void ka650_device::mv3900(system_config &config)
 	cvax_cpu *cpu;
 
 	cpu = CVAX(config, "cvax", 0);
-//	cpu->setAddressMap(AS_PROGRAM, &ka650_device::mv3900_mem);
+	cpu->setAddressMap(AS_PROGRAM, &ka650_device::mv3900_mem);
 
 	cout << "This is MicroVAX 3900 system" << endl;
 
@@ -30,7 +30,7 @@ void ka650_device::mv3900x(system_config &config)
 	cvax_cpu *cpu;
 
 	cpu = CVAX(config, "cvax", 0);
-//	cpu->setAddressMap(AS_PROGRAM, &ka650_device::mv3900x_mem);
+	cpu->setAddressMap(AS_PROGRAM, &ka650_device::mv3900x_mem);
 
 	cout << "This is MicroVAX 3800x system" << endl;
 }
