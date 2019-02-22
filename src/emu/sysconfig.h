@@ -20,18 +20,16 @@ public:
 
 	std::pair<const char *, device_t *> resolveOwner(const char *tag);
 
-	device_t *addDeviceType(tag_t *tag, const device_type_base &type);
+	device_t *addDeviceType(tag_t *tag, const device_type_base &type, uint64_t clock);
 
 	device_t *addDevice(device_t *dev, device_t *owner);
 
 	template <typename Creator, typename... Params>
-	auto addDevice(tag_t *tag, Creator &&type, Params &&... args)
+	auto addDeviceType(tag_t *tag, Creator &&type, Params &&... args)
 	{
-//		std::pair<tag_t *, device_t *> const owner(resolveOwner(tag));
-//		auto device(type.create(*this, owner.first, owner.second, std::forward<Params>(args)...));
-//		auto &result(*device);
-//		addDevice(device, owner.second);
-//		return &result;
+		std::pair<tag_t *, device_t *> const owner(resolveOwner(tag));
+		auto device = type.create(*this, owner.first, owner.second, std::forward<Params>(args)...);
+		return addDevice(device, owner.second);
 	}
 
 	device_t *getCurrentDevice() { return curDevice; }

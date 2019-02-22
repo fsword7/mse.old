@@ -19,19 +19,6 @@ class di_execute;
 class validity_checker;
 
 
-//#define DECLARE_DEVICE_TYPE(Type, Class)
-//#define DEFINE_DEVICE_TYPE(Type, Class, ShortName, FullName)
-
-#define DECLARE_DEVICE_TYPE(Type, Class) \
-	extern device_type<Class> const &Type;
-
-//#define DEFINE_DEVICE_TYPE(Type, Class, ShortName, FullName) \
-//	device_type<Class> const &Type = deviceCreator<Class>;
-//#define DEFINE_DEVICE_TYPE(Type, Class, ShortName, FullName) \
-//	device_type<Class> const &Type = device_type<Class>(ShortName, FullName, __FILE__);
-#define DEFINE_DEVICE_TYPE(Type, Class, ShortName, FullName) \
-	device_type<Class> const &Type = device_type<Class>();
-
 template <class DeviceClass>
 struct device_tag_struct { typedef DeviceClass type; };
 template <class DeviceClass>
@@ -67,15 +54,6 @@ public:
 	  creator(nullptr)
 	{}
 
-//	template <class DeviceClass>
-//	device_type_base()
-//	: idType(typeid(DeviceClass)),
-//	  shortName(nullptr),
-//	  fullName(nullptr),
-//	  srcName(nullptr),
-//	  creator(&createDevice<DeviceClass>)
-//	{}
-
 	template <class SystemClass>
 	device_type_base(system_tag_struct<SystemClass>(*)())
 	: idType(typeid(SystemClass)),
@@ -93,15 +71,6 @@ public:
 	  srcName(nullptr),
 	  creator(&createDevice<DeviceClass>)
 	{}
-
-//	template <class DeviceClass>
-//	device_type_base(const char *sname, const char *fname, const char *srcname)
-//	: idType(typeid(DeviceClass)),
-//	  shortName(sname),
-//	  fullName(fname),
-//	  srcName(srcname),
-//	  creator(&createDevice<DeviceClass>)
-//	{}
 
 	device_t *create(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock) const
 	{
@@ -143,6 +112,17 @@ public:
 template <class SystemClass>
 constexpr auto systemCreator = &system_tag_func<SystemClass>;
 
+template <class DeviceClass>
+constexpr auto deviceCreator = &device_tag_func<DeviceClass>;
+
+#define DECLARE_DEVICE_TYPE(Type, Class) \
+	extern device_type<Class> const &Type;
+
+#define DEFINE_DEVICE_TYPE(Type, Class, ShortName, FullName) \
+	device_type<Class> const &Type = deviceCreator<Class>;
+
+// *************************************************************************
+
 class device_interface
 {
 	friend class interface_list;
@@ -162,6 +142,8 @@ protected:
 	device_t			*device;
 	tag_t				*typeName;
 };
+
+// *************************************************************************
 
 class device_t : public delegate_bind
 {
@@ -303,6 +285,7 @@ private:
 	std::vector<devauto_base *> acList;	// List of auto device configurations
 };
 
+// *************************************************************************
 
 class device_iterator
 {

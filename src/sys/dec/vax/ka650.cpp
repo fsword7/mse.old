@@ -13,15 +13,12 @@
 
 using namespace std;
 
-DEFINE_DEVICE_TYPE(KA650, ka650_device, "KA650", "KA650")
-
 // Create system routines
 void ka650_device::mv3900(system_config &config)
 {
 	cvax_cpu *cpu;
 
-	//CVAX(config, cpu, 0);
-	cpu = new cvax_cpu(sysConfig, "cvax", nullptr, 0);
+	cpu = CVAX(config, "cvax", 0);
 	cpu->setAddressMap(AS_PROGRAM, &ka650_device::mv3900_mem);
 
 	cout << "This is MicroVAX 3900 system" << endl;
@@ -32,8 +29,7 @@ void ka650_device::mv3900x(system_config &config)
 {
 	cvax_cpu *cpu;
 
-	//CVAX(config, cpu, 0);
-	cpu = new cvax_cpu(sysConfig, "cvax", nullptr, 0);
+	cpu = CVAX(config, "cvax", 0);
 	cpu->setAddressMap(AS_PROGRAM, &ka650_device::mv3900x_mem);
 
 	cout << "This is MicroVAX 3800x system" << endl;
