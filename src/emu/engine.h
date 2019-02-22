@@ -12,10 +12,10 @@ class system_engine
 public:
 	system_engine() {}
 
-	static device_t *find(std::string drvName);
+//	static device_t *find(std::string drvName);
 
-	static device_t *create(std::string drvName, std::string tagName);
+	static void create(std::string drvName, std::string tagName);
 
 private:
-	static std::vector<device_t> machine;
+	static std::vector<machine> machines;
 };

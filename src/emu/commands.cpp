@@ -10,19 +10,13 @@
 #include "emu/commands.h"
 #include "emu/driver.h"
 #include "emu/syslist.h"
+#include "emu/engine.h"
 
 static cmdStatus /* command_handler:: */ cmdCreate(cty_t *cty, int argc, args_t &args)
 {
-	system_list    sys;
-	const system_driver *model;
-	const system_config *config;
+	system_engine engine;
 
-
-	if ((model = sys.find(args[2])) == nullptr) {
-		std::cout << args[0] << ": System " << args[2] << " not found" << std::endl;
-		return cmdOk;
-	}
-	config = new system_config(*model);
+	engine.create(args[1], args[2]);
 
 	return cmdOk;
 }

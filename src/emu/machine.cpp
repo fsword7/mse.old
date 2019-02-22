@@ -11,8 +11,8 @@
 #include "emu/emumap.h"
 #include "emu/machine.h"
 
-machine::machine(const system_config &_config)
-: config(_config),
+machine::machine(const system_config *_config)
+: config(*_config),
   memory(this)
 {
 }

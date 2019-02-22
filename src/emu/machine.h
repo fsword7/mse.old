@@ -9,7 +9,7 @@
 
 class machine {
 public:
-	machine(const system_config &config);
+	machine(const system_config *config);
 	~machine();
 
 	device_t *sysDevice() { return device; }
