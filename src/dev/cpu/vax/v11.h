@@ -47,3 +47,5 @@ protected:
 	void mfpr();
 	void mtpr();
 };
+
+DECLARE_DEVICE_TYPE(V11, v11_cpu)

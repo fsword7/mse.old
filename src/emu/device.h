@@ -32,18 +32,22 @@ auto system_tag_func() { return system_tag_struct<SystemClass, ShortName, FullNa
 
 class device_type_base
 {
-	typedef device_t *(*create_func)(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock);
+private:
+	typedef device_t *(*create_func)(const system_config &config, const device_type_base &type,
+			tag_t *tag, device_t *owner, uint64_t clock);
 
 	template <typename DeviceClass>
-	static device_t *createDevice(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock)
+	static device_t *createDevice(const system_config &config, const device_type_base &type,
+			tag_t *tag, device_t *owner, uint64_t clock)
 	{
 		return new DeviceClass(config, tag, owner, clock);
 	}
 
 	template <typename SystemClass>
-	static device_t *createSystem(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock)
+	static device_t *createSystem(const system_config &config, const device_type_base &type,
+			tag_t *tag, device_t *owner, uint64_t clock)
 	{
-		return new SystemClass(config, tag, clock);
+		return new SystemClass(config, type, tag, clock);
 	}
 
 public:
@@ -76,7 +80,7 @@ public:
 	device_t *create(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock) const
 	{
 		assert(creator != nullptr);
-		return creator(config, tag, owner, clock);
+		return creator(config, *this, tag, owner, clock);
 	}
 
 	const std::type_info &type()	{ return idType; }
@@ -230,18 +234,16 @@ public:
 	};
 
 protected:
-	device_t(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock);
+	device_t(const system_config &config, const device_type_base &type, tag_t *tag, device_t *owner, uint64_t clock);
 
 public:
 	virtual ~device_t();
 
-	template <class DeviceClass>
-	static device_t *create(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock)
-	{
-//		DeviceClass *device = new DeviceClass(tag, config, clock);
-//		return config.addDevice(device, owner);
-		return new DeviceClass(config, tag, clock);
-	}
+//	template <class DeviceClass>
+//	static device_t *create(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock)
+//	{
+//		return new DeviceClass(config, tag, clock);
+//	}
 
 //	const char *tag() { return tagName.c_str(); }
 	std::string &tag() { return tagName; }
@@ -280,10 +282,12 @@ protected:
 	void resolvePostMap();
 
 protected:
-	device_t 		*devOwner;			// Parent device owner
-	device_t 		*devNext;			// Next device of the same owner
-	device_list 	deviceList;			// List of child devices - container
-	interface_list	interfaceList;		// List of interfaces - container
+	const device_type_base 	&type;				// Named device type
+
+	device_t 			*devOwner;			// Parent device owner
+	device_t 			*devNext;			// Next device of the same owner
+	device_list 		deviceList;			// List of child devices - container
+	interface_list		interfaceList;		// List of interfaces - container
 
 
 	const system_config &sysConfig;

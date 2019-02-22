@@ -12,8 +12,8 @@
 #include "emu/machine.h"
 #include "emu/validity.h"
 
-device_t::device_t(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock)
-: devOwner(owner), devNext(nullptr),
+device_t::device_t(const system_config &config, const device_type_base &type, tag_t *tag, device_t *owner, uint64_t clock)
+: type(type), devOwner(owner), devNext(nullptr),
   tagName(tag), devName(""),
   sysConfig(config),
   system(nullptr)

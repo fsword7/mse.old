@@ -14,9 +14,10 @@
 #include "dev/cpu/vax/fpu.h"
 #include "dev/cpu/vax/opcodes.h"
 
+DEFINE_DEVICE_TYPE(V11, v11_cpu, "V11", "V11")
 
 v11_cpu::v11_cpu(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock)
-: vax_cpu_base(config, tag, owner, clock)
+: vax_cpu_base(config, V11, tag, owner, clock)
 {
 }
 

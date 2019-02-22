@@ -43,3 +43,5 @@ protected:
 	void mfpr();
 	void mtpr();
 };
+
+DECLARE_DEVICE_TYPE(KA780, ka780_cpu)

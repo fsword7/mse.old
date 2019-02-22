@@ -482,7 +482,8 @@ struct tlb_t {
 class vax_cpu_base : public cpu_device
 {
 public:
-	vax_cpu_base(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock);
+	vax_cpu_base(const system_config &config, const device_type_base &type,
+			tag_t *tag, device_t *owner, uint64_t clock);
 	virtual ~vax_cpu_base();
 
 	void buildOpcodes();

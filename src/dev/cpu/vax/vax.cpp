@@ -35,8 +35,9 @@ const uint32_t vax_cpu_base::sgnList[] = {
 	0x10000000, 0x20000000, 0x40000000, 0x80000000
 };
 
-vax_cpu_base::vax_cpu_base(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock)
-: cpu_device(config, tag, owner, clock),
+vax_cpu_base::vax_cpu_base(const system_config &config, const device_type_base &type,
+		tag_t *tag, device_t *owner, uint64_t clock)
+: cpu_device(config, type, tag, owner, clock),
   mapProgram("program", endianLittle, 32, 32)
 {
 	buildOpcodes();
