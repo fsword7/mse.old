@@ -26,7 +26,8 @@ public:
 	virtual void init();
 
 	void setSystemDriver(const system_driver *driver);
-	void processConfig(system_config &config);
+
+	void devConfigure(system_config &config);
 
 private:
 	const system_driver	*sysDriver;

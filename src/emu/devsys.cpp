@@ -28,7 +28,7 @@ void system_device::setSystemDriver(const system_driver *driver)
 
 }
 
-void system_device::processConfig(system_config &config)
+void system_device::devConfigure(system_config &config)
 {
 	assert(sysDriver != nullptr);
 	sysDriver->configure(config, *this);

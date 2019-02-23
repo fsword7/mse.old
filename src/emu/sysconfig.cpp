@@ -44,7 +44,7 @@ device_t *system_config::addDevice(device_t *dev, device_t *owner)
 	}
 
 	// device configuration process
-	dev->beginConfig(this);
+	dev->configure(*this);
 
 	return dev;
 }

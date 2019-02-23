@@ -274,7 +274,7 @@ public:
 
 	const system_config &config() const { return sysConfig; }
 
-	void beginConfig(system_config *config);
+	void configure(system_config &config);
 
 	device_list &devices() { return deviceList; }
 	const device_list &devices() const { return deviceList; }
@@ -290,8 +290,9 @@ public:
 
 	void validate(validity_checker &valid) const;
 
-	virtual void processConfig(system_config &config);
-	virtual void validateDevice(validity_checker &valid) const;
+	// Device-specific virtual function calls
+	virtual void devConfigure(system_config &config);
+	virtual void devValidate(validity_checker &valid) const;
 
 protected:
 	devauto_base *register_device(devauto_base *autodev);

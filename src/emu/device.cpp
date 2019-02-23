@@ -25,11 +25,14 @@ device_t::~device_t()
 {
 }
 
-void device_t::beginConfig(system_config *config)
+void device_t::configure(system_config &config)
 {
-	assert(&sysConfig == config);
-	config->begin(this);
-	processConfig(*config);
+	assert(&sysConfig == &config);
+
+	// Assign current configuring device and
+	// start configuration process.
+	config.begin(this);
+	devConfigure(config);
 
 //	for(devauto_base *autodev : acList)
 //		autodev->endConfig();
@@ -60,15 +63,16 @@ void device_t::validate(validity_checker &valid) const
 	for (device_interface *intf : interfaces())
 		intf->validate(valid);
 
-	validateDevice(valid);
+	devValidate(valid);
 }
 
-void device_t::processConfig(system_config &config)
+
+void device_t::devConfigure(system_config &config)
 {
 	// Do nothing by default
 }
 
-void device_t::validateDevice(validity_checker &valid) const
+void device_t::devValidate(validity_checker &valid) const
 {
 	// Do nothing by default
 }
