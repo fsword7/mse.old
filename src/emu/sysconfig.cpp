@@ -31,26 +31,28 @@ device_t *system_config::addDeviceType(tag_t *tag, const device_type_base &type,
 
 device_t *system_config::addDevice(device_t *dev, device_t *owner)
 {
+	// Save the current configuring device and will automatically restore it
+	// after new device configuration process and exiting this function call.
+	const config_device_stack context(*this);
+
 	if (owner != nullptr) {
 		owner->devices().add(dev);
 	} else {
 		assert(sysDevice == nullptr);
+		dynamic_cast<system_device *>(dev)->setSystemDriver(sysDriver);
 		sysDevice = dev;
-		system_device *driver = dynamic_cast<system_device *>(dev);
-		if (driver != nullptr)
-			driver->setSystemDriver(sysDriver);
 	}
 
-	// Begin system/device configuration process
+	// device configuration process
 	dev->beginConfig(this);
 
 	return dev;
 }
 
-void system_config::beginConfig(device_t *device)
+void system_config::begin(device_t *device)
 {
 	// Assign device/system for configuration process
-	assert(device != nullptr);
+	assert(curDevice == nullptr);
 	curDevice = device;
 }
 

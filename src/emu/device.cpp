@@ -28,7 +28,7 @@ device_t::~device_t()
 void device_t::beginConfig(system_config *config)
 {
 	assert(&sysConfig == config);
-	config->beginConfig(this);
+	config->begin(this);
 	processConfig(*config);
 
 //	for(devauto_base *autodev : acList)

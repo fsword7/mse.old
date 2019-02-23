@@ -15,7 +15,27 @@ inline device_t *cfgAddDevice(system_config &config, Tag *tag, Creator &&type, P
 
 class system_config
 {
+protected:
+	class config_device_stack {
+	public:
+		config_device_stack(system_config &config)
+		: host(config), device(config.curDevice)
+		{
+			host.curDevice = nullptr;
+		}
+
+		~config_device_stack()
+		{
+			host.curDevice = device;
+		}
+
+	private:
+		system_config &host;
+		device_t *device;
+	};
+
 public:
+
 	system_config(const system_driver &driver);
 
 	std::pair<const char *, device_t *> resolveOwner(const char *tag);
@@ -40,7 +60,7 @@ public:
 	device_t *getSystemDevice() { return sysDevice; }
 	device_t *getSystemDevice() const { return sysDevice; }
 
-	void beginConfig(device_t *device);
+	void begin(device_t *device);
 
 private:
 	const system_driver	*sysDriver;		// system driver
