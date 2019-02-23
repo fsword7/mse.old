@@ -9,11 +9,13 @@
 #include "emu/emucore.h"
 #include "emu/sysconfig.h"
 #include "emu/emumap.h"
+#include "emu/romloader.h"
 #include "emu/machine.h"
 
 machine::machine(const system_config *_config)
 : config(*_config),
   sysDevice(config.systemDevice()),
+  romLoad(nullptr),
   memory(this)
 {
 }
@@ -35,8 +37,20 @@ std::string machine::getDeviceName()
 // Running machine initialization
 void machine::init()
 {
+	// Resolve objects that can be used for memory maps.
+//	for (device_t &device : device_iterator(sysDevice))
+//		device.resolve_pre_map();
+
+	// Loading ROM images
+	romLoad = new rom_load_manager(this);
+
 	// Initialize memory on all devices.
 	memory.init();
+
+	// Resolve objects that are created for memory maps.
+//	for (device_t &device : device_iterator(sysDevice))
+//		device.resolve_post_map();
+
 }
 
 void machine::execute()

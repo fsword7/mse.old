@@ -26,6 +26,8 @@ private:
 	const system_config &config;
 	device_t *sysDevice;
 
+	rom_load_manager *romLoad;
+
 	// embedded managers
 	mapManager		memory;
 };
