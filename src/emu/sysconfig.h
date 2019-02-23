@@ -19,14 +19,14 @@ protected:
 	class config_device_stack {
 	public:
 		config_device_stack(system_config &config)
-		: host(config), device(config.curDevice)
+		: host(config), device(config.cfgDevice)
 		{
-			host.curDevice = nullptr;
+			host.cfgDevice = nullptr;
 		}
 
 		~config_device_stack()
 		{
-			host.curDevice = device;
+			host.cfgDevice = device;
 		}
 
 	private:
@@ -55,15 +55,15 @@ public:
 		return addDevice(device, owner.second);
 	}
 
-	device_t *getCurrentDevice() { return curDevice; }
-	device_t *getCurrentDevice() const { return curDevice; }
-	device_t *getSystemDevice() { return sysDevice; }
-	device_t *getSystemDevice() const { return sysDevice; }
+	device_t *configDevice() { return cfgDevice; }
+	device_t *configDevice() const { return cfgDevice; }
+	device_t *systemDevice() { return sysDevice; }
+	device_t *systemDevice() const { return sysDevice; }
 
 	void begin(device_t *device);
 
 private:
 	const system_driver	*sysDriver;		// system driver
 	device_t			*sysDevice;		// root system device
-	device_t			*curDevice;		// current device
+	device_t			*cfgDevice;		// current device
 };

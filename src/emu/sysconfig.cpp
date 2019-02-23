@@ -12,7 +12,7 @@
 
 
 system_config::system_config(const system_driver &model)
-: sysDriver(&model), sysDevice(nullptr), curDevice(nullptr)
+: sysDriver(&model), sysDevice(nullptr), cfgDevice(nullptr)
 {
 	// Create root of system device
 	addDeviceType(model.name, model.type, 0);
@@ -52,19 +52,19 @@ device_t *system_config::addDevice(device_t *dev, device_t *owner)
 void system_config::begin(device_t *device)
 {
 	// Assign device/system for configuration process
-	assert(curDevice == nullptr);
-	curDevice = device;
+	assert(cfgDevice == nullptr);
+	cfgDevice = device;
 }
 
 std::pair<const char *, device_t *> system_config::resolveOwner(const char *tag)
 {
 	const char	*otag = tag;
-	device_t	*owner = curDevice;
+	device_t	*owner = cfgDevice;
 	std::string	name;
 
 	// Determine absolute path name
 	if (tag[0] == ':') {
-		curDevice = sysDevice;
+		cfgDevice = sysDevice;
 		tag++;
 	}
 

@@ -13,7 +13,7 @@
 
 machine::machine(const system_config *_config)
 : config(*_config),
-  sysDevice(config.getSystemDevice()),
+  sysDevice(config.systemDevice()),
   memory(this)
 {
 }
@@ -24,12 +24,12 @@ machine::~machine()
 
 void machine::setDeviceName(std::string name)
 {
-	config.getSystemDevice()->setDeviceName(name);
+	config.systemDevice()->setDeviceName(name);
 }
 
 std::string machine::getDeviceName()
 {
-	return config.getSystemDevice()->deviceName();
+	return config.systemDevice()->deviceName();
 }
 
 // Running machine initialization
