@@ -7,6 +7,8 @@
 
 #pragma once
 
+class rom_loader;
+
 class machine {
 public:
 	machine(const system_config *config);
@@ -26,7 +28,7 @@ private:
 	const system_config &config;
 	device_t *sysDevice;
 
-	rom_load_manager *romLoad;
+	rom_loader *romLoader;
 
 	// embedded managers
 	mapManager		memory;

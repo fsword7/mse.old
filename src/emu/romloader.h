@@ -11,13 +11,13 @@
 
 class machine;
 
-class rom_load_manager
+class rom_loader
 {
 public:
-	rom_load_manager(machine *sys);
-	~rom_load_manager();
+	rom_loader(machine *sys);
+	~rom_loader();
 
-	machine *getMachine() const { return sysMachine; }
+	machine *systemMachine() const { return sysMachine; }
 
 private:
 	machine *sysMachine;

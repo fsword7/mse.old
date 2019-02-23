@@ -10,13 +10,13 @@
 #include "emu/romloader.h"
 
 
-rom_load_manager::rom_load_manager(machine *sys)
+rom_loader::rom_loader(machine *sys)
 : sysMachine(sys)
 {
 
 }
 
-rom_load_manager::~rom_load_manager()
+rom_loader::~rom_loader()
 {
 }
 

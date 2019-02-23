@@ -15,7 +15,7 @@
 machine::machine(const system_config *_config)
 : config(*_config),
   sysDevice(config.systemDevice()),
-  romLoad(nullptr),
+  romLoader(nullptr),
   memory(this)
 {
 }
@@ -42,7 +42,7 @@ void machine::init()
 //		device.resolve_pre_map();
 
 	// Loading ROM images
-	romLoad = new rom_load_manager(this);
+	romLoader = new rom_loader(this);
 
 	// Initialize memory on all devices.
 	memory.init();
