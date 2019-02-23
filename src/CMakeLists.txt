@@ -31,6 +31,7 @@ set(mse_cpp_SRCS
 	emu/diexec.cpp
 	emu/didebug.cpp
 	emu/dimem.cpp
+	emu/emucore.cpp
 	emu/emumap.cpp
 	emu/emumap_hedr.cpp
 	emu/emumap_hedr0.cpp
@@ -77,6 +78,7 @@ set(mse_h_SRCS
 	dev/cpu/vax/v11.h
 	dev/cpu/vax/vax.h
 	emu/addrmap.h
+	emu/badcast.h
 	emu/commands.h
 	emu/console.h
 	emu/debug.h

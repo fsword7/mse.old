@@ -19,9 +19,30 @@ typedef device_interface_iterator<di_memory> dimem_iterator;
 
 class di_memory : public device_interface
 {
+private:
 	template <typename T, typename U>
 	struct is_related_class {
 		static constexpr bool value = std::is_convertible<std::add_pointer<T>, std::add_pointer<U>>::value;
+	};
+
+	template <typename T, typename U>
+	struct is_related_device {
+		static constexpr bool value = is_device_implementation<T>::value && is_related_class<T, U>::value;
+	};
+
+	template <typename T, typename U>
+	struct is_related_interface {
+		static constexpr bool value = is_device_interface<T>::value && is_related_class<T, U>::value;
+	};
+
+	template <typename T, typename U>
+	struct is_unrelated_device {
+		static constexpr bool value = is_device_implementation<T>::value && !is_related_class<T, U>::value;
+	};
+
+	template <typename T, typename U>
+	struct is_unrelated_interface {
+		static constexpr bool value = is_device_interface<T>::value && !is_related_class<T, U>::value;
 	};
 
 public:
@@ -34,14 +55,41 @@ public:
 
 	int mapConfigCount() { return mapConfig.size(); }
 
+//	template <typename T, typename U, typename Ret, typename... Params>
+//	std::enable_if_t<is_related_device<device_t, T>::value>
+//	setAddressMap(int space, T &obj, Ret (U::*func)(Params...))
+//	{
+//		setAddressMap(space, mapConstructor(func, obj.tag(), &downcast<U &>(obj)));
+//	}
+//
+//	template <typename T, typename U, typename Ret, typename... Params>
+//	std::enable_if_t<is_related_interface<device_t, T>::value>
+//	setAddressMap(int space, T &obj, Ret (U::*func)(Params...))
+//	{
+//		setAddressMap(space, mapConstructor(func, obj.device().tag(), &downcast<U &>(obj)));
+//	}
+
+	template <typename T, typename U, typename Ret, typename... Params>
+	std::enable_if_t<is_unrelated_device<device_t, T>::value>
+	setAddressMap(int space, T &obj, Ret (U::*func)(Params...))
+	{
+		setAddressMap(space, mapConstructor(func, obj.tag().c_str(), &dynamic_cast<U &>(obj)));
+	}
+
+	template <typename T, typename U, typename Ret, typename... Params>
+	std::enable_if_t<is_unrelated_interface<device_t, T>::value>
+	setAddressMap(int space, T &obj, Ret (U::*func)(Params...))
+	{
+		setAddressMap(space, mapConstructor(func, obj.device().tag().c_str(), &dynamic_cast<U &>(obj)));
+	}
 
 	template <typename T, typename Ret, typename... Params>
 	std::enable_if_t<is_related_class<device_t, T>::value>
-		setAddressMap(int space, Ret (T::*func)(Params...));
+	setAddressMap(int space, Ret (T::*func)(Params...));
 
 	template <typename T, typename Ret, typename... Params>
 	std::enable_if_t<!is_related_class<device_t, T>::value>
-		setAddressMap(int space, Ret (T::*func)(Params...));
+	setAddressMap(int space, Ret (T::*func)(Params...));
 
 	void setAddressMap(int space, mapConstructor map);
 

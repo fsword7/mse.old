@@ -12,12 +12,23 @@
 class system_config;
 class device_list;
 class device_t;
+class device_interface;
 class devauto_base;
 class machine;
 class di_memory;
 class di_execute;
 class di_debug;
 class validity_checker;
+
+template <typename T> struct is_device_implementation
+{
+	static constexpr bool value = std::is_base_of<device_t, T>::value;
+};
+
+template <typename T> struct is_device_interface
+{
+	static constexpr bool value = std::is_base_of<device_interface, T>::value && !is_device_implementation<T>::value;
+};
 
 
 template <class DeviceClass, tag_t *ShortName, tag_t *FullName, tag_t *Source>
@@ -137,6 +148,7 @@ constexpr auto deviceCreator = &device_tag_func<DeviceClass, ShortName, FullName
 
 // *************************************************************************
 
+
 class device_interface
 {
 	friend class interface_list;
@@ -246,9 +258,9 @@ public:
 //	}
 
 //	const char *tag() { return tagName.c_str(); }
-	std::string &tag() { return tagName; }
+	const std::string &tag() const { return tagName; }
 //	const char *name() { return drvName.c_str(); }
-	std::string &name() { return devName; }
+	const std::string &name() const { return type.fname(); }
 	device_t *owner() { return devOwner; }
 	device_t *next()  { return devNext; }
 
