@@ -187,7 +187,7 @@ tlb_t vax_cpu_base::pagefault(uint32_t errCode, uint32_t vAddr, uint32_t acc, ui
 {
 #ifdef ENABLE_DEBUG
 	if (dbg.checkFlags(DBG_EXCEPTION))
-		dbg.log("%s: (PFT) Page fault on %08X at PC %08X (%s)\n", name().c_str(),
+		dbg.log("%s: (PFT) Page fault on %08X at PC %08X (%s)\n", deviceName(),
 			vAddr, faultAddr, (errCode < 8) ? pftMessages[errCode] : "<Unknown>");
 #endif /* ENABLE_DEBUG */
 
@@ -219,7 +219,7 @@ tlb_t vax_cpu_base::translate(uint32_t vAddr, int size, uint32_t acc, uint32_t *
 
 	if (vAddr & VA_ADDR_S0) {
 		// Virtual System Region Area
-//		printf("%s: System Space: Base %08X + (%08X < %08X) => %08X\n", name().c_str(),
+//		printf("%s: System Space: Base %08X + (%08X < %08X) => %08X\n", deviceName(),
 //			IPR_SBR, pteIndex, IPR_SLR << 2, (IPR_SBR + pteIndex));
 		if (pteIndex >= (IPR_SLR << 2))
 			return pagefault(MM_LNV, vAddr, acc, sts);
@@ -268,12 +268,12 @@ tlb_t vax_cpu_base::translate(uint32_t vAddr, int size, uint32_t acc, uint32_t *
 	tlb = ((pte << PAG_WIDTH) & TLB_PFN) |
 		accTable[PTE_GETACC(pte)];
 
-//	printf("%s: PTE %08X (on %08X) => TLB %08X\n", name().c_str(),
+//	printf("%s: PTE %08X (on %08X) => TLB %08X\n", deviceName(),
 //		pte, pteAddr, tlb);
 
 	// Check legal access
 	if ((tlb & acc) == 0) {
-//		printf("%s: TLB %08X ACC %08X\n", name().c_str(), tlb, acc);
+//		printf("%s: TLB %08X ACC %08X\n", deviceName(), tlb, acc);
 		return pagefault(MM_ACV, vAddr, acc, sts);
 	}
 	if ((pte & PTE_V) == 0)
@@ -290,7 +290,7 @@ tlb_t vax_cpu_base::translate(uint32_t vAddr, int size, uint32_t acc, uint32_t *
 	vpn = VA_GETVPN(vAddr);
 	tbi = VA_GETTBI(vpn);
 
-//	printf("%s: TLB %08X, Address %08X => %08X %08X\n", name().c_str(),
+//	printf("%s: TLB %08X, Address %08X => %08X %08X\n", deviceName(),
 //		tlb, vAddr, vpn, tbi);
 
 	// Update TLB cache and return TLB entry
@@ -326,7 +326,7 @@ uint32_t vax_cpu_base::probev(uint32_t vAddr, uint32_t acc, uint32_t *sts)
 	if (((tlb.pte & acc) == 0) || (tlb.tag != vpn))
 		tlb = translate(vAddr, LN_BYTE, acc, sts);
 
-//	printf("%s: TLB (%08X) %08X %08X => V %08X P %08X\n", name().c_str(),
+//	printf("%s: TLB (%08X) %08X %08X => V %08X P %08X\n", deviceName(),
 //			tbi, tlb.tag, tlb.pte, vAddr, ((tlb.pte & TLB_PFN) | off));
 
 	return (*sts == MM_OK) ? ((tlb.pte & TLB_PFN) | off) : MM_FAIL;

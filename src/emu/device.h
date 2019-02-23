@@ -257,15 +257,18 @@ public:
 //		return new DeviceClass(config, tag, clock);
 //	}
 
-//	const char *tag() { return tagName.c_str(); }
-	const std::string &tag() const { return tagName; }
-//	const char *name() { return drvName.c_str(); }
-	const std::string &name() const { return type.fname(); }
+	const std::string &tag() const { return stagName; }
+
+	tag_t *pathName() const { return spathName.c_str(); }
+	tag_t *tagName() const { return stagName.c_str(); }
+	tag_t *shortName() const { return type.sname(); }
+	tag_t *fullName() const { return type.fname(); }
+	tag_t *deviceName() const { return devName; }
+
 	device_t *owner() { return devOwner; }
 	device_t *next()  { return devNext; }
 
-	void setDeviceName(std::string name) { devName = name; }
-	std::string getDeviceName() { return devName; }
+	void setDeviceName(std::string name) { devName = name.c_str(); }
 
 	const device_type_base &getType() const { return type; }
 
@@ -311,9 +314,9 @@ protected:
 	machine  *system;
 
 private:
-	std::string		pathName;			// Path of tag names
-	std::string		tagName;			// Tag name for linking named devices
-	std::string		devName;			// Device name for command line access
+	std::string		spathName;			// Path of tag names
+	std::string		stagName;			// Tag name for linking named devices
+	tag_t 			*devName;			// Device name for command line access
 
 	std::vector<devauto_base *> acList;	// List of auto device configurations
 };

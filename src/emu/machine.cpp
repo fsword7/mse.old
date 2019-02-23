@@ -29,7 +29,7 @@ void machine::setDeviceName(std::string name)
 
 std::string machine::getDeviceName()
 {
-	return config.getSystemDevice()->getDeviceName();
+	return config.getSystemDevice()->deviceName();
 }
 
 // Running machine initialization

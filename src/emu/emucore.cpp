@@ -18,5 +18,5 @@ void report_bad_cast(const std::type_info &srcType, const std::type_info &dstTyp
 void report_bad_device_cast(const device_t *dev, const std::type_info &srcType, const std::type_info &dstType)
 {
 	throw mseFatalError("Error: bad downcast<> - Tried to convert device %s (%s) of type %s to %s - Incompatible",
-			dev->tag().c_str(), dev->name().c_str(), srcType.name(), dstType.name());
+			dev->tag().c_str(), dev->fullName(), srcType.name(), dstType.name());
 }

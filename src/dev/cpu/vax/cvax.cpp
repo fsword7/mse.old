@@ -188,7 +188,7 @@ void cvax_cpu::halt(uint32_t code)
 #ifdef ENABLE_DEBUG
 	if (dbg.checkFlags(DBG_EXCEPTION))
 		dbg.log("%s: (HALT) Halt Action Code %08X - Jumped to %08X\n",
-			name().c_str(), code, REG_PC);
+			deviceName(), code, REG_PC);
 #endif /* ENABLE_DEBUG */
 
 	throw HALT_ACTION;
@@ -215,7 +215,7 @@ void cvax_cpu::check(uint32_t code)
 #ifdef ENABLE_DEBUG
 	if (dbg.checkFlags(DBG_EXCEPTION))
 		dbg.log("%s: (MCHK) Machine Check Exception Code %08X\n",
-			name().c_str(), code);
+			deviceName(), code);
 #endif /* ENABLE_DEBUG */
 
 	// Entering an exception routine.
@@ -282,7 +282,7 @@ void cvax_cpu::mfpr()
 		const char *regName = "Undefined Register";
 		if ((ipr < iprSize) && iprName[ipr])
 			regName = iprName[ipr];
-		dbg.log("%s: (R) %s (%02X) => %08X: %s\n", name().c_str(),
+		dbg.log("%s: (R) %s (%02X) => %08X: %s\n", deviceName(),
 				regName, ipr, dst, stringCC(ccReg));
 	}
 #endif /* ENABLE_DEBUG */
@@ -396,7 +396,7 @@ void cvax_cpu::mtpr()
 		const char *regName = "Undefined Register";
 		if ((ipr < iprSize) && iprName[ipr])
 			regName = iprName[ipr];
-		dbg.log("%s: (W) %s (%02X) <= %08X: %s\n", name().c_str(),
+		dbg.log("%s: (W) %s (%02X) <= %08X: %s\n", deviceName(),
 			regName, ipr, src, stringCC(ccReg));
 	}
 #endif /* ENABLE_DEBUG */
