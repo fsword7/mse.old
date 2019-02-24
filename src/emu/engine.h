@@ -15,6 +15,7 @@ public:
 	static machine *find(std::string drvName);
 
 	static void create(std::string drvName, std::string tagName);
+	static void list();
 
 private:
 	static std::vector<machine> machines;

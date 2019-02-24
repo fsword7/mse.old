@@ -55,3 +55,20 @@ void system_engine::create(string devName, string sysName)
 	if (sys != nullptr)
 		machines.push_back(*sys);
 }
+
+void system_engine::list()
+{
+	for (auto &machine : machines) {
+		device_t *sys = machine.getSystemDevice();
+
+//		std::cout << sys->deviceName() << "  " << sys->tagName() << "  "
+//				  << sys->shortName() << " (" << sys->fullName() << ")"
+//				  << std::endl;
+
+		for (device_t &dev : device_iterator(*sys)) {
+			std::cout << dev.deviceName() << "  " << dev.tagName() << "  "
+					  << dev.shortName() << " (" << dev.fullName() << ")"
+					  << std::endl;
+		}
+	}
+}

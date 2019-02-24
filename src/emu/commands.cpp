@@ -36,6 +36,15 @@ static cmdStatus /* command_handler:: */ cmdListSystem(cty_t *cty, int argc, arg
 	return cmdOk;
 }
 
+static cmdStatus /* commander_handler:: */ cmdListMachine(cty_t *cty, int argc, args_t &args)
+{
+	system_engine engine;
+
+	engine.list();
+
+	return cmdOk;
+}
+
 // General commands table
 command_t command_handler::mseCommands[] = {
 	{ "create", cmdCreate },
@@ -60,6 +69,7 @@ command_t command_handler::mseShowCommands[] = {
 // General list commands table
 command_t command_handler::mseListCommands[] = {
 	{ "system", cmdListSystem },
+	{ "machine", cmdListMachine },
 	// null terminator - end of command table
 	{ nullptr }
 };
