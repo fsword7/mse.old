@@ -83,6 +83,32 @@ void device_t::devValidate(validity_checker &valid) const
 {
 	// Do nothing by default
 }
+// ********************************************************
+
+std::vector<romEntry> device_t::romBuildRegions()
+{
+	romEntry *entries;
+
+	if ((entries = devGetROMRegion()) != nullptr) {
+		int idx = 0;
+		do {
+			romEntries.emplace_back(entries[idx]);
+		} while (!ROMENTRY_ISEND(entries[idx++]));
+	} else {
+		// Device does not have ROM entries
+		// Just create END entry.
+		const romEntry end = ROM_END;
+		romEntries.emplace_back(end);
+	}
+	return romEntries;
+}
+
+std::vector<romEntry> device_t::romGetRegions()
+{
+	if (romEntries.empty())
+		romBuildRegions();
+	return romEntries;
+}
 
 // ********************************************************
 

@@ -19,6 +19,13 @@ public:
 
 	machine *systemMachine() const { return sysMachine; }
 
+
+protected:
+	void processRegionList();
+
+	const romEntry *first(device_t &device);
+	const romEntry *next(const romEntry *);
+
 private:
 	machine *sysMachine;
 };

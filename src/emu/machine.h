@@ -17,6 +17,9 @@ public:
 	device_t *getSystemDevice() { return sysDevice; }
 	const device_t *getSystemsDevice() const { return sysDevice; }
 
+	device_t *systemDevice() { return sysDevice; }
+	const device_t *systemDevice() const { return sysDevice; }
+
 	void setDeviceName(tag_t *name);
 	tag_t *getDeviceName();
 

@@ -292,6 +292,10 @@ public:
 
 	void validate(validity_checker &valid) const;
 
+	// ROM vector manager
+	std::vector<romEntry> romBuildRegions();
+	std::vector<romEntry> romGetRegions();
+
 	// Device-specific virtual function calls
 	virtual void devConfigure(system_config &config);
 	virtual romEntry *devGetROMRegion();
@@ -312,6 +316,7 @@ protected:
 	device_list 		deviceList;			// List of child devices - container
 	interface_list		interfaceList;		// List of interfaces - container
 
+	std::vector<romEntry> romEntries;
 
 	const system_config &sysConfig;
 
