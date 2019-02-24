@@ -24,7 +24,7 @@ console_base::~console_base()
 }
 
 
-void console_base::printf(const char *format, ...)
+void console_base::printf(const char *format, ...) const
 {
 	char     out[2048];
 	va_list  args;
@@ -32,6 +32,7 @@ void console_base::printf(const char *format, ...)
 	va_start(args, format);
 
 	vsprintf(out, format, args);
+	fflush(stdout);
 
 	std::cout << out;
 

@@ -14,7 +14,7 @@ public:
 	console_base();
 	~console_base();
 
-	void printf(const char *format, ...);
+	void printf(const char *format, ...) const;
 
 	void prompt();
 	void script(std::string fname);

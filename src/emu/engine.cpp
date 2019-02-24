@@ -6,6 +6,7 @@
  */
 
 #include "emu/emucore.h"
+#include "emu/console.h"
 #include "emu/device.h"
 #include "emu/driver.h"
 #include "emu/syslist.h"
@@ -37,14 +38,14 @@ void system_engine::create(string devName, string sysName)
 
 	// Named system must be non-existent first
 	if (find(devName) != nullptr) {
-		std::cout << devName << ": System already created" << std::endl;
+		cty.printf("%s: system already created\n", devName);
 		return;
 	}
 
 	// Find system from system list database
 	driver = syslist.find(sysName);
 	if (driver == nullptr) {
-		std::cout << devName << ": System " << sysName << " not found" << std::endl;
+		cty.printf("%s: System '%s' not found\n", devName, sysName);
 		return;
 	}
 
@@ -66,9 +67,11 @@ void system_engine::list()
 //				  << std::endl;
 
 		for (device_t &dev : device_iterator(*sys)) {
-			std::cout << dev.deviceName() << "  " << dev.tagName() << "  "
-					  << dev.shortName() << " (" << dev.fullName() << ")"
-					  << std::endl;
+			cty.printf("%-10s %-10s %-10s (%s)\n", dev.deviceName(),
+					dev.tagName(), dev.shortName(), dev.fullName());
+//			std::cout << dev.deviceName() << "  " << dev.tagName() << "  "
+//					  << dev.shortName() << " (" << dev.fullName() << ")"
+//					  << std::endl;
 		}
 	}
 }

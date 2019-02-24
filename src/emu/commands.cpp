@@ -14,7 +14,7 @@
 
 static cmdStatus /* command_handler:: */ cmdCreate(cty_t *cty, int argc, args_t &args)
 {
-	system_engine engine;
+	system_engine engine(*cty);
 
 	engine.create(args[1], args[2]);
 
@@ -38,7 +38,7 @@ static cmdStatus /* command_handler:: */ cmdListSystem(cty_t *cty, int argc, arg
 
 static cmdStatus /* commander_handler:: */ cmdListMachine(cty_t *cty, int argc, args_t &args)
 {
-	system_engine engine;
+	system_engine engine(*cty);
 
 	engine.list();
 

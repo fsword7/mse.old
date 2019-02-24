@@ -10,13 +10,14 @@
 class system_engine
 {
 public:
-	system_engine() {}
+	system_engine(const cty_t &cty) : cty(cty) {}
 
-	static machine *find(std::string drvName);
+	machine *find(std::string drvName);
 
-	static void create(std::string drvName, std::string tagName);
-	static void list();
+	void create(std::string drvName, std::string tagName);
+	void list();
 
 private:
 	static std::vector<machine> machines;
+	const cty_t &cty;
 };
