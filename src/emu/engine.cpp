@@ -54,6 +54,8 @@ void system_engine::create(string devName, string sysName)
 	char *name = strdup(devName.c_str());
 	sys->setDeviceName(name);
 
+	sys->init(cty);
+
 	if (sys != nullptr)
 		machines.push_back(*sys);
 }

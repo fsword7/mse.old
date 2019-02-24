@@ -35,7 +35,11 @@
 #define ROM_NAME(Name)		rom_##Name
 #define ROM_END				{ nullptr, nullptr, 0, 0, ROM_TYPE_END }
 
-#define ROMENTRY_ISEND(e) (((e).flags & ROM_TYPE_MASK) == ROM_TYPE_END)
+#define ROMENTRY_ISREGION(e)		(((e).flags & ROM_TYPE_MASK) == ROM_TYPE_REGION)
+#define ROMENTRY_ISEND(e)			(((e).flags & ROM_TYPE_MASK) == ROM_TYPE_END)
+
+#define ROMREGION_GETNAME(e)		((e).name)
+#define ROMREGION_GETLENGTH(e)		((e).length)
 
 class romEntry
 {

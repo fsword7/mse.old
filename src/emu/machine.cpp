@@ -7,6 +7,7 @@
 
 
 #include "emu/emucore.h"
+#include "emu/console.h"
 #include "emu/sysconfig.h"
 #include "emu/emumap.h"
 #include "emu/romloader.h"
@@ -35,14 +36,14 @@ tag_t *machine::getDeviceName()
 }
 
 // Running machine initialization
-void machine::init()
+void machine::init(const cty_t &cty)
 {
 	// Resolve objects that can be used for memory maps.
 //	for (device_t &device : device_iterator(sysDevice))
 //		device.resolve_pre_map();
 
 	// Loading ROM images
-	romLoader = new rom_loader(this);
+	romLoader = new rom_loader(this, cty);
 
 	// Initialize memory on all devices.
 	memory.init();

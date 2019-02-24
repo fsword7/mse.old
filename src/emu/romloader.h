@@ -14,7 +14,7 @@ class machine;
 class rom_loader
 {
 public:
-	rom_loader(machine *sys);
+	rom_loader(machine *sys, const cty_t &cty);
 	~rom_loader();
 
 	machine *systemMachine() const { return sysMachine; }
@@ -28,4 +28,5 @@ protected:
 
 private:
 	machine *sysMachine;
+	const cty_t &cty;
 };

@@ -8,6 +8,7 @@
 #pragma once
 
 class rom_loader;
+class console_base;
 
 class machine {
 public:
@@ -23,7 +24,7 @@ public:
 	void setDeviceName(tag_t *name);
 	tag_t *getDeviceName();
 
-	void init();
+	void init(const console_base &cty);
 	void execute();
 
 private:

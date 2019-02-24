@@ -19,6 +19,7 @@ device_t::device_t(const system_config &config, const device_type_base &type, ta
   sysConfig(config),
   system(nullptr)
 {
+	romEntries.clear();
 	acList.clear();
 }
 
@@ -93,6 +94,7 @@ std::vector<romEntry> device_t::romBuildRegions()
 		int idx = 0;
 		do {
 			romEntries.emplace_back(entries[idx]);
+			std::cout << "Count ROM entry " << idx << "..." << std::endl;
 		} while (!ROMENTRY_ISEND(entries[idx++]));
 	} else {
 		// Device does not have ROM entries
