@@ -14,7 +14,7 @@
 
 device_t::device_t(const system_config &config, const device_type_base &type, tag_t *tag, device_t *owner, uint64_t clock)
 : type(type), devOwner(owner), devNext(nullptr),
-  stagName(tag), devName(""),
+  stagName(tag), devName(nullptr),
   sysConfig(config),
   system(nullptr)
 {

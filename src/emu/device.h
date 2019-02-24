@@ -268,7 +268,8 @@ public:
 	device_t *owner() { return devOwner; }
 	device_t *next()  { return devNext; }
 
-	void setDeviceName(std::string name) { devName = name.c_str(); }
+	void setDeviceName(std::string name) { devName = strdup(name.c_str()); }
+	void setDeviceName(tag_t *name) { devName = name; }
 
 	const device_type_base &getType() const { return type; }
 
