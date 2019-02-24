@@ -24,12 +24,12 @@ machine::~machine()
 {
 }
 
-void machine::setDeviceName(std::string name)
+void machine::setDeviceName(tag_t *name)
 {
 	config.systemDevice()->setDeviceName(name);
 }
 
-std::string machine::getDeviceName()
+tag_t *machine::getDeviceName()
 {
 	return config.systemDevice()->deviceName();
 }

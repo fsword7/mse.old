@@ -51,7 +51,8 @@ void system_engine::create(string devName, string sysName)
 
 	config = new system_config(*driver);
 	sys = new machine(config);
-	sys->setDeviceName(devName);
+	char *name = strdup(devName.c_str());
+	sys->setDeviceName(name);
 
 	if (sys != nullptr)
 		machines.push_back(*sys);
@@ -69,9 +70,6 @@ void system_engine::list()
 		for (device_t &dev : device_iterator(*sys)) {
 			cty.printf("%-10s %-10s %-10s (%s)\n", dev.deviceName(),
 					dev.tagName(), dev.shortName(), dev.fullName());
-//			std::cout << dev.deviceName() << "  " << dev.tagName() << "  "
-//					  << dev.shortName() << " (" << dev.fullName() << ")"
-//					  << std::endl;
 		}
 	}
 }
