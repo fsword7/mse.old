@@ -7,6 +7,7 @@
 
 #include "emu/emucore.h"
 #include "emu/sysconfig.h"
+#include "emu/maprom.h"
 #include "emu/device.h"
 #include "emu/devauto.h"
 #include "emu/machine.h"
@@ -70,6 +71,12 @@ void device_t::validate(validity_checker &valid) const
 void device_t::devConfigure(system_config &config)
 {
 	// Do nothing by default
+}
+
+romEntry *device_t::devGetROMRegion()
+{
+	// Do nothing by default
+	return nullptr;
 }
 
 void device_t::devValidate(validity_checker &valid) const

@@ -6,6 +6,7 @@
  */
 
 #include "emu/emucore.h"
+#include "emu/maprom.h"
 #include "emu/devsys.h"
 
 system_device::system_device(const system_config &config, const device_type_base &type,
@@ -32,6 +33,12 @@ void system_device::devConfigure(system_config &config)
 {
 	assert(sysDriver != nullptr);
 	sysDriver->configure(config, *this);
+}
+
+romEntry *system_device::devGetROMRegion()
+{
+	assert(sysDriver != nullptr);
+	return sysDriver->rom;
 }
 
 // init - default implementation does nothing

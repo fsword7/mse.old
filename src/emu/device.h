@@ -19,6 +19,7 @@ class di_memory;
 class di_execute;
 class di_debug;
 class validity_checker;
+class romEntry;
 
 template <typename T> struct is_device_implementation
 {
@@ -293,6 +294,7 @@ public:
 
 	// Device-specific virtual function calls
 	virtual void devConfigure(system_config &config);
+	virtual romEntry *devGetROMRegion();
 	virtual void devValidate(validity_checker &valid) const;
 
 protected:
