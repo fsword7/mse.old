@@ -194,8 +194,8 @@ public:
 			list.push_back(dev);
 		}
 
-		device_t *first() { return list[0]; }
-		device_t *last()  { return list[size()]; }
+		device_t *first() { return list.empty() ? nullptr : list[0]; }
+		device_t *last()  { return list.empty() ? nullptr : list[size()]; }
 
 		int size()   { return list.size(); }
 		bool empty() { return list.empty(); }
@@ -222,8 +222,8 @@ public:
 		: execute(nullptr), memory(nullptr)
 		{ list.clear(); }
 
-		device_interface *first() { return list.front(); }
-		device_interface *last()  { return list.back(); }
+		device_interface *first() { return list.empty() ? nullptr : list.front(); }
+		device_interface *last()  { return list.empty() ? nullptr : list.back(); }
 
 		int size()   { return list.size(); }
 		bool empty() { return list.empty(); }
