@@ -15,6 +15,8 @@ public:
 	machine(const system_config *config);
 	~machine();
 
+	mapMemoryManager &memory() { return sysMemory; }
+
 	device_t *getSystemDevice() { return sysDevice; }
 	const device_t *getSystemsDevice() const { return sysDevice; }
 
@@ -35,5 +37,5 @@ private:
 	rom_loader *romLoader;
 
 	// embedded managers
-	mapMemoryManager	memory;
+	mapMemoryManager	sysMemory;
 };

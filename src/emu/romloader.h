@@ -21,6 +21,11 @@ public:
 
 
 protected:
+
+	void fillImage(const romEntry_t *);
+	void copyImage(const romEntry_t *);
+
+	void processEntries(tag_t *tagName, const romEntry_t *parent, const romEntry_t *entry, device_t &device);
 	void processRegionList();
 
 	const romEntry_t *first(device_t &device);
@@ -28,5 +33,6 @@ protected:
 
 private:
 	machine *sysMachine;
+	mapMemoryRegion *region;
 	const cty_t &cty;
 };

@@ -35,6 +35,48 @@ const romEntry_t *rom_loader::next(const romEntry_t *entry)
 	return !ROMENTRY_ISEND(*entry) ? entry : nullptr;
 }
 
+void rom_loader::fillImage(const romEntry_t *entry)
+{
+	uint32_t	length = ROM_GETLENGTH(*entry);
+	uint32_t	skip = ROM_GETSKIP(*entry);
+	uint8_t 	*base = region->base() + ROM_GETOFFSET(*entry);
+	uint8_t		fillValue = 0;
+
+	fillValue = uint8_t(strtol(ROM_GETHASH(*entry), nullptr, 0));
+
+	if (skip > 0) {
+		for (int idx = 0; idx < length; idx += skip+1)
+			base[idx] = fillValue;
+	} else
+		memset(base, fillValue, length);
+}
+
+void rom_loader::copyImage(const romEntry_t *entry)
+{
+	tag_t		*tagSource = ROM_GETNAME(*entry);
+	uint32_t	length = ROM_GETLENGTH(*entry);
+	uint8_t		*base = region->base() + ROM_GETOFFSET(*entry);
+
+
+}
+
+void rom_loader::processEntries(tag_t *tagName, const romEntry_t *parent, const romEntry_t *entry, device_t &device)
+{
+
+	while (!ROMENTRY_ISREGIONEND(*entry)) {
+
+		if (ROMENTRY_ISFILL(*entry))
+			fillImage(entry++);
+		else if (ROMENTRY_ISCOPY(*entry))
+			copyImage(entry++);
+		else if (ROMENTRY_ISFILE(*entry)) {
+
+			entry++;
+		} else
+			entry++;
+	}
+}
+
 void rom_loader::processRegionList()
 {
 	uint32_t			rgnLength;
@@ -56,7 +98,16 @@ void rom_loader::processRegionList()
 			if (ROMREGION_ISROMDATA(*entry)) {
 				uint8_t  width  = ROMREGION_GETWIDTH(*entry) / 8;
 				endian_t endian = ROMREGION_ISBIGENDIAN(*entry) ? endianBig : endianLittle;
+				uint8_t  erase  = 0;
 
+				region = sysMachine->memory().allocateRegion(rgnTagName, rgnLength, width, endian);
+
+				if (ROMREGION_ISERASE(*entry))
+					erase = ROMREGION_GETERASEVAL(*entry);
+				memset(region->base(), erase, region->size());
+
+				// Now processing ROM entries within region area
+				processEntries(device.shortName(), entry, entry+1, device);
 			}
 		}
 	}

@@ -17,7 +17,7 @@ machine::machine(const system_config *_config)
 : config(*_config),
   sysDevice(config.systemDevice()),
   romLoader(nullptr),
-  memory(this)
+  sysMemory(this)
 {
 }
 
