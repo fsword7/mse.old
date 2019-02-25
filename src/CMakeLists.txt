@@ -32,6 +32,7 @@ set(mse_cpp_SRCS
 	emu/didebug.cpp
 	emu/dimem.cpp
 	emu/emucore.cpp
+	emu/emufile.cpp
 	emu/emumap.cpp
 	emu/emumap_hedr.cpp
 	emu/emumap_hedr0.cpp
@@ -92,6 +93,8 @@ set(mse_h_SRCS
 	emu/diexec.h
 	emu/didebug.h
 	emu/dimem.h
+	emu/emucore.h
+	emu/emufile.h
 	emu/emumap.h
 	emu/emumap_he.h
 	emu/emumap_hedr.h
@@ -113,6 +116,7 @@ set(mse_h_SRCS
 	lib/util/fileio.h
 	lib/util/templates.h
 	lib/util/unzip.h
+	osd/osdfile.h
 	sys/dec/alpha/externs.h
 	sys/dec/pdp10/externs.h
 	sys/dec/pdp11/externs.h
