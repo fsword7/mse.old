@@ -10,4 +10,6 @@ if(WIN32)
 	find_library(Ws2_32_LIBRARY ws2_32)
 endif()
 
+find_library(ZLIB REQUIRED)
+
 add_subdirectory(src)

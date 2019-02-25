@@ -53,6 +53,7 @@ set(mse_cpp_SRCS
 	emu/user.cpp
 	formats/dec/image.cpp
 	lib/util/delegate.cpp
+	lib/util/fileio.cpp
 	sys/dec/vax/ka650.cpp
 )
 
@@ -108,6 +109,7 @@ set(mse_h_SRCS
 	emu/validity.h
 	formats/dec/word10.h
 	lib/util/delegate.h
+	lib/util/fileio.h
 	lib/util/templates.h
 	sys/dec/alpha/externs.h
 	sys/dec/pdp10/externs.h
@@ -121,10 +123,12 @@ set(tools_SRCS
 	tools/dump10.cpp
 )
 
-include_directories(${PROJECT_SOURCE_DIR}/src)
+include_directories(${PROJECT_SOURCE_DIR}/src )
 
 add_executable(mse ${mse_cpp_SRCS} ${mse_h_SRCS})
 target_compile_definitions(mse PRIVATE ENABLE_DEBUG)
 if(WIN32)
-	target_link_libraries(mse ${WSOCK32_LIBRARY} ${WS2_32_LIBRARY})
-endif()
+	target_link_libraries(mse ${WSOCK32_LIBRARY} ${WS2_32_LIBRARY} ${ZLIB_LIBRARIES} )
+else(WIN32)
+	target_link_libraries(mse ${ZLIB_LIBRARIES} )
+endif(WIN32)
