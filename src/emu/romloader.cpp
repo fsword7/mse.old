@@ -21,14 +21,14 @@ rom_loader::~rom_loader()
 {
 }
 
-const romEntry *rom_loader::first(device_t &device)
+const romEntry_t *rom_loader::first(device_t &device)
 {
-	const romEntry *entry = &device.romGetRegions().front();
+	const romEntry_t *entry = device.romGetRegions();
 
 	return !ROMENTRY_ISEND(*entry) ? entry : nullptr;
 }
 
-const romEntry *rom_loader::next(const romEntry *entry)
+const romEntry_t *rom_loader::next(const romEntry_t *entry)
 {
 	entry++;
 
@@ -37,20 +37,27 @@ const romEntry *rom_loader::next(const romEntry *entry)
 
 void rom_loader::processRegionList()
 {
-	uint32_t	rgnLength;
-	tag_t		*rgnTagName;
+	uint32_t			rgnLength;
+	tag_t				*rgnTagName;
+	const romEntry_t	*entry;
 
 	device_iterator iters(*sysMachine->systemDevice());
 	for (device_t &device : iters) {
-		for (const romEntry *entry = first(device); entry != nullptr; entry = next(entry)) {
+		for (entry = first(device); entry != nullptr; entry = next(entry)) {
 			rgnLength  = ROMREGION_GETLENGTH(*entry);
 			rgnTagName = ROMREGION_GETNAME(*entry);
 
 			cty.printf("%s: Processing ROM region '%s' length = %d\n",
 				device.deviceName(), rgnTagName, rgnLength);
 
+			// Entry must be region type
 //			assert(ROMENTRY_ISREGION(*entry));
 
+			if (ROMREGION_ISROMDATA(*entry)) {
+				uint8_t  width  = ROMREGION_GETWIDTH(*entry) / 8;
+				endian_t endian = ROMREGION_ISBIGENDIAN(*entry) ? endianBig : endianLittle;
+
+			}
 		}
 	}
 }

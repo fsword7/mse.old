@@ -15,11 +15,12 @@
 
 device_t::device_t(const system_config &config, const device_type_base &type, tag_t *tag, device_t *owner, uint64_t clock)
 : type(type), devOwner(owner), devNext(nullptr),
+  romEntries(nullptr),
   stagName(tag), devName(nullptr),
   sysConfig(config),
   system(nullptr)
 {
-	romEntries.clear();
+//	romEntries.clear();
 	acList.clear();
 }
 
@@ -74,7 +75,7 @@ void device_t::devConfigure(system_config &config)
 	// Do nothing by default
 }
 
-romEntry *device_t::devGetROMRegion()
+const romEntry_t *device_t::devGetROMRegion()
 {
 	// Do nothing by default
 	return nullptr;
@@ -86,29 +87,43 @@ void device_t::devValidate(validity_checker &valid) const
 }
 // ********************************************************
 
-std::vector<romEntry> device_t::romBuildRegions()
-{
-	romEntry *entries;
+//std::vector<const romEntry *> device_t::romBuildRegions()
+//{
+//	const romEntry_t *entries;
+//
+//	static const romEntry_t end = ROM_END;
+//
+//	if ((entries = devGetROMRegion()) != nullptr) {
+//		int idx = 0;
+//		do {
+//			romEntries.push_back(&entries[idx]);
+////			std::cout << "Count ROM entry " << idx << "..." << std::endl;
+//		} while (!ROMENTRY_ISEND(entries[idx++]));
+//	} else {
+//		// Device does not have ROM entries
+//		// Just create END entry.
+//		romEntries.push_back(&end);
+//	}
+//	return romEntries;
+//}
 
-	if ((entries = devGetROMRegion()) != nullptr) {
-		int idx = 0;
-		do {
-			romEntries.emplace_back(entries[idx]);
-			std::cout << "Count ROM entry " << idx << "..." << std::endl;
-		} while (!ROMENTRY_ISEND(entries[idx++]));
-	} else {
-		// Device does not have ROM entries
-		// Just create END entry.
-		const romEntry end = ROM_END;
-		romEntries.emplace_back(end);
+//std::vector<const romEntry *> device_t::romGetRegions()
+//{
+//	if (romEntries.empty())
+//		romBuildRegions();
+//	return romEntries;
+//}
+
+const romEntry_t *device_t::romGetRegions()
+{
+	static const romEntry_t rom_empty[] = { ROM_END };
+
+	if (romEntries == nullptr) {
+		romEntries = devGetROMRegion();
+		if (romEntries == nullptr)
+			romEntries = rom_empty;
 	}
-	return romEntries;
-}
 
-std::vector<romEntry> device_t::romGetRegions()
-{
-	if (romEntries.empty())
-		romBuildRegions();
 	return romEntries;
 }
 

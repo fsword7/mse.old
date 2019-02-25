@@ -35,7 +35,7 @@ void system_device::devConfigure(system_config &config)
 	sysDriver->configure(config, *this);
 }
 
-romEntry *system_device::devGetROMRegion()
+const romEntry_t *system_device::devGetROMRegion()
 {
 	assert(sysDriver != nullptr);
 	return sysDriver->rom;

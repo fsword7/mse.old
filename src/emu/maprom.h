@@ -22,6 +22,9 @@
 #define ROM_REGION_LE		0x00000000
 #define ROM_REGION_BE		0x00000040
 
+#define ROM_REGION_DATA		0x00000100
+#define ROM_REGION_ROM		0x00000000
+
 #define ROM_REGION(tag, length, flags)			{ tag, nullptr, 0, length, (flags) | ROM_TYPE_REGION }
 #define ROM_REGION16_BE(tag, length, flags)		ROM_REGION(tag, length, (flags) | ROM_REGION_16BIT | ROM_REGION_BE)
 #define ROM_REGION16_LE(tag, length, flags)		ROM_REGION(tag, length, (flags) | ROM_REGION_16BIT | ROM_REGION_LE)
@@ -35,18 +38,23 @@
 #define ROM_NAME(Name)		rom_##Name
 #define ROM_END				{ nullptr, nullptr, 0, 0, ROM_TYPE_END }
 
-#define ROMENTRY_ISREGION(e)		(((e).flags & ROM_TYPE_MASK) == ROM_TYPE_REGION)
-#define ROMENTRY_ISEND(e)			(((e).flags & ROM_TYPE_MASK) == ROM_TYPE_END)
+#define ROMENTRY_ISREGION(e)			(((e).flags & ROM_TYPE_MASK) == ROM_TYPE_REGION)
+#define ROMENTRY_ISEND(e)				(((e).flags & ROM_TYPE_MASK) == ROM_TYPE_END)
 
-#define ROMREGION_GETNAME(e)		((e).name)
-#define ROMREGION_GETLENGTH(e)		((e).length)
+#define ROMREGION_GETNAME(e)			((e).name)
+#define ROMREGION_GETLENGTH(e)			((e).length)
+#define ROMREGION_GETWIDTH(e)			(8 << (((e).flags & ROM_REGION_WIDTH) >> 4))
+#define ROMREGION_GETDATATYPE(e)		((e).flags & ROM_REGION_DATA)
+#define ROMREGION_ISROMDATA(e)			(ROMREGION_GETDATATYPE(e) == ROM_REGION_ROM)
+#define ROMREGION_ISBIGENDIAN(e)		(((e).flags & ROM_REGION_ENDIAN) == ROM_REGION_BE)
+#define ROMREGION_ISLITTLEENDIAN(e)		(((e).flags & ROM_REGION_ENDIAN) == ROM_REGION_LE)
 
-class romEntry
+
+struct romEntry_t
 {
-public:
-	const char *name;
-	const char *hash;
-	uint32_t	offset;
-	uint32_t	length;
-	uint32_t	flags;
+	const char 		*name;
+	const char 		*hash;
+	const uint32_t	offset;
+	const uint32_t	length;
+	const uint32_t	flags;
 };

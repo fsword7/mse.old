@@ -28,7 +28,7 @@ public:
 	void setSystemDriver(const system_driver *driver);
 
 	void devConfigure(system_config &config);
-	romEntry *devGetROMRegion();
+	const romEntry_t *devGetROMRegion();
 
 private:
 	const system_driver	*sysDriver;

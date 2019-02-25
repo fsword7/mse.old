@@ -23,8 +23,8 @@ public:
 protected:
 	void processRegionList();
 
-	const romEntry *first(device_t &device);
-	const romEntry *next(const romEntry *);
+	const romEntry_t *first(device_t &device);
+	const romEntry_t *next(const romEntry_t *);
 
 private:
 	machine *sysMachine;

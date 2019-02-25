@@ -58,7 +58,7 @@ void ka650_device::mv3900x_init()
 
 }
 
-static romEntry ROM_NAME(mv3900)[] =
+static const romEntry_t ROM_NAME(mv3900)[] =
 {
 		ROM_REGION32_LE("srm", 0x20000, 0),
 		ROM_LOAD("ka655x.bin", 0x00000, 0x20000, nullptr, 0),

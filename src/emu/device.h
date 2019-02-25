@@ -19,7 +19,7 @@ class di_memory;
 class di_execute;
 class di_debug;
 class validity_checker;
-class romEntry;
+struct romEntry_t;
 
 template <typename T> struct is_device_implementation
 {
@@ -293,12 +293,13 @@ public:
 	void validate(validity_checker &valid) const;
 
 	// ROM vector manager
-	std::vector<romEntry> romBuildRegions();
-	std::vector<romEntry> romGetRegions();
+//	std::vector<const romEntry> romBuildRegions();
+//	std::vector<const romEntry> romGetRegions();
+	const romEntry_t *romGetRegions();
 
 	// Device-specific virtual function calls
 	virtual void devConfigure(system_config &config);
-	virtual romEntry *devGetROMRegion();
+	virtual const romEntry_t *devGetROMRegion();
 	virtual void devValidate(validity_checker &valid) const;
 
 protected:
@@ -316,7 +317,8 @@ protected:
 	device_list 		deviceList;			// List of child devices - container
 	interface_list		interfaceList;		// List of interfaces - container
 
-	std::vector<romEntry> romEntries;
+//	std::vector<const romEntry> romEntries;
+	const romEntry_t *romEntries;
 
 	const system_config &sysConfig;
 

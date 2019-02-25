@@ -16,14 +16,14 @@ public:
 	typedef void (*system_creator)(system_config &, device_t &);
 	typedef void (*driver_init)(device_t &);
 
-	const char		*name;			// machine name
-	const char 		*parent;		// parent of machine name
+	const char				*name;			// machine name
+	const char 				*parent;		// parent of machine name
 	const device_type_base	&type;
-	system_creator	configure;		// system creator/configuration callback
-	driver_init		init;			// system initialize callback
-	romEntry		*rom;			// ROM entries for firmware
-	const char		*description;	//Description/full name
-	const char		*source;		// source file name
+	system_creator			configure;		// system creator/configuration callback
+	driver_init				init;			// system initialize callback
+	const romEntry_t		*rom;			// ROM entries for firmware
+	const char				*description;	//Description/full name
+	const char				*source;		// source file name
 };
 
 #define SYSTEM_NAME(Name) Name##_driver
