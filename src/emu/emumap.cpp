@@ -11,16 +11,16 @@
 #include "emu/machine.h"
 
 
-mapManager::mapManager(machine *sys)
+mapMemoryManager::mapMemoryManager(machine *sys)
 : system(sys)
 {
 }
 
-mapManager::~mapManager()
+mapMemoryManager::~mapMemoryManager()
 {
 }
 
-void mapManager::allocate(di_memory &memory)
+void mapMemoryManager::allocate(di_memory &memory)
 {
 	for (int space = 0; memory.mapConfigCount(); space++) {
 		mapAddressConfig *config = memory.getAddressSpaceConfig(space);
@@ -30,7 +30,7 @@ void mapManager::allocate(di_memory &memory)
 	}
 }
 
-void mapManager::init()
+void mapMemoryManager::init()
 {
 	dimem_iterator iter(*system->getSystemDevice());
 	std::vector<di_memory *> memories;
@@ -39,6 +39,22 @@ void mapManager::init()
 		memories.push_back(&memory);
 		allocate(memory);
 	}
+}
+
+mapMemoryRegion *mapMemoryManager::allocateRegion(tag_t *name, uint32_t length, uint8_t width, endian_t endian)
+{
+	mapMemoryRegion *region;
+
+
+	region = new mapMemoryRegion(system, name, length, width, endian);
+	regionList.emplace(name, region);
+
+	return region;
+}
+
+void mapMemoryManager::freeRegion(tag_t *name)
+{
+	regionList.erase(name);
 }
 
 // ***********************************************************
@@ -67,7 +83,7 @@ mapAddressConfig::mapAddressConfig(tag_t *tag, endian_t endian,
 
 // ***********************************************************
 
-mapAddressSpace::mapAddressSpace(mapManager &manager, di_memory &memory, int space)
+mapAddressSpace::mapAddressSpace(mapMemoryManager &manager, di_memory &memory, int space)
 : name(memory.getAddressSpaceConfig(space)->getName()),
   space(space),
   device(*memory.getDevice()),
@@ -120,7 +136,7 @@ class mapAddressSpaceAccess : public mapAddressSpace
 	}
 
 public:
-	mapAddressSpaceAccess(mapManager &manager, di_memory &memory, int space, int addrWidth)
+	mapAddressSpaceAccess(mapMemoryManager &manager, di_memory &memory, int space, int addrWidth)
 	: mapAddressSpace(manager, memory, space),
 	  rootRead(nullptr), rootWrite(nullptr)
 	{
@@ -256,3 +272,5 @@ public:
 	mapReadHandlerEntry<dWidth, aShift, Endian>  *rootRead;
 	mapWriteHandlerEntry<dWidth, aShift, Endian> *rootWrite;
 };
+
+// ******************************************************************

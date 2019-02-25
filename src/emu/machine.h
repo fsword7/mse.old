@@ -35,5 +35,5 @@ private:
 	rom_loader *romLoader;
 
 	// embedded managers
-	mapManager		memory;
+	mapMemoryManager	memory;
 };

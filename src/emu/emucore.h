@@ -19,6 +19,7 @@
 #include <memory>
 #include <utility>
 #include <exception>
+#include <map>
 
 #include <cstdio>
 #include <cstddef>

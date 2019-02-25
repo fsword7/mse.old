@@ -9,6 +9,7 @@
 
 #include <type_traits>
 
+class mapMemoryManager;
 class mapAddress;
 class mapAddressSpace;
 class mapMemoryBank;
@@ -37,17 +38,6 @@ using write64_delegate = device_delegate<uint64_t(mapAddress &, offs_t, uint64_t
 #include "emu/emumap_he.h"
 #include "emu/emumap_heun.h"
 
-class mapManager {
-public:
-	mapManager(machine *sys);
-	~mapManager();
-
-	void allocate(di_memory &memory);
-	void init();
-
-private:
-	machine *system;
-};
 
 class mapAddressConfig
 {
@@ -78,7 +68,7 @@ private:
 class mapAddressSpace
 {
 protected:
-	mapAddressSpace(mapManager &manager, di_memory &memeory, int space);
+	mapAddressSpace(mapMemoryManager &manager, di_memory &memeory, int space);
 
 public:
 	virtual ~mapAddressSpace();
@@ -164,11 +154,11 @@ public:
 //	void setBankRW(offs_t start, offs_t end, offs_t mirror, mapMemoryBank *bank);
 
 protected:
-	const char	*name;		// Name of the address space
-	int			space;		// Address space index
-	device_t	&device;	// Reference to the owning device
-	mapManager	&manager;	// Reference to the owning map manager
-	mapAddress	*map;		// Original address map database
+	const char			*name;		// Name of the address space
+	int					space;		// Address space index
+	device_t			&device;	// Reference to the owning device
+	mapMemoryManager	&manager;	// Reference to the owning map manager
+	mapAddress			*map;		// Original address map database
 
 	offs_t		addrMask;	// Address mask
 
@@ -210,8 +200,74 @@ private:
 
 class mapMemoryShare
 {
+public:
+	mapMemoryShare(uint8_t width, size_t size, endian_t endian, void *data = nullptr)
+	: baseData(data), dataSize(size),
+	  endianType(endian), bitWidth(width),
+	  byteWidth(0)
+	{ }
+
+private:
+	void		*baseData;
+	size_t		dataSize;
+	endian_t	endianType;
+	uint8_t		bitWidth;
+	uint8_t		byteWidth;
 };
 
 class mapMemoryRegion
 {
+public:
+	mapMemoryRegion(machine *sys, tag_t *tag, uint32_t length, uint8_t width, endian_t endian)
+	: sysMachine(sys), tagName(tag), data(length),
+	  endianType(endian), bitWidth(width * 8), byteWidth(width)
+	{
+		assert(width == 1 || width == 2 || width == 4 | width == 8);
+	}
+
+	uint8_t *base() { return (data.size() > 0) ? &data[0] : nullptr; }
+	uint8_t *end()	{ return base() + data.size(); }
+
+	machine *system()			{ return sysMachine; }
+	tag_t *name()				{ return tagName.c_str(); }
+	endian_t endian() const		{ return endianType; }
+	uint32_t size()				{ return data.size(); }
+	uint8_t bitwidth() const	{ return bitWidth; }
+	uint8_t bytewidth() const	{ return byteWidth; }
+
+	// Data access
+	uint8_t	&access8(offs_t offset = 0)		{ return data[offset]; }
+	uint16_t &access16(offs_t offset = 0)	{ return reinterpret_cast<uint16_t *>(base())[offset]; }
+	uint32_t &access32(offs_t offset = 0)	{ return reinterpret_cast<uint32_t *>(base())[offset]; }
+	uint64_t &access64(offs_t offset = 0)	{ return reinterpret_cast<uint64_t *>(base())[offset]; }
+
+private:
+	machine					*sysMachine;
+	std::string				tagName;
+	std::vector<uint8_t>	data;
+	endian_t				endianType;
+	uint8_t					bitWidth;
+	uint8_t					byteWidth;
+};
+
+class mapMemoryManager {
+public:
+	mapMemoryManager(machine *sys);
+	~mapMemoryManager();
+
+	void allocate(di_memory &memory);
+	void init();
+
+	// Memory regions
+	mapMemoryRegion *allocateRegion(tag_t *name, uint32_t length, uint8_t width, endian_t endian);
+	void freeRegion(tag_t *name);
+
+private:
+	machine *system;
+
+
+	std::vector<mapMemoryBlock *> blockList;
+	std::map<std::string, mapMemoryRegion *> regionList;
+	std::map<std::string, mapMemoryBank *> bankList;
+	std::map<std::string, mapMemoryShare *> shareList;
 };
