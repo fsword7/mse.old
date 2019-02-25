@@ -22,6 +22,8 @@ public:
 
 protected:
 
+	int openImageFile(tag_t *tagName, const romEntry_t *entry);
+
 	void fillImage(const romEntry_t *);
 	void copyImage(const romEntry_t *);
 

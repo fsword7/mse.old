@@ -37,6 +37,11 @@ const romEntry_t *rom_loader::next(const romEntry_t *entry)
 	return !ROMENTRY_ISEND(*entry) ? entry : nullptr;
 }
 
+int rom_loader::openImageFile(tag_t *tagName, const romEntry_t *entry)
+{
+	return 0;
+}
+
 void rom_loader::fillImage(const romEntry_t *entry)
 {
 	uint32_t	length = ROM_GETLENGTH(*entry);
@@ -72,6 +77,7 @@ void rom_loader::processEntries(tag_t *tagName, const romEntry_t *parent, const 
 		else if (ROMENTRY_ISFILE(*entry)) {
 
 			cty.printf("%s: Loading ROM file '%s'\n", device.deviceName(), ROM_GETNAME(*entry));
+			openImageFile(tagName, entry);
 
 			entry++;
 		} else
