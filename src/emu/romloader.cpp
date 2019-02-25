@@ -31,6 +31,8 @@ const romEntry_t *rom_loader::first(device_t &device)
 const romEntry_t *rom_loader::next(const romEntry_t *entry)
 {
 	entry++;
+	while (!ROMENTRY_ISREGIONEND(*entry))
+		entry++;
 
 	return !ROMENTRY_ISEND(*entry) ? entry : nullptr;
 }
@@ -39,10 +41,8 @@ void rom_loader::fillImage(const romEntry_t *entry)
 {
 	uint32_t	length = ROM_GETLENGTH(*entry);
 	uint32_t	skip = ROM_GETSKIP(*entry);
+	uint8_t		fillValue = ROM_GETVALUE(*entry);
 	uint8_t 	*base = region->base() + ROM_GETOFFSET(*entry);
-	uint8_t		fillValue = 0;
-
-	fillValue = uint8_t(strtol(ROM_GETHASH(*entry), nullptr, 0));
 
 	if (skip > 0) {
 		for (int idx = 0; idx < length; idx += skip+1)
@@ -70,6 +70,8 @@ void rom_loader::processEntries(tag_t *tagName, const romEntry_t *parent, const 
 		else if (ROMENTRY_ISCOPY(*entry))
 			copyImage(entry++);
 		else if (ROMENTRY_ISFILE(*entry)) {
+
+			cty.printf("%s: Loading ROM file '%s'\n", device.deviceName(), ROM_GETNAME(*entry));
 
 			entry++;
 		} else

@@ -42,7 +42,7 @@
 #define ROM_SKIP(n)					(((n) & 0xF) << 8)
 #define ROM_NOSKIP					ROM_SKIP(0)
 
-#define ROM_REGION(tag, length, flags)			{ tag, nullptr, 0, length, (flags) | ROM_TYPE_REGION }
+#define ROM_REGION(tag, length, flags)			{ tag, nullptr, 0, length, 0, (flags) | ROM_TYPE_REGION }
 #define ROM_REGION16_BE(tag, length, flags)		ROM_REGION(tag, length, (flags) | ROM_REGION_16BIT | ROM_REGION_BE)
 #define ROM_REGION16_LE(tag, length, flags)		ROM_REGION(tag, length, (flags) | ROM_REGION_16BIT | ROM_REGION_LE)
 #define ROM_REGION32_BE(tag, length, flags)		ROM_REGION(tag, length, (flags) | ROM_REGION_32BIT | ROM_REGION_BE)
@@ -50,10 +50,10 @@
 #define ROM_REGION64_BE(tag, length, flags)		ROM_REGION(tag, length, (flags) | ROM_REGION_64BIT | ROM_REGION_BE)
 #define ROM_REGION64_LE(tag, length, flags)		ROM_REGION(tag, length, (flags) | ROM_REGION_64BIT | ROM_REGION_LE)
 
-#define ROM_LOAD(name, offset, length, hash, flags)	{ name, hash, offset, length, ROM_TYPE_IMAGE | (flags) }
+#define ROM_LOAD(name, offset, length, hash, flags)	{ name, hash, offset, length, 0, ROM_TYPE_IMAGE | (flags) }
 
 #define ROM_NAME(Name)		rom_##Name
-#define ROM_END				{ nullptr, nullptr, 0, 0, ROM_TYPE_END }
+#define ROM_END				{ nullptr, nullptr, 0, 0, 0, ROM_TYPE_END }
 
 #define ROMENTRY_ISREGION(e)			((ROM_GETFLAGS(e) & ROM_TYPE_MASK) == ROM_TYPE_REGION)
 #define ROMENTRY_ISEND(e)				((ROM_GETFLAGS(e) & ROM_TYPE_MASK) == ROM_TYPE_END)
@@ -77,6 +77,7 @@
 #define ROM_GETHASH(e)					((e).hash)
 #define ROM_GETOFFSET(e)				((e).offset)
 #define ROM_GETLENGTH(e)				((e).length)
+#define ROM_GETVALUE(e)					((e).value)
 #define ROM_GETFLAGS(e)					((e).flags)
 
 #define ROM_GETSKIP(e)					((ROM_GETFLAGS(e) & ROM_SKIPMASK) >> 8)
@@ -87,5 +88,6 @@ struct romEntry_t
 	const char 		*hash;
 	const uint32_t	offset;
 	const uint32_t	length;
+	const uint32_t	value;
 	const uint32_t	flags;
 };
