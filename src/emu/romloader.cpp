@@ -41,7 +41,7 @@ const romEntry_t *rom_loader::next(const romEntry_t *entry)
 
 emuFile *rom_loader::processImageFile(tag_t *pathName, const romEntry_t *entry, osdFile::error &ferr)
 {
-	auto imageFile = new emuFile(OPEN_FLAG_READ);
+	auto imageFile = new emuFile("fw", OPEN_FLAG_READ);
 	std::string fullPathName;
 
 	fullPathName = std::string(pathName) + std::string("/") + std::string(ROM_GETNAME(*entry));

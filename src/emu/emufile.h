@@ -10,10 +10,28 @@
 #include "osd/osdfile.h"
 #include "lib/util/unzip.h"
 
+
+class pathIterator
+{
+public:
+	pathIterator(const std::string &searchPath);
+//	pathIterator(std::string &&sarchPath);
+
+	bool next(std::string &pathName, const char *name = nullptr);
+	void reset();
+
+private:
+	std::string					searchPath;
+	std::string::const_iterator	current;
+	bool						isFirst;
+};
+
 class emuFile
 {
 public:
 	emuFile(uint32_t openFlags);
+//	emuFile(std::string &&searchPath, uint32_t openFlags);
+	emuFile(const std::string &searchPath, uint32_t openFlags);
 	virtual ~emuFile();
 
 	// open/close function calls
@@ -24,6 +42,9 @@ public:
 protected:
 	std::string fileName;		// base filename
 	std::string pathName;		// full filename
+
+	pathIterator mediaPaths;
+	pathIterator iterator;
 
 	uint32_t	openFlags;		// Open flags for access
 
