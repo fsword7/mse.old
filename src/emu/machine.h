@@ -23,6 +23,9 @@ public:
 	device_t *systemDevice() { return sysDevice; }
 	const device_t *systemDevice() const { return sysDevice; }
 
+	const system_config &config() const { return sysConfig; }
+	const system_driver &driver() const { return sysDriver; }
+
 	void setDeviceName(tag_t *name);
 	tag_t *getDeviceName();
 
@@ -31,7 +34,8 @@ public:
 
 private:
 
-	const system_config &config;
+	const system_config &sysConfig;
+	const system_driver &sysDriver;
 	device_t *sysDevice;
 
 	rom_loader *romLoader;

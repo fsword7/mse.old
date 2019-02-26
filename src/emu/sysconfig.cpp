@@ -11,11 +11,11 @@
 #include "emu/sysconfig.h"
 
 
-system_config::system_config(const system_driver &model)
-: sysDriver(&model), sysDevice(nullptr), cfgDevice(nullptr)
+system_config::system_config(const system_driver &driver)
+: sysDriver(driver), sysDevice(nullptr), cfgDevice(nullptr)
 {
 	// Create root of system device
-	addDeviceType(model.name, model.type, 0);
+	addDeviceType(driver.name, driver.type, 0);
 
 }
 
@@ -39,7 +39,7 @@ device_t *system_config::addDevice(device_t *dev, device_t *owner)
 		owner->devices().add(dev);
 	} else {
 		assert(sysDevice == nullptr);
-		dynamic_cast<system_device *>(dev)->setSystemDriver(sysDriver);
+		dynamic_cast<system_device *>(dev)->setSystemDriver(&sysDriver);
 		sysDevice = dev;
 	}
 

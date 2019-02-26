@@ -14,8 +14,9 @@
 #include "emu/machine.h"
 
 machine::machine(const system_config *_config)
-: config(*_config),
-  sysDevice(config.systemDevice()),
+: sysConfig(*_config),
+  sysDriver(sysConfig.driver()),
+  sysDevice(sysConfig.systemDevice()),
   romLoader(nullptr),
   sysMemory(this)
 {
@@ -27,12 +28,12 @@ machine::~machine()
 
 void machine::setDeviceName(tag_t *name)
 {
-	config.systemDevice()->setDeviceName(name);
+	sysConfig.systemDevice()->setDeviceName(name);
 }
 
 tag_t *machine::getDeviceName()
 {
-	return config.systemDevice()->deviceName();
+	return sysConfig.systemDevice()->deviceName();
 }
 
 // Running machine initialization

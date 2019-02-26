@@ -55,6 +55,8 @@ public:
 		return addDevice(device, owner.second);
 	}
 
+	const system_driver &driver() const { return sysDriver; }
+
 	device_t *configDevice() { return cfgDevice; }
 	device_t *configDevice() const { return cfgDevice; }
 	device_t *systemDevice() { return sysDevice; }
@@ -63,7 +65,7 @@ public:
 	void begin(device_t *device);
 
 private:
-	const system_driver	*sysDriver;		// system driver
+	const system_driver	&sysDriver;		// system driver
 	device_t			*sysDevice;		// root system device
 	device_t			*cfgDevice;		// current device
 };
