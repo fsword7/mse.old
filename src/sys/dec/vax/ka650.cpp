@@ -60,7 +60,7 @@ void ka650_device::mv3900x_init()
 
 static const romEntry_t ROM_NAME(mv3900)[] =
 {
-		ROM_REGION32_LE("srm", 0x20000, 0),
+		ROM_REGION32_LE("ka655x-srm", 0x20000, 0),
 		ROM_LOAD("ka655x.bin", 0x00000, 0x20000, nullptr, 0),
 		ROM_END
 };
@@ -68,4 +68,4 @@ static const romEntry_t ROM_NAME(mv3900)[] =
 #define rom_mv3900x rom_mv3900
 
 COMP(mv3900,  nullptr, vax, KA650, ka650_device, mv3900,  mv3900_init,  "DEC", "MicroVAX 3900")
-COMP(mv3900x, nullptr, vax, KA650, ka650_device, mv3900x, mv3900x_init, "DEC", "MicroVAX 3900x")
+COMP(mv3900x, mv3900,  vax, KA650, ka650_device, mv3900x, mv3900x_init, "DEC", "MicroVAX 3900x")
