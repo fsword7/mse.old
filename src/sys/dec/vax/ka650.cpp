@@ -67,5 +67,5 @@ static const romEntry_t ROM_NAME(mv3900)[] =
 
 #define rom_mv3900x rom_mv3900
 
-COMP(mv3900,  nullptr, KA650, ka650_device, mv3900,  mv3900_init,  "DEC", "MicroVAX 3900")
-COMP(mv3900x, nullptr, KA650, ka650_device, mv3900x, mv3900x_init, "DEC", "MicroVAX 3900x")
+COMP(mv3900,  nullptr, vax, KA650, ka650_device, mv3900,  mv3900_init,  "DEC", "MicroVAX 3900")
+COMP(mv3900x, nullptr, vax, KA650, ka650_device, mv3900x, mv3900x_init, "DEC", "MicroVAX 3900x")

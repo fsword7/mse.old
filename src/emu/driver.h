@@ -18,6 +18,7 @@ public:
 
 	const char				*name;			// machine name
 	const char 				*parent;		// parent of machine name
+	const char				*section;		// section area
 	const device_type_base	&type;
 	system_creator			configure;		// system creator/configuration callback
 	driver_init				init;			// system initialize callback
@@ -46,12 +47,13 @@ public:
 		(SYSTEM_TRAITS_NAME(Name)::fullName),		\
 		(SYSTEM_TRAITS_NAME(Name)::sourceName)>
 
-#define COMP(Name, Parent, Type, Class, Create, Init, Company, Description)	\
+#define COMP(Name, Parent, Section, Type, Class, Create, Init, Company, Description)	\
 	SYSTEM_TRAITS(Name, Description)					\
 	extern const system_driver SYSTEM_NAME(Name) =		\
 	{													\
 		#Name,											\
 		#Parent,										\
+		#Section,										\
 		SYSTEM_TYPE(Name, Class),						\
 		[] (system_config &config, device_t &owner) { static_cast<Class &>(owner).Create(config); }, \
 		[] (device_t &owner) { static_cast<Class &>(owner).Init(); },	\
