@@ -5,8 +5,9 @@
  *      Author: Timothy Stark
  */
 
+#include "osd/telnet.h"
+
 #include "emu/emucore.h"
-#include "emu/osd/telnet.h"
 
 // Telnet Code Initialization
 static uint8_t tlnCodes[] =

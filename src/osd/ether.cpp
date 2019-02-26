@@ -9,6 +9,6 @@
  */
 
 #include "emu/emucore.h"
-#include "emu/osd/socket.h"
-#include "emu/osd/ether.h"
+#include "osd/ether.h"
+#include "osd/socket.h"
 

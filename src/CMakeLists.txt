@@ -48,15 +48,15 @@ set(mse_cpp_SRCS
 	emu/syslist.cpp
 	emu/systems.cpp
 	emu/validity.cpp
-	emu/osd/ether.cpp
-	emu/osd/main.cpp
-	emu/osd/telnet.cpp
 	emu/user.cpp
 	formats/dec/image.cpp
 	lib/util/delegate.cpp
 	lib/util/fileio.cpp
 	lib/util/unzip.cpp
+	osd/ether.cpp
+	osd/main.cpp
 	osd/osdfileio.cpp
+	osd/telnet.cpp
 	sys/dec/vax/ka650.cpp
 )
 
@@ -105,9 +105,6 @@ set(mse_h_SRCS
 	emu/exception.h
 	emu/machine.h
 	emu/romloader.h
-	emu/osd/ether.h
-	emu/osd/socket.h
-	emu/osd/telnet.h
 	emu/sysconfig.h
 	emu/syslist.h
 	emu/user.h
@@ -117,7 +114,10 @@ set(mse_h_SRCS
 	lib/util/fileio.h
 	lib/util/templates.h
 	lib/util/unzip.h
+	osd/ether.h
+	osd/socket.h
 	osd/osdfileio.h
+	osd/telnet.h
 	sys/dec/alpha/externs.h
 	sys/dec/pdp10/externs.h
 	sys/dec/pdp11/externs.h

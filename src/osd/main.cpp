@@ -1,7 +1,7 @@
 
 #include "emu/emucore.h"
 #include "emu/console.h"
-#include "emu/osd/socket.h"
+#include "osd/socket.h"
 
 #if __WIN32__
 static WSADATA wsaData;
