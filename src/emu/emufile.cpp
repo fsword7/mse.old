@@ -109,9 +109,11 @@ osdFile::error emuFile::openFile()
 	ferr = osdFile::open(pathName, openFlags, &file);
 	if (ferr == osdFile::NONE) {
 		std::cout << "Successfully open file!" << std::endl;
-	} else if (file != nullptr) {
-		delete file;
-		file = nullptr;
+		if (file != nullptr) {
+			std::cout << "Now closed it for now." << std::endl;
+			delete file;
+			file = nullptr;
+		}
 	}
 
 	return ferr;
