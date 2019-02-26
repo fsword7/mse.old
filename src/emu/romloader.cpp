@@ -38,12 +38,13 @@ const romEntry_t *rom_loader::next(const romEntry_t *entry)
 	return !ROMENTRY_ISEND(*entry) ? entry : nullptr;
 }
 
-emuFile *rom_loader::processImageFile(tag_t *pathName, tag_t *ext, const romEntry_t *entry, osdFile::error &ferr)
+emuFile *rom_loader::processImageFile(tag_t *pathName, const romEntry_t *entry, osdFile::error &ferr)
 {
 	auto imageFile = new emuFile(OPEN_FLAG_READ);
 	std::string fullPathName;
 
-	fullPathName = std::string(pathName) + std::string("/") + std::string(ROM_GETNAME(*entry)) + std::string(ext);
+	fullPathName = std::string(pathName) + std::string("/") + std::string(ROM_GETNAME(*entry));
+	cty.printf("Path: %s\n", fullPathName.c_str());
 	ferr = imageFile->open(fullPathName);
 
 	// For attempted open failure
@@ -57,6 +58,17 @@ emuFile *rom_loader::processImageFile(tag_t *pathName, tag_t *ext, const romEntr
 
 int rom_loader::openImageFile(tag_t *tagName, const romEntry_t *entry)
 {
+	uint32_t romSize = ROM_GETLENGTH(*entry);
+	const system_driver &driver = sysMachine->driver();
+	std::string pathName;
+	osdFile::error ferr;
+
+	file = nullptr;
+	pathName += driver.section;
+	pathName += "/";
+	pathName += driver.name;
+
+	file = processImageFile(pathName.c_str(), entry, ferr);
 
 	return 0;
 }

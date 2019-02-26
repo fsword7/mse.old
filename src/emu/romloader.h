@@ -22,7 +22,7 @@ public:
 
 
 protected:
-	emuFile *processImageFile(tag_t *pathName, tag_t *ext, const romEntry_t *entry, osdFile::error &ferr);
+	emuFile *processImageFile(tag_t *pathName, const romEntry_t *entry, osdFile::error &ferr);
 
 	int openImageFile(tag_t *tagName, const romEntry_t *entry);
 
