@@ -8,6 +8,7 @@
 #pragma once
 
 #include "emu/maprom.h"
+#include "emu/emufile.h"
 
 class machine;
 
@@ -21,6 +22,7 @@ public:
 
 
 protected:
+	emuFile *processImageFile(tag_t *pathName, tag_t *ext, const romEntry_t *entry, osdFile::error &ferr);
 
 	int openImageFile(tag_t *tagName, const romEntry_t *entry);
 
@@ -36,5 +38,6 @@ protected:
 private:
 	machine *sysMachine;
 	mapMemoryRegion *region;
+	emuFile *file;
 	const cty_t &cty;
 };

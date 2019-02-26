@@ -8,6 +8,7 @@
 #include "emu/emucore.h"
 #include "emu/console.h"
 #include "emu/machine.h"
+#include "emu/emufile.h"
 #include "emu/romloader.h"
 
 
@@ -37,8 +38,26 @@ const romEntry_t *rom_loader::next(const romEntry_t *entry)
 	return !ROMENTRY_ISEND(*entry) ? entry : nullptr;
 }
 
+emuFile *rom_loader::processImageFile(tag_t *pathName, tag_t *ext, const romEntry_t *entry, osdFile::error &ferr)
+{
+	auto imageFile = new emuFile(OPEN_FLAG_READ);
+	std::string fullPathName;
+
+	fullPathName = std::string(pathName) + std::string("/") + std::string(ROM_GETNAME(*entry)) + std::string(ext);
+	ferr = imageFile->open(fullPathName);
+
+	// For attempted open failure
+	if (ferr != osdFile::NONE) {
+		delete imageFile;
+		imageFile = nullptr;
+	}
+
+	return imageFile;
+}
+
 int rom_loader::openImageFile(tag_t *tagName, const romEntry_t *entry)
 {
+
 	return 0;
 }
 
