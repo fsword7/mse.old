@@ -80,6 +80,12 @@ emuFile::emuFile(const std::string &searchPath, uint32_t openFlags)
 {
 }
 
+emuFile::~emuFile()
+{
+	close();
+}
+
+
 osdFile::error emuFile::open(const std::string &name)
 {
 	osdFile::error ferr;
@@ -122,10 +128,22 @@ osdFile::error emuFile::openFile()
 void emuFile::close()
 {
 	// Release now
+	delete file;
 	file = nullptr;
 }
 
-emuFile::~emuFile()
+uint32_t emuFile::read(void *buffer, uint32_t length)
 {
-	close();
+	uint32_t actual = 0;
+	if (file != nullptr)
+		file->read(buffer, 0, length, actual);
+	return 0;
+}
+
+uint32_t emuFile::write(void *buffer, uint32_t length)
+{
+	uint32_t actual = 0;
+	if (file != nullptr)
+		file->write(buffer, 0, length, actual);
+	return 0;
 }

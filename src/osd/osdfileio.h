@@ -32,6 +32,9 @@ public:
 
 	static error open(const std::string &path, uint32_t openFlags, osdFile **file);
 
+	error read(void *buffer, uint64_t offset, uint32_t count, uint32_t &actual);
+	error write(void *buffer, uint64_t offset, uint32_t count, uint32_t &actual);
+
 protected:
 	int fd;
 };

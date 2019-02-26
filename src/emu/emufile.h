@@ -39,6 +39,9 @@ public:
 	osdFile::error openFile();
 	void close();
 
+	uint32_t read(void *buffer, uint32_t length);
+	uint32_t write(void *buffer, uint32_t length);
+
 protected:
 	std::string fileName;		// base filename
 	std::string pathName;		// full filename

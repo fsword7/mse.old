@@ -73,3 +73,29 @@ osdFile::error osdFile::open(const std::string &path, uint32_t openFlags, osdFil
 
 	return osdFile::NONE;
 }
+
+osdFile::error osdFile::read(void *buffer, uint64_t offset, uint32_t count, uint32_t &actual)
+{
+	ssize_t result;
+
+	if (lseek(fd, offset, SEEK_SET) < 0)
+		return osdError(errno);
+	result = ::read(fd, buffer, size_t(count));
+	if (result < 0)
+		return osdError(errno);
+	actual = result;
+	return osdFile::NONE;
+}
+
+osdFile::error osdFile::write(void *buffer, uint64_t offset, uint32_t count, uint32_t &actual)
+{
+	ssize_t result;
+
+	if (lseek(fd, offset, SEEK_SET) < 0)
+		return osdError(errno);
+	result = ::write(fd, buffer, size_t(count));
+	if (result < 0)
+		return osdError(errno);
+	actual = result;
+	return osdFile::NONE;
+}
