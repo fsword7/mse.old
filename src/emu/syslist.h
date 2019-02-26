@@ -14,9 +14,11 @@ public:
 	system_list() {}
 
 
-	static const system_driver *find(std::string name);
+	const system_driver *find(std::string name);
+//	const system_driver &find(std::string name);
+	const system_driver *clone(const system_driver *driver);
 
-	static void list();
+	void list();
 
 private:
 	static system_driver const *syslist[];

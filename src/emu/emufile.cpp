@@ -33,7 +33,7 @@ osdFile::error emuFile::openFile()
 	if (file != nullptr)
 		close();
 
-	return osdFile::NONE;
+	return osdFile::FAILURE;
 }
 
 void emuFile::close()

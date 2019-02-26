@@ -13,14 +13,19 @@ using namespace std;
 
 const system_driver *system_list::find(string name)
 {
-	const system_driver *model;
+	const system_driver *driver;
 
 	for (int idx = 0; syslist[idx]; idx++) {
-		model = syslist[idx];
-		if (string(model->name) == name)
-			return model;
+		driver = syslist[idx];
+		if (string(driver->name) == name)
+			return driver;
 	}
 	return nullptr;
+}
+
+const system_driver *system_list::clone(const system_driver *driver)
+{
+	return find(driver->parent);
 }
 
 void system_list::list()

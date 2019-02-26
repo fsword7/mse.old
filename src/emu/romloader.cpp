@@ -7,6 +7,7 @@
 
 #include "emu/emucore.h"
 #include "emu/console.h"
+#include "emu/syslist.h"
 #include "emu/machine.h"
 #include "emu/emufile.h"
 #include "emu/romloader.h"
@@ -58,17 +59,27 @@ emuFile *rom_loader::processImageFile(tag_t *pathName, const romEntry_t *entry, 
 
 int rom_loader::openImageFile(tag_t *tagName, const romEntry_t *entry)
 {
+	system_list sysList;
 	uint32_t romSize = ROM_GETLENGTH(*entry);
-	const system_driver &driver = sysMachine->driver();
+	const system_driver *driver;
 	std::string pathName;
+	std::string triedNames = "";
 	osdFile::error ferr;
 
-	file = nullptr;
-	pathName += driver.section;
-	pathName += "/";
-	pathName += driver.name;
 
-	file = processImageFile(pathName.c_str(), entry, ferr);
+	file = nullptr;
+	for (driver = &sysMachine->driver(); file == nullptr && driver != nullptr; driver = sysList.clone(driver)) {
+		pathName = driver->section;
+		pathName += "/";
+		pathName += driver->name;
+
+		if (triedNames.length() > 0)
+			triedNames += ",";
+		triedNames += driver->name;
+
+		file = processImageFile(pathName.c_str(), entry, ferr);
+	}
+	cty.printf("Tried names: %s\n", triedNames.c_str());
 
 	return 0;
 }
