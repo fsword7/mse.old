@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "osd/osdfile.h"
+#include "osd/osdfileio.h"
 #include "lib/util/unzip.h"
 
 

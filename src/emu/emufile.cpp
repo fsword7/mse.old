@@ -91,7 +91,6 @@ osdFile::error emuFile::open(const std::string &name)
 
 osdFile::error emuFile::openFile()
 {
-
 	if (file != nullptr)
 		close();
 
@@ -106,6 +105,14 @@ osdFile::error emuFile::openFile()
 		pathName.append("/");
 	pathName.append(fileName);
 	std::cout << "Trying that: " << pathName << std::endl;
+
+	ferr = osdFile::open(pathName, openFlags, &file);
+	if (ferr == osdFile::NONE) {
+		std::cout << "Successfully open file!" << std::endl;
+	} else if (file != nullptr) {
+		delete file;
+		file = nullptr;
+	}
 
 	return ferr;
 }

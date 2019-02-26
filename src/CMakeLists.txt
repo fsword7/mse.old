@@ -56,6 +56,7 @@ set(mse_cpp_SRCS
 	lib/util/delegate.cpp
 	lib/util/fileio.cpp
 	lib/util/unzip.cpp
+	osd/osdfileio.cpp
 	sys/dec/vax/ka650.cpp
 )
 
@@ -116,7 +117,7 @@ set(mse_h_SRCS
 	lib/util/fileio.h
 	lib/util/templates.h
 	lib/util/unzip.h
-	osd/osdfile.h
+	osd/osdfileio.h
 	sys/dec/alpha/externs.h
 	sys/dec/pdp10/externs.h
 	sys/dec/pdp11/externs.h
