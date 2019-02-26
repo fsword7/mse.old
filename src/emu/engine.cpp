@@ -38,14 +38,14 @@ void system_engine::create(string devName, string sysName)
 
 	// Named system must be non-existent first
 	if (find(devName) != nullptr) {
-		cty.printf("%s: system already created\n", devName);
+		cty.printf("%s: system already created\n", devName.c_str());
 		return;
 	}
 
 	// Find system from system list database
 	driver = syslist.find(sysName);
 	if (driver == nullptr) {
-		cty.printf("%s: System '%s' not found\n", devName, sysName);
+		cty.printf("%s: System '%s' not found\n", devName.c_str(), sysName.c_str());
 		return;
 	}
 
