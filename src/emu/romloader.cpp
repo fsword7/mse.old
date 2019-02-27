@@ -84,6 +84,21 @@ int rom_loader::openImageFile(tag_t *tagName, const romEntry_t *entry)
 	return 0;
 }
 
+int rom_loader::readImageData(const romEntry_t *parent, const romEntry_t *entry)
+{
+//	int			dShift = ROM_GETBITSHIFT(*entry);
+//	int			dMask  = ((1 << ROM_GETBITWIDTH(*entry)) - 1) << dShift;
+//	int			gsize	= ROM_GETGROUPSIZE(*entry);
+//	int			reserved = ROM_ISREVERSED(*entry);
+//	int			ngroups = (length + gsize - 1) / gsize;
+
+	int			length = ROM_GETLENGTH(*entry);
+	int			skip   = ROM_GETSKIP(*entry);
+	uint8_t 	*base = region->base() + ROM_GETOFFSET(*entry);
+
+	return 0;
+}
+
 void rom_loader::fillImage(const romEntry_t *entry)
 {
 	uint32_t	length = ROM_GETLENGTH(*entry);

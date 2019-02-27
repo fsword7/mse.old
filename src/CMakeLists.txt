@@ -51,11 +51,12 @@ set(mse_cpp_SRCS
 	emu/user.cpp
 	formats/dec/image.cpp
 	lib/util/delegate.cpp
-	lib/util/fileio.cpp
+	lib/util/corefile.cpp
 	lib/util/unzip.cpp
 	osd/ether.cpp
 	osd/main.cpp
-	osd/osdfileio.cpp
+#	osd/osdfile.cpp
+	osd/posixfile.cpp
 	osd/telnet.cpp
 	sys/dec/vax/ka650.cpp
 )
@@ -111,12 +112,13 @@ set(mse_h_SRCS
 	emu/validity.h
 	formats/dec/word10.h
 	lib/util/delegate.h
-	lib/util/fileio.h
+	lib/util/corefile.h
 	lib/util/templates.h
 	lib/util/unzip.h
 	osd/ether.h
 	osd/socket.h
-	osd/osdfileio.h
+	osd/osdfile.h
+	osd/posixfile.h
 	osd/telnet.h
 	sys/dec/alpha/externs.h
 	sys/dec/pdp10/externs.h
