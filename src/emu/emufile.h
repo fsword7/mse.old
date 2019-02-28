@@ -40,6 +40,8 @@ public:
 	osdFile::error openFile();
 	void close();
 
+	int seek(int64_t offset, int whence);
+
 	uint32_t read(void *buffer, uint32_t length);
 	uint32_t write(void *buffer, uint32_t length);
 

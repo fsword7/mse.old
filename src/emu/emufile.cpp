@@ -110,7 +110,7 @@ osdFile::error emuFile::openFile()
 	if (!pathName.empty())
 		pathName.append("/");
 	pathName.append(fileName);
-	std::cout << "Trying that: " << pathName << std::endl;
+//	std::cout << "Trying that: " << pathName << std::endl;
 
 	ferr = coreFile::open(pathName, openFlags, file);
 
@@ -123,6 +123,13 @@ void emuFile::close()
 	if (file != nullptr)
 		delete file;
 	file = nullptr;
+}
+
+int emuFile::seek(int64_t offset, int whence)
+{
+	if (file != nullptr)
+		return file->seek(offset, whence);
+	return 1;
 }
 
 uint32_t emuFile::read(void *buffer, uint32_t length)
