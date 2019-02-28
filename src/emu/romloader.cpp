@@ -90,8 +90,13 @@ int rom_loader::openImageFile(tag_t *tagName, const romEntry_t *entry)
 
 int rom_loader::freadImageData(uint8_t *buffer, int length, const romEntry_t *parent)
 {
-	if (file != nullptr)
-		return file->read(buffer, length);
+	uint32_t actual;
+
+	if (file != nullptr) {
+		actual = file->read(buffer, length);
+//		cty.printf("Loading %d bytes\n", actual);
+		return actual;
+	}
 	return 0;
 }
 
@@ -105,9 +110,21 @@ int rom_loader::readImageData(const romEntry_t *parent, const romEntry_t *entry)
 	int			reversed = ROM_ISREVERSED(*entry);
 	int			ngroups = (length + gsize - 1) / gsize;
 	uint8_t 	*base = region->base() + ROM_GETOFFSET(*entry);
+	uint32_t	bufSize;
+
+	cty.printf("%s: Loading ROM data: off=%X len=%X mask=%02X group=%d skip=%d reverse=%d\n",
+		ROM_GETNAME(*entry), ROM_GETOFFSET(*entry), length, dMask, gsize, skip, reversed);
 
 	if (dMask == 0xFF && (gsize == 1 || !reversed) && skip == 0)
 		return freadImageData(base, length, parent);
+
+//	bufSize = std::min(1024*1024*1024, length);
+//	std::vector<uint8_t> buffer(bufSize);
+//
+//	skip += gsize;
+//	while (length > 0) {
+//
+//	}
 
 	return 0;
 }
@@ -139,6 +156,7 @@ void rom_loader::processEntries(tag_t *tagName, const romEntry_t *parent, const 
 {
 
 	while (!ROMENTRY_ISREGIONEND(*entry)) {
+//		cty.printf("ROM Type: %d\n", ROM_GETFLAGS(*entry) & ROM_TYPE_MASK);
 
 		if (ROMENTRY_ISFILL(*entry))
 			fillImage(entry++);
@@ -149,7 +167,7 @@ void rom_loader::processEntries(tag_t *tagName, const romEntry_t *parent, const 
 			const romEntry_t *baserom = entry;
 			int romLength = 0;
 
-			cty.printf("%s: Loading ROM file '%s'... ", device.deviceName(), ROM_GETNAME(*entry));
+			cty.printf("%s: Loading ROM file '%s'... \n", device.deviceName(), ROM_GETNAME(*entry));
 			openImageFile(tagName, entry);
 
 			do {
@@ -162,9 +180,9 @@ void rom_loader::processEntries(tag_t *tagName, const romEntry_t *parent, const 
 //					else
 //						ROM_SETFLAG(mentry, ROM_GETFLAGS(mentry) & ROM_INHERITFLAGS) | lastFlags);
 
-					if (!ROMENTRY_ISIGNORE(*entry))
-						readImageData(parent, entry);
-					romLength += ROM_GETLENGTH(*entry);
+					if (!ROMENTRY_ISIGNORE(mentry))
+						readImageData(parent, &mentry);
+					romLength += ROM_GETLENGTH(mentry);
 
 				} while (ROMENTRY_ISCONTINUE(*entry) || ROMENTRY_ISIGNORE(*entry));
 
@@ -180,7 +198,6 @@ void rom_loader::processEntries(tag_t *tagName, const romEntry_t *parent, const 
 				delete file;
 				file == nullptr;
 			}
-			entry++;
 		} else
 			entry++;
 	}
