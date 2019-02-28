@@ -26,6 +26,7 @@ protected:
 
 	int openImageFile(tag_t *tagName, const romEntry_t *entry);
 
+	int	 freadImageData(uint8_t *buffer, int length, const romEntry_t *parent);
 	int  readImageData(const romEntry_t *parent, const romEntry_t *entry);
 	void fillImage(const romEntry_t *);
 	void copyImage(const romEntry_t *);

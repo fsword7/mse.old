@@ -45,7 +45,7 @@ emuFile *rom_loader::processImageFile(tag_t *pathName, const romEntry_t *entry, 
 	std::string fullPathName;
 
 	fullPathName = std::string(pathName) + std::string("/") + std::string(ROM_GETNAME(*entry));
-	cty.printf("Path: %s\n", fullPathName.c_str());
+//	cty.printf("Path: %s\n", fullPathName.c_str());
 	ferr = imageFile->open(fullPathName);
 
 	// For attempted open failure
@@ -53,6 +53,10 @@ emuFile *rom_loader::processImageFile(tag_t *pathName, const romEntry_t *entry, 
 		delete imageFile;
 		imageFile = nullptr;
 	}
+
+//	imageFile->close();
+//	delete imageFile;
+//	imageFIle = nullptr;
 
 	return imageFile;
 }
@@ -79,22 +83,31 @@ int rom_loader::openImageFile(tag_t *tagName, const romEntry_t *entry)
 
 		file = processImageFile(pathName.c_str(), entry, ferr);
 	}
-	cty.printf("Tried names: %s\n", triedNames.c_str());
+//	cty.printf("Tried names: %s\n", triedNames.c_str());
 
+	return 0;
+}
+
+int rom_loader::freadImageData(uint8_t *buffer, int length, const romEntry_t *parent)
+{
+	if (file != nullptr)
+		return file->read(buffer, length);
 	return 0;
 }
 
 int rom_loader::readImageData(const romEntry_t *parent, const romEntry_t *entry)
 {
-//	int			dShift = ROM_GETBITSHIFT(*entry);
-//	int			dMask  = ((1 << ROM_GETBITWIDTH(*entry)) - 1) << dShift;
-//	int			gsize	= ROM_GETGROUPSIZE(*entry);
-//	int			reserved = ROM_ISREVERSED(*entry);
-//	int			ngroups = (length + gsize - 1) / gsize;
-
 	int			length = ROM_GETLENGTH(*entry);
 	int			skip   = ROM_GETSKIP(*entry);
+	int			dShift = ROM_GETBITSHIFT(*entry);
+	int			dMask  = ((1 << ROM_GETBITWIDTH(*entry)) - 1) << dShift;
+	int			gsize	= ROM_GETGROUPSIZE(*entry);
+	int			reversed = ROM_ISREVERSED(*entry);
+	int			ngroups = (length + gsize - 1) / gsize;
 	uint8_t 	*base = region->base() + ROM_GETOFFSET(*entry);
+
+	if (dMask == 0xFF && (gsize == 1 || !reversed) && skip == 0)
+		return freadImageData(base, length, parent);
 
 	return 0;
 }
@@ -133,9 +146,40 @@ void rom_loader::processEntries(tag_t *tagName, const romEntry_t *parent, const 
 			copyImage(entry++);
 		else if (ROMENTRY_ISFILE(*entry)) {
 
-			cty.printf("%s: Loading ROM file '%s'\n", device.deviceName(), ROM_GETNAME(*entry));
+			const romEntry_t *baserom = entry;
+			int romLength = 0;
+
+			cty.printf("%s: Loading ROM file '%s'... ", device.deviceName(), ROM_GETNAME(*entry));
 			openImageFile(tagName, entry);
 
+			do {
+				do {
+					romEntry_t mentry = *entry++;
+
+					// handle flag inheritance
+//					if (!ROM_HASINHERITFLAG(&mentry))
+//						lastFlags = ROM_GETFLAGS(mentry);
+//					else
+//						ROM_SETFLAG(mentry, ROM_GETFLAGS(mentry) & ROM_INHERITFLAGS) | lastFlags);
+
+					if (!ROMENTRY_ISIGNORE(*entry))
+						readImageData(parent, entry);
+					romLength += ROM_GETLENGTH(*entry);
+
+				} while (ROMENTRY_ISCONTINUE(*entry) || ROMENTRY_ISIGNORE(*entry));
+
+				// Reset the file offset back to zero (starting).
+				if (file != nullptr)
+					file->seek(0, SEEK_SET);
+
+			} while (ROMENTRY_ISRELOAD(*entry));
+
+			if (file != nullptr) {
+				cty.printf("done.\n");
+				file->close();
+				delete file;
+				file == nullptr;
+			}
 			entry++;
 		} else
 			entry++;
