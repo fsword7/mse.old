@@ -52,7 +52,7 @@ protected:
 
 	uint32_t	openFlags;		// Open flags for access
 
-	osdFile		*file;
+	coreFile		*file;
 
 	// archive file parameters
 	archive_file			*zipFile;

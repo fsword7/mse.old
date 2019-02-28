@@ -112,8 +112,7 @@ osdFile::error emuFile::openFile()
 	pathName.append(fileName);
 	std::cout << "Trying that: " << pathName << std::endl;
 
-	uint64_t fsize;
-	ferr = osdFile::open(pathName, openFlags, file, fsize);
+	ferr = coreFile::open(pathName, openFlags, file);
 	if (ferr == osdFile::NONE) {
 		std::cout << "Successfully open file!" << std::endl;
 		if (file != nullptr) {
@@ -135,16 +134,14 @@ void emuFile::close()
 
 uint32_t emuFile::read(void *buffer, uint32_t length)
 {
-	uint32_t actual = 0;
 	if (file != nullptr)
-		file->read(buffer, 0, length, actual);
+		return file->read(buffer, length);
 	return 0;
 }
 
 uint32_t emuFile::write(void *buffer, uint32_t length)
 {
-	uint32_t actual = 0;
 	if (file != nullptr)
-		file->write(buffer, 0, length, actual);
+		return file->write(buffer, length);
 	return 0;
 }
