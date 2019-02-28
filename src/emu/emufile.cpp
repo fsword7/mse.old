@@ -117,8 +117,7 @@ osdFile::error emuFile::openFile()
 		std::cout << "Successfully open file!" << std::endl;
 		if (file != nullptr) {
 			std::cout << "Now closed it for now." << std::endl;
-			delete file;
-			file = nullptr;
+			close();
 		}
 	}
 
@@ -128,7 +127,8 @@ osdFile::error emuFile::openFile()
 void emuFile::close()
 {
 	// Release now
-	delete file;
+	if (file != nullptr)
+		delete file;
 	file = nullptr;
 }
 

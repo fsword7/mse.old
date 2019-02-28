@@ -105,7 +105,7 @@ class coreFile
 public:
 	typedef coreFile *ptr;
 
-	virtual ~coreFile();
+	virtual ~coreFile() {}
 
 	static osdFile::error open(std::string &filename, uint32_t openFlags, ptr &file);
 
@@ -115,7 +115,5 @@ public:
 
 	virtual uint32_t read(void *buffer, uint32_t length) = 0;
 	virtual uint32_t write(void *buffer, uint32_t length) = 0;
-
-private:
 
 };
