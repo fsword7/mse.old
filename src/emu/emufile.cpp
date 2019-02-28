@@ -113,13 +113,6 @@ osdFile::error emuFile::openFile()
 	std::cout << "Trying that: " << pathName << std::endl;
 
 	ferr = coreFile::open(pathName, openFlags, file);
-	if (ferr == osdFile::NONE) {
-		std::cout << "Successfully open file!" << std::endl;
-		if (file != nullptr) {
-			std::cout << "Now closed it for now." << std::endl;
-			close();
-		}
-	}
 
 	return ferr;
 }
