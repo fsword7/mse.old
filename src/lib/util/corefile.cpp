@@ -21,7 +21,7 @@ osdFile::error coreFile::open(std::string &filename, uint32_t openFlags, ptr &fi
 	osdFile::ptr	ofile;
 	uint64_t		length = 0;
 
-	auto const ferr = osdFile::open(filename, openFlags, ofile);
+	auto const ferr = osdFile::open(filename, openFlags, ofile, length);
 	if (ferr != osdFile::NONE)
 		return ferr;
 

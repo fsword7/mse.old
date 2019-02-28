@@ -112,7 +112,8 @@ osdFile::error emuFile::openFile()
 	pathName.append(fileName);
 	std::cout << "Trying that: " << pathName << std::endl;
 
-	ferr = osdFile::open(pathName, openFlags, file);
+	uint64_t fsize;
+	ferr = osdFile::open(pathName, openFlags, file, fsize);
 	if (ferr == osdFile::NONE) {
 		std::cout << "Successfully open file!" << std::endl;
 		if (file != nullptr) {

@@ -28,7 +28,7 @@ public:
 
 	virtual ~osdFile() {}
 
-	static error open(const std::string &path, uint32_t openFlags, ptr &file);
+	static error open(const std::string &path, uint32_t openFlags, ptr &file, uint64_t &fsize);
 
 	virtual error read(void *buffer, uint64_t offset, uint32_t count, uint32_t &actual) = 0;
 	virtual error write(void *buffer, uint64_t offset, uint32_t count, uint32_t &actual) = 0;

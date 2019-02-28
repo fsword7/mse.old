@@ -9,6 +9,8 @@
 #include <cassert>
 #include <cerrno>
 
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <fcntl.h>
 
 #include "osd/posixfile.h"
@@ -88,7 +90,7 @@ private:
 	int fd;
 };
 
-osdFile::error osdFile::open(const std::string &path, uint32_t openFlags, ptr &file)
+osdFile::error osdFile::open(const std::string &path, uint32_t openFlags, ptr &file, uint64_t &fsize)
 {
 	int access;
 	int fd = -1;
@@ -108,7 +110,15 @@ osdFile::error osdFile::open(const std::string &path, uint32_t openFlags, ptr &f
 	if (fd < 0)
 		return osdError(errno);
 
-	file = new posixFile(fd);
+	struct stat fst;
+	if (::fstat(fd, &fst) < 0) {
+		int errCode = errno;
+		::close(fd);
+		return osdError(errCode);
+	}
+
+	fsize = fst.st_size;
+	file  = new posixFile(fd);
 
 	return osdFile::NONE;
 }
