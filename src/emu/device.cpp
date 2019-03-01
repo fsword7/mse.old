@@ -33,8 +33,10 @@ device_t::~device_t()
 void device_t::completeConfig()
 {
 
-	for (device_interface *intf : interfaces())
+	for (device_interface *intf : interfaces()) {
+		std::cout << intf->type() << ": Completeing configuration..." << std::endl;
 		intf->intfCompleteConfig();
+	}
 
 	devCompleteConfig();
 }

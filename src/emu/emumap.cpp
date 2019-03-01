@@ -251,7 +251,7 @@ void mapMemoryManager::allocate(di_memory &memory)
 	std::cout << memory.getDevice()->deviceName() <<
 		": Allocating address spaces (" << memory.mapConfigCount() << " spaces)" << std::endl;
 
-	for (int space = 0; memory.mapConfigCount(); space++) {
+	for (int space = 0; space < memory.mapConfigCount(); space++) {
 		const mapAddressConfig *config = memory.getAddressSpaceConfig(space);
 		if (config != nullptr) {
 			switch( config->address_width() | (4 - config->address_shift())) {

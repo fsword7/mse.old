@@ -44,12 +44,16 @@ mapAddress::mapAddress(device_t &_dev, int space)
 		throw mseFatalError("No memory address space configuration for device '%s'\n",
 			device.tag());
 
+
 	if (!memory->getAddressMap(adrSpace).isnull()) {
+		std::cout << "Trying call to delelgate 1..." << std::endl;
 		memory->getAddressMap(adrSpace)(*this);
 	}
 
-	if (!config->internalMap.isnull())
-		config->internalMap(*this);
+//	if (!config->internalMap.isnull()) {
+//		std::cout << "Trying call to delelgate 2..." << std::endl;
+//		config->internalMap(*this);
+//	}
 
 	std::cout << "Address Map initialized." << std::endl;
 }

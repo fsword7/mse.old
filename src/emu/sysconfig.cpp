@@ -18,8 +18,10 @@ system_config::system_config(const system_driver &driver)
 	addDeviceType(driver.name, driver.type, 0);
 
 	// Complete final configuration
-	for (device_t &device : device_iterator(*sysDevice))
+	for (device_t &device : device_iterator(*sysDevice)) {
+		std::cout << "Device " << device.shortName() << std::endl;
 		device.completeConfig();
+	}
 }
 
 device_t *system_config::addDeviceType(tag_t *tag, const device_type_base &type, uint64_t clock)

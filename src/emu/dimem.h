@@ -54,7 +54,7 @@ protected:
 	virtual spaceConfigVector mapGetSpaceVector() const = 0;
 
 public:
-	void completeConfig();
+	void intfCompleteConfig();
 
 	mapConstructor getAddressMap(int space = 0);
 	const mapAddressConfig *getAddressSpaceConfig(int space) const;
@@ -108,10 +108,12 @@ public:
 
 	template <typename Space> void allocate(mapMemoryManager &manager, int space)
 	{
+		std::cout << "Attempting to allocate address space " << space << std::endl;
+
 		assert((space >= 0) && (space < mapConfig.size()));
 		mapSpace.resize(std::max(int(mapSpace.size()), space+1));
 
-		assert(mapSpace[space] != nullptr);
+		assert(mapSpace[space] == nullptr);
 		mapSpace[space] = new Space(manager, *this, space, mapConfig[space]->address_width());
 
 		std::cout << "Allocated address space." << std::endl;
