@@ -24,6 +24,13 @@ di_memory::~di_memory()
 
 void di_memory::completeConfig()
 {
+	const spaceConfigVector r = mapGetSpaceVector();
+
+	for (const auto &entry : r) {
+		if (entry.first >= mapConfig.size())
+			mapConfig.resize(entry.first + 1);
+		mapConfig[entry.first] = entry.second;
+	}
 }
 
 mapConstructor di_memory::getAddressMap(int space)
@@ -32,13 +39,6 @@ mapConstructor di_memory::getAddressMap(int space)
 		return mapAddress[space];
 	else
 		return mapConstructor();
-}
-
-mapAddressConfig *di_memory::getAddressSpaceConfig(int space)
-{
-	if (space >= 0 && space < mapConfig.size())
-		return mapConfig[space];
-	return nullptr;
 }
 
 const mapAddressConfig *di_memory::getAddressSpaceConfig(int space) const

@@ -49,11 +49,15 @@ public:
 	di_memory(device_t *dev);
 	~di_memory();
 
+protected:
+	using spaceConfigVector = std::vector<std::pair<int, const mapAddressConfig *>>;
+	virtual spaceConfigVector mapGetSpaceVector() const = 0;
+
+public:
 	void completeConfig();
 
 	mapConstructor getAddressMap(int space = 0);
 	const mapAddressConfig *getAddressSpaceConfig(int space) const;
-	mapAddressConfig *getAddressSpaceConfig(int space);
 
 	int mapConfigCount() { return mapConfig.size(); }
 
@@ -124,6 +128,6 @@ protected:
 	std::vector<mapConstructor>		mapAddress;
 
 private:
-	std::vector<mapAddressConfig *>	mapConfig;
+	std::vector<const mapAddressConfig *>	mapConfig;
 	std::vector<mapAddressSpace *>	mapSpace;
 };

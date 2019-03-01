@@ -635,6 +635,8 @@ public:
 	uint32_t readc(uint32_t vAddr, int size, uint32_t *sts);
 	void     writec(uint32_t vAddr, uint32_t data, int size, uint32_t *sts);
 
+	di_memory::spaceConfigVector mapGetSpaceVector() const;
+
 protected:
 	scale32_t gpReg[CPU_nGREGS];  // General registers
 	uint32_t  ipReg[CPU_nPREGS];  // Processor registers

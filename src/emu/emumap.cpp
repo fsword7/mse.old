@@ -252,7 +252,7 @@ void mapMemoryManager::allocate(di_memory &memory)
 		": Allocating address spaces (" << memory.mapConfigCount() << " spaces)" << std::endl;
 
 	for (int space = 0; memory.mapConfigCount(); space++) {
-		mapAddressConfig *config = memory.getAddressSpaceConfig(space);
+		const mapAddressConfig *config = memory.getAddressSpaceConfig(space);
 		if (config != nullptr) {
 			switch( config->address_width() | (4 - config->address_shift())) {
 			// 8-bit address width

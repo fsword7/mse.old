@@ -48,6 +48,13 @@ vax_cpu_base::~vax_cpu_base()
 {
 }
 
+di_memory::spaceConfigVector vax_cpu_base::mapGetSpaceVector() const
+{
+	return spaceConfigVector {
+		std::make_pair(AS_PROGRAM, &mapProgramConfig)
+	};
+}
+
 //void vax_cpu_base::reset()
 //{
 //	// Initialize all working registers

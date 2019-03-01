@@ -50,14 +50,14 @@ public:
 			int8_t aShift = 0,
 			mapConstructor intmap = mapConstructor());
 
-	tag_t *getName() { return name; }
+	tag_t *getName() const { return name; }
 
-	endian_t endian()		{ return endianness; }
+	endian_t endian() const		{ return endianness; }
 
-	uint8_t data_width()    { return dataWidth; }
-	uint8_t address_width() { return addrWidth; }
-	int8_t  address_shift() { return addrShift; }
-	int8_t  page_shift()    { return pageShift; }
+	uint8_t data_width() const   { return dataWidth; }
+	uint8_t address_width() const { return addrWidth; }
+	int8_t  address_shift() const { return addrShift; }
+	int8_t  page_shift() const   { return pageShift; }
 
 private:
 	tag_t		*name;
