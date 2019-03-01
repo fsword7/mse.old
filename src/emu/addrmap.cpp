@@ -46,16 +46,16 @@ mapAddress::mapAddress(device_t &_dev, int space)
 
 
 	if (!memory->getAddressMap(adrSpace).isnull()) {
-		std::cout << "Trying call to delelgate 1..." << std::endl;
+//		std::cout << "Trying call to delelgate 1..." << std::endl;
 		memory->getAddressMap(adrSpace)(*this);
 	}
 
-//	if (!config->internalMap.isnull()) {
+	if (!config->internalMap.isnull()) {
 //		std::cout << "Trying call to delelgate 2..." << std::endl;
-//		config->internalMap(*this);
-//	}
+		config->internalMap(*this);
+	}
 
-	std::cout << "Address Map initialized." << std::endl;
+//	std::cout << "Address Map initialized." << std::endl;
 }
 
 mapAddress::mapAddress(device_t &_dev, mapAddressEntry *entry)

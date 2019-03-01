@@ -77,6 +77,8 @@ public:
 	tag_t		*tagRegion;		// Tag of region map block
 	offs_t		rgnOffset;		// Offset from region base
 
+	void		*memory;
+
 	device_t		*submapDevice;
 	mapConstructor	submapDelegate;
 
@@ -94,6 +96,8 @@ public:
 };
 
 class mapAddress {
+	friend class mapAddressSpace;
+
 public:
 	mapAddress(device_t &device, int space);
 	mapAddress(device_t &device, mapAddressEntry *entry);
@@ -106,6 +110,8 @@ public:
 	void validate(int space) const;
 
 	offs_t	gmask;	// Global bit mask
+
+	uint64_t unmapValue;
 
 private:
 	device_t &device;

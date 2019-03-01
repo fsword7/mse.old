@@ -129,7 +129,7 @@ public:
 
 
 	bool is_mfp() const { return !mfp.isnull(); }
-	bool isnull() const { return (function != nullptr && stdfunc != nullptr && mfp.isnull()); }
+	bool isnull() const { return (function == nullptr && stdfunc == nullptr && mfp.isnull()); }
 
 	void bind(delegate_bind &obj) { if (binder != nullptr) bind((*binder)(obj)); }
 
