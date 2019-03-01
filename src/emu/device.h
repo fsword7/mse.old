@@ -224,7 +224,9 @@ public:
 
 	public:
 		interface_list()
-		: execute(nullptr), memory(nullptr)
+		: execute(nullptr),
+		  memory(nullptr),
+		  debug(nullptr)
 		{ list.clear(); }
 
 		device_interface *first() { return list.empty() ? nullptr : list.front(); }
@@ -451,6 +453,7 @@ public:
 			for (; cdev != nullptr; advance())
 				if (cdev->hasInterface(interface))
 					return;
+			interface = nullptr;
 		}
 
 		InterfaceClass *interface;

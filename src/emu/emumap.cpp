@@ -36,6 +36,7 @@ void mapMemoryManager::init()
 	std::vector<di_memory *> memories;
 
 	for (di_memory &memory : iter) {
+//		std::cout << "Device " << memory.getDevice()->deviceName() << std::endl;
 		memories.push_back(&memory);
 		allocate(memory);
 	}
