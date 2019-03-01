@@ -28,6 +28,17 @@ device_t::~device_t()
 {
 }
 
+// When configuration of device is complete,
+// execute that to finish configuration.
+void device_t::completeConfig()
+{
+
+	for (device_interface *intf : interfaces())
+		intf->intfCompleteConfig();
+
+	devCompleteConfig();
+}
+
 void device_t::configure(system_config &config)
 {
 	assert(&sysConfig == &config);
@@ -39,6 +50,8 @@ void device_t::configure(system_config &config)
 
 //	for(devauto_base *autodev : acList)
 //		autodev->endConfig();
+
+
 }
 
 devauto_base *device_t::register_device(devauto_base *autodev)
@@ -64,13 +77,18 @@ void device_t::resolvePostMap()
 void device_t::validate(validity_checker &valid) const
 {
 	for (device_interface *intf : interfaces())
-		intf->validate(valid);
+		intf->intfValidate(valid);
 
 	devValidate(valid);
 }
 
 
 void device_t::devConfigure(system_config &config)
+{
+	// Do nothing by default
+}
+
+void device_t::devCompleteConfig()
 {
 	// Do nothing by default
 }
@@ -85,6 +103,7 @@ void device_t::devValidate(validity_checker &valid) const
 {
 	// Do nothing by default
 }
+
 // ********************************************************
 
 //std::vector<const romEntry *> device_t::romBuildRegions()
@@ -164,7 +183,12 @@ device_interface::~device_interface()
 {
 }
 
-void device_interface::validate(validity_checker &valid) const
+void device_interface::intfCompleteConfig()
+{
+	// Do nothing by default
+}
+
+void device_interface::intfValidate(validity_checker &valid) const
 {
 	// Do nothing by default
 }

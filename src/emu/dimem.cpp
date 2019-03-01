@@ -22,6 +22,10 @@ di_memory::~di_memory()
 {
 }
 
+void di_memory::completeConfig()
+{
+}
+
 mapConstructor di_memory::getAddressMap(int space)
 {
 	if (space >= 0 && space < mapAddress.size())

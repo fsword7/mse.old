@@ -49,6 +49,8 @@ public:
 	di_memory(device_t *dev);
 	~di_memory();
 
+	void completeConfig();
+
 	mapConstructor getAddressMap(int space = 0);
 	const mapAddressConfig *getAddressSpaceConfig(int space) const;
 	mapAddressConfig *getAddressSpaceConfig(int space);

@@ -166,7 +166,8 @@ public:
 	tag_t *type() { return typeName; }
 	device_t *getDevice() { return device; }
 
-	virtual void validate(validity_checker &valid) const;
+	virtual void intfCompleteConfig();
+	virtual void intfValidate(validity_checker &valid) const;
 
 protected:
 	device_interface	*next;
@@ -264,6 +265,8 @@ public:
 //		return new DeviceClass(config, tag, clock);
 //	}
 
+	void completeConfig(); // complete final configuration
+
 	const std::string &tag() const { return stagName; }
 
 	tag_t *pathName() const { return spathName.c_str(); }
@@ -311,6 +314,7 @@ public:
 
 	// Device-specific virtual function calls
 	virtual void devConfigure(system_config &config);
+	virtual void devCompleteConfig(); // complete final configuration
 	virtual const romEntry_t *devGetROMRegion();
 	virtual void devValidate(validity_checker &valid) const;
 
