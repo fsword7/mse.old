@@ -54,7 +54,9 @@ public:
 	mapAddressEntry &mirror(offs_t bits) { adrMirror = bits; return *this; }
 	mapAddressEntry &select(offs_t bits) { adrSelect = bits; return *this; }
 
-	mapAddressEntry &share(const char *tag) { tagShare = tag; return *this; }
+	mapAddressEntry &region(tag_t *tag, offs_t offset = 0)
+		{ tagRegion = tag; rgnOffset = offset; return *this; }
+	mapAddressEntry &share(tag_t *tag) { tagShare = tag; return *this; }
 
 	mapAddressEntry &mask(offs_t mask);
 
@@ -71,7 +73,9 @@ public:
 	offs_t		adrSelect;	// Select address bits
 
 	mapHandler  read, write;	// Memory map handler for read and write access
-	const char	*tagShare;		// Tag of shared map block
+	tag_t		*tagShare;		// Tag of shared map block
+	tag_t		*tagRegion;		// Tag of region map block
+	offs_t		rgnOffset;		// Offset from region base
 
 	device_t		*submapDevice;
 	mapConstructor	submapDelegate;

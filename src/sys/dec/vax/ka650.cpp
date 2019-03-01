@@ -44,7 +44,7 @@ void ka650_device::mv3900_mem(mapAddress &map)
 void ka650_device::mv3900x_mem(mapAddress &map)
 {
 	map(0x00000000, 0x1FFFFFFF).ram();
-	map(0x20040000, 0x2007FFFF).rom().mirror(0x1FFFF);
+	map(0x20040000, 0x2007FFFF).rom().mirror(0x1FFFF).region("ka655x-srm");
 }
 
 // Initialize system routines
