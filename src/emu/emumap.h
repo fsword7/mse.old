@@ -255,6 +255,10 @@ public:
 	mapMemoryManager(machine *sys);
 	~mapMemoryManager();
 
+	const std::map<std::string, mapMemoryRegion *> &regions() const { return regionList; }
+	const std::map<std::string, mapMemoryBank *> &banks() const { return bankList; }
+	const std::map<std::string, mapMemoryShare *> &shares() const { return shareList; }
+
 	void allocate(di_memory &memory);
 	void init();
 

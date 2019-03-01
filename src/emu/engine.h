@@ -17,6 +17,9 @@ public:
 	void create(std::string drvName, std::string tagName);
 	void list();
 
+	// debug tools
+	void dump(int argc, args_t &args);
+
 private:
 	static std::vector<machine> machines;
 	const cty_t &cty;

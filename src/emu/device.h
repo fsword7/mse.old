@@ -21,6 +21,10 @@ class di_debug;
 class validity_checker;
 struct romEntry_t;
 
+class mapMemoryRegion;
+class mapMemoryBank;
+class mapMemoryShare;
+
 template <typename T> struct is_device_implementation
 {
 	static constexpr bool value = std::is_base_of<device_t, T>::value;
@@ -271,6 +275,7 @@ public:
 
 	void setDeviceName(std::string name) { devName = strdup(name.c_str()); }
 	void setDeviceName(tag_t *name) { devName = name; }
+	void setMachine(machine *sys) { system = sys; }
 
 	const device_type_base &getType() const { return type; }
 
@@ -297,6 +302,11 @@ public:
 //	std::vector<const romEntry> romGetRegions();
 	const romEntry_t *romGetRegions();
 
+	// Memory manager
+	mapMemoryRegion *mapGetMemoryRegion(std::string tag) const;
+	mapMemoryBank   *mapGetMemoryBank(std::string tag) const;
+	mapMemoryShare  *mapGetMemoryShare(std::string tag) const;
+
 	// Device-specific virtual function calls
 	virtual void devConfigure(system_config &config);
 	virtual const romEntry_t *devGetROMRegion();
@@ -305,7 +315,7 @@ public:
 protected:
 	devauto_base *register_device(devauto_base *autodev);
 
-	void setMachine(machine *sys) { system = sys; }
+
 	void resolvePreMap();
 	void resolvePostMap();
 

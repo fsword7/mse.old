@@ -21,6 +21,15 @@ static cmdStatus /* command_handler:: */ cmdCreate(cty_t *cty, int argc, args_t 
 	return cmdOk;
 }
 
+static cmdStatus /* command handler:: */ cmdDump(cty_t *cty, int argc, args_t &args)
+{
+	system_engine engine(*cty);
+
+	engine.dump(argc, args);
+
+	return cmdOk;
+}
+
 static cmdStatus /* command_handler:: */ cmdExit(cty_t *cty, int argc, args_t &args)
 {
 	return cmdShutdown;
@@ -48,6 +57,7 @@ static cmdStatus /* commander_handler:: */ cmdListMachine(cty_t *cty, int argc, 
 // General commands table
 command_t command_handler::mseCommands[] = {
 	{ "create", cmdCreate },
+	{ "dump", cmdDump },
 	{ "exit", cmdExit },
 	{ "quit", cmdExit },
 	// null terminator - end of command table

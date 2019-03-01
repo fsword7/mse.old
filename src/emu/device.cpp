@@ -127,6 +127,26 @@ const romEntry_t *device_t::romGetRegions()
 	return romEntries;
 }
 
+
+mapMemoryRegion *device_t::mapGetMemoryRegion(std::string tag) const
+{
+	auto search = system->memory().regions().find(tag);
+	if (search != system->memory().regions().end())
+		return search->second;
+	else
+		return nullptr;
+}
+
+mapMemoryBank *device_t::mapGetMemoryBank(std::string tag) const
+{
+	return nullptr;
+}
+
+mapMemoryShare *device_t::mapGetMemoryShare(std::string tag) const
+{
+	return nullptr;
+}
+
 // ********************************************************
 
 device_interface::device_interface(device_t *dev, tag_t *name)

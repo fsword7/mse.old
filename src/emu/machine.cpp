@@ -20,6 +20,10 @@ machine::machine(const system_config *_config)
   romLoader(nullptr),
   sysMemory(this)
 {
+	// Assign this to all devices
+	device_iterator iter(*sysDevice);
+	for (device_t &dev : iter)
+		dev.setMachine(this);
 }
 
 machine::~machine()
