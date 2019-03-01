@@ -75,6 +75,8 @@ class mapAddressSpace
 protected:
 	mapAddressSpace(mapMemoryManager &manager, di_memory &memeory, int space);
 
+	inline void adjustAddresses(offs_t &start, offs_t &end, offs_t &mask, offs_t &mirror);
+
 public:
 	virtual ~mapAddressSpace();
 
@@ -259,6 +261,8 @@ class mapMemoryManager {
 public:
 	mapMemoryManager(machine *sys);
 	~mapMemoryManager();
+
+	machine *sysMachine() { return system; }
 
 	const std::map<std::string, mapMemoryRegion *> &regions() const { return regionList; }
 	const std::map<std::string, mapMemoryBank *> &banks() const { return bankList; }

@@ -52,6 +52,13 @@ mapAddressSpace::~mapAddressSpace()
 {
 }
 
+inline void mapAddressSpace::adjustAddresses(offs_t &start, offs_t &end, offs_t &mask, offs_t &mirror)
+{
+	mask  &= addrMask;
+	start &= ~mirror & addrMask;
+	end   &= ~mirror & addrMask;
+}
+
 void mapAddressSpace::prepare()
 {
 	mapMemoryRegion *devRegion = (space == 0) ? device.mapGetMemoryRegion("") : nullptr;
@@ -59,6 +66,43 @@ void mapAddressSpace::prepare()
 
 	map = new mapAddress(device, space);
 
+	unmapValue = (map->unmapValue == 0) ? 0 : ~0;
+	if (map->gmask != 0) {
+//		if (map->gmask & ~addrMask)
+//			mseFatalError("Can't set a global mask of %08X on a %d-bit address width bus.\n",
+//				map->gmask, address_width());
+		addrMask = map->gmask;
+	}
+
+	for (mapAddressEntry &entry : map->list) {
+
+		// Adjust addresses first
+		adjustAddresses(entry.adrStart, entry.adrEnd, entry.adrMask, entry.adrMirror);
+
+		if (entry.tagShare != nullptr) {
+
+		}
+
+//		if (space == 0 && entry.read.type == mapROM && entry.tagRegion == nullptr) {
+//			if (entry.adrEnd < devRegionSize) {
+//				entry.tagRegion = device.tagName();
+//				entry.rgnOffset = address_to_byte(entry.adrStart);
+//			}
+//		}
+
+		// Validate adjusted addresses against implicit regions
+		// and assign region to memory pointers
+		if (entry.tagRegion != nullptr) {
+//			mapMemoryRegion *region = manager.sysMachine().systemDevice().getMemoryRegion(tagRegion);
+//			if (region == nullptr)
+//				throw mseFataError("Device '%s' %s space memory entry %X-%X - nonexistent region '%s'\n",
+//					device.tagName(), name, entry.adrStart, entry.adrEnd, entry.tagRegion);
+//
+//			// Now assign named region to memory pointers
+//			entry.memory = region;
+		}
+
+	}
 }
 
 void mapAddressSpace::populate(mapAddress *map)
