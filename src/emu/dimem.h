@@ -95,10 +95,28 @@ public:
 
 	void validate() const;
 
+	template <typename Space> void allocate(mapMemoryManager &manager, int space)
+	{
+		assert((space >= 0) && (space < mapConfig.size()));
+		mapSpace.resize(std::max(int(mapSpace.size()), space+1));
+
+		assert(mapSpace[space] != nullptr);
+		mapSpace[space] = new Space(manager, *this, space, mapConfig[space]->address_width());
+
+		std::cout << "Allocated address space." << std::endl;
+	}
+
+	// Address space initialization calls
+	void prepare() { for (auto const &space : mapSpace) if (space != nullptr) { space->prepare(); } }
+	void populate() { for (auto const &space : mapSpace) if (space != nullptr) { space->populate(); }}
+	void allocate() { for (auto const &space : mapSpace) if (space != nullptr) { space->allocate(); }}
+	void locate() { for (auto const &space : mapSpace) if (space != nullptr) { space->locate(); }}
+	void set_log_unmap() { }
+
 protected:
 	std::vector<mapConstructor>		mapAddress;
 
 private:
 	std::vector<mapAddressConfig *>	mapConfig;
-	std::vector<mapAddressSpace>	mapSpace;
+	std::vector<mapAddressSpace *>	mapSpace;
 };

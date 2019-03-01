@@ -53,6 +53,13 @@ public:
 
 	tag_t *getName() { return name; }
 
+	endian_t endian()		{ return endianness; }
+
+	uint8_t data_width()    { return dataWidth; }
+	uint8_t address_width() { return addrWidth; }
+	int8_t  address_shift() { return addrShift; }
+	int8_t  page_shift()    { return pageShift; }
+
 private:
 	tag_t		*name;
 	endian_t	endianness;
@@ -90,34 +97,34 @@ public:
 	{ return nullptr; /* static_cast<mapWriteHandlerUnmapped<dWidth, aShift, Endian>> writeUnmap; */ }
 
 	// read accessors
-	virtual uint8_t read8(offs_t address) = 0;
-	virtual uint16_t read16(offs_t address) = 0;
-	virtual uint16_t read16(offs_t address, uint16_t mask) = 0;
-	virtual uint16_t read16u(offs_t address) = 0;
-	virtual uint16_t read16u(offs_t address, uint16_t mask) = 0;
-	virtual uint32_t read32(offs_t address) = 0;
-	virtual uint32_t read32(offs_t address, uint32_t mask) = 0;
-	virtual uint32_t read32u(offs_t address) = 0;
-	virtual uint32_t read32u(offs_t address, uint32_t mask) = 0;
-	virtual uint64_t read64(offs_t address) = 0;
-	virtual uint64_t read64(offs_t address, uint64_t mask) = 0;
-	virtual uint64_t read64u(offs_t address) = 0;
-	virtual uint64_t read64u(offs_t address, uint64_t mask) = 0;
+//	virtual uint8_t read8(offs_t address) = 0;
+//	virtual uint16_t read16(offs_t address) = 0;
+//	virtual uint16_t read16(offs_t address, uint16_t mask) = 0;
+//	virtual uint16_t read16u(offs_t address) = 0;
+//	virtual uint16_t read16u(offs_t address, uint16_t mask) = 0;
+//	virtual uint32_t read32(offs_t address) = 0;
+//	virtual uint32_t read32(offs_t address, uint32_t mask) = 0;
+//	virtual uint32_t read32u(offs_t address) = 0;
+//	virtual uint32_t read32u(offs_t address, uint32_t mask) = 0;
+//	virtual uint64_t read64(offs_t address) = 0;
+//	virtual uint64_t read64(offs_t address, uint64_t mask) = 0;
+//	virtual uint64_t read64u(offs_t address) = 0;
+//	virtual uint64_t read64u(offs_t address, uint64_t mask) = 0;
 
 	// write accessors
-	virtual void write8(offs_t address, uint8_t data) = 0;
-	virtual void write16(offs_t address, uint16_t data) = 0;
-	virtual void write16(offs_t address, uint16_t data, uint16_t mask) = 0;
-	virtual void write16u(offs_t address, uint16_t data) = 0;
-	virtual void write16u(offs_t address, uint16_t data, uint16_t mask) = 0;
-	virtual void write32(offs_t address, uint32_t data) = 0;
-	virtual void write32(offs_t address, uint32_t data, uint32_t mask) = 0;
-	virtual void write32u(offs_t address, uint32_t data) = 0;
-	virtual void write32u(offs_t address, uint32_t data, uint32_t mask) = 0;
-	virtual void write64(offs_t address, uint64_t data) = 0;
-	virtual void write64(offs_t address, uint64_t data, uint64_t mask) = 0;
-	virtual void write64u(offs_t address, uint64_t data) = 0;
-	virtual void write64u(offs_t address, uint64_t data, uint64_t mask) = 0;
+//	virtual void write8(offs_t address, uint8_t data) = 0;
+//	virtual void write16(offs_t address, uint16_t data) = 0;
+//	virtual void write16(offs_t address, uint16_t data, uint16_t mask) = 0;
+//	virtual void write16u(offs_t address, uint16_t data) = 0;
+//	virtual void write16u(offs_t address, uint16_t data, uint16_t mask) = 0;
+//	virtual void write32(offs_t address, uint32_t data) = 0;
+//	virtual void write32(offs_t address, uint32_t data, uint32_t mask) = 0;
+//	virtual void write32u(offs_t address, uint32_t data) = 0;
+//	virtual void write32u(offs_t address, uint32_t data, uint32_t mask) = 0;
+//	virtual void write64(offs_t address, uint64_t data) = 0;
+//	virtual void write64(offs_t address, uint64_t data, uint64_t mask) = 0;
+//	virtual void write64u(offs_t address, uint64_t data) = 0;
+//	virtual void write64u(offs_t address, uint64_t data, uint64_t mask) = 0;
 
 //	// set ports, banks and RAM access
 //	void setRAM(offs_t start, offs_t end, void *base = nullptr);

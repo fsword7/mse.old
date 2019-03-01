@@ -54,6 +54,8 @@ mapAddress::mapAddress(device_t &_dev, int space)
 
 	if (!config->internalMap.isnull())
 		config->internalMap(*this);
+
+	std::cout << "Address Map initialized." << std::endl;
 }
 
 mapAddress::mapAddress(device_t &_dev, mapAddressEntry *entry)
