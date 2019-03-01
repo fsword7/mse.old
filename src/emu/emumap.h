@@ -48,8 +48,7 @@ public:
 	mapAddressConfig(tag_t *name, endian_t endian,
 			uint8_t dWidth, uint8_t aWidth,
 			int8_t aShift = 0,
-			mapConstructor intmap = mapConstructor(),
-			mapConstructor defmap = mapConstructor());
+			mapConstructor intmap = mapConstructor());
 
 	tag_t *getName() { return name; }
 
@@ -69,7 +68,6 @@ private:
 	int8_t		pageShift;
 
 	mapConstructor internalMap;
-	mapConstructor defaultMap;
 };
 
 class mapAddressSpace

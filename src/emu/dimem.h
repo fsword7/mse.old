@@ -55,6 +55,11 @@ public:
 
 	int mapConfigCount() { return mapConfig.size(); }
 
+	mapAddressSpace &getAddressSpace(int space = 0) {
+		assert(space >= 0 && space < mapSpace.size() && mapSpace[space] != nullptr);
+		return *mapSpace[space];
+	}
+
 //	template <typename T, typename U, typename Ret, typename... Params>
 //	std::enable_if_t<is_related_device<device_t, T>::value>
 //	setAddressMap(int space, T &obj, Ret (U::*func)(Params...))

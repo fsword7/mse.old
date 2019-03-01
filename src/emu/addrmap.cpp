@@ -44,12 +44,8 @@ mapAddress::mapAddress(device_t &_dev, int space)
 		throw mseFatalError("No memory address space configuration for device '%s'\n",
 			device.tag());
 
-	if (memory->getAddressMap(adrSpace).isnull())
-	{
+	if (!memory->getAddressMap(adrSpace).isnull()) {
 		memory->getAddressMap(adrSpace)(*this);
-	} else {
-		if (!config->defaultMap.isnull())
-			config->defaultMap(*this);
 	}
 
 	if (!config->internalMap.isnull())
