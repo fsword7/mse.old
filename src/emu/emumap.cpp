@@ -75,9 +75,9 @@ void mapAddressSpace::prepare()
 
 	unmapValue = (map->unmapValue == 0) ? 0 : ~0;
 	if (map->gmask != 0) {
-//		if (map->gmask & ~addrMask)
-//			mseFatalError("Can't set a global mask of %08X on a %d-bit address width bus.\n",
-//				map->gmask, address_width());
+		if (map->gmask & ~addrMask)
+			msePrintf("%s: Can't set a global mask of %08X on a %d-bit address width bus.\n",
+				device.tagName(), map->gmask, addr_width());
 		addrMask = map->gmask;
 	}
 

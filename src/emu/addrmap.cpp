@@ -30,7 +30,8 @@ mapAddressEntry &mapAddressEntry::mask(offs_t mask)
 
 mapAddress::mapAddress(device_t &_dev, int space)
 : device(_dev),
-  adrSpace(space)
+  adrSpace(space),
+  gmask(0), unmapValue(0)
 {
 	di_memory			*memory;
 	const mapAddressConfig	*config;
