@@ -241,6 +241,8 @@ public:
 	: space(space), start(start), end(end), tag(tag)
 	{ }
 
+	const std::string &tagName() const { return tag; }
+
 private:
 	mapAddressSpace &space;
 	offs_t			start, end;

@@ -323,21 +323,41 @@ public:
 
 	void setup_unmap_generic(offs_t adrStart, offs_t adrEnd, offs_t adrMirror, rwType type, bool quiet)
 	{
+		msePrintf("%s: %s space - Unmapped %08X-%08X Mirror=%08X, Access=%s, %s\n",
+				device.tagName(), name, adrStart, adrEnd, adrMirror,
+				(type == rwType::READ) ? "read" :
+				(type == rwType::WRITE) ? "write" :
+				(type == rwType::RW) ? "read/write" : "???",
+				quiet ? "quiet" : "normal");
 
 	}
 
 	void setup_ram_generic(offs_t adrStart, offs_t adrEnd, offs_t adrMirror, rwType type, void *base)
 	{
+		msePrintf("%s: %s space - RAM/ROM %08X-%08X Mirror=%08X, Access=%s, %p\n",
+				device.tagName(), name, adrStart, adrEnd, adrMirror,
+				(type == rwType::READ) ? "read" :
+				(type == rwType::WRITE) ? "write" :
+				(type == rwType::RW) ? "read/write" : "???",
+				base);
 
 	}
 
 	void setup_bank_generic(offs_t adrStart, offs_t adrEnd, offs_t adrMirror, std::string rtag, std::string wtag)
 	{
+		msePrintf("%s: %s space - bank %08X-%08X Mirror=%08X, read=%s, write=%s\n",
+				device.tagName(), name, adrStart, adrEnd, adrMirror,
+				!rtag.empty() ? rtag.c_str() : "(none)",
+				!wtag.empty() ? wtag.c_str() : "(none)");
 
 	}
 
-	void setup_bank_generic(offs_t adrStart, offs_t adrEnd, offs_t adrMirror, mapMemoryBank *rabank, mapMemoryBank *wbank)
+	void setup_bank_generic(offs_t adrStart, offs_t adrEnd, offs_t adrMirror, mapMemoryBank *rbank, mapMemoryBank *wbank)
 	{
+		msePrintf("%s: %s space - bank %08X-%08X Mirror=%08X, read=%s, write=%s\n",
+				device.tagName(), name, adrStart, adrEnd, adrMirror,
+				(rbank != nullptr) ? rbank->tagName() : "(none)",
+				(wbank != nullptr) ? wbank->tagName() : "(none)");
 
 	}
 

@@ -68,6 +68,8 @@ void mapAddressSpace::prepare()
 
 	map = new mapAddress(device, space);
 
+	msePrintf("%s: Preparing for maps...\n", device.tagName());
+
 	// Merge with submaps
 	map->importSubmaps(*manager.sysMachine(), device.owner() ? *device.owner() : device, data_width(), endian());
 
@@ -81,7 +83,7 @@ void mapAddressSpace::prepare()
 
 	for (mapAddressEntry *entry : map->list) {
 
-		msePrintf("%s: %s space memory entry %08X-%08X mask %08X mirror %08X\n", device.tagName(), name,
+		msePrintf("%s: %s space - %08X-%08X mask %08X mirror %08X\n", device.tagName(), name,
 			entry->adrStart, entry->adrEnd, entry->adrMask, entry->adrMirror);
 
 		// Adjust addresses first
@@ -104,11 +106,11 @@ void mapAddressSpace::prepare()
 			mapMemoryRegion *region = manager.sysMachine()->getSystemDevice()->mapGetMemoryRegion(entry->tagRegion);
 
 			if (region == nullptr)
-				msePrintf("Device '%s' %s space memory entry %X-%X - nonexistent region '%s'\n",
+				msePrintf("%s: %s space - %08X-%08X - nonexistent region '%s'\n",
 					device.tagName(), name, entry->adrStart, entry->adrEnd, entry->tagRegion);
 
 			if ((entry->rgnOffset + config.address_to_byte(entry->adrEnd - entry->adrStart + 1)) > region->size())
-				msePrintf("Device '%s' %s space memory entry %X-%X extends beyond region '%s'\n",
+				msePrintf("%s: %s space - %08X-%08X extends beyond region '%s'\n",
 					device.tagName(), name, entry->adrStart, entry->adrEnd, entry->tagRegion);
 
 			// Now assign named region to memory pointers
@@ -166,6 +168,8 @@ void mapAddressSpace::populate(mapAddress *map)
 		map = this->map;
 	if (map == nullptr)
 		return;
+
+	msePrintf("%s: Populating from maps...\n", device.tagName());
 
 	for (const mapAddressEntry *entry : map->list) {
 		populateEntry(*entry, rwType::READ);
