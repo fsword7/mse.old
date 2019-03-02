@@ -105,6 +105,12 @@ protected:
 public:
 	virtual ~mapAddressSpace();
 
+	int data_width() const { return config.data_width(); }
+	int addr_width() const { return config.address_width(); }
+	int addr_shift() const { return config.address_shift(); }
+	endian_t endian() const { return config.endian(); }
+	uint64_t unmap() const { return unmapValue; }
+
 	// Setup initialization routines
 	void prepare();
 	void populateEntry(const mapAddressEntry &entry, rwType type);
@@ -112,12 +118,10 @@ public:
 	void allocate();
 	void locate();
 
-	int data_width() const { return config.data_width(); }
-	int addr_width() const { return config.address_width(); }
-	int addr_shift() const { return config.address_shift(); }
-	endian_t endian() const { return config.endian(); }
-
-	uint64_t unmap() const { return unmapValue; }
+	virtual void setup_unmap_generic(offs_t adrStart, offs_t adrEnd, offs_t adrMirror, rwType type, bool quiet) = 0;
+	virtual void setup_ram_generic(offs_t adrStart, offs_t adrEnd, offs_t adrMirror, rwType type, void *base) = 0;
+	virtual void setup_bank_generic(offs_t adrStart, offs_t adrEnd, offs_t adrMirror, std::string rtag, std::string wtag) = 0;
+	virtual void setup_bank_generic(offs_t adrStart, offs_t adrEnd, offs_t adrMirror, mapMemoryBank *rabank, mapMemoryBank *wbank) = 0;
 
 	// Address/byte conversion function calls
 	offs_t address_to_byte(offs_t address) const { return config.address_to_byte(address); }

@@ -34,6 +34,7 @@ set(mse_cpp_SRCS
 	emu/emucore.cpp
 	emu/emufile.cpp
 	emu/emumap.cpp
+	emu/emumap_access.cpp
 	emu/emumap_hedr.cpp
 	emu/emumap_hedr0.cpp
 	emu/emumap_hedr1.cpp
