@@ -15,6 +15,7 @@ enum mapType {
 	mapROM,			// ROM type
 	mapPort,		// I/O port type
 	mapNop,			// Non-existent type
+	mapUnmapped,	// Unmapped type
 	mapBank,		// Memory bank type
 	mapDelegate,	// Device delegate (callback)
 	mapSubmap		// Device submap type
@@ -118,6 +119,6 @@ public:
 private:
 	device_t &device;
 	int       adrSpace;
-	std::vector<mapAddressEntry> list;
+	std::vector<mapAddressEntry *> list;
 };
 

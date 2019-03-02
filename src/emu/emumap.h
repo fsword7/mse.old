@@ -11,6 +11,7 @@
 
 class mapMemoryManager;
 class mapAddress;
+class mapAddressEntry;
 class mapAddressSpace;
 class mapMemoryBank;
 class machine;
@@ -19,6 +20,12 @@ class machine;
 #define AS_PROGRAM		0
 #define AS_DATA			1
 #define AS_IO			2
+
+enum class rwType {
+	READ  = 1,
+	WRITE = 2,
+	RW    = 3
+};
 
 //using offs_t = std::size_t;
 using offs_t = uint32_t;
@@ -100,6 +107,7 @@ public:
 
 	// Setup initialization routines
 	void prepare();
+	void populateEntry(const mapAddressEntry &entry, rwType type);
 	void populate(mapAddress *map = nullptr);
 	void allocate();
 	void locate();
@@ -117,11 +125,11 @@ public:
 	offs_t byte_to_address(offs_t address) const { return config.byte_to_address(address); }
 	offs_t byte_to_address_end(offs_t address) const { return config.byte_to_address_end(address); }
 
-	template<int dWidth, int aShift, endian_t Endian>
+	template<int dWidth, int aShift, int Endian>
 	mapReadHandlerUnmapped<dWidth, aShift, Endian> *getReadUnmap() const
 	{ return nullptr; /* static_cast<mapReadHandlerUnmapped<dWidth, aShift, Endian>> readUnmap; */ }
 
-	template<int dWidth, int aShift, endian_t Endian>
+	template<int dWidth, int aShift, int Endian>
 	mapWriteHandlerUnmapped<dWidth, aShift, Endian> *getWriteUnmap() const
 	{ return nullptr; /* static_cast<mapWriteHandlerUnmapped<dWidth, aShift, Endian>> writeUnmap; */ }
 

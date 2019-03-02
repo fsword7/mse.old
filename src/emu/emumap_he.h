@@ -122,7 +122,7 @@ protected:
 	};
 };
 
-template <int dWidth, int aShift, endian_t Endian>
+template <int dWidth, int aShift, int Endian>
 class mapReadHandlerEntry : public mapHandlerEntry
 {
 public:
@@ -135,7 +135,7 @@ public:
 	virtual uintx_t read(offs_t address, uintx_t mask) = 0;
 };
 
-template <int dWidth, int aShift, endian_t Endian>
+template <int dWidth, int aShift, int Endian>
 class mapWriteHandlerEntry : public mapHandlerEntry
 {
 public:

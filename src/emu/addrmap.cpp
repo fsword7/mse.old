@@ -56,6 +56,7 @@ mapAddress::mapAddress(device_t &_dev, int space)
 	}
 
 //	std::cout << "Address Map initialized." << std::endl;
+//	std::cout << "Address map entries: " << list.size() << std::endl;
 }
 
 mapAddress::mapAddress(device_t &_dev, mapAddressEntry *entry)
@@ -76,7 +77,7 @@ mapAddressEntry &mapAddress::operator()(offs_t start, offs_t end)
 	mapAddressEntry *entry;
 
 	entry = new mapAddressEntry(device, *this, start, end);
-	list.push_back(*entry);
+	list.push_back(entry);
 
 	return *entry;
 }

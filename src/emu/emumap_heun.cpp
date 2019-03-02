@@ -8,25 +8,25 @@
 #include "emu/emucore.h"
 #include "emu/emumap.h"
 
-template <int dWidth, int aShift, endian_t Endian>
+template <int dWidth, int aShift, int Endian>
 typename mapHandlerSize<dWidth>::uintx_t mapReadHandlerUnmapped<dWidth, aShift, Endian>::read(offs_t offset, uintx_t mask)
 {
 	return rhe::space->unmap();
 }
 
-template <int dWidth, int aShift, endian_t Endian>
+template <int dWidth, int aShift, int Endian>
 std::string mapReadHandlerUnmapped<dWidth, aShift, Endian>::name() const
 {
 	return "unmapped";
 }
 
-template <int dWidth, int aShift, endian_t Endian>
+template <int dWidth, int aShift, int Endian>
 void mapWriteHandlerUnmapped<dWidth, aShift, Endian>::write(offs_t offset, uintx_t data, uintx_t mask)
 {
 
 }
 
-template <int dWidth, int aShift, endian_t Endian>
+template <int dWidth, int aShift, int Endian>
 std::string mapWriteHandlerUnmapped<dWidth, aShift, Endian>::name() const
 {
 	return "unmapped";
@@ -34,25 +34,25 @@ std::string mapWriteHandlerUnmapped<dWidth, aShift, Endian>::name() const
 
 // ************************************************************
 
-template <int dWidth, int aShift, endian_t Endian>
+template <int dWidth, int aShift, int Endian>
 typename mapHandlerSize<dWidth>::uintx_t mapReadHandlerNop<dWidth, aShift, Endian>::read(offs_t offset, uintx_t mask)
 {
 	return rhe::space->unmap();
 }
 
-template <int dWidth, int aShift, endian_t Endian>
+template <int dWidth, int aShift, int Endian>
 std::string mapReadHandlerNop<dWidth, aShift, Endian>::name() const
 {
 	return "nop";
 }
 
-template <int dWidth, int aShift, endian_t Endian>
+template <int dWidth, int aShift, int Endian>
 void mapWriteHandlerNop<dWidth, aShift, Endian>::write(offs_t offset, uintx_t data, uintx_t mask)
 {
 
 }
 
-template <int dWidth, int aShift, endian_t Endian>
+template <int dWidth, int aShift, int Endian>
 std::string mapWriteHandlerNop<dWidth, aShift, Endian>::name() const
 {
 	return "nop";

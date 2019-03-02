@@ -11,7 +11,8 @@
 #include "emu/machine.h"
 #include "emu/exception.h"
 
-
+#include "emu/emumap_hedr.h"
+#include "emu/emumap_hedw.h"
 
 // ***********************************************************
 
@@ -78,39 +79,100 @@ void mapAddressSpace::prepare()
 		addrMask = map->gmask;
 	}
 
-	for (mapAddressEntry &entry : map->list) {
+	for (mapAddressEntry *entry : map->list) {
+
+		msePrintf("%s: %s space memory entry %08X-%08X mask %08X mirror %08X\n", device.tagName(), name,
+			entry->adrStart, entry->adrEnd, entry->adrMask, entry->adrMirror);
 
 		// Adjust addresses first
-		adjustAddresses(entry.adrStart, entry.adrEnd, entry.adrMask, entry.adrMirror);
+		adjustAddresses(entry->adrStart, entry->adrEnd, entry->adrMask, entry->adrMirror);
 
-		if (entry.tagShare != nullptr) {
+		if (entry->tagShare != nullptr) {
 
 		}
 
-//		if (space == 0 && entry.read.type == mapROM && entry.tagRegion == nullptr) {
-//			if (entry.adrEnd < devRegionSize) {
-//				entry.tagRegion = device.tagName();
-//				entry.rgnOffset = address_to_byte(entry.adrStart);
-//			}
-//		}
+		if (space == 0 && entry->read.type == mapROM && entry->tagRegion == nullptr) {
+			if (entry->adrEnd < devRegionSize) {
+				entry->tagRegion = device.tagName();
+				entry->rgnOffset = config.address_to_byte(entry->adrStart);
+			}
+		}
 
 		// Validate adjusted addresses against implicit regions
 		// and assign region to memory pointers
-		if (entry.tagRegion != nullptr) {
-//			mapMemoryRegion *region = manager.sysMachine().systemDevice().getMemoryRegion(tagRegion);
-//			if (region == nullptr)
-//				throw mseFataError("Device '%s' %s space memory entry %X-%X - nonexistent region '%s'\n",
-//					device.tagName(), name, entry.adrStart, entry.adrEnd, entry.tagRegion);
-//
-//			// Now assign named region to memory pointers
-//			entry.memory = region;
+		if (entry->tagRegion != nullptr) {
+			mapMemoryRegion *region = manager.sysMachine()->getSystemDevice()->mapGetMemoryRegion(entry->tagRegion);
+
+			if (region == nullptr)
+				msePrintf("Device '%s' %s space memory entry %X-%X - nonexistent region '%s'\n",
+					device.tagName(), name, entry->adrStart, entry->adrEnd, entry->tagRegion);
+
+			if ((entry->rgnOffset + config.address_to_byte(entry->adrEnd - entry->adrStart + 1)) > region->size())
+				msePrintf("Device '%s' %s space memory entry %X-%X extends beyond region '%s'\n",
+					device.tagName(), name, entry->adrStart, entry->adrEnd, entry->tagRegion);
+
+			// Now assign named region to memory pointers
+			entry->memory = region;
 		}
 
 	}
 }
 
+void mapAddressSpace::populateEntry(const mapAddressEntry &entry, rwType type)
+{
+
+	const mapHandler &data = (type == rwType::READ) ? entry.read : entry.write;
+
+	switch (data.type) {
+	case mapNone:
+		return;
+
+	case mapROM:
+		if (type == rwType::WRITE)
+			return;
+	case mapRAM:
+//		install_ram_generic(entry.adrStart, entry.adrEnd, entry.adrMirror, type, nullptr);
+		break;
+
+	case mapNop:
+//		install_unmap_generic(entry.adrStart, entry.adrEnd, entry.adrMirror, type, true);
+		break;
+
+	case mapUnmapped:
+//		install_unmap_generic(entry.adrStart, entry.adrEnd, entry.adrMirror, type, false);
+		break;
+
+	case mapPort:
+//		install_rw_port(entry.adrStart, entry.adrEnd, entry.adrMirror,
+//				(type == rwType::READ) ? "" : ""),
+//				(type == rwType::WRITE) ? "" : ""));
+		break;
+
+	case mapBank:
+//		install_bank_port(entry.adrStart, entry.adrEnd, entry.adrMirror,
+//				(type == rwType::READ) ? "" : ""),
+//				(type == rwType::WRITE) ? "" : ""));
+		break;
+
+	case mapSubmap:
+		msePrintf("Internal mapping error: leftover mapping of %s\n", data.tag);
+		break;
+	}
+}
+
 void mapAddressSpace::populate(mapAddress *map)
 {
+	if (map == nullptr)
+		map = this->map;
+	if (map == nullptr)
+		return;
+
+	for (const mapAddressEntry *entry : map->list) {
+		populateEntry(*entry, rwType::READ);
+		populateEntry(*entry, rwType::WRITE);
+	}
+
+
 }
 
 void mapAddressSpace::allocate()
@@ -123,7 +185,7 @@ void mapAddressSpace::locate()
 
 // ***********************************************************
 
-template <int dWidth, int aShift, endian_t Endian>
+template <int dWidth, int aShift, int Endian>
 class mapAddressSpaceAccess : public mapAddressSpace
 {
 	using uintx_t = typename mapHandlerSize<dWidth>::uintx_t;
@@ -153,36 +215,171 @@ public:
 
 		mapHandlerEntry::range r = { 0, 0xFFFFFFFF >> (32 - addrWidth) };
 
-//		switch (addrWidth) {
-//
-//		case 1:
-//			rootRead = new mapReadHandlerDispatch<1, dWidth, aShift, Endian>(this, r, nullptr);
-//			rootWrite = new mapWriteHandlerDispatch<1, dWidth, aShift, Endian>(this, r, nullptr);
-//			break;
-//
-//		case 2:
-//			rootRead = new mapReadHandlerDispatch<2, dWidth, aShift, Endian>(this, r, nullptr);
-//			rootWrite = new mapWriteHandlerDispatch<2, dWidth, aShift, Endian>(this, r, nullptr);
-//			break;
-//
-//		case 30:
-//			rootRead = new mapReadHandlerDispatch<30, dWidth, aShift, Endian>(this, r, nullptr);
-//			rootWrite = new mapWriteHandlerDispatch<30, dWidth, aShift, Endian>(this, r, nullptr);
-//			break;
-//
-//		case 31:
-//			rootRead = new mapReadHandlerDispatch<31, dWidth, aShift, Endian>(this, r, nullptr);
-//			rootWrite = new mapWriteHandlerDispatch<31, dWidth, aShift, Endian>(this, r, nullptr);
-//			break;
-//
-//		case 32:
-//			rootRead = new mapReadHandlerDispatch<32, dWidth, aShift, Endian>(this, r, nullptr);
-//			rootWrite = new mapWriteHandlerDispatch<32, dWidth, aShift, Endian>(this, r, nullptr);
-//			break;
-//
-//		default:
-//			std::cerr << "Unhandled address bus width: " << addrWidth << std::endl;
-//		}
+		switch (addrWidth) {
+
+		case 1:
+			rootRead  = new mapReadHandlerDispatch<1, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<1, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		case 2:
+			rootRead  = new mapReadHandlerDispatch<2, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<2, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		case 3:
+			rootRead  = new mapReadHandlerDispatch<3, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<3, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		case 4:
+			rootRead  = new mapReadHandlerDispatch<4, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<4, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		case 5:
+			rootRead  = new mapReadHandlerDispatch<5, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<5, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		case 6:
+			rootRead  = new mapReadHandlerDispatch<6, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<6, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		case 7:
+			rootRead  = new mapReadHandlerDispatch<7, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<7, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		case 8:
+			rootRead  = new mapReadHandlerDispatch<8, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<8, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		case 9:
+			rootRead  = new mapReadHandlerDispatch<9, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<9, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		case 10:
+			rootRead  = new mapReadHandlerDispatch<10, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<10, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		case 11:
+			rootRead  = new mapReadHandlerDispatch<11, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<11, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		case 12:
+			rootRead  = new mapReadHandlerDispatch<12, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<12, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		case 13:
+			rootRead  = new mapReadHandlerDispatch<13, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<13, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		case 14:
+			rootRead  = new mapReadHandlerDispatch<14, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<14, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		case 15:
+			rootRead  = new mapReadHandlerDispatch<15, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<15, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		case 16:
+			rootRead  = new mapReadHandlerDispatch<16, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<16, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		case 17:
+			rootRead  = new mapReadHandlerDispatch<17, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<17, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		case 18:
+			rootRead  = new mapReadHandlerDispatch<18, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<18, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		case 19:
+			rootRead  = new mapReadHandlerDispatch<19, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<19, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		case 20:
+			rootRead  = new mapReadHandlerDispatch<20, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<20, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		case 21:
+			rootRead  = new mapReadHandlerDispatch<21, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<21, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		case 22:
+			rootRead  = new mapReadHandlerDispatch<22, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<22, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		case 23:
+			rootRead  = new mapReadHandlerDispatch<23, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<23, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		case 24:
+			rootRead  = new mapReadHandlerDispatch<24, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<24, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		case 25:
+			rootRead  = new mapReadHandlerDispatch<25, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<25, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		case 26:
+			rootRead  = new mapReadHandlerDispatch<26, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<26, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		case 27:
+			rootRead  = new mapReadHandlerDispatch<27, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<27, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		case 28:
+			rootRead  = new mapReadHandlerDispatch<28, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<28, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		case 29:
+			rootRead  = new mapReadHandlerDispatch<29, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<29, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		case 30:
+			rootRead  = new mapReadHandlerDispatch<30, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<30, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		case 31:
+			rootRead  = new mapReadHandlerDispatch<31, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<31, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		case 32:
+			rootRead  = new mapReadHandlerDispatch<32, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapWriteHandlerDispatch<32, dWidth, aShift, Endian>(this, r, nullptr);
+			break;
+
+		default:
+			std::cerr << "Unhandled address bus width: " << addrWidth << std::endl;
+		}
 	}
 
 	nativeType readNative(offs_t offset, nativeType mask)

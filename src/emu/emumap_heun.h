@@ -7,7 +7,7 @@
 
 #pragma once
 
-template <int dWidth, int aShift, endian_t Endian>
+template <int dWidth, int aShift, int Endian>
 class mapReadHandlerUnmapped : public mapReadHandlerEntry<dWidth, aShift, Endian>
 {
 public:
@@ -25,7 +25,7 @@ public:
 	uintx_t read(offs_t offset, uintx_t mask) override;
 };
 
-template <int dWidth, int aShift, endian_t Endian>
+template <int dWidth, int aShift, int Endian>
 class mapWriteHandlerUnmapped : public mapWriteHandlerEntry<dWidth, aShift, Endian>
 {
 public:
@@ -44,7 +44,7 @@ public:
 };
 
 
-template <int dWidth, int aShift, endian_t Endian>
+template <int dWidth, int aShift, int Endian>
 class mapReadHandlerNop : public mapReadHandlerEntry<dWidth, aShift, Endian>
 {
 public:
@@ -62,7 +62,7 @@ public:
 	uintx_t read(offs_t offset, uintx_t mask) override;
 };
 
-template <int dWidth, int aShift, endian_t Endian>
+template <int dWidth, int aShift, int Endian>
 class mapWriteHandlerNop : public mapWriteHandlerEntry<dWidth, aShift, Endian>
 {
 public:

@@ -7,7 +7,7 @@
 
 #pragma once
 
-template <int highBits, int dWidth, int aShift, endian_t Endian>
+template <int highBits, int dWidth, int aShift, int Endian>
 class mapReadHandlerDispatch : public mapReadHandlerEntry<dWidth, aShift, Endian>
 {
 public:
@@ -31,6 +31,11 @@ public:
 	{
 		for (unsigned int idx = 0; idx != count; idx++)
 			dispatch[idx]->unref();
+	}
+
+	std::string name() const override
+	{
+		return "dispatch";
 	}
 
 	uintx_t read(offs_t offset, uintx_t mask) override

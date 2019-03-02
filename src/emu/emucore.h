@@ -188,3 +188,4 @@ struct scale64_t {
 void osdExit(std::string reason);
 
 uint32_t getParity(uint32_t data, uint32_t odd);
+void msePrintf(const char *format, ...);
