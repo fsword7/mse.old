@@ -151,13 +151,28 @@ public:
 		readNop = new mapReadHandlerNop<dWidth, aShift, Endian>(this);
 		writeNop = new mapWriteHandlerNop<dWidth, aShift, Endian>(this);
 
-//		mapHandlerEntry::range r(0, 0xFFFFFFFF >> (32 - addrWidth));
+		mapHandlerEntry::range r = { 0, 0xFFFFFFFF >> (32 - addrWidth) };
 
 //		switch (addrWidth) {
+//
+//		case 1:
+//			rootRead = new mapReadHandlerDispatch<1, dWidth, aShift, Endian>(this, r, nullptr);
+//			rootWrite = new mapWriteHandlerDispatch<1, dWidth, aShift, Endian>(this, r, nullptr);
+//			break;
+//
+//		case 2:
+//			rootRead = new mapReadHandlerDispatch<2, dWidth, aShift, Endian>(this, r, nullptr);
+//			rootWrite = new mapWriteHandlerDispatch<2, dWidth, aShift, Endian>(this, r, nullptr);
+//			break;
 //
 //		case 30:
 //			rootRead = new mapReadHandlerDispatch<30, dWidth, aShift, Endian>(this, r, nullptr);
 //			rootWrite = new mapWriteHandlerDispatch<30, dWidth, aShift, Endian>(this, r, nullptr);
+//			break;
+//
+//		case 31:
+//			rootRead = new mapReadHandlerDispatch<31, dWidth, aShift, Endian>(this, r, nullptr);
+//			rootWrite = new mapWriteHandlerDispatch<31, dWidth, aShift, Endian>(this, r, nullptr);
 //			break;
 //
 //		case 32:
