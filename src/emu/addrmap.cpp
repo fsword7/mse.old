@@ -84,3 +84,8 @@ mapAddressEntry &mapAddress::operator()(offs_t start, offs_t end)
 void mapAddress::validate(int space) const
 {
 }
+
+void mapAddress::importSubmaps(machine &sysMachine, device_t &owner, int dataWidth, endian_t endian)
+{
+
+}

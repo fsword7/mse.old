@@ -36,7 +36,8 @@ mapAddressConfig::mapAddressConfig(tag_t *tag, endian_t endian,
 // ***********************************************************
 
 mapAddressSpace::mapAddressSpace(mapMemoryManager &manager, di_memory &memory, int space)
-: name(memory.getAddressSpaceConfig(space)->getName()),
+: config(*memory.getAddressSpaceConfig(space)),
+  name(config.getName()),
   space(space),
   device(*memory.getDevice()),
   manager(manager),
@@ -65,6 +66,9 @@ void mapAddressSpace::prepare()
 	uint32_t devRegionSize = (devRegion != nullptr) ? devRegion->size() : 0;
 
 	map = new mapAddress(device, space);
+
+	// Merge with submaps
+	map->importSubmaps(*manager.sysMachine(), device.owner() ? *device.owner() : device, data_width(), endian());
 
 	unmapValue = (map->unmapValue == 0) ? 0 : ~0;
 	if (map->gmask != 0) {

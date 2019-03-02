@@ -109,6 +109,8 @@ public:
 
 	void validate(int space) const;
 
+	void importSubmaps(machine &sysMachine, device_t &owner, int dataWidth, endian_t endian);
+
 	offs_t	gmask;	// Global bit mask
 
 	uint64_t unmapValue;

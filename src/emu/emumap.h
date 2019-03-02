@@ -59,6 +59,24 @@ public:
 	int8_t  address_shift() const { return addrShift; }
 	int8_t  page_shift() const   { return pageShift; }
 
+	inline offs_t address_to_byte(offs_t address) const {
+		return (addrShift < 0) ? (address << -addrShift) : (address >> addrShift);
+	}
+
+	inline offs_t byte_to_address(offs_t address) const {
+		return (addrShift > 0) ? (address << addrShift) : (address >> -addrShift);
+	}
+
+	inline offs_t byte_to_address_end(offs_t address) const {
+		return (addrShift < 0)  ? ((address << -addrShift) | ((1 << -addrShift) - 1))
+								: (address >> addrShift);
+	}
+
+	inline offs_t address_to_byte_end(offs_t address) const {
+		return (addrShift > 0)  ? ((address << addrShift) | ((1 << addrShift) - 1))
+								: (address >> -addrShift);
+	}
+
 private:
 	tag_t		*name;
 	endian_t	endianness;
@@ -86,7 +104,18 @@ public:
 	void allocate();
 	void locate();
 
+	int data_width() const { return config.data_width(); }
+	int addr_width() const { return config.address_width(); }
+	int addr_shift() const { return config.address_shift(); }
+	endian_t endian() const { return config.endian(); }
+
 	uint64_t unmap() const { return unmapValue; }
+
+	// Address/byte conversion function calls
+	offs_t address_to_byte(offs_t address) const { return config.address_to_byte(address); }
+	offs_t address_to_byte_end(offs_t address) const { return config.address_to_byte_end(address); }
+	offs_t byte_to_address(offs_t address) const { return config.byte_to_address(address); }
+	offs_t byte_to_address_end(offs_t address) const { return config.byte_to_address_end(address); }
 
 	template<int dWidth, int aShift, endian_t Endian>
 	mapReadHandlerUnmapped<dWidth, aShift, Endian> *getReadUnmap() const
@@ -161,6 +190,7 @@ public:
 //	void setBankRW(offs_t start, offs_t end, offs_t mirror, mapMemoryBank *bank);
 
 protected:
+	const mapAddressConfig &config;	// address space configuration
 	const char			*name;		// Name of the address space
 	int					space;		// Address space index
 	device_t			&device;	// Reference to the owning device
