@@ -105,6 +105,8 @@ protected:
 public:
 	virtual ~mapAddressSpace();
 
+	mapMemoryManager &getManager() const { return manager; }
+
 	int data_width() const { return config.data_width(); }
 	int addr_width() const { return config.address_width(); }
 	int addr_shift() const { return config.address_shift(); }
@@ -224,14 +226,29 @@ protected:
 class mapMemoryBlock
 {
 public:
-	mapMemoryBlock(mapAddressSpace &space, offs_t start, offs_t end, uint8_t *memory = nullptr)
-	: space(space), start(start), end(end), data(memory)
-	{ }
+	mapMemoryBlock(mapAddressSpace &space, offs_t start, offs_t end, void *memory = nullptr);
+	~mapMemoryBlock() {}
+
+	// getters
+	machine &sysMachine() const { return system; }
+	offs_t start() const { return addrStart; }
+	offs_t end() const { return addrEnd; }
+	uint8_t *base() const { return baseData; }
+
+	// Check address range within memory block
+	bool contains(mapAddressSpace &space, offs_t sAddr, offs_t eAddr) const
+	{
+		return (&space == &addrSpace && addrStart <= sAddr && addrEnd >= eAddr);
+	}
 
 private:
-	mapAddressSpace &space;
-	offs_t			start, end;
-	uint8_t			*data;
+	machine			&system;
+	mapAddressSpace &addrSpace;
+	offs_t			addrStart;
+	offs_t			addrEnd;
+	uint8_t			*baseData;
+
+	std::vector<uint8_t> allocated;
 };
 
 class mapMemoryBank
@@ -243,9 +260,31 @@ public:
 
 	const std::string &tagName() const { return tag; }
 
+//	machine &sysMachine() { return system; }
+	int  entry() const { return current; }
+	bool anonymous() const { return flagAnonymous; }
+	offs_t addrStart() const { return start; }
+//	tag_t *name() const { return bankName.c_str(); }
+//	tag_t *tag() const { return tagName.c_str(); }
+
+	void *base() const
+	{
+		return !entries.empty() ? entries[current] : nullptr;
+	}
+
+	// Configure/set entries
+//	void configureEntry(int entry, void *base);
+//	void configureEntries(int sEntry, int nEntries, void *base, offs_t stride);
+//	void setEntry(int entry);
+
 private:
+//	machine			&system;
 	mapAddressSpace &space;
 	offs_t			start, end;
+	int				current;
+	std::vector<uint8_t *> entries;
+	bool			flagAnonymous;
+	std::string		bank;
 	std::string		tag;
 };
 
@@ -255,8 +294,18 @@ public:
 	mapMemoryShare(uint8_t width, size_t size, endian_t endian, void *data = nullptr)
 	: baseData(data), dataSize(size),
 	  endianType(endian), bitWidth(width),
-	  byteWidth(0)
+	  byteWidth(width / 8)
 	{ }
+
+	// getters
+	void *base() const { return baseData; }
+	size_t size() const { return dataSize; }
+	endian_t endian() const { return endianType; }
+	uint8_t bit_width() const { return bitWidth; }
+	uint8_t byte_width() const { return byteWidth; }
+
+	// setters
+	void setBase(void *base) { baseData = base; }
 
 private:
 	void		*baseData;
@@ -279,12 +328,12 @@ public:
 	uint8_t *base() { return (data.size() > 0) ? &data[0] : nullptr; }
 	uint8_t *end()	{ return base() + data.size(); }
 
-	machine *system()			{ return sysMachine; }
-	tag_t *name()				{ return tagName.c_str(); }
+	machine *system() const		{ return sysMachine; }
+	tag_t *name() const			{ return tagName.c_str(); }
 	endian_t endian() const		{ return endianType; }
-	uint32_t size()				{ return data.size(); }
-	uint8_t bitwidth() const	{ return bitWidth; }
-	uint8_t bytewidth() const	{ return byteWidth; }
+	uint32_t size()	const		{ return data.size(); }
+	uint8_t bit_width() const	{ return bitWidth; }
+	uint8_t byte_width() const	{ return byteWidth; }
 
 	// Data access
 	uint8_t	&access8(offs_t offset = 0)		{ return data[offset]; }

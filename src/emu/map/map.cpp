@@ -240,3 +240,20 @@ void mapMemoryManager::freeRegion(tag_t *name)
 {
 	regionList.erase(name);
 }
+
+mapMemoryBlock::mapMemoryBlock(mapAddressSpace &space, offs_t start, offs_t end, void *memory)
+: system(*space.getManager().sysMachine()),
+  addrSpace(space),
+  addrStart(start),
+  addrEnd(end),
+  baseData(reinterpret_cast<uint8_t *>(memory))
+{
+	const offs_t length = space.address_to_byte(end + 1 - start);
+
+	// Initialize memory block if not available
+	if (baseData == nullptr) {
+		allocated.resize(length);
+		memset(&allocated[0], 0, length);
+		baseData = &allocated[0];
+	}
+}
