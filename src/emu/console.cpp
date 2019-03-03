@@ -1,7 +1,6 @@
 
 #include "emu/emucore.h"
 #include "emu/commands.h"
-#include "emu/console.h"
 
 std::vector<std::string> split(std::string const &line)
 {

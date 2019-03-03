@@ -7,6 +7,10 @@
 
 #pragma once
 
+#ifndef __CORE_H__
+#error Include emucore.h instead.
+#endif
+
 #include "emu/commands.h"
 
 class console_base {

@@ -6,7 +6,6 @@
  */
 
 #include "emu/emucore.h"
-#include "emu/console.h"
 #include "emu/syslist.h"
 #include "emu/machine.h"
 #include "emu/emufile.h"

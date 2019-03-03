@@ -7,7 +7,6 @@
 
 #include "emu/emucore.h"
 #include "emu/devcore.h"
-#include "emu/console.h"
 
 //ttyDevice::ttyDevice()
 //: ioDevice(CLS_TTYDEV)

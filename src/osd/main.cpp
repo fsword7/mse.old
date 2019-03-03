@@ -1,6 +1,5 @@
 
 #include "emu/emucore.h"
-#include "emu/console.h"
 #include "osd/socket.h"
 
 #if __WIN32__

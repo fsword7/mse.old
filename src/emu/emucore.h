@@ -6,6 +6,7 @@
  */
 
 #pragma once
+#define __CORE_H__
 
 #include <iostream>
 #include <fstream>
