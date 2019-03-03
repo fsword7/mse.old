@@ -61,6 +61,33 @@ public:
 
 	mapAddressEntry &mask(offs_t mask);
 
+	// Implicit delegate calls
+//	template <typename T, typename Ret, typename... Params>
+//	mapAddressEntry &r(Ret (T::*read)(Params...), tag_t *readName)
+//	{
+//		return *this;
+//	}
+//
+//	template <typename T, typename Ret, typename... Params>
+//	mapAddressEntry &w(Ret (T::*write)(Params...), tag_t *writeName)
+//	{
+//		return *this;
+//	}
+//
+//	template <typename T, typename rRet, typename... rParams, typename U, typename wRet, typename... wParams>
+//	mapAddressEntry &rw(rRet (T::*read)(rParams...), tag_t *readName, wRet (U::*write)(wParams...), tag_t *writeName)
+//	{
+//		return *this;
+//	}
+//
+//	template <typename T, typename Ret, typename... Params>
+//	mapAddressEntry &m(Ret (T::*map)(Params...), tag_t *mapName)
+//	{
+//		return *this;
+//	}
+
+
+
 	// Address entry information (public access)
 	mapAddressEntry *mapNext;	// Point to the next entry
 	mapAddress   	&map;		// Reference to address map database
