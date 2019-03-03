@@ -62,7 +62,8 @@ mapAddress::mapAddress(device_t &_dev, int space)
 
 mapAddress::mapAddress(device_t &_dev, mapAddressEntry *entry)
 : device(_dev),
-  adrSpace(AS_PROGRAM)
+  adrSpace(AS_PROGRAM),
+  gmask(0), unmapValue(0)
 {
 	entry->submapDelegate.bind(_dev);
 	entry->submapDelegate(*this);

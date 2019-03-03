@@ -43,6 +43,7 @@ mapAddressSpace::mapAddressSpace(mapMemoryManager &manager, di_memory &memory, i
   device(*memory.getDevice()),
   manager(manager),
   map(nullptr),
+  addrMask(makeBitMask<offs_t>(config.address_width())),
   unmapValue(0),
   readUnmap(nullptr), writeUnmap(nullptr),
   readNop(nullptr), writeNop(nullptr)
@@ -76,8 +77,8 @@ void mapAddressSpace::prepare()
 	unmapValue = (map->unmapValue == 0) ? 0 : ~0;
 	if (map->gmask != 0) {
 		if (map->gmask & ~addrMask)
-			msePrintf("%s: Can't set a global mask of %08X on a %d-bit address width bus.\n",
-				device.tagName(), map->gmask, addr_width());
+			msePrintf("%s: Can't set a global mask of %08X on a %d-bit address width bus (mask %08X).\n",
+				device.tagName(), map->gmask, addr_width(), addrMask);
 		addrMask = map->gmask;
 	}
 
