@@ -62,14 +62,14 @@ inline void mapAddressSpace::adjustAddresses(offs_t &start, offs_t &end, offs_t 
 	end   &= ~mirror & addrMask;
 }
 
-void mapAddressSpace::prepare()
+void mapAddressSpace::prepare(const cty_t &cty)
 {
 	mapMemoryRegion *devRegion = (space == 0) ? device.mapGetMemoryRegion("") : nullptr;
 	uint32_t devRegionSize = (devRegion != nullptr) ? devRegion->size() : 0;
 
 	map = new mapAddress(device, space);
 
-	msePrintf("%s: Preparing for maps...\n", device.tagName());
+	cty.printf("%s: Preparing for maps...\n", device.tagName());
 
 	// Merge with submaps
 	map->importSubmaps(*manager.sysMachine(), device.owner() ? *device.owner() : device, data_width(), endian());
@@ -77,14 +77,14 @@ void mapAddressSpace::prepare()
 	unmapValue = (map->unmapValue == 0) ? 0 : ~0;
 	if (map->gmask != 0) {
 		if (map->gmask & ~addrMask)
-			msePrintf("%s: Can't set a global mask of %08X on a %d-bit address width bus (mask %08X).\n",
+			cty.printf("%s: Can't set a global mask of %08X on a %d-bit address width bus (mask %08X).\n",
 				device.tagName(), map->gmask, addr_width(), addrMask);
 		addrMask = map->gmask;
 	}
 
 	for (mapAddressEntry *entry : map->list) {
 
-		msePrintf("%s: %s space - %08X-%08X mask %08X mirror %08X\n", device.tagName(), name,
+		cty.printf("%s: %s space - %08X-%08X mask %08X mirror %08X\n", device.tagName(), name,
 			entry->adrStart, entry->adrEnd, entry->adrMask, entry->adrMirror);
 
 		// Adjust addresses first
@@ -107,11 +107,11 @@ void mapAddressSpace::prepare()
 			mapMemoryRegion *region = manager.sysMachine()->getSystemDevice()->mapGetMemoryRegion(entry->tagRegion);
 
 			if (region == nullptr)
-				msePrintf("%s: %s space - %08X-%08X - nonexistent region '%s'\n",
+				cty.printf("%s: %s space - %08X-%08X - nonexistent region '%s'\n",
 					device.tagName(), name, entry->adrStart, entry->adrEnd, entry->tagRegion);
 
 			if ((entry->rgnOffset + config.address_to_byte(entry->adrEnd - entry->adrStart + 1)) > region->size())
-				msePrintf("%s: %s space - %08X-%08X extends beyond region '%s'\n",
+				cty.printf("%s: %s space - %08X-%08X extends beyond region '%s'\n",
 					device.tagName(), name, entry->adrStart, entry->adrEnd, entry->tagRegion);
 
 			// Now assign named region to memory pointers
@@ -121,7 +121,7 @@ void mapAddressSpace::prepare()
 	}
 }
 
-void mapAddressSpace::populateEntry(const mapAddressEntry &entry, rwType type)
+void mapAddressSpace::populateEntry(const cty_t &cty, const mapAddressEntry &entry, rwType type)
 {
 
 	const mapHandler &data = (type == rwType::READ) ? entry.read : entry.write;
@@ -134,15 +134,15 @@ void mapAddressSpace::populateEntry(const mapAddressEntry &entry, rwType type)
 		if (type == rwType::WRITE)
 			return;
 	case mapRAM:
-		setup_ram_generic(entry.adrStart, entry.adrEnd, entry.adrMirror, type, nullptr);
+		setup_ram_generic(cty, entry.adrStart, entry.adrEnd, entry.adrMirror, type, nullptr);
 		break;
 
 	case mapNop:
-		setup_unmap_generic(entry.adrStart, entry.adrEnd, entry.adrMirror, type, true);
+		setup_unmap_generic(cty, entry.adrStart, entry.adrEnd, entry.adrMirror, type, true);
 		break;
 
 	case mapUnmapped:
-		setup_unmap_generic(entry.adrStart, entry.adrEnd, entry.adrMirror, type, false);
+		setup_unmap_generic(cty, entry.adrStart, entry.adrEnd, entry.adrMirror, type, false);
 		break;
 
 	case mapPort:
@@ -158,33 +158,33 @@ void mapAddressSpace::populateEntry(const mapAddressEntry &entry, rwType type)
 		break;
 
 	case mapSubmap:
-		msePrintf("Internal mapping error: leftover mapping of %s\n", data.tag);
+		cty.printf("Internal mapping error: leftover mapping of %s\n", data.tag);
 		break;
 	}
 }
 
-void mapAddressSpace::populate(mapAddress *map)
+void mapAddressSpace::populate(const cty_t &cty, mapAddress *map)
 {
 	if (map == nullptr)
 		map = this->map;
 	if (map == nullptr)
 		return;
 
-	msePrintf("%s: Populating from maps...\n", device.tagName());
+	cty.printf("%s: Populating from maps...\n", device.tagName());
 
 	for (const mapAddressEntry *entry : map->list) {
-		populateEntry(*entry, rwType::READ);
-		populateEntry(*entry, rwType::WRITE);
+		populateEntry(cty, *entry, rwType::READ);
+		populateEntry(cty, *entry, rwType::WRITE);
 	}
 
 
 }
 
-void mapAddressSpace::allocate()
+void mapAddressSpace::allocate(const cty_t &cty)
 {
 }
 
-void mapAddressSpace::locate()
+void mapAddressSpace::locate(const cty_t &cty)
 {
 }
 
@@ -199,7 +199,7 @@ mapMemoryManager::~mapMemoryManager()
 {
 }
 
-void mapMemoryManager::init()
+void mapMemoryManager::init(const cty_t &cty)
 {
 	dimem_iterator iter(*system->getSystemDevice());
 	std::vector<di_memory *> memories;
@@ -207,21 +207,21 @@ void mapMemoryManager::init()
 	for (di_memory &memory : iter) {
 //		std::cout << "Device " << memory.getDevice()->deviceName() << std::endl;
 		memories.push_back(&memory);
-		allocate(memory);
+		allocate(cty, memory);
 	}
 
 
 	for (auto const memory : memories)
-		memory->prepare();
+		memory->prepare(cty);
 
 	for (auto const memory : memories)
-		memory->populate();
+		memory->populate(cty);
 
 	for (auto const memory : memories)
-		memory->allocate();
+		memory->allocate(cty);
 
 	for (auto const memory : memories)
-		memory->locate();
+		memory->locate(cty);
 
 }
 

@@ -49,7 +49,7 @@ void machine::init(const cty_t &cty)
 	romLoader = new rom_loader(this, cty);
 
 	// Initialize memory on all devices.
-	sysMemory.init();
+	sysMemory.init(cty);
 
 	// Resolve objects that are created for memory maps.
 //	for (device_t &device : device_iterator(sysDevice))

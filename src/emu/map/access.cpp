@@ -321,9 +321,9 @@ public:
 //	static void write64ms(type &space, offs_t address, uint64_t data, offs_t mask)
 //	{ address &= space.addrMask;  }
 
-	void setup_unmap_generic(offs_t adrStart, offs_t adrEnd, offs_t adrMirror, rwType type, bool quiet)
+	void setup_unmap_generic(const cty_t &cty, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, rwType type, bool quiet)
 	{
-		msePrintf("%s: %s space - Unmapped %08X-%08X Mirror=%08X, Access=%s, %s\n",
+		cty.printf("%s: %s space - Unmapped %08X-%08X Mirror=%08X, Access=%s, %s\n",
 				device.tagName(), name, adrStart, adrEnd, adrMirror,
 				(type == rwType::READ) ? "read" :
 				(type == rwType::WRITE) ? "write" :
@@ -332,9 +332,9 @@ public:
 
 	}
 
-	void setup_ram_generic(offs_t adrStart, offs_t adrEnd, offs_t adrMirror, rwType type, void *base)
+	void setup_ram_generic(const cty_t &cty, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, rwType type, void *base)
 	{
-		msePrintf("%s: %s space - RAM/ROM %08X-%08X Mirror=%08X, Access=%s, %p\n",
+		cty.printf("%s: %s space - RAM/ROM %08X-%08X Mirror=%08X, Access=%s, %p\n",
 				device.tagName(), name, adrStart, adrEnd, adrMirror,
 				(type == rwType::READ) ? "read" :
 				(type == rwType::WRITE) ? "write" :
@@ -343,18 +343,18 @@ public:
 
 	}
 
-	void setup_bank_generic(offs_t adrStart, offs_t adrEnd, offs_t adrMirror, std::string rtag, std::string wtag)
+	void setup_bank_generic(const cty_t &cty, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, std::string rtag, std::string wtag)
 	{
-		msePrintf("%s: %s space - bank %08X-%08X Mirror=%08X, read=%s, write=%s\n",
+		cty.printf("%s: %s space - bank %08X-%08X Mirror=%08X, read=%s, write=%s\n",
 				device.tagName(), name, adrStart, adrEnd, adrMirror,
 				!rtag.empty() ? rtag.c_str() : "(none)",
 				!wtag.empty() ? wtag.c_str() : "(none)");
 
 	}
 
-	void setup_bank_generic(offs_t adrStart, offs_t adrEnd, offs_t adrMirror, mapMemoryBank *rbank, mapMemoryBank *wbank)
+	void setup_bank_generic(const cty_t &cty, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, mapMemoryBank *rbank, mapMemoryBank *wbank)
 	{
-		msePrintf("%s: %s space - bank %08X-%08X Mirror=%08X, read=%s, write=%s\n",
+		cty.printf("%s: %s space - bank %08X-%08X Mirror=%08X, read=%s, write=%s\n",
 				device.tagName(), name, adrStart, adrEnd, adrMirror,
 				(rbank != nullptr) ? rbank->tagName() : "(none)",
 				(wbank != nullptr) ? wbank->tagName() : "(none)");
@@ -367,14 +367,17 @@ public:
 
 // ************************************************************************
 
-void mapMemoryManager::allocate(di_memory &memory)
+void mapMemoryManager::allocate(const cty_t &cty, di_memory &memory)
 {
-	std::cout << memory.getDevice()->deviceName() <<
-		": Allocating address spaces (" << memory.mapConfigCount() << " spaces)" << std::endl;
+	cty.printf("%s: Allocating address space (%d space%s)\n",
+		memory.getDevice()->tagName(), memory.mapConfigCount(),
+		memory.mapConfigCount() != 1 ? "s" : "");
 
 	for (int space = 0; space < memory.mapConfigCount(); space++) {
 		const mapAddressConfig *config = memory.getAddressSpaceConfig(space);
 		if (config != nullptr) {
+			cty.printf("%s: Allocating address space...\n", memory.getDevice()->tagName());
+
 			switch( config->address_width() | (4 - config->address_shift())) {
 			// 8-bit address width
 			case 8|(4-0):

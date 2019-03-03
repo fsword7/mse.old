@@ -112,16 +112,16 @@ public:
 	uint64_t unmap() const { return unmapValue; }
 
 	// Setup initialization routines
-	void prepare();
-	void populateEntry(const mapAddressEntry &entry, rwType type);
-	void populate(mapAddress *map = nullptr);
-	void allocate();
-	void locate();
+	void prepare(const cty_t &cty);
+	void populateEntry(const cty_t &cty, const mapAddressEntry &entry, rwType type);
+	void populate(const cty_t &cty, mapAddress *map = nullptr);
+	void allocate(const cty_t &cty);
+	void locate(const cty_t &cty);
 
-	virtual void setup_unmap_generic(offs_t adrStart, offs_t adrEnd, offs_t adrMirror, rwType type, bool quiet) = 0;
-	virtual void setup_ram_generic(offs_t adrStart, offs_t adrEnd, offs_t adrMirror, rwType type, void *base) = 0;
-	virtual void setup_bank_generic(offs_t adrStart, offs_t adrEnd, offs_t adrMirror, std::string rtag, std::string wtag) = 0;
-	virtual void setup_bank_generic(offs_t adrStart, offs_t adrEnd, offs_t adrMirror, mapMemoryBank *rabank, mapMemoryBank *wbank) = 0;
+	virtual void setup_unmap_generic(const cty_t &cty, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, rwType type, bool quiet) = 0;
+	virtual void setup_ram_generic(const cty_t &cty, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, rwType type, void *base) = 0;
+	virtual void setup_bank_generic(const cty_t &cty, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, std::string rtag, std::string wtag) = 0;
+	virtual void setup_bank_generic(const cty_t &cty, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, mapMemoryBank *rabank, mapMemoryBank *wbank) = 0;
 
 	// Address/byte conversion function calls
 	offs_t address_to_byte(offs_t address) const { return config.address_to_byte(address); }
@@ -312,8 +312,8 @@ public:
 	const std::map<std::string, mapMemoryBank *> &banks() const { return bankList; }
 	const std::map<std::string, mapMemoryShare *> &shares() const { return shareList; }
 
-	void allocate(di_memory &memory);
-	void init();
+	void allocate(const cty_t &cty, di_memory &memory);
+	void init(const cty_t &cty);
 
 	// Memory regions
 	mapMemoryRegion *allocateRegion(tag_t *name, uint32_t length, uint8_t width, endian_t endian);
