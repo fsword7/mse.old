@@ -6,6 +6,5 @@
  */
 
 #include "emu/emucore.h"
-#include "emu/emumap.h"
-#include "emu/emumap_hedr.h"
+#include "emu/map/hedr.h"
 

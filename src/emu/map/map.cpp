@@ -11,8 +11,8 @@
 #include "emu/machine.h"
 #include "emu/exception.h"
 
-#include "emu/emumap_hedr.h"
-#include "emu/emumap_hedw.h"
+#include "emu/map/hedr.h"
+#include "emu/map/hedw.h"
 
 // ***********************************************************
 

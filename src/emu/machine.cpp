@@ -9,7 +9,6 @@
 #include "emu/emucore.h"
 #include "emu/console.h"
 #include "emu/sysconfig.h"
-#include "emu/emumap.h"
 #include "emu/romloader.h"
 #include "emu/machine.h"
 

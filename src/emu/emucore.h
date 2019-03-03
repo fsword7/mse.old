@@ -54,7 +54,7 @@ constexpr const endian_t endianNative = endianBig;
 #include "emu/device.h"
 #include "emu/driver.h"
 #include "emu/sysconfig.h"
-#include "emu/emumap.h"
+#include "emu/map/map.h"
 
 #include "emu/dimem.h"
 

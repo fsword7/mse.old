@@ -33,13 +33,13 @@ set(mse_cpp_SRCS
 	emu/dimem.cpp
 	emu/emucore.cpp
 	emu/emufile.cpp
-	emu/emumap.cpp
-	emu/emumap_access.cpp
-	emu/emumap_hedr.cpp
-	emu/emumap_hedr0.cpp
-	emu/emumap_hedr1.cpp
-	emu/emumap_hedw0.cpp
-	emu/emumap_heun.cpp
+	emu/map/map.cpp
+	emu/map/access.cpp
+	emu/map/hedr.cpp
+	emu/map/hedr0.cpp
+	emu/map/hedr1.cpp
+	emu/map/hedw0.cpp
+	emu/map/heun.cpp
 	emu/engine.cpp
 	emu/exception.cpp
 	emu/machine.cpp
@@ -98,11 +98,11 @@ set(mse_h_SRCS
 	emu/dimem.h
 	emu/emucore.h
 	emu/emufile.h
-	emu/emumap.h
-	emu/emumap_he.h
-	emu/emumap_hedr.h
-	emu/emumap_hedw.h
-	emu/emumap_heun.h
+	emu/map/map.h
+	emu/map/he.h
+	emu/map/hedr.h
+	emu/map/hedw.h
+	emu/map/heun.h
 	emu/engine.h
 	emu/exception.h
 	emu/machine.h

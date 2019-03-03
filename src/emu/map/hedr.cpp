@@ -6,7 +6,6 @@
  */
 
 #include "emu/emucore.h"
-#include "emu/emumap.h"
 
 //template<int highBits, int dWidth, int aShift, endian_t Endian>
 //mapReadHandlerDispatch<highBits, dWidth, aShift, Endian>::mapReadHandlerDispatch(mapAddressSpace *space,

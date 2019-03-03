@@ -42,8 +42,8 @@ using write16_delegate = device_delegate<uint16_t(mapAddress &, offs_t, uint16_t
 using write32_delegate = device_delegate<uint32_t(mapAddress &, offs_t, uint32_t)>;
 using write64_delegate = device_delegate<uint64_t(mapAddress &, offs_t, uint64_t)>;
 
-#include "emu/emumap_he.h"
-#include "emu/emumap_heun.h"
+#include "emu/map/he.h"
+#include "emu/map/heun.h"
 
 
 class mapAddressConfig

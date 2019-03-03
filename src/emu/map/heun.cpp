@@ -6,7 +6,6 @@
  */
 
 #include "emu/emucore.h"
-#include "emu/emumap.h"
 
 template <int dWidth, int aShift, int Endian>
 typename mapHandlerSize<dWidth>::uintx_t mapReadHandlerUnmapped<dWidth, aShift, Endian>::read(offs_t offset, uintx_t mask)

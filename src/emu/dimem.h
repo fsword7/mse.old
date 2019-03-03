@@ -9,7 +9,6 @@
 
 #include "emu/device.h"
 #include "emu/addrmap.h"
-#include "emu/emumap.h"
 
 #define cfgSetAddressMap(_cpu, _space, _map) \
 	dynamic_cast<di_memory *>(_cpu)->setAddressMap(_space, \

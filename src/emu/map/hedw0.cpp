@@ -6,8 +6,7 @@
  */
 
 #include "emu/emucore.h"
-#include "emu/emumap.h"
-#include "emu/emumap_hedw.h"
+#include "emu/map/hedw.h"
 
 template class mapWriteHandlerDispatch< 1, 0, 0, endianLittle>;
 template class mapWriteHandlerDispatch< 1, 0, 0, endianBig>;

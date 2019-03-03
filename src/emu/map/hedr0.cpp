@@ -6,8 +6,7 @@
  */
 
 #include "emu/emucore.h"
-#include "emu/emumap.h"
-#include "emu/emumap_hedr.h"
+#include "emu/map/hedr.h"
 
 template class mapReadHandlerDispatch< 1, 0, 0, endianLittle>;
 template class mapReadHandlerDispatch< 1, 0, 0, endianBig>;
