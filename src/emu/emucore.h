@@ -51,6 +51,7 @@ constexpr const endian_t endianNative = endianBig;
 
 #include "lib/util/delegate.h"
 #include "emu/devdelegate.h"
+#include "emu/console.h"
 #include "emu/device.h"
 #include "emu/driver.h"
 #include "emu/sysconfig.h"
