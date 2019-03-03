@@ -47,6 +47,10 @@ constexpr const endian_t endianNative = endianLittle;
 constexpr const endian_t endianNative = endianBig;
 #endif
 
+// Determine endian-based values
+#define ENDIAN_VALUE(endian, leValue, beValue)	((endian == endianLittle) ? (leValue) : (beValue))
+#define NATIVE_ENDIAN(leValue, beValue)			ENDIAN_VALUE(endianNative, leValue, beValue)
+
 // named function call parameters
 #define FUNC(func) func, #func
 

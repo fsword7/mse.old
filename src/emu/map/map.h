@@ -27,6 +27,74 @@ enum class rwType {
 	RW    = 3
 };
 
+// address space conversion for endian (little/big)
+// read/write a byte to 16-bit space
+#define XOR_BYTE_BE16(a)		((a) ^ NATIVE_ENDIAN(1, 0))
+#define XOR_BYTE_LE16(a)		((a) ^ NATIVE_ENDIAN(0, 1))
+
+// read/write a byte to 32-bit space
+#define XOR_BYTE_BE32(a)		((a) ^ NATIVE_ENDIAN(3, 0))
+#define XOR_BYTE_LE32(a)		((a) ^ NATIVE_ENDIAN(0, 3))
+
+// read/write a byte to 64-bit space
+#define XOR_BYTE_BE64(a)		((a) ^ NATIVE_ENDIAN(7, 0))
+#define XOR_BYTE_LE64(a)		((a) ^ NATIVE_ENDIAN(0, 7))
+
+// read/write a word to 32-bit space
+#define XOR_WORD_BE32(a)		((a) ^ NATIVE_ENDIAN(2, 0))
+#define XOR_WORD_LE32(a)		((a) ^ NATIVE_ENDIAN(0, 2))
+
+// read/write a word to 64-but space
+#define XOR_WORD_BE64(a)		((a) ^ NATIVE_ENDIAN(6, 0))
+#define XOR_WORD_LE64(a)		((a) ^ NATIVE_ENDIAN(0, 6))
+
+// read/write a dword to 64-bit space
+#define XOR_DWORD_BE64(a)		((a) ^ NATIVE_ENDIAN(4, 0))
+#define XOR_DWORD_LE64(a)		((a) ^ NATIVE_ENDIAN(0, 4))
+
+// Macros for function calls for read/write accesses
+#define READ8_FUNC(name)			uint8_t  name(ATTR_UNUSED mapAddressSpace &space, ATTR_UNUSED offs_t offset, ATTR_UNUSED uint8_t mask)
+#define READ16_FUNC(name)			uint16_t name(ATTR_UNUSED mapAddressSpace &space, ATTR_UNUSED offs_t offset, ATTR_UNUSED uint16_t mask)
+#define READ32_FUNC(name)			uint32_t name(ATTR_UNUSED mapAddressSpace &space, ATTR_UNUSED offs_t offset, ATTR_UNUSED uint32_t mask)
+#define READ64_FUNC(name)			uint64_t name(ATTR_UNUSED mapAddressSpace &space, ATTR_UNUSED offs_t offset, ATTR_UNUSED uint64_t mask)
+
+#define WRITE8_FUNC(name)			void name(ATTR_UNUSED mapAddressSpace &space, ATTR_UNUSED offs_t offset, ATTR_UNUSED uint8_t data, ATTR_UNUSED uint8_t mask)
+#define WRITE16_FUNC(name)			void name(ATTR_UNUSED mapAddressSpace &space, ATTR_UNUSED offs_t offset, ATTR_UNUSED uint16_t data, ATTR_UNUSED uint16_t mask)
+#define WRITE32_FUNC(name)			void name(ATTR_UNUSED mapAddressSpace &space, ATTR_UNUSED offs_t offset, ATTR_UNUSED uint32_t data, ATTR_UNUSED uint32_t mask)
+#define WRITE64_FUNC(name)			void name(ATTR_UNUSED mapAddressSpace &space, ATTR_UNUSED offs_t offset, ATTR_UNUSED uint64_t data, ATTR_UNUSED uint64_t mask)
+
+#define DECLARE_READ8_FUNC(name)	uint8_t  name(ATTR_UNUSED mapAddressSpace &space, ATTR_UNUSED offs_t offset, ATTR_UNUSED uint8_t mask = 0xFF)
+#define DECLARE_READ16_FUNC(name)	uint16_t name(ATTR_UNUSED mapAddressSpace &space, ATTR_UNUSED offs_t offset, ATTR_UNUSED uint16_t mask = 0xFFFF)
+#define DECLARE_READ32_FUNC(name)	uint32_t name(ATTR_UNUSED mapAddressSpace &space, ATTR_UNUSED offs_t offset, ATTR_UNUSED uint32_t mask = 0xFFFFFFFF)
+#define DECLARE_READ64_FUNC(name)	uint64_t name(ATTR_UNUSED mapAddressSpace &space, ATTR_UNUSED offs_t offset, ATTR_UNUSED uint64_t mask = 0xFFFFFFFFFFFFFFFFu)
+
+#define DECLARE_WRITE8_FUNC(name)	void name(ATTR_UNUSED mapAddressSpace &space, ATTR_UNUSED offs_t offset, ATTR_UNUSED uint8_t data, ATTR_UNUSED uint8_t mask = 0xFF)
+#define DECLARE_WRITE16_FUNC(name)	void name(ATTR_UNUSED mapAddressSpace &space, ATTR_UNUSED offs_t offset, ATTR_UNUSED uint16_t data, ATTR_UNUSED uint16_t mask = 0xFFFF)
+#define DECLARE_WRITE32_FUNC(name)	void name(ATTR_UNUSED mapAddressSpace &space, ATTR_UNUSED offs_t offset, ATTR_UNUSED uint32_t data, ATTR_UNUSED uint32_t mask = 0xFFFFFFFF)
+#define DECLARE_WRITE64_FUNC(name)	void name(ATTR_UNUSED mapAddressSpace &space, ATTR_UNUSED offs_t offset, ATTR_UNUSED uint64_t data, ATTR_UNUSED uint64_t mask = 0xFFFFFFFFFFFFFFFFu)
+
+// Macros for device delegate calls (read/write accesses)
+#define READ8_DELEGATE(_class, _member)						read8_delegate(FUNC(_class::_member), this)
+#define READ16_DELEGATE(_class, _member)					read16_delegate(FUNC(_class::_member), this)
+#define READ32_DELEGATE(_class, _member)					read32_delegate(FUNC(_class::_member), this)
+#define READ64_DELEGATE(_class, _member)					read64_delegate(FUNC(_class::_member), this)
+
+#define WRITE8_DELEGATE(_class, _member)					write8_delegate(FUNC(_class::_member), this)
+#define WRITE16_DELEGATE(_class, _member)					write16_delegate(FUNC(_class::_member), this)
+#define WRITE32_DELEGATE(_class, _member)					write32_delegate(FUNC(_class::_member), this)
+#define WRITE64_DELEGATE(_class, _member)					write64_delegate(FUNC(_class::_member), this)
+
+#define READ8_DEVICE_DELEGATE(_device, _class, _member)		read8_delegate(FUNC(_class::_member), _device)
+#define READ16_DEVICE_DELEGATE(_device, _class, _member)	read16_delegate(FUNC(_class::_member), _device)
+#define READ32_DEVICE_DELEGATE(_device, _class, _member)	read32_delegate(FUNC(_class::_member), _device)
+#define READ64_DEVICE_DELEGATE(_device, _class, _member)	read64_delegate(FUNC(_class::_member), _device)
+
+#define WRITE8_DEVICE_DELEGATE(_device, _class, _member)	write8_delegate(FUNC(_class::_member), _device)
+#define WRITE16_DEVICE_DELEGATE(_device, _class, _member)	write16_delegate(FUNC(_class::_member), _device)
+#define WRITE32_DEVICE_DELEGATE(_device, _class, _member)	write32_delegate(FUNC(_class::_member), _device)
+#define WRITE64_DEVICE_DELEGATE(_device, _class, _member)	write64_delegate(FUNC(_class::_member), _device)
+
+
 //using offs_t = std::size_t;
 using offs_t = uint32_t;
 
