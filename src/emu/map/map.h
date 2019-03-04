@@ -200,12 +200,12 @@ public:
 	offs_t byte_to_address_end(offs_t address) const { return config.byte_to_address_end(address); }
 
 	template<int dWidth, int aShift, int Endian>
-	mapReadHandlerUnmapped<dWidth, aShift, Endian> *getReadUnmap() const
-	{ return nullptr; /* static_cast<mapReadHandlerUnmapped<dWidth, aShift, Endian>> readUnmap; */ }
+	mapHandlerReadUnmapped<dWidth, aShift, Endian> *getReadUnmap() const
+	{ return nullptr; /* static_cast<mapHandlerReadUnmapped<dWidth, aShift, Endian>> readUnmap; */ }
 
 	template<int dWidth, int aShift, int Endian>
-	mapWriteHandlerUnmapped<dWidth, aShift, Endian> *getWriteUnmap() const
-	{ return nullptr; /* static_cast<mapWriteHandlerUnmapped<dWidth, aShift, Endian>> writeUnmap; */ }
+	mapHandlerWriteUnmapped<dWidth, aShift, Endian> *getWriteUnmap() const
+	{ return nullptr; /* static_cast<mapHandlerWriteUnmapped<dWidth, aShift, Endian>> writeUnmap; */ }
 
 	// read accessors
 //	virtual uint8_t read8(offs_t address) = 0;

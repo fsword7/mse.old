@@ -8,25 +8,25 @@
 #include "emu/emucore.h"
 
 template <int dWidth, int aShift, int Endian>
-typename mapHandlerSize<dWidth>::uintx_t mapReadHandlerUnmapped<dWidth, aShift, Endian>::read(offs_t offset, uintx_t mask)
+typename mapHandlerSize<dWidth>::uintx_t mapHandlerReadUnmapped<dWidth, aShift, Endian>::read(offs_t offset, uintx_t mask)
 {
 	return rhe::space->unmap();
 }
 
 template <int dWidth, int aShift, int Endian>
-std::string mapReadHandlerUnmapped<dWidth, aShift, Endian>::name() const
+std::string mapHandlerReadUnmapped<dWidth, aShift, Endian>::name() const
 {
 	return "unmapped";
 }
 
 template <int dWidth, int aShift, int Endian>
-void mapWriteHandlerUnmapped<dWidth, aShift, Endian>::write(offs_t offset, uintx_t data, uintx_t mask)
+void mapHandlerWriteUnmapped<dWidth, aShift, Endian>::write(offs_t offset, uintx_t data, uintx_t mask)
 {
 
 }
 
 template <int dWidth, int aShift, int Endian>
-std::string mapWriteHandlerUnmapped<dWidth, aShift, Endian>::name() const
+std::string mapHandlerWriteUnmapped<dWidth, aShift, Endian>::name() const
 {
 	return "unmapped";
 }
@@ -34,111 +34,111 @@ std::string mapWriteHandlerUnmapped<dWidth, aShift, Endian>::name() const
 // ************************************************************
 
 template <int dWidth, int aShift, int Endian>
-typename mapHandlerSize<dWidth>::uintx_t mapReadHandlerNop<dWidth, aShift, Endian>::read(offs_t offset, uintx_t mask)
+typename mapHandlerSize<dWidth>::uintx_t mapHandlerReadNop<dWidth, aShift, Endian>::read(offs_t offset, uintx_t mask)
 {
 	return rhe::space->unmap();
 }
 
 template <int dWidth, int aShift, int Endian>
-std::string mapReadHandlerNop<dWidth, aShift, Endian>::name() const
+std::string mapHandlerReadNop<dWidth, aShift, Endian>::name() const
 {
 	return "nop";
 }
 
 template <int dWidth, int aShift, int Endian>
-void mapWriteHandlerNop<dWidth, aShift, Endian>::write(offs_t offset, uintx_t data, uintx_t mask)
+void mapHandlerWriteNop<dWidth, aShift, Endian>::write(offs_t offset, uintx_t data, uintx_t mask)
 {
 
 }
 
 template <int dWidth, int aShift, int Endian>
-std::string mapWriteHandlerNop<dWidth, aShift, Endian>::name() const
+std::string mapHandlerWriteNop<dWidth, aShift, Endian>::name() const
 {
 	return "nop";
 }
 
 // ************************************************************
 
-template class mapReadHandlerUnmapped<0, 0, endianLittle>;
-template class mapReadHandlerUnmapped<0, 0, endianBig>;
-template class mapReadHandlerUnmapped<1, 0, endianLittle>;
-template class mapReadHandlerUnmapped<1, 0, endianBig>;
-template class mapReadHandlerUnmapped<1, -1, endianLittle>;
-template class mapReadHandlerUnmapped<1, -1, endianBig>;
-template class mapReadHandlerUnmapped<2, 0, endianLittle>;
-template class mapReadHandlerUnmapped<2, 0, endianBig>;
-template class mapReadHandlerUnmapped<2, -1, endianLittle>;
-template class mapReadHandlerUnmapped<2, -1, endianBig>;
-template class mapReadHandlerUnmapped<2, -2, endianLittle>;
-template class mapReadHandlerUnmapped<2, -2, endianBig>;
-template class mapReadHandlerUnmapped<3, 0, endianLittle>;
-template class mapReadHandlerUnmapped<3, 0, endianBig>;
-template class mapReadHandlerUnmapped<3, -1, endianLittle>;
-template class mapReadHandlerUnmapped<3, -1, endianBig>;
-template class mapReadHandlerUnmapped<3, -2, endianLittle>;
-template class mapReadHandlerUnmapped<3, -2, endianBig>;
-template class mapReadHandlerUnmapped<3, -3, endianLittle>;
-template class mapReadHandlerUnmapped<3, -3, endianBig>;
+template class mapHandlerReadUnmapped<0, 0, endianLittle>;
+template class mapHandlerReadUnmapped<0, 0, endianBig>;
+template class mapHandlerReadUnmapped<1, 0, endianLittle>;
+template class mapHandlerReadUnmapped<1, 0, endianBig>;
+template class mapHandlerReadUnmapped<1, -1, endianLittle>;
+template class mapHandlerReadUnmapped<1, -1, endianBig>;
+template class mapHandlerReadUnmapped<2, 0, endianLittle>;
+template class mapHandlerReadUnmapped<2, 0, endianBig>;
+template class mapHandlerReadUnmapped<2, -1, endianLittle>;
+template class mapHandlerReadUnmapped<2, -1, endianBig>;
+template class mapHandlerReadUnmapped<2, -2, endianLittle>;
+template class mapHandlerReadUnmapped<2, -2, endianBig>;
+template class mapHandlerReadUnmapped<3, 0, endianLittle>;
+template class mapHandlerReadUnmapped<3, 0, endianBig>;
+template class mapHandlerReadUnmapped<3, -1, endianLittle>;
+template class mapHandlerReadUnmapped<3, -1, endianBig>;
+template class mapHandlerReadUnmapped<3, -2, endianLittle>;
+template class mapHandlerReadUnmapped<3, -2, endianBig>;
+template class mapHandlerReadUnmapped<3, -3, endianLittle>;
+template class mapHandlerReadUnmapped<3, -3, endianBig>;
 
-template class mapWriteHandlerUnmapped<0, 0, endianLittle>;
-template class mapWriteHandlerUnmapped<0, 0, endianBig>;
-template class mapWriteHandlerUnmapped<1, 0, endianLittle>;
-template class mapWriteHandlerUnmapped<1, 0, endianBig>;
-template class mapWriteHandlerUnmapped<1, -1, endianLittle>;
-template class mapWriteHandlerUnmapped<1, -1, endianBig>;
-template class mapWriteHandlerUnmapped<2, 0, endianLittle>;
-template class mapWriteHandlerUnmapped<2, 0, endianBig>;
-template class mapWriteHandlerUnmapped<2, -1, endianLittle>;
-template class mapWriteHandlerUnmapped<2, -1, endianBig>;
-template class mapWriteHandlerUnmapped<2, -2, endianLittle>;
-template class mapWriteHandlerUnmapped<2, -2, endianBig>;
-template class mapWriteHandlerUnmapped<3, 0, endianLittle>;
-template class mapWriteHandlerUnmapped<3, 0, endianBig>;
-template class mapWriteHandlerUnmapped<3, -1, endianLittle>;
-template class mapWriteHandlerUnmapped<3, -1, endianBig>;
-template class mapWriteHandlerUnmapped<3, -2, endianLittle>;
-template class mapWriteHandlerUnmapped<3, -2, endianBig>;
-template class mapWriteHandlerUnmapped<3, -3, endianLittle>;
-template class mapWriteHandlerUnmapped<3, -3, endianBig>;
+template class mapHandlerWriteUnmapped<0, 0, endianLittle>;
+template class mapHandlerWriteUnmapped<0, 0, endianBig>;
+template class mapHandlerWriteUnmapped<1, 0, endianLittle>;
+template class mapHandlerWriteUnmapped<1, 0, endianBig>;
+template class mapHandlerWriteUnmapped<1, -1, endianLittle>;
+template class mapHandlerWriteUnmapped<1, -1, endianBig>;
+template class mapHandlerWriteUnmapped<2, 0, endianLittle>;
+template class mapHandlerWriteUnmapped<2, 0, endianBig>;
+template class mapHandlerWriteUnmapped<2, -1, endianLittle>;
+template class mapHandlerWriteUnmapped<2, -1, endianBig>;
+template class mapHandlerWriteUnmapped<2, -2, endianLittle>;
+template class mapHandlerWriteUnmapped<2, -2, endianBig>;
+template class mapHandlerWriteUnmapped<3, 0, endianLittle>;
+template class mapHandlerWriteUnmapped<3, 0, endianBig>;
+template class mapHandlerWriteUnmapped<3, -1, endianLittle>;
+template class mapHandlerWriteUnmapped<3, -1, endianBig>;
+template class mapHandlerWriteUnmapped<3, -2, endianLittle>;
+template class mapHandlerWriteUnmapped<3, -2, endianBig>;
+template class mapHandlerWriteUnmapped<3, -3, endianLittle>;
+template class mapHandlerWriteUnmapped<3, -3, endianBig>;
 
-template class mapReadHandlerNop<0, 0, endianLittle>;
-template class mapReadHandlerNop<0, 0, endianBig>;
-template class mapReadHandlerNop<1, 0, endianLittle>;
-template class mapReadHandlerNop<1, 0, endianBig>;
-template class mapReadHandlerNop<1, -1, endianLittle>;
-template class mapReadHandlerNop<1, -1, endianBig>;
-template class mapReadHandlerNop<2, 0, endianLittle>;
-template class mapReadHandlerNop<2, 0, endianBig>;
-template class mapReadHandlerNop<2, -1, endianLittle>;
-template class mapReadHandlerNop<2, -1, endianBig>;
-template class mapReadHandlerNop<2, -2, endianLittle>;
-template class mapReadHandlerNop<2, -2, endianBig>;
-template class mapReadHandlerNop<3, 0, endianLittle>;
-template class mapReadHandlerNop<3, 0, endianBig>;
-template class mapReadHandlerNop<3, -1, endianLittle>;
-template class mapReadHandlerNop<3, -1, endianBig>;
-template class mapReadHandlerNop<3, -2, endianLittle>;
-template class mapReadHandlerNop<3, -2, endianBig>;
-template class mapReadHandlerNop<3, -3, endianLittle>;
-template class mapReadHandlerNop<3, -3, endianBig>;
+template class mapHandlerReadNop<0, 0, endianLittle>;
+template class mapHandlerReadNop<0, 0, endianBig>;
+template class mapHandlerReadNop<1, 0, endianLittle>;
+template class mapHandlerReadNop<1, 0, endianBig>;
+template class mapHandlerReadNop<1, -1, endianLittle>;
+template class mapHandlerReadNop<1, -1, endianBig>;
+template class mapHandlerReadNop<2, 0, endianLittle>;
+template class mapHandlerReadNop<2, 0, endianBig>;
+template class mapHandlerReadNop<2, -1, endianLittle>;
+template class mapHandlerReadNop<2, -1, endianBig>;
+template class mapHandlerReadNop<2, -2, endianLittle>;
+template class mapHandlerReadNop<2, -2, endianBig>;
+template class mapHandlerReadNop<3, 0, endianLittle>;
+template class mapHandlerReadNop<3, 0, endianBig>;
+template class mapHandlerReadNop<3, -1, endianLittle>;
+template class mapHandlerReadNop<3, -1, endianBig>;
+template class mapHandlerReadNop<3, -2, endianLittle>;
+template class mapHandlerReadNop<3, -2, endianBig>;
+template class mapHandlerReadNop<3, -3, endianLittle>;
+template class mapHandlerReadNop<3, -3, endianBig>;
 
-template class mapWriteHandlerNop<0, 0, endianLittle>;
-template class mapWriteHandlerNop<0, 0, endianBig>;
-template class mapWriteHandlerNop<1, 0, endianLittle>;
-template class mapWriteHandlerNop<1, 0, endianBig>;
-template class mapWriteHandlerNop<1, -1, endianLittle>;
-template class mapWriteHandlerNop<1, -1, endianBig>;
-template class mapWriteHandlerNop<2, 0, endianLittle>;
-template class mapWriteHandlerNop<2, 0, endianBig>;
-template class mapWriteHandlerNop<2, -1, endianLittle>;
-template class mapWriteHandlerNop<2, -1, endianBig>;
-template class mapWriteHandlerNop<2, -2, endianLittle>;
-template class mapWriteHandlerNop<2, -2, endianBig>;
-template class mapWriteHandlerNop<3, 0, endianLittle>;
-template class mapWriteHandlerNop<3, 0, endianBig>;
-template class mapWriteHandlerNop<3, -1, endianLittle>;
-template class mapWriteHandlerNop<3, -1, endianBig>;
-template class mapWriteHandlerNop<3, -2, endianLittle>;
-template class mapWriteHandlerNop<3, -2, endianBig>;
-template class mapWriteHandlerNop<3, -3, endianLittle>;
-template class mapWriteHandlerNop<3, -3, endianBig>;
+template class mapHandlerWriteNop<0, 0, endianLittle>;
+template class mapHandlerWriteNop<0, 0, endianBig>;
+template class mapHandlerWriteNop<1, 0, endianLittle>;
+template class mapHandlerWriteNop<1, 0, endianBig>;
+template class mapHandlerWriteNop<1, -1, endianLittle>;
+template class mapHandlerWriteNop<1, -1, endianBig>;
+template class mapHandlerWriteNop<2, 0, endianLittle>;
+template class mapHandlerWriteNop<2, 0, endianBig>;
+template class mapHandlerWriteNop<2, -1, endianLittle>;
+template class mapHandlerWriteNop<2, -1, endianBig>;
+template class mapHandlerWriteNop<2, -2, endianLittle>;
+template class mapHandlerWriteNop<2, -2, endianBig>;
+template class mapHandlerWriteNop<3, 0, endianLittle>;
+template class mapHandlerWriteNop<3, 0, endianBig>;
+template class mapHandlerWriteNop<3, -1, endianLittle>;
+template class mapHandlerWriteNop<3, -1, endianBig>;
+template class mapHandlerWriteNop<3, -2, endianLittle>;
+template class mapHandlerWriteNop<3, -2, endianBig>;
+template class mapHandlerWriteNop<3, -3, endianLittle>;
+template class mapHandlerWriteNop<3, -3, endianBig>;

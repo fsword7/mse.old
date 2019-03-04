@@ -8,13 +8,13 @@
 #pragma once
 
 template <int dWidth, int aShift, int Endian>
-class mapHandlerReadAddress : public mapReadHandlerEntry<dWidth, aShift, Endian>
+class mapHandlerReadAddress : public mapHandlerRead<dWidth, aShift, Endian>
 {
 public:
 	using uintx_t = typename mapHandlerSize<dWidth>::uintx_t;
 
 	mapHandlerReadAddress(mapAddressSpace *space, uint32_t flags)
-	: mapReadHandlerEntry<dWidth, aShift, Endian>(space, flags)
+	: mapHandlerRead<dWidth, aShift, Endian>(space, flags)
 	{ }
 
 	~mapHandlerReadAddress() = default;
@@ -30,13 +30,13 @@ protected:
 };
 
 template <int dWidth, int aShift, int Endian>
-class mapHandlerWriteAddress : public mapWriteHandlerEntry<dWidth, aShift, Endian>
+class mapHandlerWriteAddress : public mapHandlerWrite<dWidth, aShift, Endian>
 {
 public:
 	using uintx_t = typename mapHandlerSize<dWidth>::uintx_t;
 
 	mapHandlerWriteAddress(mapAddressSpace *space, uint32_t flags)
-	: mapWriteHandlerEntry<dWidth, aShift, Endian>(space, flags)
+	: mapHandlerWrite<dWidth, aShift, Endian>(space, flags)
 	{ }
 
 	~mapHandlerWriteAddress() = default;

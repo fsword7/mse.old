@@ -8,19 +8,19 @@
 #include "emu/emucore.h"
 #include "emu/map/hedr.h"
 
-template class mapReadHandlerDispatch< 1, 0, 0, endianLittle>;
-template class mapReadHandlerDispatch< 1, 0, 0, endianBig>;
-template class mapReadHandlerDispatch< 2, 0, 0, endianLittle>;
-template class mapReadHandlerDispatch< 2, 0, 0, endianBig>;
-template class mapReadHandlerDispatch< 3, 0, 0, endianLittle>;
-template class mapReadHandlerDispatch< 3, 0, 0, endianBig>;
-template class mapReadHandlerDispatch< 4, 0, 0, endianLittle>;
-template class mapReadHandlerDispatch< 4, 0, 0, endianBig>;
-template class mapReadHandlerDispatch< 5, 0, 0, endianLittle>;
-template class mapReadHandlerDispatch< 5, 0, 0, endianBig>;
-template class mapReadHandlerDispatch< 6, 0, 0, endianLittle>;
-template class mapReadHandlerDispatch< 6, 0, 0, endianBig>;
-template class mapReadHandlerDispatch< 7, 0, 0, endianLittle>;
-template class mapReadHandlerDispatch< 7, 0, 0, endianBig>;
-template class mapReadHandlerDispatch< 8, 0, 0, endianLittle>;
-template class mapReadHandlerDispatch< 8, 0, 0, endianBig>;
+template class mapHandlerReadDispatch< 1, 0, 0, endianLittle>;
+template class mapHandlerReadDispatch< 1, 0, 0, endianBig>;
+template class mapHandlerReadDispatch< 2, 0, 0, endianLittle>;
+template class mapHandlerReadDispatch< 2, 0, 0, endianBig>;
+template class mapHandlerReadDispatch< 3, 0, 0, endianLittle>;
+template class mapHandlerReadDispatch< 3, 0, 0, endianBig>;
+template class mapHandlerReadDispatch< 4, 0, 0, endianLittle>;
+template class mapHandlerReadDispatch< 4, 0, 0, endianBig>;
+template class mapHandlerReadDispatch< 5, 0, 0, endianLittle>;
+template class mapHandlerReadDispatch< 5, 0, 0, endianBig>;
+template class mapHandlerReadDispatch< 6, 0, 0, endianLittle>;
+template class mapHandlerReadDispatch< 6, 0, 0, endianBig>;
+template class mapHandlerReadDispatch< 7, 0, 0, endianLittle>;
+template class mapHandlerReadDispatch< 7, 0, 0, endianBig>;
+template class mapHandlerReadDispatch< 8, 0, 0, endianLittle>;
+template class mapHandlerReadDispatch< 8, 0, 0, endianBig>;

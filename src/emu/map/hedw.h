@@ -8,15 +8,15 @@
 #pragma once
 
 template <int highBits, int dWidth, int aShift, int Endian>
-class mapWriteHandlerDispatch : public mapWriteHandlerEntry<dWidth, aShift, Endian>
+class mapHandlerWriteDispatch : public mapHandlerWrite<dWidth, aShift, Endian>
 {
 public:
 	using uintx_t = typename mapHandlerSize<dWidth>::uintx_t;
-	using whe = mapWriteHandlerEntry<dWidth, aShift, Endian>;
+	using whe = mapHandlerWrite<dWidth, aShift, Endian>;
 
-	mapWriteHandlerDispatch(mapAddressSpace *space, const mapHandlerEntry::range &init,
-			mapWriteHandlerEntry<dWidth, aShift, Endian> *handler)
-	: mapWriteHandlerEntry<dWidth, aShift, Endian>(space, mapHandlerEntry::heDispatch)
+	mapHandlerWriteDispatch(mapAddressSpace *space, const mapHandlerEntry::range &init,
+			mapHandlerWrite<dWidth, aShift, Endian> *handler)
+	: mapHandlerWrite<dWidth, aShift, Endian>(space, mapHandlerEntry::heDispatch)
 	{
 		if (handler == nullptr)
 			handler = space->getWriteUnmap<dWidth, aShift, Endian>();
@@ -27,7 +27,7 @@ public:
 		}
 	}
 
-	~mapWriteHandlerDispatch()
+	~mapHandlerWriteDispatch()
 	{
 		for (unsigned int idx = 0; idx != count; idx++)
 			dispatch[idx]->unref();
@@ -52,7 +52,7 @@ protected:
 	static constexpr offs_t   highMask = makeBitMask<offs_t>(highBits) - lowMask;
 	static constexpr offs_t   upMask = makeBitMask<offs_t>(highBits);
 
-	mapWriteHandlerEntry<dWidth, aShift, Endian> *dispatch[count];
+	mapHandlerWrite<dWidth, aShift, Endian> *dispatch[count];
 	mapHandlerEntry::range ranges[count];
 
 private:

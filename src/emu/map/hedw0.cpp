@@ -8,22 +8,22 @@
 #include "emu/emucore.h"
 #include "emu/map/hedw.h"
 
-template class mapWriteHandlerDispatch< 1, 0, 0, endianLittle>;
-template class mapWriteHandlerDispatch< 1, 0, 0, endianBig>;
-template class mapWriteHandlerDispatch< 2, 0, 0, endianLittle>;
-template class mapWriteHandlerDispatch< 2, 0, 0, endianBig>;
-template class mapWriteHandlerDispatch< 3, 0, 0, endianLittle>;
-template class mapWriteHandlerDispatch< 3, 0, 0, endianBig>;
-template class mapWriteHandlerDispatch< 4, 0, 0, endianLittle>;
-template class mapWriteHandlerDispatch< 4, 0, 0, endianBig>;
-template class mapWriteHandlerDispatch< 5, 0, 0, endianLittle>;
-template class mapWriteHandlerDispatch< 5, 0, 0, endianBig>;
-template class mapWriteHandlerDispatch< 6, 0, 0, endianLittle>;
-template class mapWriteHandlerDispatch< 6, 0, 0, endianBig>;
-template class mapWriteHandlerDispatch< 7, 0, 0, endianLittle>;
-template class mapWriteHandlerDispatch< 7, 0, 0, endianBig>;
-template class mapWriteHandlerDispatch< 8, 0, 0, endianLittle>;
-template class mapWriteHandlerDispatch< 8, 0, 0, endianBig>;
+template class mapHandlerWriteDispatch< 1, 0, 0, endianLittle>;
+template class mapHandlerWriteDispatch< 1, 0, 0, endianBig>;
+template class mapHandlerWriteDispatch< 2, 0, 0, endianLittle>;
+template class mapHandlerWriteDispatch< 2, 0, 0, endianBig>;
+template class mapHandlerWriteDispatch< 3, 0, 0, endianLittle>;
+template class mapHandlerWriteDispatch< 3, 0, 0, endianBig>;
+template class mapHandlerWriteDispatch< 4, 0, 0, endianLittle>;
+template class mapHandlerWriteDispatch< 4, 0, 0, endianBig>;
+template class mapHandlerWriteDispatch< 5, 0, 0, endianLittle>;
+template class mapHandlerWriteDispatch< 5, 0, 0, endianBig>;
+template class mapHandlerWriteDispatch< 6, 0, 0, endianLittle>;
+template class mapHandlerWriteDispatch< 6, 0, 0, endianBig>;
+template class mapHandlerWriteDispatch< 7, 0, 0, endianLittle>;
+template class mapHandlerWriteDispatch< 7, 0, 0, endianBig>;
+template class mapHandlerWriteDispatch< 8, 0, 0, endianLittle>;
+template class mapHandlerWriteDispatch< 8, 0, 0, endianBig>;
 
 
 

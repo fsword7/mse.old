@@ -8,17 +8,17 @@
 #pragma once
 
 template <int dWidth, int aShift, int Endian>
-class mapReadHandlerUnmapped : public mapReadHandlerEntry<dWidth, aShift, Endian>
+class mapHandlerReadUnmapped : public mapHandlerRead<dWidth, aShift, Endian>
 {
 public:
 	using uintx_t = typename mapHandlerSize<dWidth>::uintx_t;
-	using rhe = mapReadHandlerEntry<dWidth, aShift, Endian>;
+	using rhe = mapHandlerRead<dWidth, aShift, Endian>;
 
-	mapReadHandlerUnmapped(mapAddressSpace *space)
-	: mapReadHandlerEntry<dWidth, aShift, Endian>(space, 0)
+	mapHandlerReadUnmapped(mapAddressSpace *space)
+	: mapHandlerRead<dWidth, aShift, Endian>(space, 0)
 	{ }
 
-	~mapReadHandlerUnmapped() = default;
+	~mapHandlerReadUnmapped() = default;
 
 	std::string name() const override;
 
@@ -26,17 +26,17 @@ public:
 };
 
 template <int dWidth, int aShift, int Endian>
-class mapWriteHandlerUnmapped : public mapWriteHandlerEntry<dWidth, aShift, Endian>
+class mapHandlerWriteUnmapped : public mapHandlerWrite<dWidth, aShift, Endian>
 {
 public:
 	using uintx_t = typename mapHandlerSize<dWidth>::uintx_t;
-	using whe = mapWriteHandlerEntry<dWidth, aShift, Endian>;
+	using whe = mapHandlerWrite<dWidth, aShift, Endian>;
 
-	mapWriteHandlerUnmapped(mapAddressSpace *space)
-	: mapWriteHandlerEntry<dWidth, aShift, Endian>(space, 0)
+	mapHandlerWriteUnmapped(mapAddressSpace *space)
+	: mapHandlerWrite<dWidth, aShift, Endian>(space, 0)
 	{ }
 
-	~mapWriteHandlerUnmapped() = default;
+	~mapHandlerWriteUnmapped() = default;
 
 	std::string name() const override;
 
@@ -45,17 +45,17 @@ public:
 
 
 template <int dWidth, int aShift, int Endian>
-class mapReadHandlerNop : public mapReadHandlerEntry<dWidth, aShift, Endian>
+class mapHandlerReadNop : public mapHandlerRead<dWidth, aShift, Endian>
 {
 public:
 	using uintx_t = typename mapHandlerSize<dWidth>::uintx_t;
-	using rhe = mapReadHandlerEntry<dWidth, aShift, Endian>;
+	using rhe = mapHandlerRead<dWidth, aShift, Endian>;
 
-	mapReadHandlerNop(mapAddressSpace *space)
-	: mapReadHandlerEntry<dWidth, aShift, Endian>(space, 0)
+	mapHandlerReadNop(mapAddressSpace *space)
+	: mapHandlerRead<dWidth, aShift, Endian>(space, 0)
 	{ }
 
-	~mapReadHandlerNop() = default;
+	~mapHandlerReadNop() = default;
 
 	std::string name() const override;
 
@@ -63,17 +63,17 @@ public:
 };
 
 template <int dWidth, int aShift, int Endian>
-class mapWriteHandlerNop : public mapWriteHandlerEntry<dWidth, aShift, Endian>
+class mapHandlerWriteNop : public mapHandlerWrite<dWidth, aShift, Endian>
 {
 public:
 	using uintx_t = typename mapHandlerSize<dWidth>::uintx_t;
-	using whe = mapWriteHandlerEntry<dWidth, aShift, Endian>;
+	using whe = mapHandlerWrite<dWidth, aShift, Endian>;
 
-	mapWriteHandlerNop(mapAddressSpace *space)
-	: mapWriteHandlerEntry<dWidth, aShift, Endian>(space, 0)
+	mapHandlerWriteNop(mapAddressSpace *space)
+	: mapHandlerWrite<dWidth, aShift, Endian>(space, 0)
 	{ }
 
-	~mapWriteHandlerNop() = default;
+	~mapHandlerWriteNop() = default;
 
 	std::string name() const override;
 

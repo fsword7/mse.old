@@ -39,173 +39,173 @@ public:
 	  rootRead(nullptr), rootWrite(nullptr)
 	{
 
-		readUnmap = new mapReadHandlerUnmapped<dWidth, aShift, Endian>(this);
-		writeUnmap = new mapWriteHandlerUnmapped<dWidth, aShift, Endian>(this);
-		readNop = new mapReadHandlerNop<dWidth, aShift, Endian>(this);
-		writeNop = new mapWriteHandlerNop<dWidth, aShift, Endian>(this);
+		readUnmap = new mapHandlerReadUnmapped<dWidth, aShift, Endian>(this);
+		writeUnmap = new mapHandlerWriteUnmapped<dWidth, aShift, Endian>(this);
+		readNop = new mapHandlerReadNop<dWidth, aShift, Endian>(this);
+		writeNop = new mapHandlerWriteNop<dWidth, aShift, Endian>(this);
 
 		mapHandlerEntry::range r = { 0, 0xFFFFFFFF >> (32 - addrWidth) };
 
 		switch (addrWidth) {
 
 		case 1:
-			rootRead  = new mapReadHandlerDispatch<1, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<1, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<1, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<1, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 2:
-			rootRead  = new mapReadHandlerDispatch<2, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<2, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<2, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<2, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 3:
-			rootRead  = new mapReadHandlerDispatch<3, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<3, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<3, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<3, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 4:
-			rootRead  = new mapReadHandlerDispatch<4, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<4, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<4, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<4, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 5:
-			rootRead  = new mapReadHandlerDispatch<5, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<5, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<5, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<5, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 6:
-			rootRead  = new mapReadHandlerDispatch<6, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<6, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<6, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<6, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 7:
-			rootRead  = new mapReadHandlerDispatch<7, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<7, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<7, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<7, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 8:
-			rootRead  = new mapReadHandlerDispatch<8, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<8, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<8, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<8, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 9:
-			rootRead  = new mapReadHandlerDispatch<9, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<9, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<9, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<9, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 10:
-			rootRead  = new mapReadHandlerDispatch<10, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<10, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<10, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<10, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 11:
-			rootRead  = new mapReadHandlerDispatch<11, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<11, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<11, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<11, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 12:
-			rootRead  = new mapReadHandlerDispatch<12, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<12, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<12, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<12, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 13:
-			rootRead  = new mapReadHandlerDispatch<13, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<13, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<13, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<13, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 14:
-			rootRead  = new mapReadHandlerDispatch<14, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<14, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<14, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<14, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 15:
-			rootRead  = new mapReadHandlerDispatch<15, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<15, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<15, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<15, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 16:
-			rootRead  = new mapReadHandlerDispatch<16, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<16, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<16, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<16, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 17:
-			rootRead  = new mapReadHandlerDispatch<17, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<17, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<17, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<17, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 18:
-			rootRead  = new mapReadHandlerDispatch<18, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<18, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<18, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<18, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 19:
-			rootRead  = new mapReadHandlerDispatch<19, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<19, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<19, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<19, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 20:
-			rootRead  = new mapReadHandlerDispatch<20, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<20, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<20, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<20, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 21:
-			rootRead  = new mapReadHandlerDispatch<21, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<21, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<21, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<21, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 22:
-			rootRead  = new mapReadHandlerDispatch<22, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<22, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<22, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<22, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 23:
-			rootRead  = new mapReadHandlerDispatch<23, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<23, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<23, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<23, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 24:
-			rootRead  = new mapReadHandlerDispatch<24, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<24, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<24, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<24, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 25:
-			rootRead  = new mapReadHandlerDispatch<25, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<25, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<25, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<25, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 26:
-			rootRead  = new mapReadHandlerDispatch<26, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<26, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<26, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<26, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 27:
-			rootRead  = new mapReadHandlerDispatch<27, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<27, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<27, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<27, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 28:
-			rootRead  = new mapReadHandlerDispatch<28, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<28, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<28, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<28, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 29:
-			rootRead  = new mapReadHandlerDispatch<29, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<29, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<29, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<29, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 30:
-			rootRead  = new mapReadHandlerDispatch<30, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<30, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<30, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<30, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 31:
-			rootRead  = new mapReadHandlerDispatch<31, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<31, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<31, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<31, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 32:
-			rootRead  = new mapReadHandlerDispatch<32, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapWriteHandlerDispatch<32, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<32, dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<32, dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		default:
@@ -361,8 +361,8 @@ public:
 
 	}
 
-	mapReadHandlerEntry<dWidth, aShift, Endian>  *rootRead;
-	mapWriteHandlerEntry<dWidth, aShift, Endian> *rootWrite;
+	mapHandlerRead<dWidth, aShift, Endian>  *rootRead;
+	mapHandlerWrite<dWidth, aShift, Endian> *rootWrite;
 };
 
 // ************************************************************************
