@@ -75,6 +75,9 @@ public:
 
 	mapAddressEntry &mask(offs_t mask);
 
+	mapAddressEntry &m(tag_t *name, mapConstructor func);
+	mapAddressEntry &m(device_t *device, mapConstructor func);
+
 	mapAddressEntry &r(read8_delegate func);
 	mapAddressEntry &r(read16_delegate func);
 	mapAddressEntry &r(read32_delegate func);
@@ -107,11 +110,11 @@ public:
 		return *this;
 	}
 
-//	template <typename T, typename Ret, typename... Params>
-//	mapAddressEntry &m(Ret (T::*map)(Params...), tag_t *mapName)
-//	{
-//		return *this;
-//	}
+	template <typename T, typename Ret, typename... Params>
+	mapAddressEntry &m(Ret (T::*map)(Params...), tag_t *mapName)
+	{
+		return m(&device, make_delegate(map, mapName, make_pointer<T>(device)));
+	}
 
 
 

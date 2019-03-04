@@ -94,6 +94,30 @@ void mapAddress::importSubmaps(machine &sysMachine, device_t &owner, int dataWid
 }
 
 
+mapAddressEntry &mapAddressEntry::m(tag_t *name, mapConstructor func)
+{
+	read.type = mapSubmap;
+	read.name = name;
+	write.type = mapSubmap;
+	write.name = name;
+	submapDevice = nullptr;
+	submapDelegate = func;
+
+	return *this;
+}
+
+mapAddressEntry &mapAddressEntry::m(device_t *device, mapConstructor func)
+{
+	read.type = mapSubmap;
+	read.name = nullptr;
+	write.type = mapSubmap;
+	write.name = nullptr;
+	submapDevice = device;
+	submapDelegate = func;
+
+	return *this;
+}
+
 
 mapAddressEntry &mapAddressEntry::r(read8_delegate func)
 {
