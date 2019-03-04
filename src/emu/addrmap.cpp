@@ -92,3 +92,105 @@ void mapAddress::importSubmaps(machine &sysMachine, device_t &owner, int dataWid
 {
 
 }
+
+
+
+mapAddressEntry &mapAddressEntry::r(read8_delegate func)
+{
+	assert(!func.isnull());
+
+	read.type = mapDelegate;
+	read.bits = 8;
+	read.name = func.name();
+	read8 = func;
+
+	return *this;
+}
+
+
+mapAddressEntry &mapAddressEntry::r(read16_delegate func)
+{
+	assert(!func.isnull());
+
+	read.type = mapDelegate;
+	read.bits = 16;
+	read.name = func.name();
+	read16 = func;
+
+	return *this;
+}
+
+mapAddressEntry &mapAddressEntry::r(read32_delegate func)
+{
+	assert(!func.isnull());
+
+	read.type = mapDelegate;
+	read.bits = 32;
+	read.name = func.name();
+	read32 = func;
+
+	return *this;
+}
+
+mapAddressEntry &mapAddressEntry::r(read64_delegate func)
+{
+	assert(!func.isnull());
+
+	read.type = mapDelegate;
+	read.bits = 64;
+	read.name = func.name();
+	read64 = func;
+
+	return *this;
+}
+
+
+
+mapAddressEntry &mapAddressEntry::w(write8_delegate func)
+{
+	assert(!func.isnull());
+
+	write.type = mapDelegate;
+	write.bits = 8;
+	write.name = func.name();
+	write8 = func;
+
+	return *this;
+}
+
+
+mapAddressEntry &mapAddressEntry::w(write16_delegate func)
+{
+	assert(!func.isnull());
+
+	write.type = mapDelegate;
+	write.bits = 16;
+	write.name = func.name();
+	write16 = func;
+
+	return *this;
+}
+
+mapAddressEntry &mapAddressEntry::w(write32_delegate func)
+{
+	assert(!func.isnull());
+
+	write.type = mapDelegate;
+	write.bits = 32;
+	write.name = func.name();
+	write32 = func;
+
+	return *this;
+}
+
+mapAddressEntry &mapAddressEntry::w(write64_delegate func)
+{
+	assert(!func.isnull());
+
+	write.type = mapDelegate;
+	write.bits = 64;
+	write.name = func.name();
+	write64 = func;
+
+	return *this;
+}

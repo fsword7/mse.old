@@ -39,6 +39,20 @@ class mapAddressEntry {
 public:
 	mapAddressEntry(device_t &device, mapAddress &map, offs_t start, offs_t end);
 
+	template <typename T, typename U>
+	static std::enable_if_t<std::is_convertible<std::add_pointer_t<U>, std::add_pointer_t<T>>::value, T *>
+		make_pointer(U &obj)
+	{
+		return &dynamic_cast<T &>(obj);
+	}
+
+	template <typename T, typename U>
+	static std::enable_if_t<!std::is_convertible<std::add_pointer_t<U>, std::add_pointer_t<T>>::value, T *>
+		make_pointer(U &obj)
+	{
+		return &dynamic_cast<T &>(obj);
+	}
+
 	// Mapping parameter setting function calls
 
 	// RAM/ROM mapping
@@ -61,25 +75,38 @@ public:
 
 	mapAddressEntry &mask(offs_t mask);
 
+	mapAddressEntry &r(read8_delegate func);
+	mapAddressEntry &r(read16_delegate func);
+	mapAddressEntry &r(read32_delegate func);
+	mapAddressEntry &r(read64_delegate func);
+
+	mapAddressEntry &w(write8_delegate func);
+	mapAddressEntry &w(write16_delegate func);
+	mapAddressEntry &w(write32_delegate func);
+	mapAddressEntry &w(write64_delegate func);
+
+
 	// Implicit delegate calls
-//	template <typename T, typename Ret, typename... Params>
-//	mapAddressEntry &r(Ret (T::*read)(Params...), tag_t *readName)
-//	{
-//		return *this;
-//	}
-//
-//	template <typename T, typename Ret, typename... Params>
-//	mapAddressEntry &w(Ret (T::*write)(Params...), tag_t *writeName)
-//	{
-//		return *this;
-//	}
-//
-//	template <typename T, typename rRet, typename... rParams, typename U, typename wRet, typename... wParams>
-//	mapAddressEntry &rw(rRet (T::*read)(rParams...), tag_t *readName, wRet (U::*write)(wParams...), tag_t *writeName)
-//	{
-//		return *this;
-//	}
-//
+	template <typename T, typename Ret, typename... Params>
+	mapAddressEntry &r(Ret (T::*read)(Params...), tag_t *readName)
+	{
+		return r(make_delegate(read, readName, device.tagName(), make_pointer<T>(device)));
+	}
+
+	template <typename T, typename Ret, typename... Params>
+	mapAddressEntry &w(Ret (T::*write)(Params...), tag_t *writeName)
+	{
+		return w(make_delegate(write, writeName, device.tagName(), make_pointer<T>(device)));
+	}
+
+	template <typename T, typename rRet, typename... rParams, typename U, typename wRet, typename... wParams>
+	mapAddressEntry &rw(rRet (T::*read)(rParams...), tag_t *readName, wRet (U::*write)(wParams...), tag_t *writeName)
+	{
+		r(make_delegate(read, readName, device.tagName(), make_pointer<T>(device)));
+		w(make_delegate(write, writeName, device.tagName(), make_pointer<T>(device)));
+		return *this;
+	}
+
 //	template <typename T, typename Ret, typename... Params>
 //	mapAddressEntry &m(Ret (T::*map)(Params...), tag_t *mapName)
 //	{
@@ -120,6 +147,7 @@ public:
 	write16_delegate	write16;
 	write32_delegate	write32;
 	write64_delegate	write64;
+
 
 };
 
