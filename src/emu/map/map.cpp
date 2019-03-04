@@ -188,6 +188,14 @@ void mapAddressSpace::locate(const cty_t &cty)
 {
 }
 
+void *mapAddressSpace::findBackingMemory(const cty_t &cty, offs_t adrStart, offs_t adrEnd)
+{
+	if (map == nullptr)
+		return nullptr;
+
+	return nullptr;
+}
+
 mapMemoryBank &mapAddressSpace::bankAllocate(tag_t *tag, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, rwType type)
 {
 	offs_t adrMask = ~adrMirror;
@@ -267,4 +275,17 @@ mapMemoryBlock::mapMemoryBlock(mapAddressSpace &space, offs_t start, offs_t end,
 		memset(&allocated[0], 0, length);
 		baseData = &allocated[0];
 	}
+}
+
+void mapMemoryBank::setBase(void *base)
+{
+	if (base == nullptr)
+		return;
+
+	if (entries.empty()) {
+		entries.resize(1);
+		current = 0;
+	}
+
+	entries[current] = reinterpret_cast<uint8_t *>(base);
 }

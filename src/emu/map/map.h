@@ -188,6 +188,7 @@ public:
 	void allocate(const cty_t &cty);
 	void locate(const cty_t &cty);
 
+	void *findBackingMemory(const cty_t &cty, offs_t adrStart, offs_t adrEnd);
 	mapMemoryBank &bankAllocate(tag_t *tag, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, rwType type);
 
 	virtual void setup_unmap_generic(const cty_t &cty, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, rwType type, bool quiet) = 0;
@@ -341,6 +342,8 @@ public:
 	{
 		return !entries.empty() ? entries[current] : nullptr;
 	}
+
+	void setBase(void *base);
 
 	// Configure/set entries
 //	void configureEntry(int entry, void *base);
