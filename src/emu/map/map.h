@@ -188,6 +188,8 @@ public:
 	void allocate(const cty_t &cty);
 	void locate(const cty_t &cty);
 
+	mapMemoryBank &bankAllocate(tag_t *tag, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, rwType type);
+
 	virtual void setup_unmap_generic(const cty_t &cty, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, rwType type, bool quiet) = 0;
 	virtual void setup_ram_generic(const cty_t &cty, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, rwType type, void *base) = 0;
 	virtual void setup_bank_generic(const cty_t &cty, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, std::string rtag, std::string wtag) = 0;

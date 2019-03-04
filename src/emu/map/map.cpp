@@ -188,6 +188,17 @@ void mapAddressSpace::locate(const cty_t &cty)
 {
 }
 
+mapMemoryBank &mapAddressSpace::bankAllocate(tag_t *tag, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, rwType type)
+{
+	offs_t adrMask = ~adrMirror;
+	adjustAddresses(adrStart, adrEnd, adrMask, adrMirror);
+
+	mapMemoryBank *bank = nullptr;
+
+	assert(bank != nullptr);
+	return *bank;
+}
+
 // ******************************************************************
 
 mapMemoryManager::mapMemoryManager(machine *sys)

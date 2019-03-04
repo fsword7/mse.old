@@ -144,13 +144,13 @@ public:
 		return nullptr;
 	}
 
-	inline void populate(const cty_t &cty, offs_t address, offs_t &start, offs_t &end, offs_t mirror,
+	inline void populate(const cty_t &cty, offs_t &start, offs_t &end, offs_t mirror,
 			mapHandlerRead<dWidth, aShift, Endian> *handler)
 	{
 		if (mirror != 0)
-			populate_mirror(start, end, start, end, mirror, handler);
+			populate_mirror(cty, start, end, start, end, mirror, handler);
 		else
-			populate_nomirror(start, end, start, end, handler);
+			populate_nomirror(cty, start, end, start, end, handler);
 	}
 
 	virtual void populate_mirror(const cty_t &cty, offs_t start, offs_t end, offs_t ostart, offs_t oend, offs_t mirror,
@@ -184,13 +184,13 @@ public:
 		return nullptr;
 	}
 
-	inline void populate(const cty_t &cty, offs_t address, offs_t &start, offs_t &end, offs_t mirror,
+	inline void populate(const cty_t &cty, offs_t &start, offs_t &end, offs_t mirror,
 			mapHandlerWrite<dWidth, aShift, Endian> *handler)
 	{
 		if (mirror != 0)
-			populate_mirror(start, end, start, end, mirror, handler);
+			populate_mirror(cty, start, end, start, end, mirror, handler);
 		else
-			populate_nomirror(start, end, start, end, handler);
+			populate_nomirror(cty, start, end, start, end, handler);
 	}
 
 	virtual void populate_mirror(const cty_t &cty, offs_t start, offs_t end, offs_t ostart, offs_t oend, offs_t mirror,
