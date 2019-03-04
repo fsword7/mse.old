@@ -139,6 +139,11 @@ public:
 
 	virtual uintx_t read(offs_t address, uintx_t mask) = 0;
 
+	virtual void *getAccess(offs_t offset) const
+	{
+		return nullptr;
+	}
+
 	inline void populate(const cty_t &cty, offs_t address, offs_t &start, offs_t &end, offs_t mirror,
 			mapReadHandlerEntry<dWidth, aShift, Endian> *handler)
 	{
@@ -173,6 +178,11 @@ public:
 	virtual ~mapWriteHandlerEntry() {}
 
 	virtual void write(offs_t address, uintx_t data, uintx_t mask) = 0;
+
+	virtual void *getAccess(offs_t offset) const
+	{
+		return nullptr;
+	}
 
 	inline void populate(const cty_t &cty, offs_t address, offs_t &start, offs_t &end, offs_t mirror,
 			mapWriteHandlerEntry<dWidth, aShift, Endian> *handler)

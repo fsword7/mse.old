@@ -35,6 +35,7 @@ set(mse_cpp_SRCS
 	emu/emufile.cpp
 	emu/map/map.cpp
 	emu/map/access.cpp
+	emu/map/hem.cpp
 	emu/map/hedr.cpp
 	emu/map/hedr0.cpp
 	emu/map/hedr1.cpp
@@ -100,6 +101,8 @@ set(mse_h_SRCS
 	emu/emufile.h
 	emu/map/map.h
 	emu/map/he.h
+	emu/map/hea.h
+	emu/map/hem.h
 	emu/map/hedr.h
 	emu/map/hedw.h
 	emu/map/heun.h
