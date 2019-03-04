@@ -49,7 +49,7 @@ private:
 };
 
 template<typename Signature>
-class device_delegate : named_delegate<Signature>
+class device_delegate : public named_delegate<Signature>
 {
 private:
 	using devbase = device_delegate<Signature>;
