@@ -130,7 +130,9 @@ public:
 	endian_t endian() const		{ return endianness; }
 
 	uint8_t data_width() const   { return dataWidth; }
+	uint8_t data_radix() const	{ return dataRadix; }
 	uint8_t address_width() const { return addrWidth; }
+	uint8_t addr_radix() const { return addrRadix; }
 	int8_t  address_shift() const { return addrShift; }
 	int8_t  page_shift() const   { return pageShift; }
 
@@ -153,12 +155,14 @@ public:
 	}
 
 private:
-	tag_t		*name;
-	endian_t	endianness;
-	uint8_t		dataWidth;
-	uint8_t		addrWidth;
-	int8_t		addrShift;
-	int8_t		pageShift;
+	tag_t		*name;			// Tag name
+	endian_t	endianness;		// Endianness type - Little or Big
+	uint8_t		dataWidth;		// Data bit width
+	uint8_t		dataRadix;		// Data radix
+	uint8_t		addrWidth;		// Address bit width
+	uint8_t		addrRadix;		// Address radix
+	int8_t		addrShift;		// Address shift
+	int8_t		pageShift;		// Page shift
 
 	mapConstructor internalMap;
 };
@@ -168,7 +172,10 @@ class mapAddressSpace
 protected:
 	mapAddressSpace(mapMemoryManager &manager, di_memory &memeory, int space);
 
-	inline void adjustAddresses(offs_t &start, offs_t &end, offs_t &mask, offs_t &mirror);
+	void adjustAddresses(offs_t &start, offs_t &end, offs_t &mask, offs_t &mirror);
+	void checkOptimizeMirror(const cty_t &cty, tag_t *func,
+			offs_t adrStart, offs_t adrEnd, offs_t adrMirror,
+			offs_t &nstart, offs_t &nend, offs_t &nmask, offs_t &nmirror);
 
 public:
 	virtual ~mapAddressSpace();
@@ -176,7 +183,9 @@ public:
 	mapMemoryManager &getManager() const { return manager; }
 
 	int data_width() const { return config.data_width(); }
+	int data_radix() const { return config.data_radix(); }
 	int addr_width() const { return config.address_width(); }
+	int addr_radix() const { return config.addr_radix(); }
 	int addr_shift() const { return config.address_shift(); }
 	endian_t endian() const { return config.endian(); }
 	uint64_t unmap() const { return unmapValue; }

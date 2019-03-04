@@ -55,11 +55,63 @@ mapAddressSpace::~mapAddressSpace()
 {
 }
 
-inline void mapAddressSpace::adjustAddresses(offs_t &start, offs_t &end, offs_t &mask, offs_t &mirror)
+void mapAddressSpace::adjustAddresses(offs_t &start, offs_t &end, offs_t &mask, offs_t &mirror)
 {
 	mask  &= addrMask;
 	start &= ~mirror & addrMask;
 	end   &= ~mirror & addrMask;
+}
+
+void mapAddressSpace::checkOptimizeMirror(const cty_t &cty, tag_t *func,
+		offs_t adrStart, offs_t adrEnd, offs_t adrMirror,
+		offs_t &nstart, offs_t &nend, offs_t &nmask, offs_t &nmirror)
+{
+	if (adrStart > adrEnd)
+		cty.printf("%s: (%s) In range %X-%X mirror %X, start address is after end address\n",
+			device.tagName(), func, adrStart, adrEnd, adrMirror);
+	if (adrStart & ~addrMask)
+		cty.printf("%s: (%s) In range %X-%X mirror %X, start address is outside of global address mask %X, did you mean %X?\n",
+			device.tagName(), func, adrStart, adrEnd, adrMirror, addrMask, adrStart & addrMask);
+	if (adrEnd & ~addrMask)
+		cty.printf("%s: (%s) In range %X-%X mirror %X, end address is outside of global address mask %X, did you mean %X?\n",
+			device.tagName(), func, adrStart, adrEnd, adrMirror, addrMask, adrEnd & addrMask);
+
+	offs_t lowMask = (config.address_width() >> (3 - config.address_shift())) - 1;
+
+	if (adrStart & lowMask)
+		cty.printf("%s: (%s) In range %X-%X mirror %X, start address has low bits set, did you mean %X?\n",
+			device.tagName(), func, adrStart, adrEnd, adrMirror, adrStart & ~lowMask);
+	if (adrEnd & lowMask)
+		cty.printf("%s: (%s) In range %X-%X mirror %X, end address has low bits set, did you mean %X?\n",
+			device.tagName(), func, adrStart, adrEnd, adrMirror, adrEnd & ~lowMask);
+
+
+	offs_t setBits = adrStart | adrEnd;
+	offs_t maskBits = adrStart ^ adrEnd;
+
+	if (adrMirror & ~addrMask)
+		cty.printf("%s: (%s) In range %X-%X mirror %X, mirror address is outside of global address mask %X, did you mean %X?\n",
+			device.tagName(), func, adrStart, adrEnd, adrMirror, addrMask, adrMirror & addrMask);
+	if (adrMirror & maskBits)
+		cty.printf("%s: (%s) In range %X-%X mirror %X, mirror address touches a changing address bit, did you mean %X?\n",
+			device.tagName(), func, adrStart, adrEnd, adrMirror, adrMirror & ~maskBits);
+	if (adrMirror & setBits)
+		cty.printf("%s: (%s) In range %X-%X mirror %X, mirror address touches a set address bit, did you mean %X?\n",
+			device.tagName(), func, adrStart, adrEnd, adrMirror, adrMirror & ~setBits);
+
+	nstart  = adrStart;
+	nend    = adrEnd;
+	nmask   = maskBits;
+	nmirror = adrMirror;
+
+//	if (nmirror && !(nstart & chgBits) && !((~nend) & chgBits)) {
+//		while (nmirror & (chgBits + 1)) {
+//			offs_t bit = nmirror & (chgBits+1));
+//			nmirror &= ~bit;
+//			nend |= bit;
+//			chgBits |= bit;
+//		}
+//	}
 }
 
 void mapAddressSpace::prepare(const cty_t &cty)
