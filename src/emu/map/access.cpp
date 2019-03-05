@@ -507,7 +507,7 @@ void mapMemoryManager::allocate(const cty_t &cty, di_memory &memory)
 		if (config != nullptr) {
 			cty.printf("%s: Allocating address space...\n", memory.getDevice()->tagName());
 
-			switch( config->address_width() | (4 - config->address_shift())) {
+			switch( config->data_width() | (4 - config->address_shift())) {
 			// 8-bit address width
 			case 8|(4-0):
 				if (config->endian() == endianBig)
