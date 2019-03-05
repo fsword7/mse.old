@@ -253,9 +253,13 @@ mapMemoryBank &mapAddressSpace::bankAllocate(tag_t *tag, offs_t adrStart, offs_t
 	offs_t adrMask = ~adrMirror;
 	adjustAddresses(adrStart, adrEnd, adrMask, adrMirror);
 
-	mapMemoryBank *bank = nullptr;
+	mapMemoryBank *bank = (tag != nullptr) ? manager.find(tag) : manager.find(*this, adrStart, adrEnd);
+
+	if (bank == nullptr)
+		manager.allocate(*this, adrStart, adrEnd, tag);
 
 	assert(bank != nullptr);
+	bank->addReference(*this, type);
 	return *bank;
 }
 
@@ -294,6 +298,40 @@ void mapMemoryManager::init(const cty_t &cty)
 	for (auto const memory : memories)
 		memory->locate(cty);
 
+}
+
+mapMemoryBank *mapMemoryManager::find(tag_t *tag) const
+{
+	auto bank = bankList.find(tag);
+	if (bank != bankList.end())
+		return bank->second;
+
+	return nullptr;
+}
+
+mapMemoryBank *mapMemoryManager::find(mapAddressSpace &space, offs_t adrStart, offs_t adrEnd)
+{
+	for (auto &bank : bankList)
+		if (bank.second->isAnonymous() &&
+			bank.second->hasReference(space, rwType::RW) &&
+			bank.second->matchExcatly(adrStart, adrEnd))
+			return bank.second;
+
+	return nullptr;
+}
+
+mapMemoryBank *mapMemoryManager::allocate(mapAddressSpace &space, offs_t adrStart, offs_t adrEnd, tag_t *tag)
+{
+	auto bank = new mapMemoryBank(space, bankList.size(), adrStart, adrEnd, tag);
+	std::string newTag;
+
+//	if (tag == nullptr) {
+//		newTag = strFormat("anon_%p", bank);
+//		tag = newTag.c_str();
+//	}
+
+	bankList.emplace(tag, std::move(bank));
+	return bankList.find(tag)->second;
 }
 
 mapMemoryRegion *mapMemoryManager::allocateRegion(tag_t *name, uint32_t length, uint8_t width, endian_t endian)

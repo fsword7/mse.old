@@ -471,6 +471,10 @@ public:
 
 	machine *sysMachine() { return system; }
 
+	mapMemoryBank *find(tag_t *tag) const;
+	mapMemoryBank *find(mapAddressSpace &space, offs_t adrStart, offs_t adrEnd);
+	mapMemoryBank *allocate(mapAddressSpace &space, offs_t adrStart, offs_t adrEnd, tag_t *tag);
+
 	const std::map<std::string, mapMemoryRegion *> &regions() const { return regionList; }
 	const std::map<std::string, mapMemoryBank *> &banks() const { return bankList; }
 	const std::map<std::string, mapMemoryShare *> &shares() const { return shareList; }

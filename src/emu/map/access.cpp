@@ -336,21 +336,21 @@ public:
 		offs_t nstart, nend, nmirror, nmask;
 		checkOptimizeMirror(cty, "setup_unmap_generic", adrStart, adrEnd, adrMirror, nstart, nend, nmirror, nmask);
 
-//		// Address space - read access
-//		if (type == rwType::READ || type == rwType::RW)
-//		{
-//			auto handler = static_cast<mapHandlerRead<dWidth, aShift, Endian> *>(quiet ? readNop : readUnmap);
-//			handler->ref();
-//			rootRead->populate(cty, nstart, nend, nmirror, handler);
-//		}
-//
-//		// Address space - write access
-//		if (type == rwType::WRITE || type == rwType::RW)
-//		{
-//			auto handler = static_cast<mapHandlerWrite<dWidth, aShift, Endian> *>(quiet ? writeNop : writeUnmap);
-//			handler->ref();
-//			rootWrite->populate(cty, nstart, nend, nmirror, handler);
-//		}
+		// Address space - read access
+		if (type == rwType::READ || type == rwType::RW)
+		{
+			auto handler = static_cast<mapHandlerRead<dWidth, aShift, Endian> *>(quiet ? readNop : readUnmap);
+			handler->ref();
+			rootRead->populate(cty, nstart, nend, nmirror, handler);
+		}
+
+		// Address space - write access
+		if (type == rwType::WRITE || type == rwType::RW)
+		{
+			auto handler = static_cast<mapHandlerWrite<dWidth, aShift, Endian> *>(quiet ? writeNop : writeUnmap);
+			handler->ref();
+			rootWrite->populate(cty, nstart, nend, nmirror, handler);
+		}
 
 //		invalidate_caches(type);
 	}
@@ -367,63 +367,63 @@ public:
 		offs_t nstart, nend, nmirror, nmask;
 		checkOptimizeMirror(cty, "setup_ram_generic", adrStart, adrEnd, adrMirror, nstart, nend, nmirror, nmask);
 
-//		// Address space - read access
-//		if (type == rwType::READ || type == rwType::RW)
-//		{
-//			mapMemoryBank &bank = bankAllocate(nullptr, adrStart, adrEnd, adrMirror, rwType::READ);
-//			if (base != nullptr)
-//				bank.setBase(base);
-//
-//			if (bank.base() == nullptr)
-//			{
-//				void *backing = findBackingMemory(cty, adrStart, adrEnd);
-//				if (backing != nullptr)
-//					bank.setBase(backing);
-//			}
-//
-//			if (bank.base() == nullptr)
-//			{
-//			}
-//
-//			auto handler = new mapHandlerReadMemory<dWidth, aShift, Endian>(this);
-//			if (bank.base())
-//				handler->setBase(static_cast<uintx_t *>(bank.base()));
-//			else {
-//
-//			}
-//
-//			handler->setAddressInfo(nstart, nend);
-//			rootRead->populate(cty, nstart, nend, nmirror, handler);
-//		}
-//
-//		// Address space - write access
-//		if (type == rwType::WRITE || type == rwType::RW)
-//		{
-//			mapMemoryBank &bank = bankAllocate(nullptr, adrStart, adrEnd, adrMirror, rwType::WRITE);
-//			if (base != nullptr)
-//				bank.setBase(base);
-//
-//			if (bank.base() == nullptr)
-//			{
-//				void *backing = findBackingMemory(cty, adrStart, adrEnd);
-//				if (backing != nullptr)
-//					bank.setBase(backing);
-//			}
-//
-//			if (bank.base() == nullptr)
-//			{
-//			}
-//
-//			auto handler = new mapHandlerWriteMemory<dWidth, aShift, Endian>(this);
-//			if (bank.base())
-//				handler->setBase(static_cast<uintx_t *>(bank.base()));
-//			else {
-//
-//			}
-//
-//			handler->setAddressInfo(nstart, nend);
-//			rootWrite->populate(cty, nstart, nend, nmirror, handler);
-//		}
+		// Address space - read access
+		if (type == rwType::READ || type == rwType::RW)
+		{
+			mapMemoryBank &bank = bankAllocate(nullptr, adrStart, adrEnd, adrMirror, rwType::READ);
+			if (base != nullptr)
+				bank.setBase(base);
+
+			if (bank.base() == nullptr)
+			{
+				void *backing = findBackingMemory(cty, adrStart, adrEnd);
+				if (backing != nullptr)
+					bank.setBase(backing);
+			}
+
+			if (bank.base() == nullptr)
+			{
+			}
+
+			auto handler = new mapHandlerReadMemory<dWidth, aShift, Endian>(this);
+			if (bank.base())
+				handler->setBase(static_cast<uintx_t *>(bank.base()));
+			else {
+
+			}
+
+			handler->setAddressInfo(nstart, nend);
+			rootRead->populate(cty, nstart, nend, nmirror, handler);
+		}
+
+		// Address space - write access
+		if (type == rwType::WRITE || type == rwType::RW)
+		{
+			mapMemoryBank &bank = bankAllocate(nullptr, adrStart, adrEnd, adrMirror, rwType::WRITE);
+			if (base != nullptr)
+				bank.setBase(base);
+
+			if (bank.base() == nullptr)
+			{
+				void *backing = findBackingMemory(cty, adrStart, adrEnd);
+				if (backing != nullptr)
+					bank.setBase(backing);
+			}
+
+			if (bank.base() == nullptr)
+			{
+			}
+
+			auto handler = new mapHandlerWriteMemory<dWidth, aShift, Endian>(this);
+			if (bank.base())
+				handler->setBase(static_cast<uintx_t *>(bank.base()));
+			else {
+
+			}
+
+			handler->setAddressInfo(nstart, nend);
+			rootWrite->populate(cty, nstart, nend, nmirror, handler);
+		}
 
 //		invalidate_caches(type);
 	}
@@ -438,25 +438,25 @@ public:
 		offs_t nstart, nend, nmirror, nmask;
 		checkOptimizeMirror(cty, "setup_bank_generic", adrStart, adrEnd, adrMirror, nstart, nend, nmirror, nmask);
 
-//		// Address space - read access
-//		if (rtag != "")
-//		{
-//			mapMemoryBank &bank = bankAllocate(rtag.c_str(), adrStart, adrEnd, adrMirror, rwType::READ);
-//
-//			auto handler = new mapHandlerReadMemoryBank<dWidth, aShift, Endian>(this, bank);
-//			handler->setAddressInfo(nstart, nend);
-//			rootRead->populate(cty, nstart, nend, nmirror, handler);
-//		}
-//
-//		// Address space - write access
-//		if (wtag != "")
-//		{
-//			mapMemoryBank &bank = bankAllocate(wtag.c_str(), adrStart, adrEnd, adrMirror, rwType::WRITE);
-//
-//			auto handler = new mapHandlerWriteMemoryBank<dWidth, aShift, Endian>(this, bank);
-//			handler->setAddressInfo(nstart, nend);
-//			rootWrite->populate(cty, nstart, nend, nmirror, handler);
-//		}
+		// Address space - read access
+		if (rtag != "")
+		{
+			mapMemoryBank &bank = bankAllocate(rtag.c_str(), adrStart, adrEnd, adrMirror, rwType::READ);
+
+			auto handler = new mapHandlerReadMemoryBank<dWidth, aShift, Endian>(this, bank);
+			handler->setAddressInfo(nstart, nend);
+			rootRead->populate(cty, nstart, nend, nmirror, handler);
+		}
+
+		// Address space - write access
+		if (wtag != "")
+		{
+			mapMemoryBank &bank = bankAllocate(wtag.c_str(), adrStart, adrEnd, adrMirror, rwType::WRITE);
+
+			auto handler = new mapHandlerWriteMemoryBank<dWidth, aShift, Endian>(this, bank);
+			handler->setAddressInfo(nstart, nend);
+			rootWrite->populate(cty, nstart, nend, nmirror, handler);
+		}
 
 //		invalidate_caches((rtag != "") ? (wtag != "") ? rwTypw::RW : rwType::READ : rwType::WRITE);
 	}
@@ -471,21 +471,21 @@ public:
 		offs_t nstart, nend, nmirror, nmask;
 		checkOptimizeMirror(cty, "setup_bank_generic", adrStart, adrEnd, adrMirror, nstart, nend, nmirror, nmask);
 
-//		// Address space - read access
-//		if (rbank != nullptr)
-//		{
-//			auto handler = new mapHandlerReadMemoryBank<dWidth, aShift, Endian>(this, *rbank);
-//			handler->setAddressInfo(nstart, nend);
-//			rootRead->populate(cty, nstart, nend, nmirror, handler);
-//		}
-//
-//		// Address space - write access
-//		if (wbank != nullptr)
-//		{
-//			auto handler = new mapHandlerWriteMemoryBank<dWidth, aShift, Endian>(this, *wbank);
-//			handler->setAddressInfo(nstart, nend);
-//			rootWrite->populate(cty, nstart, nend, nmirror, handler);
-//		}
+		// Address space - read access
+		if (rbank != nullptr)
+		{
+			auto handler = new mapHandlerReadMemoryBank<dWidth, aShift, Endian>(this, *rbank);
+			handler->setAddressInfo(nstart, nend);
+			rootRead->populate(cty, nstart, nend, nmirror, handler);
+		}
+
+		// Address space - write access
+		if (wbank != nullptr)
+		{
+			auto handler = new mapHandlerWriteMemoryBank<dWidth, aShift, Endian>(this, *wbank);
+			handler->setAddressInfo(nstart, nend);
+			rootWrite->populate(cty, nstart, nend, nmirror, handler);
+		}
 
 //		invalidate_caches((rbank != nullptr) ? (wbank != nullptr) ? rwTypw::RW : rwType::READ : rwType::WRITE);
 	}
