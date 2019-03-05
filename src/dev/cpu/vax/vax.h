@@ -483,7 +483,7 @@ class vax_cpu_base : public cpu_device
 {
 public:
 	vax_cpu_base(const system_config &config, const device_type_base &type,
-			tag_t *tag, device_t *owner, uint64_t clock);
+			tag_t *tag, device_t *owner, uint64_t clock, uint8_t dWidth, uint8_t aWidth);
 	virtual ~vax_cpu_base();
 
 	void buildOpcodes();

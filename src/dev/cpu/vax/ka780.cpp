@@ -19,7 +19,7 @@
 DEFINE_DEVICE_TYPE(KA780, ka780_cpu, "KA780", "VAX-11/780")
 
 ka780_cpu::ka780_cpu(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock)
-: vax_cpu_base(config, KA780, tag, owner, clock)
+: vax_cpu_base(config, KA780, tag, owner, clock, 32, 32)
 {
 }
 
