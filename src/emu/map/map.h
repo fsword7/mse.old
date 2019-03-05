@@ -198,7 +198,7 @@ public:
 	void locate(const cty_t &cty);
 
 	void *findBackingMemory(const cty_t &cty, offs_t adrStart, offs_t adrEnd);
-	mapMemoryBank &bankAllocate(tag_t *tag, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, rwType type);
+	mapMemoryBank &allocateBank(tag_t *tag, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, rwType type);
 
 	virtual void setup_unmap_generic(const cty_t &cty, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, rwType type, bool quiet) = 0;
 	virtual void setup_ram_generic(const cty_t &cty, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, rwType type, void *base) = 0;
@@ -473,7 +473,7 @@ public:
 
 	mapMemoryBank *find(tag_t *tag) const;
 	mapMemoryBank *find(mapAddressSpace &space, offs_t adrStart, offs_t adrEnd);
-	mapMemoryBank *allocate(mapAddressSpace &space, offs_t adrStart, offs_t adrEnd, tag_t *tag);
+	mapMemoryBank *allocateBank(mapAddressSpace &space, offs_t adrStart, offs_t adrEnd, tag_t *tag);
 
 	const std::map<std::string, mapMemoryRegion *> &regions() const { return regionList; }
 	const std::map<std::string, mapMemoryBank *> &banks() const { return bankList; }

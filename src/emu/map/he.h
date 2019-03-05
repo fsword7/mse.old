@@ -156,13 +156,13 @@ public:
 	virtual void populate_mirror(const cty_t &cty, offs_t start, offs_t end, offs_t ostart, offs_t oend, offs_t mirror,
 			mapHandlerRead<dWidth, aShift, Endian> *handler)
 	{
-		cty.printf("%s: Populate (mirror) called on non-dispatching read class\n", name());
+		cty.printf("%s: Populate (mirror) called on non-dispatching read class\n", name().c_str());
 	}
 
 	virtual void populate_nomirror(const cty_t &cty, offs_t start, offs_t end, offs_t ostart, offs_t oend,
 			mapHandlerRead<dWidth, aShift, Endian> *handler)
 	{
-		cty.printf("%s: Populate (nomirror) called on non-dispatching read class\n", name());
+		cty.printf("%s: Populate (nomirror) called on non-dispatching read class\n", name().c_str());
 	}
 
 };
@@ -196,13 +196,13 @@ public:
 	virtual void populate_mirror(const cty_t &cty, offs_t start, offs_t end, offs_t ostart, offs_t oend, offs_t mirror,
 			mapHandlerWrite<dWidth, aShift, Endian> *handler)
 	{
-		cty.printf("%s: Populate (mirror) called on non-dispatching write class\n", name());
+		cty.printf("%s: Populate (mirror) called on non-dispatching write class\n", name().c_str());
 	}
 
 	virtual void populate_nomirror(const cty_t &cty, offs_t start, offs_t end, offs_t ostart, offs_t oend,
 			mapHandlerWrite<dWidth, aShift, Endian> *handler)
 	{
-		cty.printf("%s: Populate (nomirror) called on non-dispatching write class\n", name());
+		cty.printf("%s: Populate (nomirror) called on non-dispatching write class\n", name().c_str());
 	}
 
 };

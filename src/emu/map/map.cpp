@@ -81,9 +81,9 @@ void mapAddressSpace::checkOptimizeMirror(const cty_t &cty, tag_t *func,
 	if (adrStart & lowMask)
 		cty.printf("%s: (%s) In range %X-%X mirror %X, start address has low bits set, did you mean %X?\n",
 			device.tagName(), func, adrStart, adrEnd, adrMirror, adrStart & ~lowMask);
-	if (adrEnd & lowMask)
-		cty.printf("%s: (%s) In range %X-%X mirror %X, end address has low bits set, did you mean %X?\n",
-			device.tagName(), func, adrStart, adrEnd, adrMirror, adrEnd & ~lowMask);
+	if ((~adrEnd) & lowMask)
+		cty.printf("%s: (%s) In range %X-%X mirror %X, end address has low bits unset, did you mean %X?\n",
+			device.tagName(), func, adrStart, adrEnd, adrMirror, adrEnd | lowMask);
 
 
 	offs_t setBits = adrStart | adrEnd;
@@ -248,7 +248,7 @@ void *mapAddressSpace::findBackingMemory(const cty_t &cty, offs_t adrStart, offs
 	return nullptr;
 }
 
-mapMemoryBank &mapAddressSpace::bankAllocate(tag_t *tag, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, rwType type)
+mapMemoryBank &mapAddressSpace::allocateBank(tag_t *tag, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, rwType type)
 {
 	offs_t adrMask = ~adrMirror;
 	adjustAddresses(adrStart, adrEnd, adrMask, adrMirror);
@@ -256,7 +256,7 @@ mapMemoryBank &mapAddressSpace::bankAllocate(tag_t *tag, offs_t adrStart, offs_t
 	mapMemoryBank *bank = (tag != nullptr) ? manager.find(tag) : manager.find(*this, adrStart, adrEnd);
 
 	if (bank == nullptr)
-		manager.allocate(*this, adrStart, adrEnd, tag);
+		bank = manager.allocateBank(*this, adrStart, adrEnd, tag);
 
 	assert(bank != nullptr);
 	bank->addReference(*this, type);
@@ -320,15 +320,18 @@ mapMemoryBank *mapMemoryManager::find(mapAddressSpace &space, offs_t adrStart, o
 	return nullptr;
 }
 
-mapMemoryBank *mapMemoryManager::allocate(mapAddressSpace &space, offs_t adrStart, offs_t adrEnd, tag_t *tag)
+mapMemoryBank *mapMemoryManager::allocateBank(mapAddressSpace &space, offs_t adrStart, offs_t adrEnd, tag_t *tag)
 {
 	auto bank = new mapMemoryBank(space, bankList.size(), adrStart, adrEnd, tag);
-	std::string newTag;
+//	std::string newTag;
+	char newTag[1024];
 
-//	if (tag == nullptr) {
+	if (tag == nullptr) {
 //		newTag = strFormat("anon_%p", bank);
 //		tag = newTag.c_str();
-//	}
+		sprintf(newTag, "anon_%p", bank);
+		tag = newTag;
+	}
 
 	bankList.emplace(tag, std::move(bank));
 	return bankList.find(tag)->second;
