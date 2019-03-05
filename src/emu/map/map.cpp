@@ -329,6 +329,34 @@ mapMemoryBlock::mapMemoryBlock(mapAddressSpace &space, offs_t start, offs_t end,
 	}
 }
 
+// ********************************************************************
+
+mapMemoryBank::mapMemoryBank(mapAddressSpace &space, int index, offs_t sAddr, offs_t eAddr, tag_t *tag)
+: system(*space.getManager().sysMachine()),
+  space(space),
+  anonymous(tag == nullptr),
+  start(sAddr),
+  end(eAddr),
+  current(0)
+{
+	if (tag == nullptr) {
+//		tagName  = strFormat("%d", index);
+//		bankName = strFormat("Internal bank #%d", index);
+		strTagName = "";
+		strBankName = "";
+	} else {
+		strTagName = tag;
+		strBankName = tag;
+//		bankName = strFormat("Bank '%s'", tag);
+	}
+
+	// save manager
+}
+
+mapMemoryBank::~mapMemoryBank()
+{
+}
+
 void mapMemoryBank::setBase(void *base)
 {
 	if (base == nullptr)
@@ -340,4 +368,60 @@ void mapMemoryBank::setBase(void *base)
 	}
 
 	entries[current] = reinterpret_cast<uint8_t *>(base);
+
+	// Notify devices about that
+	for (auto cb : notifiers)
+		cb(base);
+	notifiers.clear();
+}
+
+void mapMemoryBank::addReference(mapAddressSpace &space, rwType type)
+{
+	if (hasReference(space, type))
+		return;
+	refList.push_back(new bankReference(space, type));
+}
+
+bool mapMemoryBank::hasReference(const mapAddressSpace &space, rwType type) const
+{
+	for (auto &ref : refList)
+		if (ref->matches(space, type))
+			return true;
+	return false;
+}
+
+void mapMemoryBank::addNotifier(std::function<void (void *)> cb)
+{
+	notifiers.emplace_back(cb);
+}
+
+void mapMemoryBank::setEntry(int entry)
+{
+	if (anonymous == true)
+		return;
+	if (entry < 0 || entry >= entries.size())
+		return;
+	if (entries[entry] == nullptr)
+		return;
+
+	current = entry;
+}
+
+void mapMemoryBank::configureEntry(int entry, void *base)
+{
+	if (entry < 0)
+		return;
+	if (entry >= entries.size())
+		entries.resize(entry+1);
+
+	entries[entry] = reinterpret_cast<uint8_t *>(base);
+}
+
+void mapMemoryBank::configureEntries(int sEntry, int nEntries, void *base, offs_t stride)
+{
+	if (sEntry + nEntries >= entries.size())
+		entries.resize(sEntry + nEntries + 1);
+
+	for (int entry = 0; entry < nEntries; entry++)
+		entries[sEntry + entry] = reinterpret_cast<uint8_t *>(base) + (entry * stride);
 }

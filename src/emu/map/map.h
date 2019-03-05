@@ -333,41 +333,73 @@ private:
 
 class mapMemoryBank
 {
+	class bankReference
+	{
+	public:
+		bankReference(mapAddressSpace &space, rwType type)
+		: adrSpace(space), accessType(type)
+		{}
+
+		mapAddressSpace &space() const { return adrSpace; }
+
+		bool matches(const mapAddressSpace &space, rwType type) const
+		{
+			return (&space == &adrSpace && (type == rwType::RW || type == accessType));
+		}
+
+	private:
+		mapAddressSpace &adrSpace;
+		rwType accessType;
+	};
+
 public:
-	mapMemoryBank(mapAddressSpace &space, offs_t start, offs_t end, tag_t *tag = nullptr)
-	: space(space), start(start), end(end), tag(tag)
-	{ }
+	mapMemoryBank(mapAddressSpace &space, int index, offs_t start, offs_t end, tag_t *tag = nullptr);
+	~mapMemoryBank();
 
-	const std::string &tagName() const { return tag; }
+//	const std::string &tagName() const { return tag; }
 
-//	machine &sysMachine() { return system; }
+	machine &sysMachine() { return system; }
 	int  entry() const { return current; }
-	bool anonymous() const { return flagAnonymous; }
+	bool isAnonymous() const { return anonymous; }
 	offs_t addrStart() const { return start; }
-//	tag_t *name() const { return bankName.c_str(); }
-//	tag_t *tag() const { return tagName.c_str(); }
+	tag_t *bankName() const { return strBankName.c_str(); }
+	tag_t *tagName() const { return strTagName.c_str(); }
+
+	bool matchExcatly(offs_t adrStart, offs_t adrEnd) const
+		{ return (start == adrStart) && (end == adrEnd); }
+	bool coverFully(offs_t adrStart, offs_t adrEnd) const
+		{ return (start <= adrStart) && (end >= adrEnd); }
+	bool isCoveredBy(offs_t adrStart, offs_t adrEnd) const
+		{ return (start >= adrStart) && (end <= adrEnd); }
+	bool straddles(offs_t adrStart, offs_t adrEnd) const
+		{ return (start < adrStart) && (end > adrEnd); }
 
 	void *base() const
-	{
-		return !entries.empty() ? entries[current] : nullptr;
-	}
+		{ return !entries.empty() ? entries[current] : nullptr; }
 
 	void setBase(void *base);
+	void addNotifier(std::function<void (void *)> cb);
+
+	void addReference(mapAddressSpace &space, rwType type);
+	bool hasReference(const mapAddressSpace &space, rwType type) const;
 
 	// Configure/set entries
-//	void configureEntry(int entry, void *base);
-//	void configureEntries(int sEntry, int nEntries, void *base, offs_t stride);
-//	void setEntry(int entry);
+	void configureEntry(int entry, void *base);
+	void configureEntries(int sEntry, int nEntries, void *base, offs_t stride);
+	void setEntry(int entry);
 
 private:
-//	machine			&system;
+	machine			&system;
 	mapAddressSpace &space;
+	bool			anonymous;
 	offs_t			start, end;
 	int				current;
+	std::string		strBankName;
+	std::string		strTagName;
+
 	std::vector<uint8_t *> entries;
-	bool			flagAnonymous;
-	std::string		bank;
-	std::string		tag;
+	std::vector<bankReference *> refList;
+	std::vector<std::function<void (void *)>> notifiers;
 };
 
 class mapMemoryShare
