@@ -1,20 +1,19 @@
 /*
- * emumap_hedr.cpp
+ * hedw.cpp
  *
- *  Created on: Feb 14, 2019
+ *  Created on: Mar 5, 2019
  *      Author: Tim Stark
  */
 
 #include "emu/emucore.h"
-#include "emu/map/hedr.h"
-//#include "emu/map/hedri.h"
+#include "emu/map/hedw.h"
 
 template <int highBits, int dWidth, int aShift, int Endian>
-void mapHandlerReadDispatch<highBits, dWidth, aShift, Endian>::range_cut_before(offs_t address, int start)
+void mapHandlerWriteDispatch<highBits, dWidth, aShift, Endian>::range_cut_before(offs_t address, int start)
 {
 	while (--start >= 0) {
 		if (int(lowBits) > -aShift && dispatch[start]->isDispatch()) {
-			static_cast<mapHandlerReadDispatch<lowBits, dWidth, aShift, Endian> *>(dispatch[start])->range_cut_before(address);
+			static_cast<mapHandlerWriteDispatch<lowBits, dWidth, aShift, Endian> *>(dispatch[start])->range_cut_before(address);
 			break;
 		}
 		if (ranges[start].end <= address)
@@ -24,11 +23,11 @@ void mapHandlerReadDispatch<highBits, dWidth, aShift, Endian>::range_cut_before(
 }
 
 template <int highBits, int dWidth, int aShift, int Endian>
-void mapHandlerReadDispatch<highBits, dWidth, aShift, Endian>::range_cut_after(offs_t address, int start)
+void mapHandlerWriteDispatch<highBits, dWidth, aShift, Endian>::range_cut_after(offs_t address, int start)
 {
 	while (++start < count) {
 		if (int(lowBits) > -aShift && dispatch[start]->isDispatch()) {
-			static_cast<mapHandlerReadDispatch<lowBits, dWidth, aShift, Endian> *>(dispatch[start])->range_cut_after(address);
+			static_cast<mapHandlerWriteDispatch<lowBits, dWidth, aShift, Endian> *>(dispatch[start])->range_cut_after(address);
 			break;
 		}
 		if (ranges[start].start <= address)
@@ -38,14 +37,14 @@ void mapHandlerReadDispatch<highBits, dWidth, aShift, Endian>::range_cut_after(o
 }
 
 template <int highBits, int dWidth, int aShift, int Endian>
-void mapHandlerReadDispatch<highBits, dWidth, aShift, Endian>::populate_mirror_subdispatch(const cty_t &cty, offs_t entry, offs_t start, offs_t end, offs_t ostart, offs_t oend,
-	offs_t mirror, mapHandlerRead<dWidth, aShift, Endian> *handler)
+void mapHandlerWriteDispatch<highBits, dWidth, aShift, Endian>::populate_mirror_subdispatch(const cty_t &cty, offs_t entry, offs_t start, offs_t end, offs_t ostart, offs_t oend,
+	offs_t mirror, mapHandlerWrite<dWidth, aShift, Endian> *handler)
 {
 	auto cur = dispatch[entry];
 	if (cur->isDispatch())
 		cur->populate_mirror(cty, start, end, ostart, oend, mirror, handler);
 	else {
-		auto subDispatch = new mapHandlerReadDispatch<lowBits, dWidth, aShift, Endian>(mapHandlerEntry::space, ranges[entry], cur);
+		auto subDispatch = new mapHandlerWriteDispatch<lowBits, dWidth, aShift, Endian>(mapHandlerEntry::space, ranges[entry], cur);
 		cur->unref();
 		dispatch[entry] = subDispatch;
 		subDispatch->populate_mirror(cty, start, end, ostart, oend, mirror, handler);
@@ -53,14 +52,14 @@ void mapHandlerReadDispatch<highBits, dWidth, aShift, Endian>::populate_mirror_s
 }
 
 template <int highBits, int dWidth, int aShift, int Endian>
-void mapHandlerReadDispatch<highBits, dWidth, aShift, Endian>::populate_nomirror_subdispatch(const cty_t &cty, offs_t entry, offs_t start, offs_t end, offs_t ostart, offs_t oend,
-	mapHandlerRead<dWidth, aShift, Endian> *handler)
+void mapHandlerWriteDispatch<highBits, dWidth, aShift, Endian>::populate_nomirror_subdispatch(const cty_t &cty, offs_t entry, offs_t start, offs_t end, offs_t ostart, offs_t oend,
+	mapHandlerWrite<dWidth, aShift, Endian> *handler)
 {
 	auto cur = dispatch[entry];
 	if (cur->isDispatch())
 		cur->populate_nomirror(cty, start, end, ostart, oend, handler);
 	else {
-		auto subDispatch = new mapHandlerReadDispatch<lowBits, dWidth, aShift, Endian>(mapHandlerEntry::space, ranges[entry], cur);
+		auto subDispatch = new mapHandlerWriteDispatch<lowBits, dWidth, aShift, Endian>(mapHandlerEntry::space, ranges[entry], cur);
 		cur->unref();
 		dispatch[entry] = subDispatch;
 		subDispatch->populate_nomirror(cty, start, end, ostart, oend, handler);
@@ -68,8 +67,8 @@ void mapHandlerReadDispatch<highBits, dWidth, aShift, Endian>::populate_nomirror
 }
 
 template <int highBits, int dWidth, int aShift, int Endian>
-void mapHandlerReadDispatch<highBits, dWidth, aShift, Endian>::populate_mirror(const cty_t &cty, offs_t start, offs_t end, offs_t ostart, offs_t oend,
-	offs_t mirror, mapHandlerRead<dWidth, aShift, Endian> *handler)
+void mapHandlerWriteDispatch<highBits, dWidth, aShift, Endian>::populate_mirror(const cty_t &cty, offs_t start, offs_t end, offs_t ostart, offs_t oend,
+	offs_t mirror, mapHandlerWrite<dWidth, aShift, Endian> *handler)
 {
 	offs_t hmirror = mirror & highMask;
 	offs_t lmirror = mirror & lowMask;
@@ -105,8 +104,8 @@ void mapHandlerReadDispatch<highBits, dWidth, aShift, Endian>::populate_mirror(c
 }
 
 template <int highBits, int dWidth, int aShift, int Endian>
-void mapHandlerReadDispatch<highBits, dWidth, aShift, Endian>::populate_nomirror(const cty_t &cty, offs_t start, offs_t end, offs_t ostart, offs_t oend,
-	mapHandlerRead<dWidth, aShift, Endian> *handler)
+void mapHandlerWriteDispatch<highBits, dWidth, aShift, Endian>::populate_nomirror(const cty_t &cty, offs_t start, offs_t end, offs_t ostart, offs_t oend,
+	mapHandlerWrite<dWidth, aShift, Endian> *handler)
 {
 	offs_t sEntry = start >> lowBits;
 	offs_t eEntry = end >> lowBits;
@@ -152,31 +151,4 @@ void mapHandlerReadDispatch<highBits, dWidth, aShift, Endian>::populate_nomirror
 	}
 }
 
-//template<int highBits, int dWidth, int aShift, endian_t Endian>
-//mapReadHandlerDispatch<highBits, dWidth, aShift, Endian>::mapReadHandlerDispatch(mapAddressSpace *space,
-//		const mapHandlerEntry::range &init,
-//		mapReadHandlerEntry<dWidth, aShift, Endian> *handler)
-//: mapReadHandlerEntry<dWidth, aShift, Endian>(space, mapHandlerEntry::heDispatch)
-//{
-//	if (handler == nullptr)
-//		handler = space->getReadUnmap<dWidth, aShift, Endian>();
-//
-//	for (unsigned int idx = 0; idx != count; idx++) {
-//		dispatch[idx] = handler;
-//		ranges[idx] = init;
-//	}
-//}
-//
-//
-//template<int highBits, int dWidth, int aShift, endian_t Endian>
-//mapReadHandlerDispatch<highBits, dWidth, aShift, Endian>::~mapReadHandlerDispatch()
-//{
-//	for (unsigned int idx = 0; idx != count; idx++)
-//		dispatch[idx]->unref();
-//}
-//
-//template<int highBits, int dWidth, int aShift, endian_t Endian>
-//typename mapHandlerSize<dWidth>::uintx_t mapReadHandlerDispatch<highBits, dWidth, aShift, Endian>::read(offs_t offset, uintx_t mask)
-//{
-//	return dispatch[(offset >> lowBits) & bitMask]->read(offset, mask);
-//}
+

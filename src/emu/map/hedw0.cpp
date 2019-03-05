@@ -7,7 +7,7 @@
 
 #include "emu/emucore.h"
 #include "emu/map/hedw.h"
-#include "emu/map/hedwi.h"
+//#include "emu/map/hedwi.h"
 
 //template class mapHandlerWriteDispatch< 1, 0, 0, endianLittle>;
 //template class mapHandlerWriteDispatch< 1, 0, 0, endianBig>;
