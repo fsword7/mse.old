@@ -7,6 +7,7 @@
 
 #include "emu/emucore.h"
 #include "emu/map/hedr.h"
+#include "emu/map/hedri.h"
 
 template class mapHandlerReadDispatch<25, 0, 0, endianLittle>;
 template class mapHandlerReadDispatch<25, 0, 0, endianBig>;

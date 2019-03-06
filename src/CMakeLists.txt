@@ -36,12 +36,10 @@ set(mse_cpp_SRCS
 	emu/map/map.cpp
 	emu/map/access.cpp
 	emu/map/hem.cpp
-	emu/map/hedr.cpp
 	emu/map/hedr0.cpp
 	emu/map/hedr1.cpp
 	emu/map/hedr2.cpp
 	emu/map/hedr3.cpp
-	emu/map/hedw.cpp
 	emu/map/hedw0.cpp
 	emu/map/hedw1.cpp
 	emu/map/hedw2.cpp
@@ -110,7 +108,9 @@ set(mse_h_SRCS
 	emu/map/hea.h
 	emu/map/hem.h
 	emu/map/hedr.h
+	emu/map/hedri.h
 	emu/map/hedw.h
+	emu/map/hedwi.h
 	emu/map/heun.h
 	emu/engine.h
 	emu/exception.h

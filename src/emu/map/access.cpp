@@ -52,18 +52,18 @@ public:
 		switch (addrWidth) {
 
 		case 1:
-			rootRead  = new mapHandlerReadDispatch<1, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapHandlerWriteDispatch<1, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<std::max(1, dWidth), dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<std::max(1, dWidth), dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 2:
-			rootRead  = new mapHandlerReadDispatch<2, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapHandlerWriteDispatch<2, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<std::max(2, dWidth), dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<std::max(2, dWidth), dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 3:
-			rootRead  = new mapHandlerReadDispatch<3, dWidth, aShift, Endian>(this, r, nullptr);
-			rootWrite = new mapHandlerWriteDispatch<3, dWidth, aShift, Endian>(this, r, nullptr);
+			rootRead  = new mapHandlerReadDispatch<std::max(3, dWidth), dWidth, aShift, Endian>(this, r, nullptr);
+			rootWrite = new mapHandlerWriteDispatch<std::max(3, dWidth), dWidth, aShift, Endian>(this, r, nullptr);
 			break;
 
 		case 4:
