@@ -15,7 +15,9 @@ mapAddressEntry::mapAddressEntry(device_t &_dev, mapAddress &_map, offs_t start,
 : mapNext(nullptr), map(_map), device(_dev),
   adrStart(start), adrEnd(end),
   adrMask(0), adrMirror(0), adrSelect(0),
-  tagShare(nullptr), submapDevice(nullptr)
+  tagShare(nullptr), tagRegion(nullptr),
+  rgnOffset(0), memory(nullptr),
+  submapDevice(nullptr)
 {
 
 }
