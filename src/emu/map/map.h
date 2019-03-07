@@ -213,11 +213,11 @@ public:
 
 	template<int dWidth, int aShift, int Endian>
 	mapHandlerReadUnmapped<dWidth, aShift, Endian> *getReadUnmap() const
-	{ return nullptr; /* static_cast<mapHandlerReadUnmapped<dWidth, aShift, Endian>> readUnmap; */ }
+	{ return static_cast<mapHandlerReadUnmapped<dWidth, aShift, Endian> *>(readUnmap); }
 
 	template<int dWidth, int aShift, int Endian>
 	mapHandlerWriteUnmapped<dWidth, aShift, Endian> *getWriteUnmap() const
-	{ return nullptr; /* static_cast<mapHandlerWriteUnmapped<dWidth, aShift, Endian>> writeUnmap; */ }
+	{ return static_cast<mapHandlerWriteUnmapped<dWidth, aShift, Endian> *>(writeUnmap); }
 
 	// read accessors
 //	virtual uint8_t read8(offs_t address) = 0;
