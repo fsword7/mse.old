@@ -61,7 +61,7 @@ protected:
 	static constexpr uint32_t count = 1 << bitCount;
 	static constexpr offs_t   bitMask = makeBitMask<offs_t>(bitCount);
 	static constexpr offs_t   lowMask = makeBitMask<offs_t>(lowBits);
-	static constexpr offs_t   highMask = makeBitMask<offs_t>(highBits) - lowMask;
+	static constexpr offs_t   highMask = makeBitMask<offs_t>(highBits) ^ lowMask;
 	static constexpr offs_t   upMask = makeBitMask<offs_t>(highBits);
 
 	mapHandlerRead<dWidth, aShift, Endian> *dispatch[count];

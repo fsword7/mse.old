@@ -39,6 +39,9 @@ template <int highBits, int dWidth, int aShift, int Endian>
 void mapHandlerReadDispatch<highBits, dWidth, aShift, Endian>::populate_mirror_subdispatch(const cty_t &cty, offs_t entry, offs_t start, offs_t end, offs_t ostart, offs_t oend,
 	offs_t mirror, mapHandlerRead<dWidth, aShift, Endian> *handler)
 {
+	cty.printf("%s: (R) %08X-%08X (%08X-%08X) - entry %08X mirror %08X  %p\n",
+		name().c_str(), start, end, ostart, oend, entry, mirror, handler);
+
 	auto cur = dispatch[entry];
 	if (cur->isDispatch())
 		cur->populate_mirror(cty, start, end, ostart, oend, mirror, handler);
@@ -54,6 +57,9 @@ template <int highBits, int dWidth, int aShift, int Endian>
 void mapHandlerReadDispatch<highBits, dWidth, aShift, Endian>::populate_nomirror_subdispatch(const cty_t &cty, offs_t entry, offs_t start, offs_t end, offs_t ostart, offs_t oend,
 	mapHandlerRead<dWidth, aShift, Endian> *handler)
 {
+	cty.printf("%s: (R) %08X-%08X (%08X-%08X) - entry %08X %p\n",
+		name().c_str(), start, end, ostart, oend, entry, handler);
+
 	auto cur = dispatch[entry];
 	if (cur->isDispatch())
 		cur->populate_nomirror(cty, start, end, ostart, oend, handler);
@@ -71,6 +77,11 @@ void mapHandlerReadDispatch<highBits, dWidth, aShift, Endian>::populate_mirror(c
 {
 	offs_t hmirror = mirror & highMask;
 	offs_t lmirror = mirror & lowMask;
+
+	cty.printf("%s: (R) High bits %d  low bits %d  bit count %d  count %d  bit mask %08X low %08X high %08X up %08X\n",
+		name().c_str(), highBits, lowBits, bitCount, count, bitMask, lowMask, highMask, upMask);
+	cty.printf("%s: (R) %08X-%08X (%08X-%08X) - mirror %08X -> %08X (%08X) %08X (%08X)  %p\n",
+		name().c_str(), start, end, ostart, oend, mirror, hmirror, highMask, lmirror, lowMask, handler);
 
 	if (lmirror != 0) {
 		// Non-zero low mirror bits
@@ -108,6 +119,11 @@ void mapHandlerReadDispatch<highBits, dWidth, aShift, Endian>::populate_nomirror
 {
 	offs_t sEntry = start >> lowBits;
 	offs_t eEntry = end >> lowBits;
+
+	cty.printf("%s: (R) High bits %d  low bits %d  bit count %d  count %d  mask %08X low %08X high %08X up %08X\n",
+		name().c_str(), highBits, lowBits, bitCount, count, bitMask, lowMask, highMask, upMask);
+	cty.printf("%s: (R) %08X-%08X (%08X-%08X) - entry %08X-%08X  %p\n",
+		name().c_str(), start, end, ostart, oend, sEntry, eEntry, handler);
 
 	range_cut_before(ostart-1, sEntry);
 	range_cut_after(oend+1, eEntry);
