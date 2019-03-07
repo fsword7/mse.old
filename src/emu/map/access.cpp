@@ -334,7 +334,7 @@ public:
 				quiet ? "quiet" : "normal");
 
 		offs_t nstart, nend, nmirror, nmask;
-		checkOptimizeMirror(cty, "setup_unmap_generic", adrStart, adrEnd, adrMirror, nstart, nend, nmirror, nmask);
+		checkOptimizeMirror(cty, "setup_unmap_generic", adrStart, adrEnd, adrMirror, nstart, nend, nmask, nmirror);
 
 		// Address space - read access
 		if (type == rwType::READ || type == rwType::RW)
@@ -365,7 +365,7 @@ public:
 				base);
 
 		offs_t nstart, nend, nmirror, nmask;
-		checkOptimizeMirror(cty, "setup_ram_generic", adrStart, adrEnd, adrMirror, nstart, nend, nmirror, nmask);
+		checkOptimizeMirror(cty, "setup_ram_generic", adrStart, adrEnd, adrMirror, nstart, nend, nmask, nmirror);
 
 		// Address space - read access
 		if (type == rwType::READ || type == rwType::RW)
@@ -436,7 +436,7 @@ public:
 				!wtag.empty() ? wtag.c_str() : "(none)");
 
 		offs_t nstart, nend, nmirror, nmask;
-		checkOptimizeMirror(cty, "setup_bank_generic", adrStart, adrEnd, adrMirror, nstart, nend, nmirror, nmask);
+		checkOptimizeMirror(cty, "setup_bank_generic", adrStart, adrEnd, adrMirror, nstart, nend, nmask, nmirror);
 
 		// Address space - read access
 		if (rtag != "")
@@ -469,7 +469,7 @@ public:
 				(wbank != nullptr) ? wbank->tagName() : "(none)");
 
 		offs_t nstart, nend, nmirror, nmask;
-		checkOptimizeMirror(cty, "setup_bank_generic", adrStart, adrEnd, adrMirror, nstart, nend, nmirror, nmask);
+		checkOptimizeMirror(cty, "setup_bank_generic", adrStart, adrEnd, adrMirror, nstart, nend, nmask, nmirror);
 
 		// Address space - read access
 		if (rbank != nullptr)
