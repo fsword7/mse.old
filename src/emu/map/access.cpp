@@ -33,11 +33,15 @@ typename mapHandlerSize<tWidth>::uintx_t mapReadGeneric(T rop, offs_t address,
 	static constexpr uint32_t nativeStep = aShift >= 0 ? nativeBytes << labs(aShift) : nativeBytes >> labs(aShift);
 	static constexpr uint32_t nativeMask = nativeStep - 1;
 
+	// If address is aligned, simple pass-through to the native reader
+	if ((nativeBytes == targetBytes) && (Aligned || (address & nativeMask) == 0))
+		return rop(address & ~nativeMask, mask);
+
 	return 0;
 }
 
 template <int dWidth, int aShift, int Endian, int tWidth, bool Aligned, typename T>
-void mapWriteGeneric(T rop, offs_t address,
+void mapWriteGeneric(T wop, offs_t address,
 		typename mapHandlerSize<tWidth>::uintx_t data, typename mapHandlerSize<tWidth>::uintx_t mask)
 {
 	using targetType = typename mapHandlerSize<tWidth>::uintx_t;
@@ -49,6 +53,10 @@ void mapWriteGeneric(T rop, offs_t address,
 	static constexpr uint32_t nativeBits = 8 * nativeBytes;
 	static constexpr uint32_t nativeStep = aShift >= 0 ? nativeBytes << labs(aShift) : nativeBytes >> labs(aShift);
 	static constexpr uint32_t nativeMask = nativeStep - 1;
+
+	// If address is aligned, simple pass-through to the native writer
+	if ((nativeBytes == targetBytes) && (Aligned || (address & nativeMask) == 0))
+		return wop(address & ~nativeMask, data, mask);
 
 }
 
