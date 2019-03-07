@@ -23,6 +23,8 @@ template <int dWidth, int aShift, int Endian, int tWidth, bool Aligned, typename
 typename mapHandlerSize<tWidth>::uintx_t mapReadGeneric(T rop, offs_t address,
 		typename mapHandlerSize<tWidth>::uintx_t mask)
 {
+	using targetType = typename mapHandlerSize<tWidth>::uintx_t;
+	using nativeType = typename mapHandlerSize<dWidth>::uintx_t;
 
 	static constexpr uint32_t targetBytes = 1 << tWidth;
 	static constexpr uint32_t targetBits = 8 * targetBytes;
@@ -38,6 +40,8 @@ template <int dWidth, int aShift, int Endian, int tWidth, bool Aligned, typename
 void mapWriteGeneric(T rop, offs_t address,
 		typename mapHandlerSize<tWidth>::uintx_t data, typename mapHandlerSize<tWidth>::uintx_t mask)
 {
+	using targetType = typename mapHandlerSize<tWidth>::uintx_t;
+	using nativeType = typename mapHandlerSize<dWidth>::uintx_t;
 
 	static constexpr uint32_t targetBytes = 1 << tWidth;
 	static constexpr uint32_t targetBits = 8 * targetBytes;
@@ -266,7 +270,10 @@ public:
 	}
 
 
-	// read accessors
+	// ************************
+	// 8-bit memory read access
+	// ************************
+
 	uint8_t read8(offs_t address) override
 	{
 		address &= addrMask;
@@ -275,6 +282,10 @@ public:
 			: mapReadGeneric<dWidth, aShift, Endian, 0, true>([this](offs_t offset, nativeType mask)
 				-> nativeType { return readNative(offset, mask); }, address, 0xFF);
 	}
+
+	// *************************
+	// 16-bit memory read access
+	// *************************
 
 	uint16_t read16(offs_t address) override
 	{
@@ -306,25 +317,79 @@ public:
 			-> nativeType { return readNative(offset, mask); }, address, mask);
 	}
 
+	// *************************
+	// 32-bit memory read access
+	// *************************
+
 	uint32_t read32(offs_t address) override
-		{ address &= addrMask; return 0; }
+	{
+		address &= addrMask;
+		return (dWidth == 2)
+			? readNative(address & ~nativeMask)
+			: mapReadGeneric<dWidth, aShift, Endian, 2, true>([this](offs_t offset, nativeType mask)
+				-> nativeType { return readNative(offset, mask); }, address, 0xFFFFFFFF);
+	}
+
 	uint32_t read32(offs_t address, uint32_t mask) override
-		{ address &= addrMask; return 0; }
+	{
+		address &= addrMask;
+		return mapReadGeneric<dWidth, aShift, Endian, 2, true>([this](offs_t offset, nativeType mask)
+			-> nativeType { return readNative(offset, mask); }, address, mask);
+	}
+
 	uint32_t read32u(offs_t address) override
-		{ address &= addrMask; return 0; }
+	{
+		address &= addrMask;
+		return mapReadGeneric<dWidth, aShift, Endian, 2, false>([this](offs_t offset, nativeType mask)
+			-> nativeType { return readNative(offset, mask); }, address, 0xFFFFFFFF);
+	}
+
 	uint32_t read32u(offs_t address, uint32_t mask) override
-		{ address &= addrMask; return 0; }
+	{
+		address &= addrMask;
+		return mapReadGeneric<dWidth, aShift, Endian, 2, false>([this](offs_t offset, nativeType mask)
+			-> nativeType { return readNative(offset, mask); }, address, mask);
+	}
+
+	// *************************
+	// 64-bit memory read access
+	// *************************
+
 	uint64_t read64(offs_t address) override
-		{ address &= addrMask; return 0; }
+	{
+		address &= addrMask;
+		return (dWidth == 3)
+			? readNative(address & ~nativeMask)
+			: mapReadGeneric<dWidth, aShift, Endian, 3, true>([this](offs_t offset, nativeType mask)
+				-> nativeType { return readNative(offset, mask); }, address, 0xFFFFFFFFFFFFFFFFu);
+	}
+
 	uint64_t read64(offs_t address, uint64_t mask) override
-		{ address &= addrMask; return 0; }
+	{
+		address &= addrMask;
+		return mapReadGeneric<dWidth, aShift, Endian, 3, true>([this](offs_t offset, nativeType mask)
+			-> nativeType { return readNative(offset, mask); }, address, mask);
+	}
+
 	uint64_t read64u(offs_t address) override
-		{ address &= addrMask; return 0; }
+	{
+		address &= addrMask;
+		return mapReadGeneric<dWidth, aShift, Endian, 3, false>([this](offs_t offset, nativeType mask)
+			-> nativeType { return readNative(offset, mask); }, address, 0xFFFFFFFFFFFFFFFFu);
+	}
+
 	uint64_t read64u(offs_t address, uint64_t mask) override
-		{ address &= addrMask; return 0; }
+	{
+		address &= addrMask;
+		return mapReadGeneric<dWidth, aShift, Endian, 3, false>([this](offs_t offset, nativeType mask)
+			-> nativeType { return readNative(offset, mask); }, address, mask);
+	}
 
 
-	// write accessors
+	// *************************
+	// 8-bit memory write access
+	// *************************
+
 	void write8(offs_t address, uint8_t data) override
 	{
 		address &= addrMask;
@@ -334,6 +399,10 @@ public:
 			mapWriteGeneric<dWidth, aShift, Endian, 0, true>([this](offs_t offset, nativeType data, nativeType mask)
 				{ writeNative(offset, mask); }, address, data, 0xFF);
 	}
+
+	// **************************
+	// 16-bit memory write access
+	// **************************
 
 	void write16(offs_t address, uint16_t data) override
 	{
@@ -366,22 +435,75 @@ public:
 			{ writeNative(offset, mask); }, address, data, mask);
 	}
 
+	// **************************
+	// 32-bit memory write access
+	// **************************
+
 	void write32(offs_t address, uint32_t data) override
-		{ address &= addrMask;  }
+	{
+		address &= addrMask;
+		if (dWidth == 2)
+			writeNative(address & ~nativeMask, data);
+		else
+			mapWriteGeneric<dWidth, aShift, Endian, 2, true>([this](offs_t offset, nativeType data, nativeType mask)
+				{ writeNative(offset, mask); }, address, data, 0xFFFFFFFF);
+	}
+
 	void write32(offs_t address, uint32_t data, uint32_t mask) override
-		{ address &= addrMask;  }
+	{
+		address &= addrMask;
+		mapWriteGeneric<dWidth, aShift, Endian, 2, true>([this](offs_t offset, nativeType data, nativeType mask)
+			{ writeNative(offset, mask); }, address, data, mask);
+	}
+
 	void write32u(offs_t address, uint32_t data) override
-		{ address &= addrMask;  }
+	{
+		address &= addrMask;
+		mapWriteGeneric<dWidth, aShift, Endian, 2, false>([this](offs_t offset, nativeType data, nativeType mask)
+			{ writeNative(offset, mask); }, address, data, 0xFFFFFFFF);
+	}
+
 	void write32u(offs_t address, uint32_t data, uint32_t mask) override
-		{ address &= addrMask;  }
+	{
+		address &= addrMask;
+		mapWriteGeneric<dWidth, aShift, Endian, 2, false>([this](offs_t offset, nativeType data, nativeType mask)
+			{ writeNative(offset, mask); }, address, data, mask);
+	}
+
+	// **************************
+	// 64-bit memory write access
+	// **************************
+
 	void write64(offs_t address, uint64_t data) override
-		{ address &= addrMask;  }
+	{
+		address &= addrMask;
+		if (dWidth == 3)
+			writeNative(address & ~nativeMask, data);
+		else
+			mapWriteGeneric<dWidth, aShift, Endian, 3, true>([this](offs_t offset, nativeType data, nativeType mask)
+				{ writeNative(offset, mask); }, address, data, 0xFFFFFFFFFFFFFFFFu);
+	}
+
 	void write64(offs_t address, uint64_t data, uint64_t mask) override
-		{ address &= addrMask;  }
+	{
+		address &= addrMask;
+		mapWriteGeneric<dWidth, aShift, Endian, 3, true>([this](offs_t offset, nativeType data, nativeType mask)
+			{ writeNative(offset, mask); }, address, data, mask);
+	}
+
 	void write64u(offs_t address, uint64_t data) override
-		{ address &= addrMask;  }
+	{
+		address &= addrMask;
+		mapWriteGeneric<dWidth, aShift, Endian, 3, false>([this](offs_t offset, nativeType data, nativeType mask)
+			{ writeNative(offset, mask); }, address, data, 0xFFFFFFFFFFFFFFFFu);
+	}
+
 	void write64u(offs_t address, uint64_t data, uint64_t mask) override
-		{ address &= addrMask;  }
+	{
+		address &= addrMask;
+		mapWriteGeneric<dWidth, aShift, Endian, 3, false>([this](offs_t offset, nativeType data, nativeType mask)
+			{ writeNative(offset, mask); }, address, data, mask);
+	}
 
 
 //	// static access to functions
