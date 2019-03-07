@@ -19,6 +19,35 @@
 
 // ***********************************************************
 
+template <int dWidth, int aShift, int Endian, int tWidth, bool Aligned, typename T>
+typename mapHandlerSize<tWidth>::uintx_t mapReadGeneric(T rop, offs_t address,
+		typename mapHandlerSize<tWidth>::uintx_t mask)
+{
+
+	static constexpr uint32_t targetBytes = 1 << tWidth;
+	static constexpr uint32_t targetBits = 8 * targetBytes;
+	static constexpr uint32_t nativeBytes = 1 << dWidth;
+	static constexpr uint32_t nativeBits = 8 * nativeBytes;
+	static constexpr uint32_t nativeStep = aShift >= 0 ? nativeBytes << labs(aShift) : nativeBytes >> labs(aShift);
+	static constexpr uint32_t nativeMask = nativeStep - 1;
+
+	return 0;
+}
+
+template <int dWidth, int aShift, int Endian, int tWidth, bool Aligned, typename T>
+void mapWriteGeneric(T rop, offs_t address,
+		typename mapHandlerSize<tWidth>::uintx_t data, typename mapHandlerSize<tWidth>::uintx_t mask)
+{
+
+	static constexpr uint32_t targetBytes = 1 << tWidth;
+	static constexpr uint32_t targetBits = 8 * targetBytes;
+	static constexpr uint32_t nativeBytes = 1 << dWidth;
+	static constexpr uint32_t nativeBits = 8 * nativeBytes;
+	static constexpr uint32_t nativeStep = aShift >= 0 ? nativeBytes << labs(aShift) : nativeBytes >> labs(aShift);
+	static constexpr uint32_t nativeMask = nativeStep - 1;
+
+}
+
 template <int dWidth, int aShift, int Endian>
 class mapAddressSpaceAccess : public mapAddressSpace
 {
@@ -226,71 +255,133 @@ public:
 		return rootRead->read(offset, uintx_t(0xFFFFFFFFFFFFFFFFu));
 	}
 
-	nativeType writeNative(offs_t offset, nativeType data, nativeType mask)
+	void writeNative(offs_t offset, nativeType data, nativeType mask)
 	{
-		return rootWrite->write(offset, data, mask);
+		rootWrite->write(offset, data, mask);
 	}
 
-	nativeType writeNative(offs_t offset, nativeType data)
+	void writeNative(offs_t offset, nativeType data)
 	{
-		return rootWrite->write(offset, data, uintx_t(0xFFFFFFFFFFFFFFFFu));
+		rootWrite->write(offset, data, uintx_t(0xFFFFFFFFFFFFFFFFu));
 	}
+
 
 	// read accessors
-//	uint8_t read8(offs_t address) override
-//		{ address &= addrMask; return 0; }
-//	uint16_t read16(offs_t address) override
-//		{ address &= addrMask; return 0; }
-//	uint16_t read16(offs_t address, uint16_t mask) override
-//		{ address &= addrMask; return 0; }
-//	uint16_t read16u(offs_t address) override
-//		{ address &= addrMask; return 0; }
-//	uint16_t read16u(offs_t address, uint16_t mask) override
-//		{ address &= addrMask; return 0; }
-//	uint32_t read32(offs_t address) override
-//		{ address &= addrMask; return 0; }
-//	uint32_t read32(offs_t address, uint32_t mask) override
-//		{ address &= addrMask; return 0; }
-//	uint32_t read32u(offs_t address) override
-//		{ address &= addrMask; return 0; }
-//	uint32_t read32u(offs_t address, uint32_t mask) override
-//		{ address &= addrMask; return 0; }
-//	uint64_t read64(offs_t address) override
-//		{ address &= addrMask; return 0; }
-//	uint64_t read64(offs_t address, uint64_t mask) override
-//		{ address &= addrMask; return 0; }
-//	uint64_t read64u(offs_t address) override
-//		{ address &= addrMask; return 0; }
-//	uint64_t read64u(offs_t address, uint64_t mask) override
-//		{ address &= addrMask; return 0; }
+	uint8_t read8(offs_t address) override
+	{
+		address &= addrMask;
+		return (dWidth == 0)
+			? readNative(address & ~nativeMask)
+			: mapReadGeneric<dWidth, aShift, Endian, 0, true>([this](offs_t offset, nativeType mask)
+				-> nativeType { return readNative(offset, mask); }, address, 0xFF);
+	}
+
+	uint16_t read16(offs_t address) override
+	{
+		address &= addrMask;
+		return (dWidth == 1)
+			? readNative(address & ~nativeMask)
+			: mapReadGeneric<dWidth, aShift, Endian, 1, true>([this](offs_t offset, nativeType mask)
+				-> nativeType { return readNative(offset, mask); }, address, 0xFFFF);
+	}
+
+	uint16_t read16(offs_t address, uint16_t mask) override
+	{
+		address &= addrMask;
+		return mapReadGeneric<dWidth, aShift, Endian, 1, true>([this](offs_t offset, nativeType mask)
+			-> nativeType { return readNative(offset, mask); }, address, mask);
+	}
+
+	uint16_t read16u(offs_t address) override
+	{
+		address &= addrMask;
+		return mapReadGeneric<dWidth, aShift, Endian, 1, false>([this](offs_t offset, nativeType mask)
+			-> nativeType { return readNative(offset, mask); }, address, 0xFFFF);
+	}
+
+	uint16_t read16u(offs_t address, uint16_t mask) override
+	{
+		address &= addrMask;
+		return mapReadGeneric<dWidth, aShift, Endian, 1, false>([this](offs_t offset, nativeType mask)
+			-> nativeType { return readNative(offset, mask); }, address, mask);
+	}
+
+	uint32_t read32(offs_t address) override
+		{ address &= addrMask; return 0; }
+	uint32_t read32(offs_t address, uint32_t mask) override
+		{ address &= addrMask; return 0; }
+	uint32_t read32u(offs_t address) override
+		{ address &= addrMask; return 0; }
+	uint32_t read32u(offs_t address, uint32_t mask) override
+		{ address &= addrMask; return 0; }
+	uint64_t read64(offs_t address) override
+		{ address &= addrMask; return 0; }
+	uint64_t read64(offs_t address, uint64_t mask) override
+		{ address &= addrMask; return 0; }
+	uint64_t read64u(offs_t address) override
+		{ address &= addrMask; return 0; }
+	uint64_t read64u(offs_t address, uint64_t mask) override
+		{ address &= addrMask; return 0; }
+
 
 	// write accessors
-//	void write8(offs_t address, uint8_t data) override
-//		{ address &= addrMask;  }
-//	void write16(offs_t address, uint16_t data) override
-//		{ address &= addrMask;  }
-//	void write16(offs_t address, uint16_t data, uint16_t mask) override
-//		{ address &= addrMask;  }
-//	void write16u(offs_t address, uint16_t data) override
-//		{ address &= addrMask;  }
-//	void write16u(offs_t address, uint16_t data, uint16_t mask) override
-//		{ address &= addrMask;  }
-//	void write32(offs_t address, uint32_t data) override
-//		{ address &= addrMask;  }
-//	void write32(offs_t address, uint32_t data, uint32_t mask) override
-//		{ address &= addrMask;  }
-//	void write32u(offs_t address, uint32_t data) override
-//		{ address &= addrMask;  }
-//	void write32u(offs_t address, uint32_t data, uint32_t mask) override
-//		{ address &= addrMask;  }
-//	void write64(offs_t address, uint64_t data) override
-//		{ address &= addrMask;  }
-//	void write64(offs_t address, uint64_t data, uint64_t mask) override
-//		{ address &= addrMask;  }
-//	void write64u(offs_t address, uint64_t data) override
-//		{ address &= addrMask;  }
-//	void write64u(offs_t address, uint64_t data, uint64_t mask) override
-//		{ address &= addrMask;  }
+	void write8(offs_t address, uint8_t data) override
+	{
+		address &= addrMask;
+		if (dWidth == 0)
+			writeNative(address & ~nativeMask, data);
+		else
+			mapWriteGeneric<dWidth, aShift, Endian, 0, true>([this](offs_t offset, nativeType data, nativeType mask)
+				{ writeNative(offset, mask); }, address, data, 0xFF);
+	}
+
+	void write16(offs_t address, uint16_t data) override
+	{
+		address &= addrMask;
+		if (dWidth == 1)
+			writeNative(address & ~nativeMask, data);
+		else
+			mapWriteGeneric<dWidth, aShift, Endian, 1, true>([this](offs_t offset, nativeType data, nativeType mask)
+				{ writeNative(offset, mask); }, address, data, 0xFFFF);
+	}
+
+	void write16(offs_t address, uint16_t data, uint16_t mask) override
+	{
+		address &= addrMask;
+		mapWriteGeneric<dWidth, aShift, Endian, 1, true>([this](offs_t offset, nativeType data, nativeType mask)
+			{ writeNative(offset, mask); }, address, data, mask);
+	}
+
+	void write16u(offs_t address, uint16_t data) override
+	{
+		address &= addrMask;
+		mapWriteGeneric<dWidth, aShift, Endian, 1, false>([this](offs_t offset, nativeType data, nativeType mask)
+			{ writeNative(offset, mask); }, address, data, 0xFFFF);
+	}
+
+	void write16u(offs_t address, uint16_t data, uint16_t mask) override
+	{
+		address &= addrMask;
+		mapWriteGeneric<dWidth, aShift, Endian, 1, false>([this](offs_t offset, nativeType data, nativeType mask)
+			{ writeNative(offset, mask); }, address, data, mask);
+	}
+
+	void write32(offs_t address, uint32_t data) override
+		{ address &= addrMask;  }
+	void write32(offs_t address, uint32_t data, uint32_t mask) override
+		{ address &= addrMask;  }
+	void write32u(offs_t address, uint32_t data) override
+		{ address &= addrMask;  }
+	void write32u(offs_t address, uint32_t data, uint32_t mask) override
+		{ address &= addrMask;  }
+	void write64(offs_t address, uint64_t data) override
+		{ address &= addrMask;  }
+	void write64(offs_t address, uint64_t data, uint64_t mask) override
+		{ address &= addrMask;  }
+	void write64u(offs_t address, uint64_t data) override
+		{ address &= addrMask;  }
+	void write64u(offs_t address, uint64_t data, uint64_t mask) override
+		{ address &= addrMask;  }
 
 
 //	// static access to functions
@@ -428,6 +519,35 @@ public:
 //		invalidate_caches(type);
 	}
 
+	void setup_bank_generic(const cty_t &cty, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, mapMemoryBank *rbank, mapMemoryBank *wbank)
+	{
+		cty.printf("%s: %s space - bank %08X-%08X Mirror=%08X, read=%s, write=%s\n",
+				device.tagName(), name, adrStart, adrEnd, adrMirror,
+				(rbank != nullptr) ? rbank->tagName() : "(none)",
+				(wbank != nullptr) ? wbank->tagName() : "(none)");
+
+		offs_t nstart, nend, nmirror, nmask;
+		checkOptimizeMirror(cty, "setup_bank_generic", adrStart, adrEnd, adrMirror, nstart, nend, nmask, nmirror);
+
+		// Address space - read access
+		if (rbank != nullptr)
+		{
+			auto handler = new mapHandlerReadMemoryBank<dWidth, aShift, Endian>(this, *rbank);
+			handler->setAddressInfo(nstart, nend);
+			rootRead->populate(cty, nstart, nend, nmirror, handler);
+		}
+
+		// Address space - write access
+		if (wbank != nullptr)
+		{
+			auto handler = new mapHandlerWriteMemoryBank<dWidth, aShift, Endian>(this, *wbank);
+			handler->setAddressInfo(nstart, nend);
+			rootWrite->populate(cty, nstart, nend, nmirror, handler);
+		}
+
+//		invalidate_caches((rbank != nullptr) ? (wbank != nullptr) ? rwTypw::RW : rwType::READ : rwType::WRITE);
+	}
+
 	void setup_bank_generic(const cty_t &cty, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, std::string rtag, std::string wtag)
 	{
 		cty.printf("%s: %s space - bank %08X-%08X Mirror=%08X, read=%s, write=%s\n",
@@ -461,33 +581,46 @@ public:
 //		invalidate_caches((rtag != "") ? (wtag != "") ? rwTypw::RW : rwType::READ : rwType::WRITE);
 	}
 
-	void setup_bank_generic(const cty_t &cty, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, mapMemoryBank *rbank, mapMemoryBank *wbank)
+//	template <int dWidth, int aShift, int Endian>
+	void setup_rw_port(const cty_t &cty, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, std::string rtag, std::string wtag)
 	{
-		cty.printf("%s: %s space - bank %08X-%08X Mirror=%08X, read=%s, write=%s\n",
+		cty.printf("%s: %s space - I/O port %08X-%08X Mirror=%08X, read=%s, write=%s\n",
 				device.tagName(), name, adrStart, adrEnd, adrMirror,
-				(rbank != nullptr) ? rbank->tagName() : "(none)",
-				(wbank != nullptr) ? wbank->tagName() : "(none)");
+				!rtag.empty() ? rtag.c_str() : "(none)",
+				!wtag.empty() ? wtag.c_str() : "(none)");
 
 		offs_t nstart, nend, nmirror, nmask;
-		checkOptimizeMirror(cty, "setup_bank_generic", adrStart, adrEnd, adrMirror, nstart, nend, nmask, nmirror);
+		checkOptimizeMirror(cty, "setup_rw_port", adrStart, adrEnd, adrMirror, nstart, nend, nmask, nmirror);
 
 		// Address space - read access
-		if (rbank != nullptr)
+		if (rtag != "")
 		{
-			auto handler = new mapHandlerReadMemoryBank<dWidth, aShift, Endian>(this, *rbank);
-			handler->setAddressInfo(nstart, nend);
-			rootRead->populate(cty, nstart, nend, nmirror, handler);
+//			ioport *port = device.owner()->ioport(rtag);
+//
+//			if (port == nullptr)
+//				cty.printf("%s: %s space - attempted to map non-existent port %s for read access\n",
+//					device.tagName(), name, wtag);
+//			else {
+//				auto handler = new mapHandlerReadIOPort<dWidth, aShift, Endian>(this, port);
+//				rootRead->populate(cty, nstart, nend, nmirror, handler);
+//			}
 		}
 
 		// Address space - write access
-		if (wbank != nullptr)
+		if (wtag != "")
 		{
-			auto handler = new mapHandlerWriteMemoryBank<dWidth, aShift, Endian>(this, *wbank);
-			handler->setAddressInfo(nstart, nend);
-			rootWrite->populate(cty, nstart, nend, nmirror, handler);
+//			ioport *port = device.owner()->ioport(wtag);
+//
+//			if (port == nullptr)
+//				cty.printf("%s: %s space - attempted to map non-existent port %s for write access\n",
+//					device.tagName(), name, wtag);
+//			else {
+//				auto handler = new mapHandlerWriteIOPort<dWidth, aShift, Endian>(this, port);
+//				rootWrite->populate(cty, nstart, nend, nmirror, handler);
+//			}
 		}
 
-//		invalidate_caches((rbank != nullptr) ? (wbank != nullptr) ? rwTypw::RW : rwType::READ : rwType::WRITE);
+//		invalidate_caches((rtag != "") ? (wtag != "") ? rwTypw::RW : rwType::READ : rwType::WRITE);
 	}
 
 	mapHandlerRead<dWidth, aShift, Endian>  *rootRead;

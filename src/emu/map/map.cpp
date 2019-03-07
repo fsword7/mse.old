@@ -197,16 +197,59 @@ void mapAddressSpace::populateEntry(const cty_t &cty, const mapAddressEntry &ent
 		setup_unmap_generic(cty, entry.adrStart, entry.adrEnd, entry.adrMirror, type, false);
 		break;
 
-	case mapPort:
-//		setup_rw_port(entry.adrStart, entry.adrEnd, entry.adrMirror,
-//				(type == rwType::READ) ? "" : ""),
-//				(type == rwType::WRITE) ? "" : ""));
+	case mapBank:
+		setup_bank_generic(cty, entry.adrStart, entry.adrEnd, entry.adrMirror,
+				((type == rwType::READ) ? device.tagName() : ""),
+				((type == rwType::WRITE) ? device.tagName() : ""));
 		break;
 
-	case mapBank:
-//		setup_bank_port(entry.adrStart, entry.adrEnd, entry.adrMirror,
-//				(type == rwType::READ) ? "" : ""),
-//				(type == rwType::WRITE) ? "" : ""));
+	case mapPort:
+		setup_rw_port(cty, entry.adrStart, entry.adrEnd, entry.adrMirror,
+				((type == rwType::READ) ? device.tagName() : ""),
+				((type == rwType::WRITE) ? device.tagName() : ""));
+		break;
+
+	case mapDelegate:
+//		if (type == rwType::READ) {
+//			switch (data.bits) {
+//			case 8:
+//				setup_read_handler(entry.adrStart, entry.adrEnd, entry.adrMask, entry.adrMirror, entry.adrSelect,
+//					read8_delegate(entry.read8, entry.device), entry.laneMask, entry.csWidth);
+//				break;
+//			case 16:
+//				setup_read_handler(entry.adrStart, entry.adrEnd, entry.adrMask, entry.adrMirror, entry.adrSelect,
+//					read16_delegate(entry.read16, entry.device), entry.laneMask, entry.csWidth);
+//				break;
+//			case 32:
+//				setup_read_handler(entry.adrStart, entry.adrEnd, entry.adrMask, entry.adrMirror, entry.adrSelect,
+//					read32_delegate(entry.read32, entry.device), entry.laneMask, entry.csWidth);
+//				break;
+//			case 64:
+//				setup_read_handler(entry.adrStart, entry.adrEnd, entry.adrMask, entry.adrMirror, entry.adrSelect,
+//					read64_delegate(entry.read64, entry.device), entry.laneMask, entry.csWidth);
+//				break;
+//			}
+//		} else {
+//			switch (data.bits) {
+//			case 8:
+//				setup_write_handler(entry.adrStart, entry.adrEnd, entry.adrMask, entry.adrMirror, entry.adrSelect,
+//					write8_delegate(entry.write8, entry.device), entry.laneMask, entry.csWidth);
+//				break;
+//			case 16:
+//				setup_write_handler(entry.adrStart, entry.adrEnd, entry.adrMask, entry.adrMirror, entry.adrSelect,
+//					write16_delegate(entry.write16, entry.device), entry.laneMask, entry.csWidth);
+//				break;
+//			case 32:
+//				setup_write_handler(entry.adrStart, entry.adrEnd, entry.adrMask, entry.adrMirror, entry.adrSelect,
+//					write32_delegate(entry.write32, entry.device), entry.laneMask, entry.csWidth);
+//				break;
+//			case 64:
+//				setup_write_handler(entry.adrStart, entry.adrEnd, entry.adrMask, entry.adrMirror, entry.adrSelect,
+//					write64_delegate(entry.write64, entry.device), entry.laneMask, entry.csWidth);
+//				break;
+//
+//			}
+//		}
 		break;
 
 	case mapSubmap:
