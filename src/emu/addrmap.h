@@ -130,6 +130,9 @@ public:
 	offs_t		adrMirror;	// Mirror address bits
 	offs_t		adrSelect;	// Select address bits
 
+	uint64_t	laneMask;	// lane mark
+	int			csWidth;	// chip select Width
+
 	mapHandler  read, write;	// Memory map handler for read and write access
 	tag_t		*tagShare;		// Tag of shared map block
 	tag_t		*tagRegion;		// Tag of region map block
