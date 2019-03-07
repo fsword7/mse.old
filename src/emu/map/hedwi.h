@@ -78,7 +78,7 @@ void mapHandlerWriteDispatch<highBits, dWidth, aShift, Endian>::populate_mirror(
 	offs_t hmirror = mirror & highMask;
 	offs_t lmirror = mirror & lowMask;
 
-	cty.printf("%s: (R) High bits %d  low bits %d  bit count %d  count %d  mask %08X low %08X high %08X up %08X\n",
+	cty.printf("%s: (W) High bits %d  low bits %d  bit count %d  count %d  mask %08X low %08X high %08X up %08X\n",
 		name().c_str(), highBits, lowBits, bitCount, count, bitMask, lowMask, highMask, upMask);
 	cty.printf("%s: (W) %08X-%08X (%08X-%08X) - mirror %08X %08X  %p\n",
 		name().c_str(), start, end, ostart, oend, hmirror, lmirror, handler);
@@ -120,7 +120,7 @@ void mapHandlerWriteDispatch<highBits, dWidth, aShift, Endian>::populate_nomirro
 	offs_t sEntry = start >> lowBits;
 	offs_t eEntry = end >> lowBits;
 
-	cty.printf("%s: (R) High bits %d  low bits %d  bit count %d  count %d  mask %08X low %08X high %08X up %08X\n",
+	cty.printf("%s: (W) High bits %d  low bits %d  bit count %d  count %d  mask %08X low %08X high %08X up %08X\n",
 		name().c_str(), highBits, lowBits, bitCount, count, bitMask, lowMask, highMask, upMask);
 	cty.printf("%s: (W) %08X-%08X (%08X-%08X) - entry %08X-%08X  %p\n",
 		name().c_str(), start, end, ostart, oend, sEntry, eEntry, handler);
