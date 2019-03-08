@@ -19,6 +19,13 @@
 
 // ***********************************************************
 
+constexpr offs_t memory_offset_to_byte(offs_t offset, int aShift)
+{
+	return aShift < 0
+		? offset << labs(aShift)
+		: offset >> labs(aShift);
+}
+
 template <int dWidth, int aShift, int Endian, int tWidth, bool Aligned, typename T>
 typename mapHandlerSize<tWidth>::uintx_t mapReadGeneric(T rop, offs_t address,
 		typename mapHandlerSize<tWidth>::uintx_t mask)
@@ -37,7 +44,17 @@ typename mapHandlerSize<tWidth>::uintx_t mapReadGeneric(T rop, offs_t address,
 	if ((nativeBytes == targetBytes) && (Aligned || (address & nativeMask) == 0))
 		return rop(address & ~nativeMask, mask);
 
-	return 0;
+	if (nativeBytes > targetBytes) {
+		uint32_t offBits = 8 * (memory_offset_to_byte(address, aShift) & (nativeBytes - (Aligned ? targetBytes : 1)));
+		if (Aligned || (offBits + targetBits <= nativeBits))
+		{
+			if (Endian != endianLittle)
+				offBits = nativeBits - targetBits - offBits;
+			return rop(address & ~nativeMask, (nativeType)mask << offBits) >> offBits;
+		}
+	}
+
+	return 0xFF;
 }
 
 template <int dWidth, int aShift, int Endian, int tWidth, bool Aligned, typename T>
