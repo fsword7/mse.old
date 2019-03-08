@@ -468,6 +468,10 @@ private:
 };
 
 class mapMemoryManager {
+	friend class mapAddressSpace;
+	template <int dWidth, int aShift, int Endian>
+		friend class mapAddressSpaceAccess;
+
 public:
 	mapMemoryManager(machine *sys);
 	~mapMemoryManager();

@@ -547,7 +547,7 @@ public:
 
 	void setup_unmap_generic(const cty_t &cty, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, rwType type, bool quiet)
 	{
-		cty.printf("%s: %s space - Unmapped %08X-%08X Mirror=%08X, Access=%s, %s\n",
+		cty.printf("%s(%s): Unmapped %08X-%08X Mirror=%08X, Access=%s, %s\n",
 				device.tagName(), name, adrStart, adrEnd, adrMirror,
 				(type == rwType::READ) ? "read" :
 				(type == rwType::WRITE) ? "write" :
@@ -578,7 +578,7 @@ public:
 
 	void setup_ram_generic(const cty_t &cty, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, rwType type, void *base)
 	{
-		cty.printf("%s: %s space - RAM/ROM %08X-%08X Mirror=%08X, Access=%s, %p\n",
+		cty.printf("%s(%s): RAM/ROM %08X-%08X Mirror=%08X, Access=%s, %p\n",
 				device.tagName(), name, adrStart, adrEnd, adrMirror,
 				(type == rwType::READ) ? "read" :
 				(type == rwType::WRITE) ? "write" :
@@ -595,23 +595,28 @@ public:
 			if (base != nullptr)
 				bank.setBase(base);
 
-//			if (bank.base() == nullptr)
-//			{
-//				void *backing = findBackingMemory(cty, adrStart, adrEnd);
-//				if (backing != nullptr)
-//					bank.setBase(backing);
-//			}
-//
-//			if (bank.base() == nullptr)
-//			{
-//			}
-//
+			if (bank.base() == nullptr)
+			{
+				void *backing = findBackingMemory(cty, adrStart, adrEnd);
+				if (backing != nullptr)
+					bank.setBase(backing);
+			}
+
+			if (bank.base() == nullptr)
+			{
+				auto block = new mapMemoryBlock(*this, adrStart, adrEnd);
+				bank.setBase(block->base());
+				cty.printf("%s(%s): Created memory block %08X-%08X (%p)\n",
+					device.tagName(), name, block->start(), block->end(), block->base());
+				manager.blockList.push_back(std::move(block));
+			}
+
 			auto handler = new mapHandlerReadMemory<dWidth, aShift, Endian>(this);
-//			if (bank.base())
-//				handler->setBase(static_cast<uintx_t *>(bank.base()));
-//			else {
-//
-//			}
+			if (bank.base() != nullptr)
+				handler->setBase(static_cast<uintx_t *>(bank.base()));
+			else {
+//				bank.addNotifier([this, handler](void *base) { handler->setBase(static_cast<uint8_t *>(base)); });
+			}
 
 			handler->setAddressInfo(nstart, nend);
 			rootRead->populate(cty, nstart, nend, nmirror, handler);
@@ -624,23 +629,28 @@ public:
 			if (base != nullptr)
 				bank.setBase(base);
 
-//			if (bank.base() == nullptr)
-//			{
-//				void *backing = findBackingMemory(cty, adrStart, adrEnd);
-//				if (backing != nullptr)
-//					bank.setBase(backing);
-//			}
-//
-//			if (bank.base() == nullptr)
-//			{
-//			}
-//
+			if (bank.base() == nullptr)
+			{
+				void *backing = findBackingMemory(cty, adrStart, adrEnd);
+				if (backing != nullptr)
+					bank.setBase(backing);
+			}
+
+			if (bank.base() == nullptr)
+			{
+				auto block = new mapMemoryBlock(*this, adrStart, adrEnd);
+				bank.setBase(block->base());
+				cty.printf("%s(%s): Created memory block %08X-%08X (%p)\n",
+					device.tagName(), name, block->start(), block->end(), block->base());
+				manager.blockList.push_back(std::move(block));
+			}
+
 			auto handler = new mapHandlerWriteMemory<dWidth, aShift, Endian>(this);
-//			if (bank.base())
-//				handler->setBase(static_cast<uintx_t *>(bank.base()));
-//			else {
-//
-//			}
+			if (bank.base() != nullptr)
+				handler->setBase(static_cast<uintx_t *>(bank.base()));
+			else {
+//				bank.addNotifier([this, handler](void *base) { handler->setBase(static_cast<uint8_t *>(base)); });
+			}
 
 			handler->setAddressInfo(nstart, nend);
 			rootWrite->populate(cty, nstart, nend, nmirror, handler);
@@ -651,7 +661,7 @@ public:
 
 	void setup_bank_generic(const cty_t &cty, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, mapMemoryBank *rbank, mapMemoryBank *wbank)
 	{
-		cty.printf("%s: %s space - bank %08X-%08X Mirror=%08X, read=%s, write=%s\n",
+		cty.printf("%s(%s): bank %08X-%08X Mirror=%08X, read=%s, write=%s\n",
 				device.tagName(), name, adrStart, adrEnd, adrMirror,
 				(rbank != nullptr) ? rbank->tagName() : "(none)",
 				(wbank != nullptr) ? wbank->tagName() : "(none)");
@@ -680,7 +690,7 @@ public:
 
 	void setup_bank_generic(const cty_t &cty, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, std::string rtag, std::string wtag)
 	{
-		cty.printf("%s: %s space - bank %08X-%08X Mirror=%08X, read=%s, write=%s\n",
+		cty.printf("%s(%s): bank %08X-%08X Mirror=%08X, read=%s, write=%s\n",
 				device.tagName(), name, adrStart, adrEnd, adrMirror,
 				!rtag.empty() ? rtag.c_str() : "(none)",
 				!wtag.empty() ? wtag.c_str() : "(none)");
@@ -714,7 +724,7 @@ public:
 //	template <int dWidth, int aShift, int Endian>
 	void setup_rw_port(const cty_t &cty, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, std::string rtag, std::string wtag)
 	{
-		cty.printf("%s: %s space - I/O port %08X-%08X Mirror=%08X, read=%s, write=%s\n",
+		cty.printf("%s(%s): I/O port %08X-%08X Mirror=%08X, read=%s, write=%s\n",
 				device.tagName(), name, adrStart, adrEnd, adrMirror,
 				!rtag.empty() ? rtag.c_str() : "(none)",
 				!wtag.empty() ? wtag.c_str() : "(none)");

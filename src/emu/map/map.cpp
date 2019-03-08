@@ -333,7 +333,7 @@ void *mapAddressSpace::findBackingMemory(const cty_t &cty, offs_t adrStart, offs
 		{
 			cty.printf("%s(%s): Found in allocated memory block 1 %08X-%08X (%p)\n",
 				device.tagName(), name, entry->adrStart, entry->adrEnd,
-				entry->memory + address_to_byte(adrStart - entry->adrStart));
+				static_cast<uint8_t *>(entry->memory) + address_to_byte(adrStart - entry->adrStart));
 
 			result = (uint8_t *)entry->memory + address_to_byte(adrStart - entry->adrStart);
 		}
