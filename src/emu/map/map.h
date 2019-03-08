@@ -197,8 +197,10 @@ public:
 	void allocate(const cty_t &cty);
 	void locate(const cty_t &cty);
 
+	bool needBackingMemory(mapAddressEntry &entry);
 	void *findBackingMemory(const cty_t &cty, offs_t adrStart, offs_t adrEnd);
 	mapMemoryBank &allocateBank(tag_t *tag, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, rwType type);
+	mapAddressEntry *assignBlockIntersecting(const cty_t &cty, offs_t adrStart, offs_t adrEnd, uint8_t *base);
 
 	virtual void setup_unmap_generic(const cty_t &cty, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, rwType type, bool quiet) = 0;
 	virtual void setup_ram_generic(const cty_t &cty, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, rwType type, void *base) = 0;
@@ -479,6 +481,8 @@ public:
 	const std::map<std::string, mapMemoryRegion *> &regions() const { return regionList; }
 	const std::map<std::string, mapMemoryBank *> &banks() const { return bankList; }
 	const std::map<std::string, mapMemoryShare *> &shares() const { return shareList; }
+
+	std::vector<mapMemoryBlock *> &blocks() { return blockList; }
 
 	void allocate(const cty_t &cty, di_memory &memory);
 	void init(const cty_t &cty);

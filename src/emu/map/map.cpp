@@ -277,17 +277,76 @@ void mapAddressSpace::populate(const cty_t &cty, mapAddress *map)
 
 void mapAddressSpace::allocate(const cty_t &cty)
 {
+	cty.printf("%s: Allocating memory space...\n", device.tagName());
+
+	auto &blockList = manager.blocks();
+
+	int tail = blockList.size();
+	for (mapAddressEntry *entry : map->list)
+		if (entry->memory != nullptr)
+			blockList.push_back(new mapMemoryBlock(*this, entry->adrStart, entry->adrEnd, entry->memory));
+
+//	mapAddressEntry *unassigned = nullptr;
+//
+//	for (mapMemoryBlock *block = blockList[tail]; tail != blockList.size(); ++tail)
+//		unassigned = assignBlockIntersecting(cty, block->start(), block->end(), block->base());
+//
+//	if (unassigned == nullptr)
+//		unassigned = assignBlockIntersecting(cty, ~0, 0, nullptr);
+//
+//
 }
 
 void mapAddressSpace::locate(const cty_t &cty)
 {
+	cty.printf("%s: Locating memory space...\n", device.tagName());
+}
+
+bool mapAddressSpace::needBackingMemory(mapAddressEntry &entry)
+{
+//	if (entry.share != nullptr) {
+//
+//	}
+
+	if (entry.write.type == mapBank || entry.write.type == mapRAM)
+		return true;
+
+	mapMemoryRegion *region = manager.sysMachine()->getSystemDevice()->mapGetMemoryRegion(device.tagName());
+	if (entry.read.type == mapRAM || (entry.read.type == mapROM &&
+			(space != 0 || region == nullptr || entry.adrStart >= region->size())))
+		return true;
+
+	return false;
 }
 
 void *mapAddressSpace::findBackingMemory(const cty_t &cty, offs_t adrStart, offs_t adrEnd)
 {
+	uint8_t *result = nullptr;
+
 	if (map == nullptr)
 		return nullptr;
 
+	for (mapAddressEntry *entry : map->list)
+		if (entry->memory != nullptr && adrStart >= entry->adrStart && adrEnd <= entry->adrEnd)
+		{
+			result = (uint8_t *)entry->memory + address_to_byte(adrStart - entry->adrStart);
+		}
+
+	if (result != nullptr)
+		return result;
+
+	for (auto &block : manager.blocks())
+		if (block->contains(*this, adrStart, adrEnd))
+		{
+			return block->base() + address_to_byte(adrStart - block->start());
+		}
+
+	return result;
+}
+
+
+mapAddressEntry *mapAddressSpace::assignBlockIntersecting(const cty_t &cty, offs_t adrStart, offs_t adrEnd, uint8_t *base)
+{
 	return nullptr;
 }
 
