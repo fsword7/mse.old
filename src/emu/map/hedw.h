@@ -21,6 +21,7 @@ public:
 		if (handler == nullptr)
 			handler = space->getWriteUnmap<dWidth, aShift, Endian>();
 
+		handler->ref(count);
 		for (unsigned int idx = 0; idx != count; idx++) {
 			dispatch[idx] = handler;
 			ranges[idx] = init;
