@@ -92,56 +92,72 @@ static const char *pftMessages[] =
 // Aligned longword read access with physical address
 uint32_t vax_cpu_base::readpl(uint32_t pAddr)
 {
-	pAddr &= paMask;
-	if (pAddr < memSize)
-		return MEML(pAddr >> 2);
+//	pAddr &= paMask;
+//	if (pAddr < memSize)
+//		return MEML(pAddr >> 2);
+//	return sdev->readio(this, pAddr, LN_LONG);
+
 	mchkAddr = pAddr;
 	mchkRef  = REF_P;
-//	return sdev->readio(this, pAddr, LN_LONG);
-	return 0;
+	return mapProgram->read32(pAddr);
 }
 
 // Aligned longword read access with physical address
 void vax_cpu_base::writepl(uint32_t pAddr, uint32_t data)
 {
-	pAddr &= paMask;
-	if (pAddr < memSize)
-		MEML(pAddr >> 2) = data;
+//	pAddr &= paMask;
+//	if (pAddr < memSize)
+//		MEML(pAddr >> 2) = data;
+//	sdev->writeio(this, pAddr, data, LN_LONG);
+
 	mchkAddr = pAddr;
 	mchkRef  = REF_P;
-//	sdev->writeio(this, pAddr, data, LN_LONG);
+	mapProgram->write32(pAddr, data);
 }
 
 // Aligned read access with physical address
 uint32_t vax_cpu_base::readp(uint32_t pAddr, int size)
 {
-	pAddr &= paMask;
-	if (pAddr < memSize) {
-		if (size == LN_LONG)
-			return MEML(pAddr >> 2);
-		if (size == LN_WORD)
-			return MEMW(pAddr >> 1);
-		return MEMB(pAddr);
-	}
-	mchkRef = REF_V;
+//	pAddr &= paMask;
+//	if (pAddr < memSize) {
+//		if (size == LN_LONG)
+//			return MEML(pAddr >> 2);
+//		if (size == LN_WORD)
+//			return MEMW(pAddr >> 1);
+//		return MEMB(pAddr);
+//	}
 //	return sdev->readio(this, pAddr, size);
-	return 0;
+
+	mchkRef = REF_V;
+	if (size == LN_LONG)
+		return mapProgram->read32(pAddr);
+	else if (size == LN_WORD)
+		return mapProgram->read16(pAddr);
+	else
+		return mapProgram->read8(pAddr);
 }
 
 // Aligned write access with physical address
 void vax_cpu_base::writep(uint32_t pAddr, uint32_t data, int size)
 {
-	pAddr &= paMask;
-	if (pAddr < memSize) {
-		if (size == LN_LONG)
-			MEML(pAddr >> 2) = data;
-		if (size == LN_WORD)
-			MEMW(pAddr >> 1) = data;
-		else
-			MEMB(pAddr) = data;
-	}
-	mchkRef = REF_V;
+//	pAddr &= paMask;
+//	if (pAddr < memSize) {
+//		if (size == LN_LONG)
+//			MEML(pAddr >> 2) = data;
+//		if (size == LN_WORD)
+//			MEMW(pAddr >> 1) = data;
+//		else
+//			MEMB(pAddr) = data;
+//	}
 //	sdev->writeio(this, pAddr, data, size);
+
+	mchkRef = REF_V;
+	if (size == LN_LONG)
+		mapProgram->write32(pAddr, data);
+	else if (size == LN_WORD)
+		mapProgram->write16(pAddr, data);
+	else
+		mapProgram->write8(pAddr, data);
 }
 
 void vax_cpu_base::cleartlb(bool sysFlag)
