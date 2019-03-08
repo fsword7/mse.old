@@ -90,12 +90,12 @@ public:
 
 	virtual std::string name() const = 0;
 
-	inline void ref(int count = 1)
+	inline void ref(int count = 1) const
 	{
 		refCount += count;
 	}
 
-	inline void unref(int count = 1)
+	inline void unref(int count = 1) const
 	{
 		refCount -= count;
 		if (refCount == 0)
