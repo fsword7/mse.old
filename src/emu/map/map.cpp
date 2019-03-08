@@ -323,12 +323,18 @@ void *mapAddressSpace::findBackingMemory(const cty_t &cty, offs_t adrStart, offs
 {
 	uint8_t *result = nullptr;
 
+	cty.printf("%s(%s): Finding blacking memory (%08X-%08X)\n", device.tagName(), name, adrStart, adrEnd);
+
 	if (map == nullptr)
 		return nullptr;
 
 	for (mapAddressEntry *entry : map->list)
 		if (entry->memory != nullptr && adrStart >= entry->adrStart && adrEnd <= entry->adrEnd)
 		{
+			cty.printf("%s(%s): Found in allocated memory block 1 %08X-%08X (%p)\n",
+				device.tagName(), name, entry->adrStart, entry->adrEnd,
+				entry->memory + address_to_byte(adrStart - entry->adrStart));
+
 			result = (uint8_t *)entry->memory + address_to_byte(adrStart - entry->adrStart);
 		}
 
@@ -338,6 +344,10 @@ void *mapAddressSpace::findBackingMemory(const cty_t &cty, offs_t adrStart, offs
 	for (auto &block : manager.blocks())
 		if (block->contains(*this, adrStart, adrEnd))
 		{
+			cty.printf("%s(%s): Found in allocated memory block 2 %08X-%08X (%p)\n",
+				device.tagName(), name, block->start(), block->end(),
+				block->base() + address_to_byte(adrStart - block->start()));
+
 			return block->base() + address_to_byte(adrStart - block->start());
 		}
 
