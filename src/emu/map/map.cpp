@@ -167,7 +167,7 @@ void mapAddressSpace::prepare(const cty_t &cty)
 					device.tagName(), name, entry->adrStart, entry->adrEnd, entry->tagRegion);
 
 			// Now assign named region to memory pointers
-			entry->memory = region;
+			entry->memory = region->base();
 		}
 
 	}
