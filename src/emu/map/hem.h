@@ -29,6 +29,10 @@ public:
 
 	uintx_t read(offs_t offset, uintx_t mask) override
 	{
+//		printf("%s: Data width=%d Address=%08X Mask=%08X -> %08X (%08X %08X %d)\n",
+//			name().c_str(), dWidth, offset, mask,
+//			(((offset - inh::baseAddress) & inh::maskAddress) >> (dWidth + aShift)),
+//			inh::baseAddress, inh::maskAddress, (dWidth+aShift));
 		return baseData[((offset - inh::baseAddress) & inh::maskAddress) >> (dWidth + aShift)];
 	}
 
@@ -98,6 +102,10 @@ public:
 
 	uintx_t read(offs_t offset, uintx_t mask) override
 	{
+//		printf("%s: Data width=%d Address=%08X Mask=%08X -> %08X (%08X %08X %d)\n",
+//			name().c_str(), dWidth, offset, mask,
+//			(((offset - inh::baseAddress) & inh::maskAddress) >> (dWidth + aShift)),
+//			inh::baseAddress, inh::maskAddress, (dWidth+aShift));
 		return static_cast<uintx_t *>(bank.base())[((offset - inh::baseAddress) & inh::maskAddress) >> (dWidth + aShift)];
 	}
 

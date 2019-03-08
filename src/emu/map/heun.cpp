@@ -10,6 +10,8 @@
 template <int dWidth, int aShift, int Endian>
 typename mapHandlerSize<dWidth>::uintx_t mapHandlerReadUnmapped<dWidth, aShift, Endian>::read(offs_t offset, uintx_t mask)
 {
+//	printf("%s: Data width=%d Address=%08X Mask=%08X ** Unmapped! **\n",
+//		name().c_str(), dWidth, offset, mask);
 	return rhe::space->unmap();
 }
 

@@ -41,6 +41,8 @@ public:
 
 	uintx_t read(offs_t offset, uintx_t mask) override
 	{
+//		printf("%s: Address width=%d Address=%08X Mask=%08X -> %08X\n",
+//			name().c_str(), highBits, offset, mask, (offset >> lowBits) & bitMask);
 		return dispatch[(offset >> lowBits) & bitMask]->read(offset, mask);
 	}
 

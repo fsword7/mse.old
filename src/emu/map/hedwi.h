@@ -149,13 +149,15 @@ void mapHandlerWriteDispatch<highBits, dWidth, aShift, Endian>::populate_nomirro
 			if (sEntry <= eEntry)
 				handler->ref();
 		}
-		if ((start & lowMask) != lowMask) {
+
+		if ((end & lowMask) != lowMask) {
 			populate_nomirror_subdispatch(cty, eEntry, 0, end & lowMask, ostart, oend, handler);
 			sEntry--;
 			if (sEntry <= eEntry)
 				handler->ref();
 		}
-		if (sEntry == eEntry) {
+
+		if (sEntry <= eEntry) {
 			handler->ref(eEntry - sEntry);
 			for (offs_t ent = sEntry; ent <= eEntry; ent++) {
 				dispatch[ent]->unref();

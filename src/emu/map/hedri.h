@@ -80,8 +80,8 @@ void mapHandlerReadDispatch<highBits, dWidth, aShift, Endian>::populate_mirror(c
 
 	cty.printf("%s: (R) High bits %d  low bits %d  bit count %d  count %d  bit mask %08X low %08X high %08X up %08X\n",
 		name().c_str(), highBits, lowBits, bitCount, count, bitMask, lowMask, highMask, upMask);
-	cty.printf("%s: (R) %08X-%08X (%08X-%08X) - mirror %08X -> %08X (%08X) %08X (%08X)  %p\n",
-		name().c_str(), start, end, ostart, oend, mirror, hmirror, highMask, lmirror, lowMask, handler);
+	cty.printf("%s: (R) %08X-%08X (%08X-%08X) - mirror %08X -> %08X (%08X) %08X (%08X) (%p:%s)\n",
+		name().c_str(), start, end, ostart, oend, mirror, hmirror, highMask, lmirror, lowMask, handler, handler->name().c_str());
 
 	if (lmirror != 0) {
 		// Non-zero low mirror bits
@@ -122,8 +122,8 @@ void mapHandlerReadDispatch<highBits, dWidth, aShift, Endian>::populate_nomirror
 
 	cty.printf("%s: (R) High bits %d  low bits %d  bit count %d  count %d  mask %08X low %08X high %08X up %08X\n",
 		name().c_str(), highBits, lowBits, bitCount, count, bitMask, lowMask, highMask, upMask);
-	cty.printf("%s: (R) %08X-%08X (%08X-%08X) - entry %08X-%08X  %p\n",
-		name().c_str(), start, end, ostart, oend, sEntry, eEntry, handler);
+	cty.printf("%s: (R) %08X-%08X (%08X-%08X) - entry %08X-%08X (low %d bits, %d shift) (%p:%s)\n",
+		name().c_str(), start, end, ostart, oend, sEntry, eEntry, lowBits, dWidth+aShift, handler, handler->name().c_str());
 
 	range_cut_before(ostart-1, sEntry);
 	range_cut_after(oend+1, eEntry);
@@ -149,13 +149,15 @@ void mapHandlerReadDispatch<highBits, dWidth, aShift, Endian>::populate_nomirror
 			if (sEntry <= eEntry)
 				handler->ref();
 		}
-		if ((start & lowMask) != lowMask) {
+
+		if ((end & lowMask) != lowMask) {
 			populate_nomirror_subdispatch(cty, eEntry, 0, end & lowMask, ostart, oend, handler);
 			sEntry--;
 			if (sEntry <= eEntry)
 				handler->ref();
 		}
-		if (sEntry == eEntry) {
+
+		if (sEntry <= eEntry) {
 			handler->ref(eEntry - sEntry);
 			for (offs_t ent = sEntry; ent <= eEntry; ent++) {
 				dispatch[ent]->unref();
