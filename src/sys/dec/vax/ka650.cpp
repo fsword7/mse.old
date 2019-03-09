@@ -10,6 +10,9 @@
 #include "emu/maprom.h"
 #include "emu/driver.h"
 #include "sys/dec/vax/ka650.h"
+#include "dev/chip/dec/vax/cssc.h"
+#include "dev/chip/dec/vax/cmctl.h"
+#include "dev/chip/dec/vax/cqbic.h"
 
 using namespace std;
 
@@ -43,7 +46,6 @@ void ka650_device::mv3900_mem(mapAddress &map)
 
 void ka650_device::mv3900x_mem(mapAddress &map)
 {
-//	cout << "mv3900x - Initialize memory space entries" << endl;
 	map.setGlobalMask(0x3FFFFFFF);
 	map(0x00000000, 0x1FFFFFFF).ram();
 	map(0x20040000, 0x2007FFFF).rom().mirror(0x20000).region("ka655x-srm");

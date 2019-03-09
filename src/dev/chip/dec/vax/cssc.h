@@ -8,12 +8,12 @@
 #pragma once
 
 // SSC Registers for MicroVAX III series
-#define SSC_BASE    0x20140000             // SSC Base Address
-#define SSC_END     (SSC_BASE + SSC_SIZE)  // End of SSC Registers
-
-#define SSC_NREGS   84                     // Number of SSC Registers
-#define SSC_SIZE    (SSC_NREGS << 2)       //    Total Bytes
-#define SSC_REG(rn) KA650_REG(cpu, sscRegs[rn])
+//#define SSC_BASE    0x20140000             // SSC Base Address
+//#define SSC_END     (SSC_BASE + SSC_SIZE)  // End of SSC Registers
+//
+//#define SSC_NREGS   84                     // Number of SSC Registers
+//#define SSC_SIZE    (SSC_NREGS << 2)       //    Total Bytes
+//#define SSC_REG(rn) KA650_REG(cpu, sscRegs[rn])
 
 #define SSC_nBASE   0x00 // Base Address
 #define SSC_nCR     0x04 // Configuration Register
@@ -121,3 +121,5 @@ class cssc_device : public device_t
 {
 
 };
+
+DECLARE_DEVICE_TYPE(CSSC, cssc_device)

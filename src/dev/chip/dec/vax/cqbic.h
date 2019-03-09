@@ -39,10 +39,10 @@
 #define MAP_RW    (MAP_VALID|MAP_PAGE)
 
 // CQ BIC Registers
-#define CQBIC_BASE   (REG_BASE) // CQBIC Base Address
-#define CQBIC_NREGS  5          //   Number of Registers
-#define CQBIC_SIZE   (CQBIC_NREGS << 2) // Total Bytes
-#define CQBIC_END    (CQBIC_BASE + CQBIC_SIZE)
+//#define CQBIC_BASE   (REG_BASE) // CQBIC Base Address
+//#define CQBIC_NREGS  5          //   Number of Registers
+//#define CQBIC_SIZE   (CQBIC_NREGS << 2) // Total Bytes
+//#define CQBIC_END    (CQBIC_BASE + CQBIC_SIZE)
 #define CQ_REG(reg)  cqRegs[reg]
 
 #define CQ_nSCR  0 // System Configuration Register
@@ -57,26 +57,26 @@
 #define CQ_SEAR  CQ_REG(CQ_nSEAR)
 #define CQ_MBR   CQ_REG(CQ_nMBR)
 
-// CQBIC Q22-Bus Map Registers
-#define CQMAP_BASE   (REG_BASE + 0x8000)
-#define CQMAP_WIDTH  15
-#define CQMAP_SIZE   (1u << CQMAP_WIDTH)
-#define CQMAP_MASK   (CQMAP_SIZE - 1)
-#define CQMAP_END    (CQMAP_BASE + CQMAP_SIZE)
-
-// CQBIC Q22-Bus I/O Space Area
-#define CQIO_BASE   (0x20000000)
-#define CQIO_WIDTH  13
-#define CQIO_SIZE   (1u << CQIO_WIDTH)
-#define CQIO_MASK   (CQIO_SIZE - 1)
-#define CQIO_END    (CQIO_BASE + CQIO_SIZE)
-
-// CQBIC Q22-Bus Memory Space Area
-#define CQMEM_BASE   (0x30000000)
-#define CQMEM_WIDTH  22
-#define CQMEM_SIZE   (1u << CQMEM_WIDTH)
-#define CQMEM_MASK   (CQMEM_SIZE - 1)
-#define CQMEM_END    (CQMEM_BASE + CQMEM_SIZE)
+//// CQBIC Q22-Bus Map Registers
+//#define CQMAP_BASE   (REG_BASE + 0x8000)
+//#define CQMAP_WIDTH  15
+//#define CQMAP_SIZE   (1u << CQMAP_WIDTH)
+//#define CQMAP_MASK   (CQMAP_SIZE - 1)
+//#define CQMAP_END    (CQMAP_BASE + CQMAP_SIZE)
+//
+//// CQBIC Q22-Bus I/O Space Area
+//#define CQIO_BASE   (0x20000000)
+//#define CQIO_WIDTH  13
+//#define CQIO_SIZE   (1u << CQIO_WIDTH)
+//#define CQIO_MASK   (CQIO_SIZE - 1)
+//#define CQIO_END    (CQIO_BASE + CQIO_SIZE)
+//
+//// CQBIC Q22-Bus Memory Space Area
+//#define CQMEM_BASE   (0x30000000)
+//#define CQMEM_WIDTH  22
+//#define CQMEM_SIZE   (1u << CQMEM_WIDTH)
+//#define CQMEM_MASK   (CQMEM_SIZE - 1)
+//#define CQMEM_END    (CQMEM_BASE + CQMEM_SIZE)
 
 // SCR - System Configuration Register
 #define SCR_PWROK   0x00008000 // Power Ok
@@ -113,3 +113,5 @@ class cqbic_device : public device_t
 {
 
 };
+
+DECLARE_DEVICE_TYPE(CQBIC, cqbic_device)

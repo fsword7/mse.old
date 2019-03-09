@@ -68,6 +68,9 @@ set(mse_cpp_SRCS
 )
 
 set(mse_h_SRCS
+	dev/chip/dec/vax/cmctl.h
+	dev/chip/dec/vax/cssc.h
+	dev/chip/dec/vax/cqbic.h
 	dev/comm/dec/cty.h
 #	dev/cpu/alpha/axp.h
 #	dev/cpu/alpha/ev4.h

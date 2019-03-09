@@ -8,12 +8,12 @@
 #pragma once
 
 // CMCTL - Memory Controller Registers
-#define CM_BASE     (REG_BASE + 0x100)     // CMCTL Base Address
-//#define CM_NREGS    18                     //    Number of Registers
-#define CM_NREGS    19                     //    Number of Registers
-#define CM_SIZE     (CM_NREGS << 2)        //    Total Bytes
-#define CM_END      (CM_BASE + CM_SIZE)    // End of CMCTL Registers
-#define CM_REG(rn)  cmReg[rn]
+//#define CM_BASE     (REG_BASE + 0x100)     // CMCTL Base Address
+////#define CM_NREGS    18                     //    Number of Registers
+//#define CM_NREGS    19                     //    Number of Registers
+//#define CM_SIZE     (CM_NREGS << 2)        //    Total Bytes
+//#define CM_END      (CM_BASE + CM_SIZE)    // End of CMCTL Registers
+//#define CM_REG(rn)  cmReg[rn]
 
 #define CM_nERR     16 // CMCTL Error Register
 #define CM_nCSR     17 // CMCTL Control/Status Register
@@ -62,3 +62,5 @@ class cmctl_device : public device_t
 {
 
 };
+
+DECLARE_DEVICE_TYPE(CMCTL, cmctl_device)
