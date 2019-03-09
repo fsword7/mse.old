@@ -1,5 +1,8 @@
 
 set(mse_cpp_SRCS
+	dev/chip/dec/vax/cmctl.cpp
+	dev/chip/dec/vax/cqbic.cpp
+	dev/chip/dec/vax/cssc.cpp
 	dev/comm/dec/console.cpp
 #	dev/cpu/alpha/axp.cpp
 #	dev/cpu/alpha/ev4.cpp

@@ -119,6 +119,11 @@
 
 class cssc_device : public device_t
 {
+//	cssc_device(const system_config &config, const device_type_base &type, tag_t *tag, device_t *owner, uint64_t clock)
+//	: device_t(config, type, tag, owner, clock)
+//	{ }
+//
+//	~cssc_device() {}
 
 };
 
