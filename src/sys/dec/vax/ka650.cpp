@@ -9,21 +9,28 @@
 #include "emu/devsys.h"
 #include "emu/maprom.h"
 #include "emu/driver.h"
-#include "sys/dec/vax/ka650.h"
 #include "dev/chip/dec/vax/cssc.h"
 #include "dev/chip/dec/vax/cmctl.h"
 #include "dev/chip/dec/vax/cqbic.h"
+#include "sys/dec/vax/ka650.h"
 
 using namespace std;
 
 // Create system routines
 void ka650_device::mv3900(system_config &config)
 {
-	cvax_cpu *cpu;
 
 	cpu = CVAX(config, "cvax", 0);
 	cpu->setAddressMap(AS_PROGRAM, &ka650_device::mv3900_mem);
 	cpu->setDeviceName("cpu");
+
+	cssc = CSSC(config, "cssc", 0);
+	cmctl = CMCTL(config, "cmctl", 0);
+	cqbic = CQBIC(config, "cqbic", 0);
+
+	cssc->setDeviceName("cssc");
+	cmctl->setDeviceName("cmctl");
+	cqbic->setDeviceName("cqbic");
 
 	cout << "This is MicroVAX 3900 system" << endl;
 
@@ -31,11 +38,18 @@ void ka650_device::mv3900(system_config &config)
 
 void ka650_device::mv3900x(system_config &config)
 {
-	cvax_cpu *cpu;
 
 	cpu = CVAX(config, "cvax", 0);
 	cpu->setAddressMap(AS_PROGRAM, &ka650_device::mv3900x_mem);
 	cpu->setDeviceName("cpu");
+
+	cssc = CSSC(config, "cssc", 0);
+	cmctl = CMCTL(config, "cmctl", 0);
+	cqbic = CQBIC(config, "cqbic", 0);
+
+	cssc->setDeviceName("cssc");
+	cmctl->setDeviceName("cmctl");
+	cqbic->setDeviceName("cqbic");
 
 	cout << "This is MicroVAX 3800x system" << endl;
 }

@@ -157,7 +157,11 @@ class ka650_device : public system_device
 {
 public:
 	ka650_device(const system_config &config, const device_type_base &type, tag_t *tag, uint64_t clock)
-	: system_device(config, type, tag, clock)
+	: system_device(config, type, tag, clock),
+	  cpu(nullptr),
+	  cssc(nullptr),
+	  cmctl(nullptr),
+	  cqbic(nullptr)
 	{
 	}
 
@@ -172,5 +176,9 @@ public:
 	// Model-specific system initialize routines
 	static void mv3900_init();
 	static void mv3900x_init();
-};
 
+	cvax_cpu 		*cpu;
+	cssc_device		*cssc;
+	cmctl_device	*cmctl;
+	cqbic_device	*cqbic;
+};
