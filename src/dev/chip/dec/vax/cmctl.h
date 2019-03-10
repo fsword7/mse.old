@@ -61,11 +61,8 @@
 class cmctl_device : public device_t
 {
 public:
-//	cmctl_device(const system_config &config, const device_type_base &type, tag_t *tag, device_t *owner, uint64_t clock)
-//	: device_t(config, type, tag, owner, clock)
-//	{ }
-//
-//	~cmctl_device() {}
+	cmctl_device(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock);
+	~cmctl_device();
 
 };
 

@@ -111,11 +111,9 @@
 
 class cqbic_device : public device_t
 {
-//	cqbic_device(const system_config &config, const device_type_base &type, tag_t *tag, device_t *owner, uint64_t clock)
-//	: device_t(config, type, tag, owner, uint64_t clock)
-//	{ }
-//
-//	~cqbic_device() {}
+public:
+	cqbic_device(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock);
+	~cqbic_device();
 
 };
 
