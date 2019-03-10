@@ -263,8 +263,8 @@ void cvax_cpu::mfpr()
 			dst = (ipr < iprSize) ? ipReg[ipr] : 0;
 			// Model-Specific IPR Registers
 			// Otherwise, reserved operand fault trap.
-//			if (cpu->ReadIPR)
-//				dst = cpu->ReadIPR(cpu, ipr);
+//			if (ssc != nullptr)
+//				dst = ssc->ReadIPR(cpu, ipr);
 			break;
 	}
 
@@ -384,7 +384,8 @@ void cvax_cpu::mtpr()
 		default:
 			// Update Model-Specific IPR Registers
 			// Otherwise, reserved operand fault trap.
-//			cpu->WriteIPR(cpu, ipr, src);
+//			if (ssc != nullptr)
+//				ssc->WriteIPR(cpu, ipr, src);
 			break;
 	}
 

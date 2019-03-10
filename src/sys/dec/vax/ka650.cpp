@@ -25,6 +25,7 @@ void ka650_device::mv3900(system_config &config)
 	cpu->setDeviceName("cpu");
 
 	cssc = CSSC(config, "cssc", 0);
+//	cpu->setSystemSupport(cssc);
 	cmctl = CMCTL(config, "cmctl", 0);
 	cqbic = CQBIC(config, "cqbic", 0);
 
@@ -44,6 +45,7 @@ void ka650_device::mv3900x(system_config &config)
 	cpu->setDeviceName("cpu");
 
 	cssc = CSSC(config, "cssc", 0);
+//	cpu->setSystemSupport(cssc);
 	cmctl = CMCTL(config, "cmctl", 0);
 	cqbic = CQBIC(config, "cqbic", 0);
 
