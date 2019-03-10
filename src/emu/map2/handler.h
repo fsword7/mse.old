@@ -19,6 +19,10 @@ template <> struct mapHandlerSize<3> { using uintx_t = uint64_t; }
 class mapMemoryHandler
 {
 public:
+	enum {
+		heDispatch = 0x0001
+	};
+
 	mapMemoryHandler(mapAddressSpace &space, uint32_t flags)
 	: space(space), flags(flags), refCount(1) { }
 	virtual ~mapMemoryHandler() { }
@@ -54,6 +58,10 @@ public:
 
 	virtual uintx_t read(offs_t offset, uintx_t mask) = 0;
 
+	void populate(const cty_t &cty, offs_t &start, offs_t &end, offs_t mirror,
+		mapMemoryHandlerRead<dataWidth, addrShift, Endian> *handler)
+	{
+	}
 };
 
 template <int dataWidth, int addrShift, int Endian>
@@ -68,4 +76,8 @@ public:
 
 	virtual uintx_t write(offs_t offset, uintx_t data, uintx_t mask) = 0;
 
+	void populate(const cty_t &cty, offs_t &start, offs_t &end, offs_t mirror,
+		mapMemoryHandlerWrite<dataWidth, addrShift, Endian> *handler)
+	{
+	}
 };
