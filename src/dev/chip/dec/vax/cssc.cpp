@@ -62,15 +62,16 @@ uint32_t cssc_device::read(offs_t offset, int acc)
 		break;
 	}
 
+	return data;
 }
 
 void cssc_device::write(offs_t offset, uint32_t data, int acc)
 {
-	uint32 ndata;
+	uint32_t ndata;
 
 	if (acc < LN_LONG) {
 		uint32_t sc = (offset & ALIGN_LONG) << 3;
-		uint32_t mask = ((acc == LN_WORD) ? W_MASK : B_MASK) << sc;
+		uint32_t mask = ((acc == LN_WORD) ? MSK_WORD : MSK_BYTE) << sc;
 		ndata = ((data << sc) & mask) | (sscReg[offset] & ~mask);
 	} else
 		ndata = data;

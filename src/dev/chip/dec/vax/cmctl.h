@@ -81,7 +81,7 @@ public:
 	~cmctl_device();
 
 	uint32_t read(offs_t offset, int acc);
-	uint32_t write(offs_t offset, uint32_t data, int acc);
+	void write(offs_t offset, uint32_t data, int acc);
 
 private:
 	uint32_t cmReg[32];

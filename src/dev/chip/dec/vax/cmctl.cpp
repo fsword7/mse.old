@@ -37,8 +37,6 @@ uint32_t cmctl_device::read(offs_t offset, int acc)
 
 void cmctl_device::write(offs_t offset, uint32_t data, int acc)
 {
-	uint32 ndata;
-
 //	if (acc < LN_LONG) {
 //		uint32_t sc = (offset & ALIGN_LONG) << 3;
 //		uint32_t mask = ((acc == LN_WORD) ? W_MASK : B_MASK) << sc;
