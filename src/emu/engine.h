@@ -19,6 +19,7 @@ public:
 	void list();
 
 	// debug tools
+	void disassemble(int argc, args_t &args);
 	void dump(int argc, args_t &args);
 	void dumpr(int argc, args_t &args);
 

@@ -22,4 +22,5 @@ public:
 	di_debug(device_t *dev);
 	~di_debug();
 
+	virtual int disassemble(const cty_t *cty, uint32_t vAddr) = 0;
 };

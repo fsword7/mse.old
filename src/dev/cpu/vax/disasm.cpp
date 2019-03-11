@@ -176,7 +176,7 @@ int vax_cpu_base::disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **pt
 	return 0;
 }
 
-int vax_cpu_base::disasm(const cty_t *cty, uint32_t vAddr)
+int vax_cpu_base::disassemble(const cty_t *cty, uint32_t vAddr)
 {
 	char       line[256], *ptr = line;
 	uint32_t   opCode, opExtend;

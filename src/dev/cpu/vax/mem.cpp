@@ -552,6 +552,7 @@ uint32_t vax_cpu_base::readpc(uint32_t pAddr, int size)
 //		return MEMB(pAddr);
 //	}
 	mchkRef |= REF_C;
+	mapProgram = &getAddressSpace(AS_PROGRAM);
 	if (size == LN_LONG)
 		return mapProgram->read32(pAddr);
 	else if (size == LN_WORD)
@@ -575,6 +576,7 @@ void vax_cpu_base::writepc(uint32_t pAddr, uint32_t data, int size)
 //			MEMB(pAddr) = data;
 //	}
 	mchkRef |= REF_C;
+	mapProgram = &getAddressSpace(AS_PROGRAM);
 	if (size == LN_LONG)
 		mapProgram->write32(pAddr, data);
 	else if (size == LN_WORD)

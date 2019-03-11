@@ -296,9 +296,11 @@ public:
 
 	bool hasInterface(di_memory *&intf)  { return ((intf = interfaceList.memory) != nullptr); }
 	bool hasInterface(di_execute *&intf) { return ((intf = interfaceList.execute) != nullptr); }
+	bool hasInterface(di_debug *&intf)   { return ((intf = interfaceList.debug) != nullptr); }
 
 	bool hasInterface(di_memory *&intf) const  { return ((intf = interfaceList.memory) != nullptr); }
 	bool hasInterface(di_execute *&intf) const { return ((intf = interfaceList.execute) != nullptr); }
+	bool hasInterface(di_debug *&intf) const   { return ((intf = interfaceList.debug) != nullptr); }
 
 	void validate(validity_checker &valid) const;
 

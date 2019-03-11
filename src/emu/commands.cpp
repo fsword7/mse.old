@@ -20,6 +20,15 @@ static cmdStatus /* command_handler:: */ cmdCreate(cty_t *cty, int argc, args_t 
 	return cmdOk;
 }
 
+static cmdStatus /* command handler:: */ cmdDisasm(cty_t *cty, int argc, args_t &args)
+{
+	system_engine engine(*cty);
+
+	engine.disassemble(argc, args);
+
+	return cmdOk;
+}
+
 static cmdStatus /* command handler:: */ cmdDump(cty_t *cty, int argc, args_t &args)
 {
 	system_engine engine(*cty);
@@ -65,6 +74,7 @@ static cmdStatus /* commander_handler:: */ cmdListMachine(cty_t *cty, int argc, 
 // General commands table
 command_t command_handler::mseCommands[] = {
 	{ "create", cmdCreate },
+	{ "disasm", cmdDisasm },
 	{ "dump", cmdDump },
 	{ "dumpr", cmdDumpr },
 	{ "exit", cmdExit },

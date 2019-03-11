@@ -101,7 +101,7 @@ void vax_cpu_base::execute() noexcept(false)
 
 #ifdef ENABLE_DEBUG
 //			if (dbg.checkFlags(DBG_TRACE))
-//				disasm(nullptr, faultAddr);
+//				disassmeble(nullptr, faultAddr);
 #endif /* ENABLE_DEBUG */
 
 			// Fetch instruction from current stream

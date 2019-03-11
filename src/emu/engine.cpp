@@ -10,6 +10,7 @@
 #include "emu/driver.h"
 #include "emu/syslist.h"
 #include "emu/engine.h"
+#include "emu/devcpu.h"
 #include "emu/devsys.h"
 #include "emu/machine.h"
 
@@ -84,11 +85,58 @@ void system_engine::list()
 	}
 }
 
+void system_engine::disassemble(int argc, args_t &args)
+{
+	machine			*machine;
+	device_t		*sys, *dev;
+
+	// Check number of arguments
+	if (args.size() < 4) {
+		cty.printf("Usage: %s <system> <device> <start[-end]> [len]", args[0]);
+		return;
+	}
+
+	// find named machine device
+	if ((machine = find(args[1])) == nullptr) {
+		cty.printf("%s: System '%s' not found\n", args[0].c_str(), args[1].c_str());
+		return;
+	}
+	sys = machine->getSystemDevice();
+
+	if ((dev = findDevice(*sys, args[2])) == nullptr) {
+		cty.printf("%s: Device '%s' not found\n", args[0].c_str(), args[2].c_str());
+		return;
+	}
+
+	di_debug *debug;
+	if (!dev->hasInterface(debug)) {
+		cty.printf("%s: Do not have debug interface\n", dev->deviceName());
+		return;
+	}
+
+	uint32_t  sAddr, eAddr = -1;
+	char     *strAddr;
+
+	sscanf(args[3].c_str(), "%x", &sAddr);
+	if ((strAddr = strchr(args[3].c_str(), '-')) != nullptr)
+		sscanf(strAddr+1, "%x", &eAddr);
+	else {
+		if (args.size() > 4) {
+			sscanf(args[4].c_str(), "%x", &eAddr);
+			eAddr = sAddr + eAddr - 1;
+		} else if (eAddr == -1)
+			eAddr = sAddr + 0x140 - 1;
+	}
+
+	while (sAddr <= eAddr) {
+		sAddr += debug->disassemble(&cty, sAddr);
+	}
+}
+
 void system_engine::dump(int argc, args_t &args)
 {
 	machine			*machine;
 	device_t		*sys, *dev;
-	mapMemoryRegion	*region;
 
 	// Check number of arguments
 	if (args.size() < 4) {
