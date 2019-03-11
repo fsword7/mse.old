@@ -115,6 +115,11 @@ public:
 	cqbic_device(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock);
 	~cqbic_device();
 
+	uint32_t read(offs_t offset, int acc);
+	void write(offs_t offset, uint32_t data, int acc);
+
+private:
+	uint32_t cqReg[8];
 };
 
 DECLARE_DEVICE_TYPE(CQBIC, cqbic_device)
