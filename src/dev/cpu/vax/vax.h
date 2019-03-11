@@ -496,9 +496,9 @@ public:
 
 //	virtual void send(cpuSignal signal);
 
-//	int disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **str);
-//	int disasm(Console *cty, uint32_t pcAddr);
-//	int dump(Console *cty, uint32_t *sAddr, uint32_t eAddr);
+	int disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **str);
+	int disasm(const cty_t *cty, uint32_t pcAddr);
+	cmdStatus dump(const cty_t *cty, uint32_t *sAddr, uint32_t eAddr);
 
 	void assignMemory(uint8_t *mem, uint32_t memSize);
 	void setPCAddr(uint32_t pcAddr);

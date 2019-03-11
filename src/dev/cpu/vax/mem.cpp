@@ -543,15 +543,21 @@ uint32_t vax_cpu_base::readvi(int size)
 // Console write access with physical address
 uint32_t vax_cpu_base::readpc(uint32_t pAddr, int size)
 {
-	pAddr &= paMask;
-	if (pAddr < memSize) {
-		if (size == LN_LONG)
-			return MEML(pAddr >> 2);
-		if (size == LN_WORD)
-			return MEMW(pAddr >> 1);
-		return MEMB(pAddr);
-	}
+//	pAddr &= paMask;
+//	if (pAddr < memSize) {
+//		if (size == LN_LONG)
+//			return MEML(pAddr >> 2);
+//		if (size == LN_WORD)
+//			return MEMW(pAddr >> 1);
+//		return MEMB(pAddr);
+//	}
 	mchkRef |= REF_C;
+	if (size == LN_LONG)
+		return mapProgram->read32(pAddr);
+	else if (size == LN_WORD)
+		return mapProgram->read16(pAddr);
+	else
+		return mapProgram->read8(pAddr);
 //	return sdev->readio(this, pAddr, size);
 	return 0;
 }
@@ -559,16 +565,22 @@ uint32_t vax_cpu_base::readpc(uint32_t pAddr, int size)
 // Console read access with physical address
 void vax_cpu_base::writepc(uint32_t pAddr, uint32_t data, int size)
 {
-	pAddr &= paMask;
-	if (pAddr < memSize) {
-		if (size == LN_LONG)
-			MEML(pAddr >> 2) = data;
-		if (size == LN_WORD)
-			MEMW(pAddr >> 1) = data;
-		else
-			MEMB(pAddr) = data;
-	}
+//	pAddr &= paMask;
+//	if (pAddr < memSize) {
+//		if (size == LN_LONG)
+//			MEML(pAddr >> 2) = data;
+//		if (size == LN_WORD)
+//			MEMW(pAddr >> 1) = data;
+//		else
+//			MEMB(pAddr) = data;
+//	}
 	mchkRef |= REF_C;
+	if (size == LN_LONG)
+		mapProgram->write32(pAddr, data);
+	else if (size == LN_WORD)
+		mapProgram->write16(pAddr, data);
+	else
+		mapProgram->write8(pAddr, data);
 //	sdev->writeio(this, pAddr, data, size);
 }
 
