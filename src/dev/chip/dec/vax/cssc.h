@@ -123,6 +123,11 @@ public:
 	cssc_device(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock);
 	~cssc_device();
 
+	uint32_t read(offs_t offset, int acc);
+	uint32_t write(offs_t offset, uint32_t data, int acc);
+
+private:
+	uint32_t sscReg[0x400];
 };
 
 DECLARE_DEVICE_TYPE(CSSC, cssc_device)
