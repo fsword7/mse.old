@@ -15,9 +15,25 @@
 //#define CM_END      (CM_BASE + CM_SIZE)    // End of CMCTL Registers
 //#define CM_REG(rn)  cmReg[rn]
 
-#define CM_nERR     16 // CMCTL Error Register
-#define CM_nCSR     17 // CMCTL Control/Status Register
-#define CM_nMSZ     18 // CMCTL Memory Size
+#define CM_nCNF00		0	// CMCTL Configuration 0
+#define CM_nCNF01		1	// CMCTL Configuration 1
+#define CM_nCNF02		2	// CMCTL Configuration 2
+#define CM_nCNF03		3	// CMCTL Configuration 3
+#define CM_nCNF04		4	// CMCTL Configuration 4
+#define CM_nCNF05		5	// CMCTL Configuration 5
+#define CM_nCNF06		6	// CMCTL Configuration 6
+#define CM_nCNF07		7	// CMCTL Configuration 7
+#define CM_nCNF08		8	// CMCTL Configuration 8
+#define CM_nCNF09		9	// CMCTL Configuration 9
+#define CM_nCNF10		10	// CMCTL Configuration 10
+#define CM_nCNF11		11	// CMCTL Configuration 11
+#define CM_nCNF12		12	// CMCTL Configuration 12
+#define CM_nCNF13		13	// CMCTL Configuration 13
+#define CM_nCNF14		14	// CMCTL Configuration 14
+#define CM_nCNF15		15	// CMCTL Configuration 15
+#define CM_nERR			16	// CMCTL Error Register
+#define CM_nCSR			17	// CMCTL Control/Status Register
+#define CM_nMSZ			18	// CMCTL Memory Size
 
 #define CM_ERR      CM_REG(CM_nERR)
 #define CM_CSR      CM_REG(CM_nCSR)
@@ -64,6 +80,11 @@ public:
 	cmctl_device(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock);
 	~cmctl_device();
 
+	uint32_t read(offs_t offset, int acc);
+	uint32_t write(offs_t offset, uint32_t data, int acc);
+
+private:
+	uint32_t cmReg[32];
 };
 
 DECLARE_DEVICE_TYPE(CMCTL, cmctl_device)
