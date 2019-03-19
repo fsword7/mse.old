@@ -38,11 +38,19 @@ tag_t *machine::getDeviceName()
 	return sysConfig.systemDevice()->deviceName();
 }
 
+void machine::startAllDevices(const cty_t &cty)
+{
+	for (device_t &device : device_iterator(*sysDevice)) {
+		cty.printf("%s: Starting %s\n", device.tagName(), device.fullName());
+		device.start();
+	}
+}
+
 // Running machine initialization
-void machine::init(const cty_t &cty)
+void machine::start(const cty_t &cty)
 {
 	// Resolve objects that can be used for memory maps.
-//	for (device_t &device : device_iterator(sysDevice))
+//	for (device_t &device : device_iterator(*sysDevice))
 //		device.resolve_pre_map();
 
 	// Loading ROM images
@@ -52,9 +60,11 @@ void machine::init(const cty_t &cty)
 	sysMemory.init(cty);
 
 	// Resolve objects that are created for memory maps.
-//	for (device_t &device : device_iterator(sysDevice))
+//	for (device_t &device : device_iterator(*sysDevice))
 //		device.resolve_post_map();
 
+	// Now starting all devices as final initialization
+	startAllDevices(cty);
 }
 
 void machine::execute()

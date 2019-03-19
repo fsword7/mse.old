@@ -63,7 +63,7 @@ void system_engine::create(string devName, string sysName)
 	char *name = strdup(devName.c_str());
 	sys->setDeviceName(name);
 
-	sys->init(cty);
+	sys->start(cty);
 
 	if (sys != nullptr)
 		machines.push_back(*sys);
@@ -95,8 +95,9 @@ void system_engine::start(int argc, args_t &args)
 		cty.printf("%s: System '%s' not found\n", args[0].c_str(), args[1].c_str());
 		return;
 	}
-	sys = machine->getSystemDevice();
 
+	// Start system device as initialization
+	machine->start(cty);
 }
 
 void system_engine::disassemble(int argc, args_t &args)

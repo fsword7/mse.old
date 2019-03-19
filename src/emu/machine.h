@@ -29,8 +29,11 @@ public:
 	void setDeviceName(tag_t *name);
 	tag_t *getDeviceName();
 
-	void init(const console_base &cty);
+	void start(const cty_t &cty);
 	void execute();
+
+protected:
+	void startAllDevices(const cty_t &cty);
 
 private:
 
