@@ -328,7 +328,8 @@ uint32_t vax_cpu_base::probev(uint32_t vAddr, uint32_t acc, uint32_t *sts)
 
 	*sts = MM_OK;
 	if ((IPR_MAPEN & 1) == 0)
-		return vAddr & paMask;
+		return vAddr;
+//		return vAddr & paMask;
 
 	// Break virtual address down
 	vpn = VA_GETVPN(vAddr);

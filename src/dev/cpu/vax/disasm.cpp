@@ -19,7 +19,7 @@ static const char *regNames[] =
 };
 
 
-int vax_cpu_base::disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **ptr)
+int vax_cpu_base::disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **ptr, uint32_t &nWords)
 {
 	int      opMode, opScale;
 	uint32_t opType;
@@ -73,9 +73,9 @@ int vax_cpu_base::disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **pt
 			*ptr += sprintf(*ptr, "S^#%02X", opType);
 
 			// CASEx instructions here
-//			if (opn == 2 && (opCode == OPC_nCASEB ||
-//				 opCode == OPC_nCASEW || opCode == OPC_nCASEL))
-//				*nWords = data;
+			if (opn == 2 && (opc->opCode == OPC_nCASEB ||
+				 opc->opCode == OPC_nCASEW || opc->opCode == OPC_nCASEL))
+				nWords = opType;
 			break;
 
 		case REG: // Register
@@ -123,10 +123,10 @@ int vax_cpu_base::disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **pt
 				vAddr += opScale;
 
 				// CASEx instructions here
-//				if (opCode == OPC_nCASEB ||
-//					opCode == OPC_nCASEW ||
-//					opCode == OPC_nCASEL)
-//					*nWords = data;
+				if (opc->opCode == OPC_nCASEB ||
+					opc->opCode == OPC_nCASEW ||
+					opc->opCode == OPC_nCASEL)
+					nWords = data;
 			}
 			break;
 
@@ -182,6 +182,7 @@ int vax_cpu_base::disassemble(const cty_t *cty, uint32_t vAddr)
 	uint32_t   opCode, opExtend;
 	uint32_t   pcAddr = vAddr;
 	const vaxOpcode *opc;
+	uint32_t   nWords = 0;
 	uint32_t   sts;
 
 	ptr += sprintf(ptr, "%08X ", pcAddr);
@@ -197,7 +198,7 @@ int vax_cpu_base::disassemble(const cty_t *cty, uint32_t vAddr)
 
 	if (opc->opCode != OPC_nUOPC) {
 		ptr += sprintf(ptr, "%-8s", opc->opName);
-		disasmOperand(pcAddr, opc, &ptr);
+		disasmOperand(pcAddr, opc, &ptr, nWords);
 	} else {
 		if (opCode > OPC_nEXTEND)
 			ptr += sprintf(ptr, ".BYTE %02X,%02X", (opCode >> 8) + OPC_nEXTEND, opCode & 0xFF);
@@ -214,16 +215,23 @@ int vax_cpu_base::disassemble(const cty_t *cty, uint32_t vAddr)
 #endif /* ENABLE_DEBUG */
 
 	// Following CASE instruction.
-//	if (nWords > 0) {
-//		int32  basePC = *addr;
-//		uint32 data;
-//		for (idx = 0; idx <= nWords; idx++) {
-//			data = ReadC(cpu, *addr, LN_WORD, sw);
-//			PrintLog2(LOG_TRACE, cty, "%08X .WORD %04X ;Jump to %08X\n",
-//				*addr, data, (basePC + SXTW(data)));
-//		}
-//		nWords = 0;
-//	}
+	if (nWords > 0) {
+		int32_t base = pcAddr;
+		uint32_t data;
+		for (int idx = 0; idx <= nWords; idx++) {
+			data = readc(pcAddr, LN_WORD, &sts);
+			if (cty != nullptr)
+				cty->printf("%08X .WORD   %04X ;Jump to %08X\n",
+					pcAddr, ZXTW(data), (base + SXTW(data)));
+#ifdef ENABLE_DEBUG
+			else
+				dbg.log("%08X .WORD   %04X ;Jump to %08X\n",
+						pcAddr, ZXTW(data), (base + SXTW(data)));
+#endif /* ENABLE_DEBUG */
+			pcAddr += LN_WORD;
+		}
+		nWords = 0;
+	}
 
 	return pcAddr - vAddr;
 }

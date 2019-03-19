@@ -496,7 +496,7 @@ public:
 
 //	virtual void send(cpuSignal signal);
 
-	int disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **str);
+	int disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **str, uint32_t &nWords);
 //	int disasm(const cty_t *cty, uint32_t pcAddr);
 	cmdStatus dump(const cty_t *cty, uint32_t *sAddr, uint32_t eAddr);
 
