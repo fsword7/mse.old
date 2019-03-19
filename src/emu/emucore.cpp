@@ -20,3 +20,19 @@ void report_bad_device_cast(const device_t *dev, const std::type_info &srcType, 
 	throw mseFatalError("Error: bad downcast<> - Tried to convert device %s (%s) of type %s to %s - Incompatible",
 			dev->tag().c_str(), dev->fullName(), srcType.name(), dstType.name());
 }
+
+void msePrintf(const char *format, ...)
+{
+	char     out[2048];
+	va_list  args;
+
+	va_start(args, format);
+
+	vsprintf(out, format, args);
+	fflush(stdout);
+
+	std::cout << out;
+
+	// All done, release arguments.
+	va_end(args);
+}
