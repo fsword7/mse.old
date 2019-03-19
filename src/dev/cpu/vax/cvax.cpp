@@ -119,6 +119,9 @@ cvax_cpu::~cvax_cpu()
 
 void cvax_cpu::reset()
 {
+	// Initialize address space
+	mapProgram = &getAddressSpace(AS_PROGRAM);
+
 	// Initialize all working registers
 	for (int idx = 0; idx < CPU_nGREGS; idx++)
 		gpReg[idx].l = 0;
