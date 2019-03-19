@@ -52,6 +52,15 @@ static cmdStatus /* command_handler:: */ cmdExit(cty_t *cty, int argc, args_t &a
 	return cmdShutdown;
 }
 
+static cmdStatus /* command handler:: */ cmdStart(cty_t *cty, int argc, args_t &args)
+{
+	system_engine engine(*cty);
+
+	engine.start(argc, args);
+
+	return cmdOk;
+}
+
 static cmdStatus /* command_handler:: */ cmdListSystem(cty_t *cty, int argc, args_t &args)
 {
 	system_list sys;
@@ -79,6 +88,7 @@ command_t command_handler::mseCommands[] = {
 	{ "dumpr", cmdDumpr },
 	{ "exit", cmdExit },
 	{ "quit", cmdExit },
+	{ "start", cmdStart },
 	// null terminator - end of command table
 	{ nullptr }
 };

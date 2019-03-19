@@ -85,6 +85,20 @@ void system_engine::list()
 	}
 }
 
+void system_engine::start(int argc, args_t &args)
+{
+	machine			*machine;
+	device_t		*sys, *dev;
+
+	// find named machine device
+	if ((machine = find(args[1])) == nullptr) {
+		cty.printf("%s: System '%s' not found\n", args[0].c_str(), args[1].c_str());
+		return;
+	}
+	sys = machine->getSystemDevice();
+
+}
+
 void system_engine::disassemble(int argc, args_t &args)
 {
 	machine			*machine;

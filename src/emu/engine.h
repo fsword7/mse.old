@@ -18,6 +18,8 @@ public:
 	void create(std::string drvName, std::string tagName);
 	void list();
 
+	void start(int argc, args_t &args);
+
 	// debug tools
 	void disassemble(int argc, args_t &args);
 	void dump(int argc, args_t &args);
