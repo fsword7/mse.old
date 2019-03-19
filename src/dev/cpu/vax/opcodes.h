@@ -14,6 +14,7 @@
 #define OPF_REGULAR  0x00000000 // Regular Opcode
 #define OPF_EMULATE  0x80000000 // Instruction is emulatable
 
+#define OPF_CASE     0x00000800 // CASE instructions
 #define OPF_STRING   0x00000400 // String Instructions
 #define OPF_PACKED   0x00000200 // Packed Instructions
 #define OPF_VECTOR   0x00000100 // Vector Instructions

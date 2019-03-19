@@ -73,8 +73,7 @@ int vax_cpu_base::disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **pt
 			*ptr += sprintf(*ptr, "S^#%02X", opType);
 
 			// CASEx instructions here
-			if (opn == 2 && (opc->opCode == OPC_nCASEB ||
-				 opc->opCode == OPC_nCASEW || opc->opCode == OPC_nCASEL))
+			if (opn == 2 && (opc->flags & OPF_CASE))
 				nWords = opType;
 			break;
 
@@ -123,9 +122,7 @@ int vax_cpu_base::disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **pt
 				vAddr += opScale;
 
 				// CASEx instructions here
-				if (opc->opCode == OPC_nCASEB ||
-					opc->opCode == OPC_nCASEW ||
-					opc->opCode == OPC_nCASEL)
+				if ((opn == 2) && (opc->flags & OPF_CASE))
 					nWords = data;
 			}
 			break;

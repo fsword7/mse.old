@@ -17,7 +17,6 @@
 #define OPC_REG  OPF_REGULAR
 #define OPC_EMU  OPF_EMULATE
 #define OPC_VEC  OPF_VECTOR
-
 #define OPC_SFL  OPF_SFLOAT
 #define OPC_DFL  OPF_DFLOAT
 #define OPC_GFL  OPF_GFLOAT
@@ -207,7 +206,7 @@ const vaxOpcode vaxOpcodes[] = {
 	OPC("XORB2",    OPC_nXORB2,    2, OPR({ RB, MB, 0,  0,  0,  0  }), OPC_REG),
 	OPC("XORB3",    OPC_nXORB3,    3, OPR({ RB, RB, WB, 0,  0,  0  }), OPC_REG),
 	OPC("MNEGB",    OPC_nMNEGB,    2, OPR({ RB, WB, 0,  0,  0,  0  }), OPC_REG),
-	OPC("CASEB",    OPC_nCASEB,    3, OPR({ RB, RB, RB, 0,  0,  0  }), OPC_REG),
+	OPC("CASEB",    OPC_nCASEB,    3, OPR({ RB, RB, RB, 0,  0,  0  }), OPC_REG|OPF_CASE),
 
 	OPC("MOVB",     OPC_nMOVB,     2, OPR({ RB, WB, 0,  0,  0,  0  }), OPC_REG),
 	OPC("CMPB",     OPC_nCMPB,     2, OPR({ RB, RB, 0,  0,  0,  0  }), OPC_REG),
@@ -243,7 +242,7 @@ const vaxOpcode vaxOpcodes[] = {
 	OPC("XORW2",    OPC_nXORW2,    2, OPR({ RW, MW, 0,  0,  0,  0  }), OPC_REG),
 	OPC("XORW3",    OPC_nXORW3,    3, OPR({ RW, RW, WW, 0,  0,  0  }), OPC_REG),
 	OPC("MNEGW",    OPC_nMNEGW,    2, OPR({ RW, WW, 0,  0,  0,  0  }), OPC_REG),
-	OPC("CASEW",    OPC_nCASEW,    3, OPR({ RW, RW, RW, 0,  0,  0  }), OPC_REG),
+	OPC("CASEW",    OPC_nCASEW,    3, OPR({ RW, RW, RW, 0,  0,  0  }), OPC_REG|OPF_CASE),
 
 	OPC("MOVW",     OPC_nMOVW,     2, OPR({ RW, WW, 0,  0,  0,  0  }), OPC_REG),
 	OPC("CMPW",     OPC_nCMPW,     2, OPR({ RW, RW, 0,  0,  0,  0  }), OPC_REG),
@@ -279,7 +278,7 @@ const vaxOpcode vaxOpcodes[] = {
 	OPC("XORL2",    OPC_nXORL2,    2, OPR({ RL, ML, 0,  0,  0,  0  }), OPC_REG),
 	OPC("XORL3",    OPC_nXORL3,    3, OPR({ RL, RL, WL, 0,  0,  0  }), OPC_REG),
 	OPC("MNEGL",    OPC_nMNEGL,    2, OPR({ RL, WL, 0,  0,  0,  0  }), OPC_REG),
-	OPC("CASEL",    OPC_nCASEL,    3, OPR({ RL, RL, RL, 0,  0,  0  }), OPC_REG),
+	OPC("CASEL",    OPC_nCASEL,    3, OPR({ RL, RL, RL, 0,  0,  0  }), OPC_REG|OPF_CASE),
 
 	OPC("MOVL",     OPC_nMOVL,     2, OPR({ RL, WL, 0,  0,  0,  0  }), OPC_REG),
 	OPC("CMPL",     OPC_nCMPL,     2, OPR({ RL, RL, 0,  0,  0,  0  }), OPC_REG),
