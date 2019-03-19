@@ -287,6 +287,9 @@ public:
 	const system_config &config() const { return sysConfig; }
 
 	void configure(system_config &config);
+	void start();
+	void stop();
+	void reset();
 
 	device_list &devices() { return deviceList; }
 	const device_list &devices() const { return deviceList; }
@@ -319,6 +322,9 @@ public:
 	virtual void devCompleteConfig(); // complete final configuration
 	virtual const romEntry_t *devGetROMRegion();
 	virtual void devValidate(validity_checker &valid) const;
+	virtual void devStart() = 0;
+	virtual void devStop();
+	virtual void devReset();
 
 protected:
 	devauto_base *register_device(devauto_base *autodev);

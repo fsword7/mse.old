@@ -56,6 +56,47 @@ void device_t::configure(system_config &config)
 
 }
 
+// Start all devices as initialization
+void device_t::start()
+{
+	//	for (device_interface *intf : interfaces())
+	//		intf->intfValidate(valid);
+
+	// Specific-device initialization
+	devStart();
+
+}
+
+// Stop all devices
+void device_t::stop()
+{
+	//	for (device_interface *intf : interfaces())
+	//		intf->intfValidate(valid);
+
+	// Specific-device initialization
+	devStop();
+
+}
+
+// Reset all devices
+void device_t::reset()
+{
+//	for (device_interface *intf : interfaces())
+//		intf->intfValidate(valid);
+
+	// Reset this device first
+	devReset();
+
+	// Reset all child devices
+	for (device_t &child : devices())
+		child.reset();
+
+//	devResetAfterChildren();
+
+//	for (device_interface *intf : interfaces())
+//		intf->intfValidate(valid);
+}
+
 devauto_base *device_t::register_device(devauto_base *autodev)
 {
 	devauto_base *last = nullptr;
@@ -102,6 +143,21 @@ const romEntry_t *device_t::devGetROMRegion()
 }
 
 void device_t::devValidate(validity_checker &valid) const
+{
+	// Do nothing by default
+}
+
+//void device_t::devStart()
+//{
+//	// Do nothing by default
+//}
+
+void device_t::devStop()
+{
+	// Do nothing by default
+}
+
+void device_t::devReset()
 {
 	// Do nothing by default
 }
