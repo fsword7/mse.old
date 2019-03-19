@@ -205,6 +205,10 @@ public:
 	axp_cpu_base(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock);
 	~axp_cpu_base();
 
+	virtual void devStart() override;
+//	virtual void devStop() override;
+//	virtual void devReset() override;
+
 private:
 	uint64_t gRegs[AXP_nGREGS];
 	uint64_t fpRegs[AXP_nFPREGS];

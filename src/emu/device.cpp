@@ -88,8 +88,8 @@ void device_t::reset()
 	devReset();
 
 	// Reset all child devices
-	for (device_t &child : devices())
-		child.reset();
+	for (device_t *child : devices())
+		child->reset();
 
 //	devResetAfterChildren();
 

@@ -24,6 +24,18 @@ cqbic_device::~cqbic_device()
 {
 }
 
+void cqbic_device::devStart()
+{
+}
+
+//void cqbic_device::devStop()
+//{
+//}
+//
+//void cqbic_device::devReset()
+//{
+//}
+
 uint32_t cqbic_device::read(offs_t offset, int acc)
 {
 	return cqReg[offset];

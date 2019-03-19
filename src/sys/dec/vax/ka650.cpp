@@ -16,6 +16,10 @@
 
 using namespace std;
 
+void ka650_device::devStart()
+{
+}
+
 // Create system routines
 void ka650_device::mv3900(system_config &config)
 {

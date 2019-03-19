@@ -16,6 +16,10 @@
 class pdp10_cpu_base : public cpu_device
 {
 public:
+	virtual void devStart() override;
+//	virtual void devStop() override;
+//	virtual void devReset() override;
+
 	// Accumulators
 	w10_t  acRegs[AC_NBLKS][AC_NREGS];
 	// Current/Previous Accumulators

@@ -79,10 +79,12 @@ public:
 	cvax_cpu(const system_config &config, tag_t *tag, device_t *owner, uint64_t clock);
 	~cvax_cpu();
 
-	void reset();
+//  void reset();
 //	int  boot();
 
-//	static cvax_cpu *create(sysDevice *sdev, std::string devName);
+	void devReset() override;
+
+	//	static cvax_cpu *create(sysDevice *sdev, std::string devName);
 
 protected:
 	// Instructions

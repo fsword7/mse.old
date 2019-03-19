@@ -414,6 +414,10 @@ public:
 	pdp11_cpu() {};
 	~pdp11_cpu() {};
 
+	virtual void devStart() override;
+//	virtual void devStop() override;
+//	virtual void devReset() override;
+
 protected:
 	uint32_t cpuFlag;  // CPU feature flags
 	uint32_t optFlag;  // Option feature flags

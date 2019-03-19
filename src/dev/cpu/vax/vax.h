@@ -496,6 +496,10 @@ public:
 
 //	virtual void send(cpuSignal signal);
 
+	virtual void devStart() override;
+	virtual void devStop() override;
+	virtual void devReset() override;
+
 	int disasmOperand(uint32_t &vAddr, const vaxOpcode *opc, char **str, uint32_t &nWords);
 //	int disasm(const cty_t *cty, uint32_t pcAddr);
 	cmdStatus dump(const cty_t *cty, uint32_t *sAddr, uint32_t eAddr);

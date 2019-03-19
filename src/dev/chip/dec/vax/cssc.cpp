@@ -46,6 +46,18 @@ cssc_device::~cssc_device()
 {
 }
 
+void cssc_device::devStart()
+{
+}
+
+//void cssc_device::devStop()
+//{
+//}
+//
+//void cssc_device::devReset()
+//{
+//}
+
 uint32_t cssc_device::read(offs_t offset, int acc)
 {
 	uint32_t data;

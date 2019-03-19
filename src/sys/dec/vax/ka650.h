@@ -165,6 +165,8 @@ public:
 	{
 	}
 
+	void devStart() override;
+
 	// System creator routines
 	void mv3900(system_config &config);
 	void mv3900x(system_config &config);

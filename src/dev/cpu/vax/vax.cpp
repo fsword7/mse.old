@@ -69,7 +69,21 @@ di_memory::spaceConfigVector vax_cpu_base::mapGetSpaceVector() const
 
 void vax_cpu_base::init()
 {
+	// Initialize address space
 	mapProgram = &getAddressSpace(AS_PROGRAM);
+}
+
+void vax_cpu_base::devStart()
+{
+	init();
+}
+
+void vax_cpu_base::devStop()
+{
+}
+
+void vax_cpu_base::devReset()
+{
 }
 
 //void vax_cpu_base::send(cpuSignal signal)

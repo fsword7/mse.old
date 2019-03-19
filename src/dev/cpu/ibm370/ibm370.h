@@ -117,6 +117,10 @@ public:
 	i360_cpu_base() {};
 	~i360_cpu_base() {};
 
+	virtual void devStart() override;
+	virtual void devStop() override;
+	virtual void devReset() override;
+
 private:
 	// Host/guest registers
 	struct regs {

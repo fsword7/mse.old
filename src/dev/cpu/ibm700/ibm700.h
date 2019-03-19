@@ -15,5 +15,9 @@ public:
 	i700_cpu_base() {};
 	~i700_cpu_base() {};
 
+	virtual void devStart() override;
+	virtual void devStop() override;
+	virtual void devReset() override;
+
 private:
 };

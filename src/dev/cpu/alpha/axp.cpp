@@ -18,3 +18,14 @@ axp_cpu_base::~axp_cpu_base()
 {
 }
 
+void axp_cpu_base::devStart()
+{
+}
+
+//void axp_cpu_base::devStop()
+//{
+//}
+//
+//void axp_cpu_base::devReset()
+//{
+//}

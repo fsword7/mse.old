@@ -30,6 +30,18 @@ cmctl_device::~cmctl_device()
 {
 }
 
+void cmctl_device::devStart()
+{
+}
+
+//void cmctl_device::devStop()
+//{
+//}
+//
+//void cmctl_device::devReset()
+//{
+//}
+
 uint32_t cmctl_device::read(offs_t offset, int acc)
 {
 	return cmReg[offset];
