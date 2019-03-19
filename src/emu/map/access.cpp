@@ -40,6 +40,8 @@ typename mapHandlerSize<tWidth>::uintx_t mapReadGeneric(T rop, offs_t address,
 	static constexpr uint32_t nativeStep = aShift >= 0 ? nativeBytes << labs(aShift) : nativeBytes >> labs(aShift);
 	static constexpr uint32_t nativeMask = nativeStep - 1;
 
+//	msePrintf("READG: Address %08X Native: %d Target: %d\n", address, dWidth, tWidth);
+
 	// If address is aligned, simple pass-through to the native reader
 	if ((nativeBytes == targetBytes) && (Aligned || (address & nativeMask) == 0))
 		return rop(address & ~nativeMask, mask);
@@ -50,6 +52,7 @@ typename mapHandlerSize<tWidth>::uintx_t mapReadGeneric(T rop, offs_t address,
 		{
 			if (Endian != endianLittle)
 				offBits = nativeBits - targetBits - offBits;
+//			msePrintf("READG:   Address %08X Mask %08X\n", address & ~nativeMask, (mask << offBits) & nativeMask);
 			return rop(address & ~nativeMask, (nativeType)mask << offBits) >> offBits;
 		}
 	}
@@ -302,6 +305,7 @@ public:
 	uint8_t read8(offs_t address) override
 	{
 		address &= addrMask;
+//		msePrintf("READ8: Data Width: %d Offset: %08X Mask: %08X\n", dWidth, address, addrMask);
 		return (dWidth == 0)
 			? readNative(address & ~nativeMask)
 			: mapReadGeneric<dWidth, aShift, Endian, 0, true>([this](offs_t offset, nativeType mask)
@@ -315,6 +319,7 @@ public:
 	uint16_t read16(offs_t address) override
 	{
 		address &= addrMask;
+//		msePrintf("READ16: Data Width: %d Offset: %08X Mask: %08X\n", dWidth, address, addrMask);
 		return (dWidth == 1)
 			? readNative(address & ~nativeMask)
 			: mapReadGeneric<dWidth, aShift, Endian, 1, true>([this](offs_t offset, nativeType mask)
@@ -349,6 +354,7 @@ public:
 	uint32_t read32(offs_t address) override
 	{
 		address &= addrMask;
+//		msePrintf("READ32: Data Width: %d Offset: %08X Mask: %08X\n", dWidth, address, addrMask);
 		return (dWidth == 2)
 			? readNative(address & ~nativeMask)
 			: mapReadGeneric<dWidth, aShift, Endian, 2, true>([this](offs_t offset, nativeType mask)
