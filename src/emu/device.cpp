@@ -14,7 +14,8 @@
 #include "emu/validity.h"
 
 device_t::device_t(const system_config &config, const device_type_base &type, tag_t *tag, device_t *owner, uint64_t clock)
-: type(type), devOwner(owner), devNext(nullptr),
+: type(type), flagStarted(false),
+  devOwner(owner), devNext(nullptr),
   romEntries(nullptr),
   stagName(tag), devName(nullptr),
   sysConfig(config),
@@ -65,6 +66,7 @@ void device_t::start()
 	// Specific-device initialization
 	devStart();
 
+	flagStarted = true;
 }
 
 // Stop all devices
@@ -76,6 +78,7 @@ void device_t::stop()
 	// Specific-device initialization
 	devStop();
 
+	flagStarted = false;
 }
 
 // Reset all devices

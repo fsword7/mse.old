@@ -275,6 +275,8 @@ public:
 	tag_t *fullName() const { return type.fname(); }
 	tag_t *deviceName() const { return devName; }
 
+	bool isStarted() const { return flagStarted; }
+
 	device_t *owner() { return devOwner; }
 	device_t *next()  { return devNext; }
 
@@ -335,6 +337,8 @@ protected:
 
 protected:
 	const device_type_base 	&type;				// Named device type
+
+	bool flagStarted;
 
 	device_t 			*devOwner;			// Parent device owner
 	device_t 			*devNext;			// Next device of the same owner
