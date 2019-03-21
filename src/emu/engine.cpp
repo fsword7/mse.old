@@ -120,6 +120,10 @@ void system_engine::disassemble(int argc, args_t &args)
 		cty.printf("%s: Device '%s' not found\n", args[0].c_str(), args[2].c_str());
 		return;
 	}
+	if (!sys->isStarted()) {
+		cty.printf("%s: Device not started\n", sys->tagName());
+		return;
+	}
 
 	di_debug *debug;
 	if (!dev->hasInterface(debug)) {
@@ -166,6 +170,10 @@ void system_engine::dump(int argc, args_t &args)
 
 	if ((dev = findDevice(*sys, args[2])) == nullptr) {
 		cty.printf("%s: Device '%s' not found\n", args[0].c_str(), args[2].c_str());
+		return;
+	}
+	if (!sys->isStarted()) {
+		cty.printf("%s: Device not started\n", sys->tagName());
 		return;
 	}
 
@@ -231,6 +239,10 @@ void system_engine::dumpr(int argc, args_t &args)
 		return;
 	}
 	dev = machine->getSystemDevice();
+	if (!dev->isStarted()) {
+		cty.printf("%s: Device not started\n", dev->tagName());
+		return;
+	}
 
 	// find named region area
 	if ((region = dev->mapGetMemoryRegion(args[2])) == nullptr) {
