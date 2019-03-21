@@ -22,7 +22,7 @@ di_memory::~di_memory()
 {
 }
 
-void di_memory::intfCompleteConfig()
+void di_memory::ifCompleteConfig()
 {
 	const spaceConfigVector r = mapGetSpaceVector();
 

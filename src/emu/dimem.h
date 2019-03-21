@@ -53,7 +53,7 @@ protected:
 	virtual spaceConfigVector mapGetSpaceVector() const = 0;
 
 public:
-	void intfCompleteConfig();
+	void ifCompleteConfig() override;
 
 	mapConstructor getAddressMap(int space = 0);
 	const mapAddressConfig *getAddressSpaceConfig(int space) const;
