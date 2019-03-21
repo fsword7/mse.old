@@ -90,16 +90,16 @@ public:
 
 
 	// Implicit delegate calls
-	template <typename T, typename Ret, typename... Params>
-	mapAddressEntry &r(Ret (T::*read)(Params...), tag_t *readName)
+	template <typename T, typename rRet, typename... rParams>
+	mapAddressEntry &r(rRet (T::*read)(rParams...), tag_t *readName)
 	{
 		return r(make_delegate(read, readName, device.tagName(), make_pointer<T>(device)));
 	}
 
-	template <typename T, typename Ret, typename... Params>
-	mapAddressEntry &w(Ret (T::*write)(Params...), tag_t *writeName)
+	template <typename U, typename wRet, typename... wParams>
+	mapAddressEntry &w(wRet (U::*write)(wParams...), tag_t *writeName)
 	{
-		return w(make_delegate(write, writeName, device.tagName(), make_pointer<T>(device)));
+		return w(make_delegate(write, writeName, device.tagName(), make_pointer<U>(device)));
 	}
 
 	template <typename T, typename rRet, typename... rParams, typename U, typename wRet, typename... wParams>
@@ -116,6 +116,33 @@ public:
 		return m(&device, make_delegate(map, mapName, make_pointer<T>(device)));
 	}
 
+
+	// Delegate calls with device tag
+	template <typename T, typename rRet, typename... rParams>
+	mapAddressEntry &r(tag_t *tag, rRet (T::*read)(rParams...), tag_t *readName)
+	{
+		return r(make_delegate(read, readName, tag, nullptr));
+	}
+
+	template <typename U, typename wRet, typename... wParams>
+	mapAddressEntry &w(tag_t *tag, wRet (U::*write)(wParams...), tag_t *writeName)
+	{
+		return w(make_delegate(write, writeName, tag, nullptr));
+	}
+
+	template <typename T, typename rRet, typename... rParams, typename U, typename wRet, typename... wParams>
+	mapAddressEntry &rw(tag_t *tag, rRet (T::*read)(rParams...), tag_t *readName, wRet (U::*write)(wParams...), tag_t *writeName)
+	{
+		r(make_delegate(read, readName, tag, nullptr));
+		w(make_delegate(write, writeName, tag, nullptr));
+		return *this;
+	}
+
+	template <typename T, typename Ret, typename... Params>
+	mapAddressEntry &m(tag_t *tag, Ret (T::*map)(Params...), tag_t *mapName)
+	{
+		return m(tag, make_delegate(map, mapName, static_cast<T*>(nullptr)));
+	}
 
 
 	// Address entry information (public access)
