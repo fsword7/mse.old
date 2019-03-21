@@ -110,7 +110,7 @@ void ka650_device::mv3900_mem(mapAddress &map)
 //	map(0x20084000, 0x20084007).iorw("ka650", FUNC(ka650_device::read), FUNC(ka650_device::write)); // KA650 board registers
 //	map(0x20088000, 0x2008FFFF).iorw("cqbic", FUNC(cqbic_device::read_map), FUNC(cqbic_device::write_map)); // CQBIC Q22-bus I/O map registers
 //	map(0x20140000, 0x201403FF).iorw("cssc", FUNC(cssc_device::read), FUNC(cssc_device::write)); // CSSC registers
-//	map(0x20140400, 0x201407FF); // NVRAM memory space
+	map(0x20140400, 0x201407FF).ram().share("nvram"); // NVRAM memory space
 //	map(0x30000000, 0x303FFFFF).iorw("cqbic", FUNC(cqbic_device::read_mem), FUNC(cqbic_device::write_mem)); // CQBIC Q22-bus I/O memory space
 }
 
@@ -125,7 +125,7 @@ void ka650_device::mv3900x_mem(mapAddress &map)
 //	map(0x20084000, 0x20084007).iorw("ka650", FUNC(ka650_device::read), FUNC(ka650_device::write)); // KA650 board registers
 //	map(0x20088000, 0x2008FFFF).iorw("cqbic", FUNC(cqbic_device::read_map), FUNC(cqbic_device::write_map)); // CQBIC Q22-bus I/O map registers
 //	map(0x20140000, 0x201403FF).iorw("cssc", FUNC(cssc_device::read), FUNC(cssc_device::write)); // CSSC registers
-//	map(0x20140400, 0x201407FF); // NVRAM memory space
+	map(0x20140400, 0x201407FF).ram().share("nvram"); // NVRAM memory space
 //	map(0x30000000, 0x303FFFFF).iorw("cqbic", FUNC(cqbic_device::read_mem), FUNC(cqbic_device::write_mem)); // CQBIC Q22-bus I/O memory space
 }
 
