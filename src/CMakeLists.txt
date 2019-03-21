@@ -34,6 +34,7 @@ set(mse_cpp_SRCS
 	emu/diexec.cpp
 	emu/didebug.cpp
 	emu/dimem.cpp
+	emu/dinvram.cpp
 	emu/emucore.cpp
 	emu/emufile.cpp
 	emu/map/map.cpp
@@ -107,6 +108,7 @@ set(mse_h_SRCS
 	emu/diexec.h
 	emu/didebug.h
 	emu/dimem.h
+	emu/dinvram.h
 	emu/emucore.h
 	emu/emufile.h
 	emu/map/map.h
