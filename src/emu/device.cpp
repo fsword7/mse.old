@@ -36,7 +36,7 @@ void device_t::completeConfig()
 
 	for (device_interface *intf : interfaces()) {
 		std::cout << intf->type() << ": Completeing configuration..." << std::endl;
-		intf->intfCompleteConfig();
+		intf->ifCompleteConfig();
 	}
 
 	devCompleteConfig();
@@ -61,7 +61,7 @@ void device_t::configure(system_config &config)
 void device_t::start()
 {
 	//	for (device_interface *intf : interfaces())
-	//		intf->intfValidate(valid);
+	//		intf->ifStart(valid);
 
 	// Specific-device initialization
 	devStart();
@@ -73,7 +73,7 @@ void device_t::start()
 void device_t::stop()
 {
 	//	for (device_interface *intf : interfaces())
-	//		intf->intfValidate(valid);
+	//		intf->ifStop(valid);
 
 	// Specific-device initialization
 	devStop();
@@ -85,7 +85,7 @@ void device_t::stop()
 void device_t::reset()
 {
 //	for (device_interface *intf : interfaces())
-//		intf->intfValidate(valid);
+//		intf->ifPreReset();
 
 	// Reset this device first
 	devReset();
@@ -97,7 +97,7 @@ void device_t::reset()
 //	devResetAfterChildren();
 
 //	for (device_interface *intf : interfaces())
-//		intf->intfValidate(valid);
+//		intf->ifPostReset();
 }
 
 devauto_base *device_t::register_device(devauto_base *autodev)
@@ -123,7 +123,7 @@ void device_t::resolvePostMap()
 void device_t::validate(validity_checker &valid) const
 {
 	for (device_interface *intf : interfaces())
-		intf->intfValidate(valid);
+		intf->ifValidate(valid);
 
 	devValidate(valid);
 }
@@ -244,12 +244,22 @@ device_interface::~device_interface()
 {
 }
 
-void device_interface::intfCompleteConfig()
+void device_interface::ifCompleteConfig()
 {
 	// Do nothing by default
 }
 
-void device_interface::intfValidate(validity_checker &valid) const
+void device_interface::ifValidate(validity_checker &valid) const
+{
+	// Do nothing by default
+}
+
+void device_interface::ifPreReset()
+{
+	// Do nothing by default
+}
+
+void device_interface::ifPostReset()
 {
 	// Do nothing by default
 }

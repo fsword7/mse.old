@@ -166,8 +166,11 @@ public:
 	tag_t *type() { return typeName; }
 	device_t *getDevice() { return device; }
 
-	virtual void intfCompleteConfig();
-	virtual void intfValidate(validity_checker &valid) const;
+	// Interface-specific function calls
+	virtual void ifCompleteConfig();
+	virtual void ifValidate(validity_checker &valid) const;
+	virtual void ifPreReset();
+	virtual void ifPostReset();
 
 protected:
 	device_interface	*next;
