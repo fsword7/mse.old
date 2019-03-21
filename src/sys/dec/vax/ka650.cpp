@@ -103,30 +103,30 @@ void ka650_device::mv3900_mem(mapAddress &map)
 	map.setGlobalMask(0x3FFFFFFF);
 	map(0x00000000, 0x03FFFFFF).ram(); // Up to 64MB main memory
 //	map(0x10000000, 0x103FFFFF); // Cache registers
-//	map(0x20000000, 0x20001FFF).iorw("cqbic", FUNC(cqbic_device::read_io), FUNC(cqbic_device::write_io)); // CQBIC Q22-bus I/O device space
+//	map(0x20000000, 0x20001FFF).rw("cqbic", FUNC(cqbic_device::read_io), FUNC(cqbic_device::write_io)); // CQBIC Q22-bus I/O device space
 	map(0x20040000, 0x2007FFFF).rom().mirror(0x20000).region("ka655x-srm");
-//	map(0x20080000, 0x2008001F).iorw("cqbic", FUNC(cqbic_device::read), FUNC(cqbic_device::write)); // CQBIC I/O registers
-//	map(0x20080100, 0x200801FF).iorw("cmctl", FUNC(cmctl_device::read), FUNC(cmctl_device::write)); // CMCTL registers
-//	map(0x20084000, 0x20084007).iorw("ka650", FUNC(ka650_device::read), FUNC(ka650_device::write)); // KA650 board registers
-//	map(0x20088000, 0x2008FFFF).iorw("cqbic", FUNC(cqbic_device::read_map), FUNC(cqbic_device::write_map)); // CQBIC Q22-bus I/O map registers
-//	map(0x20140000, 0x201403FF).iorw("cssc", FUNC(cssc_device::read), FUNC(cssc_device::write)); // CSSC registers
+//	map(0x20080000, 0x2008001F).rw("cqbic", FUNC(cqbic_device::read), FUNC(cqbic_device::write)); // CQBIC I/O registers
+//	map(0x20080100, 0x200801FF).rw("cmctl", FUNC(cmctl_device::read), FUNC(cmctl_device::write)); // CMCTL registers
+//	map(0x20084000, 0x20084007).rw("ka650", FUNC(ka650_device::read), FUNC(ka650_device::write)); // KA650 board registers
+//	map(0x20088000, 0x2008FFFF).rw("cqbic", FUNC(cqbic_device::read_map), FUNC(cqbic_device::write_map)); // CQBIC Q22-bus I/O map registers
+//	map(0x20140000, 0x201403FF).rw("cssc", FUNC(cssc_device::read), FUNC(cssc_device::write)); // CSSC registers
 	map(0x20140400, 0x201407FF).ram().share("nvram"); // NVRAM memory space
-//	map(0x30000000, 0x303FFFFF).iorw("cqbic", FUNC(cqbic_device::read_mem), FUNC(cqbic_device::write_mem)); // CQBIC Q22-bus I/O memory space
+//	map(0x30000000, 0x303FFFFF).rw("cqbic", FUNC(cqbic_device::read_mem), FUNC(cqbic_device::write_mem)); // CQBIC Q22-bus I/O memory space
 }
 
 void ka650_device::mv3900x_mem(mapAddress &map)
 {
 	map.setGlobalMask(0x3FFFFFFF);
 	map(0x00000000, 0x1FFFFFFF).ram(); // Up to 512MB main memory
-//	map(0x20000000, 0x20001FFF).iorw("cqbic", FUNC(cqbic_device::read_io), FUNC(cqbic_device::write_io)); // CQBIC Q22-bus I/O device space
+//	map(0x20000000, 0x20001FFF).rw("cqbic", FUNC(cqbic_device::read_io), FUNC(cqbic_device::write_io)); // CQBIC Q22-bus I/O device space
 	map(0x20040000, 0x2007FFFF).rom().mirror(0x20000).region("ka655x-srm");
-//	map(0x20080000, 0x2008001F).iorw("cqbic", FUNC(cqbic_device::read), FUNC(cqbic_device::write)); // CQBIC I/O registers
-//	map(0x20080100, 0x200801FF).iorw("cmctl", FUNC(cmctl_device::read), FUNC(cmctl_device::write)); // CMCTL registers
-//	map(0x20084000, 0x20084007).iorw("ka650", FUNC(ka650_device::read), FUNC(ka650_device::write)); // KA650 board registers
-//	map(0x20088000, 0x2008FFFF).iorw("cqbic", FUNC(cqbic_device::read_map), FUNC(cqbic_device::write_map)); // CQBIC Q22-bus I/O map registers
-//	map(0x20140000, 0x201403FF).iorw("cssc", FUNC(cssc_device::read), FUNC(cssc_device::write)); // CSSC registers
+//	map(0x20080000, 0x2008001F).rw("cqbic", FUNC(cqbic_device::read), FUNC(cqbic_device::write)); // CQBIC I/O registers
+//	map(0x20080100, 0x200801FF).rw("cmctl", FUNC(cmctl_device::read), FUNC(cmctl_device::write)); // CMCTL registers
+//	map(0x20084000, 0x20084007).rw("ka650", FUNC(ka650_device::read), FUNC(ka650_device::write)); // KA650 board registers
+//	map(0x20088000, 0x2008FFFF).rw("cqbic", FUNC(cqbic_device::read_map), FUNC(cqbic_device::write_map)); // CQBIC Q22-bus I/O map registers
+//	map(0x20140000, 0x201403FF).rw("cssc", FUNC(cssc_device::read), FUNC(cssc_device::write)); // CSSC registers
 	map(0x20140400, 0x201407FF).ram().share("nvram"); // NVRAM memory space
-//	map(0x30000000, 0x303FFFFF).iorw("cqbic", FUNC(cqbic_device::read_mem), FUNC(cqbic_device::write_mem)); // CQBIC Q22-bus I/O memory space
+//	map(0x30000000, 0x303FFFFF).rw("cqbic", FUNC(cqbic_device::read_mem), FUNC(cqbic_device::write_mem)); // CQBIC Q22-bus I/O memory space
 }
 
 // Initialize system routines
