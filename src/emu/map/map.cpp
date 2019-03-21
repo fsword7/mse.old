@@ -129,21 +129,26 @@ void mapAddressSpace::prepare(const cty_t &cty)
 	unmapValue = (map->unmapValue == 0) ? 0 : ~0;
 	if (map->gmask != 0) {
 		if (map->gmask & ~addrMask)
-			cty.printf("%s: Can't set a global mask of %08X on a %d-bit address width bus (mask %08X).\n",
-				device.tagName(), map->gmask, addr_width(), addrMask);
+			cty.printf("%s(%s): Can't set a global mask of %08X on a %d-bit address width bus (mask %08X).\n",
+				device.tagName(), name, map->gmask, addr_width(), addrMask);
 		addrMask = map->gmask;
 	}
 
 	for (mapAddressEntry *entry : map->list) {
 
-		cty.printf("%s: %s space - %08X-%08X mask %08X mirror %08X\n", device.tagName(), name,
+		cty.printf("%s(%s): Mapping %08X-%08X mask %08X mirror %08X\n", device.tagName(), name,
 			entry->adrStart, entry->adrEnd, entry->adrMask, entry->adrMirror);
 
 		// Adjust addresses first
 		adjustAddresses(entry->adrStart, entry->adrEnd, entry->adrMask, entry->adrMirror);
 
 		if (entry->tagShare != nullptr) {
-
+			if (manager.shareList.find(entry->tagShare) == manager.shareList.end()) {
+				cty.printf("%s(%s): Creating share '%s' of length %08X\n",
+					device.tagName(), name, entry->tagShare, entry->adrEnd + 1 - entry->adrStart);
+				manager.shareList.emplace(entry->tagShare, new mapMemoryShare(data_width(),
+					address_to_byte(entry->adrEnd - entry->adrStart + 1), endian()));
+			}
 		}
 
 		if (space == 0 && entry->read.type == mapROM && entry->tagRegion == nullptr) {
@@ -159,11 +164,11 @@ void mapAddressSpace::prepare(const cty_t &cty)
 			mapMemoryRegion *region = manager.sysMachine()->getSystemDevice()->mapGetMemoryRegion(entry->tagRegion);
 
 			if (region == nullptr)
-				cty.printf("%s: %s space - %08X-%08X - nonexistent region '%s'\n",
+				cty.printf("%s(%s): %08X-%08X - nonexistent region '%s'\n",
 					device.tagName(), name, entry->adrStart, entry->adrEnd, entry->tagRegion);
 
 			if ((entry->rgnOffset + config.address_to_byte(entry->adrEnd - entry->adrStart + 1)) > region->size())
-				cty.printf("%s: %s space - %08X-%08X extends beyond region '%s'\n",
+				cty.printf("%s(%s): %08X-%08X extends beyond region '%s'\n",
 					device.tagName(), name, entry->adrStart, entry->adrEnd, entry->tagRegion);
 
 			// Now assign named region to memory pointers
