@@ -17,6 +17,7 @@ public:
 
 	void create(std::string drvName, std::string tagName);
 	void list();
+	void listDevices(int argc, args_t &args);
 
 	void start(int argc, args_t &args);
 

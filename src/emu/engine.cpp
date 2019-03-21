@@ -83,6 +83,24 @@ void system_engine::list()
 	}
 }
 
+void system_engine::listDevices(int argc, args_t &args)
+{
+	machine  *mach;
+	device_t *sys;
+
+	// find named machine device
+	if ((mach = find(args[2])) == nullptr) {
+		cty.printf("%s: System '%s' not found\n", args[0].c_str(), args[1].c_str());
+		return;
+	}
+	sys = mach->getSystemDevice();
+
+	for (device_t &dev : device_iterator(*sys)) {
+		cty.printf("%-10s %-10s %-10s (%s)\n", dev.deviceName(),
+			dev.tagName(), dev.shortName(), dev.fullName());
+	}
+}
+
 void system_engine::start(int argc, args_t &args)
 {
 	machine			*machine;

@@ -61,6 +61,16 @@ static cmdStatus /* command handler:: */ cmdStart(cty_t *cty, int argc, args_t &
 	return cmdOk;
 }
 
+static cmdStatus /* command_handler:: */ cmdListDevices(cty_t *cty, int argc, args_t &args)
+{
+	system_engine engine(*cty);
+
+	std::cout << "System List" << std::endl;
+	engine.listDevices(argc, args);
+
+	return cmdOk;
+}
+
 static cmdStatus /* command_handler:: */ cmdListSystem(cty_t *cty, int argc, args_t &args)
 {
 	system_list sys;
@@ -107,6 +117,7 @@ command_t command_handler::mseShowCommands[] = {
 
 // General list commands table
 command_t command_handler::mseListCommands[] = {
+	{ "devices", cmdListDevices },
 	{ "system", cmdListSystem },
 	{ "machine", cmdListMachine },
 	// null terminator - end of command table
