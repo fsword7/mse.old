@@ -70,3 +70,43 @@ void cqbic_device::write(offs_t offset, uint32_t data, int acc)
 		break;
 	}
 }
+
+uint32_t cqbic_device::read_map(offs_t offset, int acc)
+{
+//	return mapReg[offset];
+	return 0;
+}
+
+void cqbic_device::write_map(offs_t offset, uint32_t data, int acc)
+{
+}
+
+uint32_t cqbic_device::read_mem(offs_t offset, int acc)
+{
+//	return mapReg[offset];
+	return 0;
+}
+
+void cqbic_device::write_mem(offs_t offset, uint32_t data, int acc)
+{
+}
+
+uint16_t cqbic_device::read_io(offs_t offset, int acc)
+{
+//	return mapReg[offset];
+	return 0;
+}
+
+void cqbic_device::write_io(offs_t offset, uint16_t data, int acc)
+{
+}
+
+uint16_t cqbic_device::read_ipc(offs_t offset, int acc)
+{
+//	return mapReg[offset];
+	return 0;
+}
+
+void cqbic_device::write_ipc(offs_t offset, uint16_t data, int acc)
+{
+}

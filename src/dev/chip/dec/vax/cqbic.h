@@ -122,6 +122,18 @@ public:
 	uint32_t read(offs_t offset, int acc);
 	void write(offs_t offset, uint32_t data, int acc);
 
+	uint32_t read_map(offs_t offset, int acc);
+	void write_map(offs_t offset, uint32_t data, int acc);
+
+	uint32_t read_mem(offs_t offset, int acc);
+	void write_mem(offs_t offset, uint32_t data, int acc);
+
+	uint16_t read_io(offs_t offset, int acc);
+	void write_io(offs_t offset, uint16_t data, int acc);
+
+	uint16_t read_ipc(offs_t offset, int acc);
+	void write_ipc(offs_t offset, uint16_t data, int acc);
+
 private:
 	uint32_t cqReg[8];
 };

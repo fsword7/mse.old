@@ -153,6 +153,25 @@
 #define CQMEM_MASK   (CQMEM_SIZE - 1)
 #define CQMEM_END    (CQMEM_BASE + CQMEM_SIZE)
 
+
+// KA650 Board Registers
+#define KA_nCACR  0 // Cache Control Register
+#define KA_nBDR   1
+
+// KA650 Cache Control Register
+#define CACR_DRO    0x00FFFF00 // Diagnostics Bits
+#define CACR_FIXED  0x00000040 // Fixed Bits
+#define CACR_CPE    0x00000020 // Parity Error
+#define CACR_CEN    0x00000010 // Cache Enable
+#define CACR_DPE    0x00000004 // Diable Parity
+#define CACR_WWP    0x00000002 // Write Wrong Parity
+#define CACR_DIAG   0x00000001 // Diagnostic Mode
+#define CACR_P_DPAR 24
+
+#define CACR_W1C    (CACR_CPE)
+#define CACR_RW     (CACR_CEN|CACR_DPE|CACR_WWP|CACR_DIAG)
+
+
 class ka650_device : public system_device
 {
 public:
@@ -164,6 +183,10 @@ public:
 	  cqbic(nullptr)
 	{
 	}
+
+	// KA650 board register read/write accesses
+	uint32_t read(uint32_t pAddr, uint32_t acc);
+	void write(uint32_t pAddr, uint32_t data, uint32_t acc);
 
 	void devStart() override;
 
@@ -183,4 +206,7 @@ public:
 	cssc_device		*cssc;
 	cmctl_device	*cmctl;
 	cqbic_device	*cqbic;
+
+private:
+	uint32_t kaReg[KA_NREGS];
 };
