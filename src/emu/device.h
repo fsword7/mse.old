@@ -180,6 +180,7 @@ protected:
 class device_t : public delegate_bind
 {
 	friend class devauto_base;
+	friend class device_list;
 
 public:
 	class device_list
@@ -197,6 +198,9 @@ public:
 		}
 
 		void add(device_t *dev) {
+			dev->devNext = nullptr;
+			if (!list.empty() && list.back() != nullptr)
+				list.back()->devNext = dev;
 			list.push_back(dev);
 		}
 
