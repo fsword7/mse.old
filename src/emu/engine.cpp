@@ -16,15 +16,15 @@
 
 using namespace std;
 
-vector<machine> system_engine::machines;
+vector<machine *> system_engine::machines;
 
 machine *system_engine::find(string drvName)
 {
 	if (machines.empty())
 		return nullptr;
 	for (auto &sys : machines) {
-		if (sys.getDeviceName() == drvName)
-			return &sys;
+		if (sys->getDeviceName() == drvName)
+			return sys;
 	}
 	return nullptr;
 }
@@ -63,16 +63,14 @@ void system_engine::create(string devName, string sysName)
 	char *name = strdup(devName.c_str());
 	sys->setDeviceName(name);
 
-	sys->start(cty);
-
 	if (sys != nullptr)
-		machines.push_back(*sys);
+		machines.push_back(sys);
 }
 
 void system_engine::list()
 {
 	for (auto &machine : machines) {
-		device_t *sys = machine.getSystemDevice();
+		device_t *sys = machine->getSystemDevice();
 
 //		std::cout << sys->deviceName() << "  " << sys->tagName() << "  "
 //				  << sys->shortName() << " (" << sys->fullName() << ")"

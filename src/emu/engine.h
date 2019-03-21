@@ -26,6 +26,6 @@ public:
 	void dumpr(int argc, args_t &args);
 
 private:
-	static std::vector<machine> machines;
+	static std::vector<machine *> machines;
 	const cty_t &cty;
 };
