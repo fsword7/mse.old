@@ -309,9 +309,11 @@ void mapAddressSpace::locate(const cty_t &cty)
 
 bool mapAddressSpace::needBackingMemory(mapAddressEntry &entry)
 {
-//	if (entry.share != nullptr) {
-//
-//	}
+	if (entry.tagShare != nullptr) {
+		auto share = manager.shareList.find(entry.tagShare);
+		if (share != manager.shareList.end() && share->second->base() == nullptr)
+			return true;
+	}
 
 	if (entry.write.type == mapBank || entry.write.type == mapRAM)
 		return true;
