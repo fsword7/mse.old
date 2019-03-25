@@ -341,6 +341,22 @@ void mapAddressSpace::allocate(const cty_t &cty)
 void mapAddressSpace::locate(const cty_t &cty)
 {
 	cty.printf("%s: Locating memory space...\n", device.tagName());
+
+	for (auto &bank : manager.bankList)
+	{
+		if (bank.second->base() == nullptr && bank.second->hasReference(*this, rwType::RW))
+		{
+			for (mapAddressEntry *entry : map->list)
+			{
+				if (entry->adrStart == bank.second->addrStart() && entry->memory != nullptr)
+				{
+					bank.second->setBase(entry->memory);
+					cty.printf("%s(%s): Assigned bank '%s' to memory %08X-%08X [%p]\n",
+						device.tagName(), name, bank.first, entry->adrStart, entry->adrEnd, entry->memory);
+				}
+			}
+		}
+	}
 }
 
 bool mapAddressSpace::needBackingMemory(mapAddressEntry &entry)
