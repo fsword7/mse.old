@@ -284,6 +284,8 @@ void mapAddressSpace::allocate(const cty_t &cty)
 {
 	cty.printf("%s: Allocating memory space...\n", device.tagName());
 
+	const int MEMORY_BLOCK_CHUNK = 65536;
+
 	auto &blockList = manager.blocks();
 
 	int tail = blockList.size();
@@ -291,15 +293,49 @@ void mapAddressSpace::allocate(const cty_t &cty)
 		if (entry->memory != nullptr)
 			blockList.push_back(new mapMemoryBlock(*this, entry->adrStart, entry->adrEnd, entry->memory));
 
-//	mapAddressEntry *unassigned = nullptr;
-//
-//	for (mapMemoryBlock *block = blockList[tail]; tail != blockList.size(); ++tail)
-//		unassigned = assignBlockIntersecting(cty, block->start(), block->end(), block->base());
-//
-//	if (unassigned == nullptr)
-//		unassigned = assignBlockIntersecting(cty, ~0, 0, nullptr);
-//
-//
+	mapAddressEntry *unassigned = nullptr;
+
+	for (mapMemoryBlock *block = blockList[tail]; tail != blockList.size(); ++tail)
+		unassigned = assignBlockIntersecting(cty, block->start(), block->end(), block->base());
+
+	if (unassigned == nullptr)
+		unassigned = assignBlockIntersecting(cty, ~0, 0, nullptr);
+
+	while (unassigned != nullptr)
+	{
+		offs_t cblkStart = unassigned->adrStart / MEMORY_BLOCK_CHUNK;
+		offs_t cblkEnd = unassigned->adrEnd / MEMORY_BLOCK_CHUNK;
+
+		bool changed;
+		do
+		{
+			changed = false;
+
+			for (mapAddressEntry *entry : map->list)
+			{
+				if (entry->memory == nullptr && entry != unassigned && needBackingMemory(*entry))
+				{
+					offs_t blkStart = entry->adrStart / MEMORY_BLOCK_CHUNK;
+					offs_t blkEnd = entry->adrEnd / MEMORY_BLOCK_CHUNK;
+
+					if (blkStart <= cblkEnd + 1 && blkEnd >= cblkStart - 1)
+					{
+						if (blkStart < cblkStart)
+							cblkStart = blkStart, changed = true;
+						if (blkEnd > cblkEnd)
+							cblkEnd = blkEnd, changed = true;
+					}
+				}
+			}
+		} while(changed);
+
+		offs_t caddrStart = cblkStart * MEMORY_BLOCK_CHUNK;
+		offs_t caddrEnd = cblkEnd * MEMORY_BLOCK_CHUNK + (MEMORY_BLOCK_CHUNK - 1);
+		auto block = new mapMemoryBlock(*this, caddrStart, caddrEnd);
+
+		unassigned = assignBlockIntersecting(cty, caddrStart, caddrEnd, block->base());
+		blockList.push_back(std::move(block));
+	}
 }
 
 void mapAddressSpace::locate(const cty_t &cty)
@@ -364,7 +400,46 @@ void *mapAddressSpace::findBackingMemory(const cty_t &cty, offs_t adrStart, offs
 
 mapAddressEntry *mapAddressSpace::assignBlockIntersecting(const cty_t &cty, offs_t adrStart, offs_t adrEnd, uint8_t *base)
 {
-	return nullptr;
+	mapAddressEntry *unassigned = nullptr;
+
+	for (mapAddressEntry *entry : map->list)
+	{
+		if (entry->memory == nullptr && entry->tagShare != nullptr)
+		{
+			auto share = manager.shareList.find(entry->tagShare);
+			if (share != manager.shareList.end() && share->second->base() != nullptr)
+			{
+				entry->memory = share->second->base();
+				cty.printf("Memory %08X-%08X: shared '%s' [%p]\n",
+					entry->adrStart, entry->adrEnd, entry->tagShare, entry->memory);
+			} else
+				cty.printf("Memory %08X-%08X: shared '%s' not found\n",
+					entry->adrStart, entry->adrEnd, entry->tagShare);
+		}
+
+		if (entry->memory == nullptr && entry->adrStart >= adrStart && entry->adrEnd <= adrEnd)
+		{
+			entry->memory = base + config.address_to_byte(entry->adrStart - entry->adrEnd);
+			cty.printf("Memory %08X-%08X: Found in block %08X-%08X [%p]\n",
+				entry->adrStart, entry->adrEnd, adrStart, adrEnd, entry->memory);
+		}
+
+		if (entry->memory != nullptr && entry->tagShare != nullptr)
+		{
+			auto share = manager.shareList.find(entry->tagShare);
+			if (share != manager.shareList.end() && share->second->base() != nullptr)
+			{
+				share->second->setBase(entry->memory);
+				cty.printf("Memory %08X-%08X: assigned shared '%s' <= [%p]\n",
+					entry->adrStart, entry->adrEnd, entry->tagShare, entry->memory);
+			}
+		}
+
+		if (entry->memory == nullptr && unassigned == nullptr && needBackingMemory(*entry))
+			unassigned = entry;
+	}
+
+	return unassigned;
 }
 
 mapMemoryBank &mapAddressSpace::allocateBank(tag_t *tag, offs_t adrStart, offs_t adrEnd, offs_t adrMirror, rwType type)
