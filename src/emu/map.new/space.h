@@ -61,6 +61,9 @@ public:
 	uint8_t  getDataWidth() const { return dataWidth; }
 	uint8_t  getDataRadix() const { return dataRadix; }
 
+	// Memory space initialization routines
+	void prepare(const cty_t &cty);
+
 private:
 	mapAddressSpaceConfig	&config;
 	mapMemoryManager		&manager;
