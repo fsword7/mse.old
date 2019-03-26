@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "emu/map2/handler.h"
+#include "emu/map.new/handler.h"
 
 template <int highBits, int dataWidth, int addrShift, int Endian>
 class mapMemoryHandlerReadDispatch : public mapMemoryHandlerRead
