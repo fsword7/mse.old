@@ -23,6 +23,16 @@ device_t::device_t(const system_config &config, const device_type_base &type, ta
 {
 //	romEntries.clear();
 	acList.clear();
+
+	// Determine path of tag names
+	if (devOwner != nullptr)
+	{
+		if (devOwner->devOwner == nullptr)
+			spathName = ":" + stagName;
+		else
+			spathName = devOwner->spathName + ":" + stagName;
+	} else
+		spathName = ":";
 }
 
 device_t::~device_t()

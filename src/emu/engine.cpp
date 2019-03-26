@@ -77,8 +77,8 @@ void system_engine::list()
 //				  << std::endl;
 
 		for (device_t &dev : device_iterator(*sys)) {
-			cty.printf("%-10s %-10s %-10s (%s)\n", dev.deviceName(),
-					dev.tagName(), dev.shortName(), dev.fullName());
+			cty.printf("%-10s %-15s %-10s %-10s (%s)\n", dev.deviceName(),
+					dev.tagName(), dev.pathName(), dev.shortName(), dev.fullName());
 		}
 	}
 }
@@ -96,8 +96,8 @@ void system_engine::listDevices(int argc, args_t &args)
 	sys = mach->getSystemDevice();
 
 	for (device_t &dev : device_iterator(*sys)) {
-		cty.printf("%-10s %-10s %-10s (%s)\n", dev.deviceName(),
-			dev.tagName(), dev.shortName(), dev.fullName());
+		cty.printf("%-10s %-15s %-10s %-10s (%s)\n", dev.deviceName(),
+			dev.tagName(), dev.pathName(), dev.shortName(), dev.fullName());
 	}
 }
 
