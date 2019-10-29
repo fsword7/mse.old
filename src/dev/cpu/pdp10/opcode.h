@@ -10,8 +10,8 @@
 struct pdp10_Opcode {
 	const char *opName;
 	const char *opDesc;
-	uint18_t    opExtend;
-	uint18_t    opOcode;
+	h10_t       opExtend;
+	h10_t       opOcode;
 };
 
 #define OPC_nUUO		0000	// Unimplemented Instruction

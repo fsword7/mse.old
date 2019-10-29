@@ -7,7 +7,9 @@ set(mse_cpp_SRCS
 #	dev/cpu/alpha/axp.cpp
 #	dev/cpu/alpha/ev4.cpp
 #	dev/cpu/alpha/opcodes.cpp
-#	dev/cpu/pdp10/opcodes.cpp
+	dev/cpu/pdp10/execute.cpp
+	dev/cpu/pdp10/opcode.cpp
+	dev/cpu/pdp10/memory.cpp
 #	dev/cpu/pdp11/models.cpp
 #	dev/cpu/pdp11/opcodes.cpp
 	dev/cpu/vax/cis.cpp
@@ -80,10 +82,8 @@ set(mse_h_SRCS
 #	dev/cpu/alpha/ev4.h
 #	dev/cpu/ibm3x0/ibm3x0.h
 #	dev/cpu/ibm700/ibm700.h
-#	dev/cpu/pdp10/executes.h
-#	dev/cpu/pdp10/ks10.h
-#	dev/cpu/pdp10/opcodes.h
-#	dev/cpu/pdp10/pdp10.h
+	dev/cpu/pdp10/opcode.h
+	dev/cpu/pdp10/kx10.h
 #	dev/cpu/pdp11/models.h
 #	dev/cpu/pdp11/pdp11.h
 	dev/cpu/vax/cvax.h

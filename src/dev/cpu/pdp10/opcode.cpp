@@ -6,9 +6,8 @@
  */
 
 #include "emu/emucore.h"
-#include "dev/cpu/pdp10/opcodes.h"
-#include "kx10.h"
-
+#include "dev/cpu/pdp10/kx10.h"
+#include "dev/cpu/pdp10/opcode.h"
 
 #define PDP6
 #define KA

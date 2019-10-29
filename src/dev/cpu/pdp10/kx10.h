@@ -34,7 +34,8 @@
 #define AC_NREGS    020
 
 // Define only one of CPU types for compiling time
-//#define CPU_KS10 1
+#define CPU_KS10 1
+#define OS_DEC 1
 
 // PDP6 processor
 #ifndef CPU_PDP6
@@ -142,18 +143,38 @@
 class pdp10_cpu_base : public cpu_device
 {
 public:
-	virtual void devStart() override;
+	pdp10_cpu_base() = default;
+	virtual ~pdp10_cpu_base() = default;
+
+//	virtual void devStart() override;
 //	virtual void devStop() override;
 //	virtual void devReset() override;
+
+	virtual void execute();
+
+	int readp();  // physical read-access  (no paging)
+	int writep(); // physical write-access (no paging)
+	int readv(uint32_t ctx, uint32_t flags); // virtual read-access
+	int writev(uint32_t ctx, uint32_t flags);  // virtual write-access
+
+protected:
 
 	// Accumulators
 	w10_t  acRegs[AC_NBLKS][AC_NREGS];
 	// Current/Previous Accumulators
-	w10_t *curReg; // Current AC block
-	w10_t *prvReg; // Previous AC block
+	w10_t *curReg = nullptr; // Current AC block
+	w10_t *prvReg = nullptr; // Previous AC block
 
-	pdp10_cpu_base()  {}
-	virtual ~pdp10_cpu_base() {}
+	// Internal data registers
+	w10_t arReg = 0;
+	w10_t brReg = 0;
+	w10_t mbReg = 0; // Memory data buffer
+	w10_t abReg = 0; // Memory address buffer
+	uint32_t pcReg = 0; // Current PC address
 
-	virtual void execute();
+	uint32_t memSize = 0;
+	bool nxmFlag = false;
+	h10_t pcFlags = 0; // Current PC flags
+
+	w10_t *mem = nullptr;
 };
