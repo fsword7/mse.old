@@ -1,5 +1,5 @@
 /*
- * pdp10_exec.h
+ * executes.h - PDP10 family processor - execute routine
  *
  *  Created on: Feb 12, 2017
  *      Author: Timothy Stark
@@ -8,7 +8,7 @@
 #pragma once
 
 #include "emu/emucore.h"
-#include "dev/cpu/pdp10/pdp10.h"
+#include "dev/cpu/pdp10/kx10.h"
 #include "dev/cpu/pdp10/opcodes.h"
 
 #if 0

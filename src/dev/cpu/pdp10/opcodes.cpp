@@ -6,8 +6,8 @@
  */
 
 #include "emu/emucore.h"
-#include "dev/cpu/pdp10/pdp10.h"
 #include "dev/cpu/pdp10/opcodes.h"
+#include "kx10.h"
 
 
 #define PDP6
